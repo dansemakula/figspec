@@ -134,7 +134,11 @@ test_that("PNAS records only what is required of the author", {
   # resolutions come from the separate Digital Art Guidelines, whose raster and
   # vector columns state the same figures.
   expect_equal(p$dpi_min, 300)
-  expect_false(grepl("200", p$source_quote_dpi))
+  # Word boundary matters: "1000-1200" contains "200" as a substring, so a
+  # bare grepl("200", ...) matches the line-art figure rather than the 200 ppi
+  # rendering figure it is meant to exclude.
+  expect_false(grepl("\\b200 ppi", p$source_quote_dpi))
+  expect_false(grepl("processed to display|HTML display", p$source_quote_dpi))
   expect_match(p$source_quote_dpi, "no type or lettering")
 
   r <- check_journal(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
