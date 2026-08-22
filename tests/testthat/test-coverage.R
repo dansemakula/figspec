@@ -255,3 +255,44 @@ test_that("IEEE inch measurements convert, and the entry names its scope", {
   expect_match(journal_spec("ieee_magazines")$name, "magazines")
   expect_match(journal_spec("ieee_magazines")$notes, "journals have a separate author centre")
 })
+
+test_that("IEEE journals and magazines are separate entries with their own sources", {
+  j <- journal_spec("ieee"); m <- journal_spec("ieee_magazines")
+  expect_false(identical(j$source_url, m$source_url))
+  # IEEE states the millimetres itself for journals, rather than by conversion.
+  expect_equal(j$columns$single, 88.9)
+  expect_equal(j$columns$double, 182)
+  expect_equal(j$dpi_line_art, 600)
+  expect_match(j$notes, "separate sources")
+})
+
+test_that("Springer's inverted width sentence is recorded on the right reading", {
+  s <- journal_spec("springer")
+  # "84 mm (for double-column text areas), or 174 mm (for single-column text
+  # areas)" describes the journal's TEXT AREA, not the figure's span: 84 mm is
+  # one column of a two-column layout, 174 mm the full width of a one-column
+  # layout. Recording it the other way round would halve every full-width figure.
+  expect_equal(s$columns$single, 84)
+  expect_equal(s$columns$double, 174)
+  expect_equal(s$height_max_mm, 234)
+  expect_match(s$notes, "reads.*backwards")
+})
+
+test_that("Springer records a stated size range but not a suggested font list", {
+  s <- journal_spec("springer")
+  # "usually about 2-3 mm (8-12 pt)" is hedged but concrete.
+  expect_equal(s$font_min_pt, 8)
+  expect_equal(s$font_max_pt, 12)
+  # "it is best to use Helvetica or Arial" is a suggestion, the same strength
+  # as ACS's "work well", and is treated the same way.
+  expect_null(s$font_families)
+  expect_null(journal_spec("acs")$font_families)
+})
+
+test_that("Springer labels figure parts in lower case and requires RGB", {
+  expect_equal(journal_spec("springer")$panel_labels, "lowercase")
+  expect_equal(unlist(journal_spec("springer")$colour_mode), "RGB")
+  # Its greyscale advice is conditional on the journal printing in black and
+  # white, so it is not a rule figspec can check.
+  expect_null(journal_spec("springer")$print_greyscale)
+})

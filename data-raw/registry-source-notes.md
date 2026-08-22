@@ -415,3 +415,51 @@ dpi ambiguity: this page says "For images, minimum 450 dpi" in an export section
   "The maximum dpi of online proofs is 450 dpi". The latter describes Nature's rendering. dpi_min
   stays at the 300 that two Nature pages state for photographic images.
 widths: NOT STATED here, which is why source_url remains the initial-submission page.
+
+## ieee — IEEE JOURNALS (distinct from ieee_magazines)
+source: https://journals.ieeeauthorcenter.ieee.org/create-your-ieee-journal-article/create-graphics-for-your-article/resolution-and-size/
+harvested: 2026-08-22
+width: "One column width: 3.5 inches, 88.9 millimeters, or 21 picas" and "Two columns width: 7.16
+  inches, 182 millimeters, or 43 picas". IEEE gives millimetres itself, so 88.9 and 182 are its own
+  figures rather than a conversion.
+dpi: "IEEE standards for non-vector graphics for color and grayscale images are >300dpi" and
+  "IEEE standards for black and white line art are >600dpi"
+formats: "Acceptable vector file formats include PS, EPS, and PDF"
+minimum size: "IEEE recommends that you avoid sizing graphics to less than one column wide" -
+  a recommendation, so not recorded as width_min_mm.
+RELATION TO ieee_magazines: the two author centres state the same column widths and the same
+  resolutions. They are kept as separate entries because they are separate sources, and the
+  magazine centre lists a wider set of accepted formats (adding PNG and TIFF) while this page is
+  specifically about vector formats. Neither entry claims to cover the other.
+
+## springer — Springer journals
+source: https://link.springer.com/journal/11145/submission-guidelines (Artwork and Illustrations
+  Guidelines section). Harvested 2026-08-22 via browser; the page redirects fetch tools to an
+  auth endpoint.
+SCOPE: this is Springer's standard artwork boilerplate, served identically across its journals;
+  it was read from the Reading and Writing instance. A journal-specific page overrides it.
+dpi: "Scanned line drawings and line drawings in bitmap format should have a minimum resolution of
+  1200 dpi"; "Halftones should have a minimum resolution of 300 dpi"; "Combination artwork should
+  have a minimum resolution of 600 dpi"
+line: "All lines should be at least 0.1 mm (0.3 pt) wide."
+formats: "For vector graphics, the preferred format is EPS; for halftones, please use TIFF format.
+  MSOffice files are also acceptable."
+colour: "Color illustrations should be submitted as RGB"
+panel parts: "Figure parts should be denoted by lowercase letters (a, b, c, etc.)"
+type: "Keep lettering consistently sized throughout your final-sized artwork, usually about 2-3 mm
+  (8-12 pt). Variance of type size within an illustration should be minimal"
+  JUDGEMENT: recorded as 8 to 12 pt despite the "usually about" hedge, because it is a concrete
+  stated range. Contrast with the font NAMES below, which are not recorded.
+fonts: "To add lettering, it is best to use Helvetica or Arial (sans serif fonts)." NOT recorded.
+  "it is best to use" is a recommendation, the same strength as ACS's "work well", and is treated
+  the same way.
+WIDTH, and a phrasing trap: "For large-sized journals the figures should be 84 mm (for double-column
+  text areas), or 174 mm (for single-column text areas) wide and not higher than 234 mm. For
+  small-sized journals, the figures should be 119 mm wide and not higher than 195 mm."
+  The parentheticals describe the JOURNAL'S TEXT AREA, not the figure's span, so the sentence reads
+  backwards: 84 mm is one column of a two-column layout, 174 mm is the full width of a single-column
+  layout. Recorded as single 84 and double 174 on that reading. The small-format figures, 119 mm
+  wide and 195 mm high, are not recorded because the schema holds one set of widths per entry.
+greyscale: "If black and white will be shown in the print version, make sure that the main
+  information will still be visible." Conditional on the journal printing in black and white, so
+  print_greyscale is NOT set.

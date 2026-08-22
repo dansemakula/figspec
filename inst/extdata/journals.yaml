@@ -812,4 +812,83 @@ journals:
     on a rule, so print_greyscale is not set, though captions must refrain from mentioning
     colour. The Arial 7 pt figure belongs to RSC s ChemDraw structure-drawing settings,
     not to figures generally, and is not recorded.'
+- id: ieee
+  name: IEEE journals
+  publisher: IEEE
+  disciplines:
+  - engineering
+  - computer-science
+  - electronics
+  source_url: https://journals.ieeeauthorcenter.ieee.org/create-your-ieee-journal-article/create-graphics-for-your-article/resolution-and-size/
+  verified_on: '2026-08-22'
+  requirements:
+    columns:
+      single: 88.9
+      double: 182.0
+    source_quote_width: 'One column width: 3.5 inches, 88.9 millimeters, or 21 picas;
+      Two columns width: 7.16 inches, 182 millimeters, or 43 picas'
+    dpi_min: 300.0
+    dpi_line_art: 600.0
+    source_quote_dpi: IEEE standards for non-vector graphics for color and grayscale
+      images are >300dpi; IEEE standards for black and white line art are >600dpi
+    formats:
+    - ps
+    - eps
+    - pdf
+    source_quote_formats: Acceptable vector file formats include PS, EPS, and PDF
+  notes: IEEE states the millimetre figures itself, so 88.9 and 182 are its own numbers
+    rather than a conversion from inches. It recommends avoiding graphics narrower
+    than one column, which is a recommendation and so is not recorded as a minimum
+    width. This page covers vector formats specifically; IEEE s magazine author centre
+    lists a wider set including PNG and TIFF. The two centres agree on widths and
+    resolutions but are kept as separate entries because they are separate sources,
+    and neither claims to cover the other.
+- id: springer
+  name: Springer journals
+  publisher: Springer Nature
+  disciplines:
+  - multidisciplinary
+  source_url: https://link.springer.com/journal/11145/submission-guidelines
+  verified_on: '2026-08-22'
+  requirements:
+    columns:
+      single: 84.0
+      double: 174.0
+    source_quote_width: For large-sized journals the figures should be 84 mm (for
+      double-column text areas), or 174 mm (for single-column text areas) wide and
+      not higher than 234 mm.
+    height_max_mm: 234.0
+    dpi_min: 300.0
+    dpi_combination: 600.0
+    dpi_line_art: 1200.0
+    source_quote_dpi: Halftones should have a minimum resolution of 300 dpi; Combination
+      artwork should have a minimum resolution of 600 dpi; line drawings ... a minimum
+      resolution of 1200 dpi
+    min_line_pt: 0.3
+    source_quote_line: All lines should be at least 0.1 mm (0.3 pt) wide.
+    font_min_pt: 8.0
+    font_max_pt: 12.0
+    source_quote_font: Keep lettering consistently sized throughout your final-sized
+      artwork, usually about 2-3 mm (8-12 pt).
+    formats:
+    - eps
+    - tiff
+    source_quote_formats: For vector graphics, the preferred format is EPS; for halftones,
+      please use TIFF format. MSOffice files are also acceptable.
+    colour_mode:
+    - RGB
+    panel_labels: lowercase
+    source_quote_panel_labels: Figure parts should be denoted by lowercase letters
+      (a, b, c, etc.)
+  notes: 'Springer s standard artwork boilerplate, served across its journals and
+    read from the Reading and Writing instance; a journal-specific page overrides
+    it. Its width sentence reads backwards on first pass: the parentheticals describe
+    the journal s TEXT AREA, not the figure s span, so 84 mm is one column of a two-column
+    layout and 174 mm the full width of a single-column one. Small-format journals
+    use 119 mm wide and 195 mm high, which the schema cannot hold alongside these.
+    The 8 to 12 pt range is recorded despite its usually about hedge, being a concrete
+    stated range; the Helvetica or Arial suggestion is not, being phrased as it is
+    best to use. Its greyscale advice is conditional on the journal printing in black
+    and white, so print_greyscale is not set. Springer also asks that titles and captions
+    not appear inside the illustration and that shading and outline lettering be avoided.'
 
