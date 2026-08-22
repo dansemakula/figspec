@@ -90,7 +90,7 @@ annotation_rows <- function(plot, spec) {
     # The publisher states no rule, so nothing was tested. Saying the labels
     # "follow sentence case" would be a verdict we never reached.
     rows[[length(rows) + 1L]] <- new_row(
-      "Text case", "not specified by publisher",
+      "Text case", UNSTATED,
       paste0(length(labels), " label(s), not checked"), "unspecified"
     )
   } else if (length(labels)) {

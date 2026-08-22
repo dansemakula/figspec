@@ -234,7 +234,17 @@ inspect_file <- function(path) {
 
 # Report assembly --------------------------------------------------------
 
+UNSTATED <- "not specified by publisher"
+
 new_row <- function(check, requirement, actual, status) {
+  # A publisher that states no requirement cannot be passed or failed. Rather
+  # than trust every call site to remember that, enforce it here: an unstated
+  # requirement is always reported as unspecified, whatever verdict was
+  # computed. Reporting a pass against a rule that does not exist is the same
+  # error as inventing the rule.
+  if (identical(requirement, UNSTATED) && status %in% c("pass", "fail")) {
+    status <- "unspecified"
+  }
   data.frame(
     check = check, requirement = requirement, actual = actual,
     status = status, stringsAsFactors = FALSE
@@ -245,7 +255,7 @@ new_row <- function(check, requirement, actual, status) {
 # recorded as a pass: the publisher has not told us what would pass.
 graded <- function(check, requirement, actual, ok) {
   if (is.null(requirement) || is.na(requirement) || !nzchar(requirement)) {
-    return(new_row(check, "not specified by publisher", actual %||% "-", "unspecified"))
+    return(new_row(check, UNSTATED, actual %||% "-", "unspecified"))
   }
   if (is.null(actual) || is.na(actual) || !nzchar(actual)) {
     return(new_row(check, requirement, "could not determine", "unknown"))
@@ -357,7 +367,7 @@ check_journal <- function(x, journal, column = "single",
   rows[[length(rows) + 1L]] <- if (is.null(actual_w) && !is.null(px_note)) {
     # Pixel count is known but physical size is not, so the requirement cannot
     # be judged. Reporting that as a failure would be a false alarm.
-    new_row("Width", req %||% "not specified by publisher", px_note,
+    new_row("Width", req %||% UNSTATED, px_note,
             if (is.null(req)) "unspecified" else "unknown")
   } else {
     graded("Width", req,
@@ -379,8 +389,9 @@ check_journal <- function(x, journal, column = "single",
   if (is_file && isTRUE(is_vector_fmt)) {
     rows[[length(rows) + 1L]] <- new_row(
       "Resolution",
-      if (!is.null(spec$dpi_min)) paste0("min ", spec$dpi_min, " dpi") else "not specified by publisher",
-      "vector format, resolution independent", "pass"
+      if (!is.null(spec$dpi_min)) paste0("min ", spec$dpi_min, " dpi") else UNSTATED,
+      "vector format, resolution independent",
+      if (!is.null(spec$dpi_min)) "pass" else "unspecified"
     )
   } else {
     required_dpi <- switch(art_type,

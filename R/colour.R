@@ -169,7 +169,7 @@ colour_rows <- function(cols, spec, threshold = 10, plot = NULL) {
   rows <- list()
 
   if (!length(cols)) {
-    rows[[1]] <- new_row("Colour", "not specified by publisher",
+    rows[[1]] <- new_row("Colour", UNSTATED,
                          "no data colours found", "unspecified")
     return(rows)
   }
@@ -188,7 +188,7 @@ colour_rows <- function(cols, spec, threshold = 10, plot = NULL) {
     new_row("Colour pairs", "red and green not used together", rg_actual,
             if (has_rg) "fail" else "pass")
   } else {
-    new_row("Colour pairs", "not specified by publisher", rg_actual, "unspecified")
+    new_row("Colour pairs", UNSTATED, rg_actual, "unspecified")
   }
 
   # Greyscale -------------------------------------------------------------
@@ -204,13 +204,13 @@ colour_rows <- function(cols, spec, threshold = 10, plot = NULL) {
     new_row("Greyscale", "must remain readable in black and white",
             grey_actual, if (nrow(grey_pairs)) "fail" else "pass")
   } else {
-    new_row("Greyscale", "not specified by publisher", grey_actual, "unspecified")
+    new_row("Greyscale", UNSTATED, grey_actual, "unspecified")
   }
 
   # Colour vision deficiency ----------------------------------------------
   if (!requireNamespace("colorspace", quietly = TRUE)) {
     rows[[length(rows) + 1L]] <- new_row(
-      "Colour vision", "not specified by publisher",
+      "Colour vision", UNSTATED,
       "install colorspace to test", "unknown"
     )
   } else {
@@ -226,7 +226,7 @@ colour_rows <- function(cols, spec, threshold = 10, plot = NULL) {
       "separable under deuteranopia, protanopia and tritanopia"
     }
     rows[[length(rows) + 1L]] <- new_row(
-      "Colour vision", "not specified by publisher", cvd_actual, "unspecified"
+      "Colour vision", UNSTATED, cvd_actual, "unspecified"
     )
   }
 
@@ -238,17 +238,17 @@ colour_rows <- function(cols, spec, threshold = 10, plot = NULL) {
     other_cue <- length(lts) > 1L || n_shapes > 1L
     if (length(cols) > 2 && !other_cue && (nrow(grey_pairs) > 0 || has_rg)) {
       rows[[length(rows) + 1L]] <- new_row(
-        "Redundant coding", "not specified by publisher",
+        "Redundant coding", UNSTATED,
         "colour is the only cue: all series share one shape and one line type",
         "unspecified"
       )
     } else if (length(cols) > 2 && other_cue && nrow(grey_pairs) > 0) {
       rows[[length(rows) + 1L]] <- new_row(
-        "Redundant coding", "not specified by publisher",
+        "Redundant coding", UNSTATED,
         paste0("colours merge in greyscale but ",
                if (n_shapes > 1L) paste0(n_shapes, " shapes") else paste0(length(lts), " line types"),
                " still separate the series"),
-        "pass"
+        "unspecified"
       )
     }
   }

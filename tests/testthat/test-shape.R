@@ -35,7 +35,7 @@ test_that("shape coding rescues a palette that merges in greyscale", {
     ggplot2::scale_colour_manual(values = cols) +
     ggplot2::scale_shape_manual(values = figspec_shapes(3))
   r <- check_colour_safety(shaped, "royal_society")
-  expect_equal(r[r$check == "Redundant coding", ]$status, "pass")
+  expect_equal(r[r$check == "Redundant coding", ]$status, "unspecified")
 
   unshaped <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
     ggplot2::geom_point() + ggplot2::scale_colour_manual(values = cols)
