@@ -229,3 +229,53 @@ test_that("Nature labels panels in lower case, like AGU and unlike Cell Press", 
   upper <- check_journal(comp + patchwork::plot_annotation(tag_levels = "A"), "nature")
   expect_equal(upper[upper$check == "Panel labels", ]$status, "fail")
 })
+
+test_that("a comma thousands separator fails the Royal Society's number rule", {
+  d <- data.frame(x = c(1e3, 5e6, 1e7), y = c(1, 2, 3))
+  base <- ggplot2::ggplot(d, ggplot2::aes(x, y)) + ggplot2::geom_point()
+
+  commas <- base + ggplot2::scale_x_continuous(labels = scales::comma)
+  expect_gt(length(labels_with_comma_thousands(commas)), 0)
+  r <- check_journal(commas, "royal_society")
+  expect_equal(r[r$check == "Number format", ]$status, "fail")
+  expect_match(r[r$check == "Number format", ]$actual, "comma used")
+
+  spaced <- base + ggplot2::scale_x_continuous(
+    labels = function(v) format(v, big.mark = " ", scientific = FALSE))
+  expect_length(labels_with_comma_thousands(spaced), 0)
+  expect_equal(check_journal(spaced, "royal_society")[
+    check_journal(spaced, "royal_society")$check == "Number format", ]$status, "pass")
+})
+
+test_that("a decimal is not mistaken for a thousands separator", {
+  # The pattern requires exactly three digits after the comma, so a decimal
+  # comma or a short number does not match.
+  expect_false(grepl("[0-9],[0-9]{3}", "1,5"))
+  expect_false(grepl("[0-9],[0-9]{3}", "0,25"))
+  expect_true(grepl("[0-9],[0-9]{3}", "10,000"))
+})
+
+test_that("only journals stating a number rule are checked against one", {
+  d <- data.frame(x = c(1e3, 5e6, 1e7), y = c(1, 2, 3))
+  commas <- ggplot2::ggplot(d, ggplot2::aes(x, y)) + ggplot2::geom_point() +
+    ggplot2::scale_x_continuous(labels = scales::comma)
+  expect_false("Number format" %in% check_journal(commas, "plos_one")$check)
+})
+
+test_that("Nature and the Royal Society require opposite panel-label styling", {
+  # Both want lower-case letters, but Nature specifies upright and the Royal
+  # Society italicised. figspec reads the tag level, not the styling, so both
+  # record lowercase and neither italic rule is checked. The conflict is real
+  # and is recorded in the entries.
+  expect_equal(journal_spec("nature")$panel_labels, "lowercase")
+  expect_equal(journal_spec("royal_society")$panel_labels, "lowercase")
+  expect_match(journal_spec("nature")$source_quote_panel_labels, "upright \\(not italic\\)")
+  expect_match(journal_spec("royal_society")$source_quote_panel_labels, "italicized")
+  expect_match(journal_spec("royal_society")$notes, "conflict|Nature requires")
+})
+
+test_that("the Royal Society requires tables as editable text", {
+  ts <- table_spec("royal_society")
+  expect_equal(ts$format, "editable")
+  expect_match(ts$source_quote, "editable format")
+})

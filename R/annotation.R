@@ -119,6 +119,25 @@ plot_text_colour <- function(plot) {
   tryCatch(ggplot2::calc_element("text", th)$colour, error = function(e) NULL)
 }
 
+# Axis tick label formatting ----------------------------------------------
+
+# Axis labels that use a comma as a thousands separator. The pattern is a digit
+# followed by a comma and exactly three digits, which is what scales::comma()
+# produces and what a decimal comma would not.
+labels_with_comma_thousands <- function(plot) {
+  b <- tryCatch(ggplot2::ggplot_build(plot), error = function(e) NULL)
+  if (is.null(b)) return(NULL)
+  pp <- tryCatch(b$layout$panel_params[[1]], error = function(e) NULL)
+  if (is.null(pp)) return(NULL)
+  labs <- character(0)
+  for (ax in c("x", "y")) {
+    l <- tryCatch(pp[[ax]]$get_labels(), error = function(e) NULL)
+    if (!is.null(l)) labs <- c(labs, as.character(l))
+  }
+  labs <- labs[!is.na(labs)]
+  unique(labs[grepl("[0-9],[0-9]{3}", labs)])
+}
+
 # Rows shared with check_journal() ----------------------------------------
 
 annotation_rows <- function(plot, spec) {
@@ -185,6 +204,25 @@ annotation_rows <- function(plot, spec) {
       if (is.null(col)) NULL else paste0("text is ", col),
       !is.null(col) && !is_coloured(col)
     )
+  }
+
+  # Number formatting -----------------------------------------------------
+  if (!is.null(spec$thousands_separator)) {
+    commas <- labels_with_comma_thousands(plot)
+    if (!is.null(commas)) {
+      rows[[length(rows) + 1L]] <- graded(
+        "Number format",
+        paste0("thousands separated by ", spec$thousands_separator, ", not commas"),
+        if (length(commas)) {
+          paste0("comma used in axis label", if (length(commas) > 1) "s" else "",
+                 ": ", paste(utils::head(commas, 3), collapse = ", "),
+                 if (length(commas) > 3) paste0(" and ", length(commas) - 3, " more") else "")
+        } else {
+          "no comma thousands separators in axis labels"
+        },
+        length(commas) == 0
+      )
+    }
   }
 
   # Axis origin -----------------------------------------------------------

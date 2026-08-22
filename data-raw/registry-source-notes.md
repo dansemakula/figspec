@@ -483,3 +483,29 @@ CONTRAST WITH rsc_books: books are 200 x 120 mm at 600 dpi with a four-part comp
 graphical abstract (table of contents entry): "The figure should be a maximum size of 8 cm wide x
   4 cm high"; "Figures should be supplied as TIFF files, with a resolution of 600 dpi or greater";
   "The text supplied should be 1-2 sentences long, using a maximum of 250 characters."
+
+## royal_society — SUPPLEMENT: full figure section (completes a thin entry)
+source: https://royalsociety.org/journals/authors/author-guidelines/
+harvested: 2026-08-22, supplied by the maintainer. The page timed out twice under browser
+  automation, which is why the entry previously held only the fields an earlier fetch summary gave.
+CORROBORATES what was already recorded: formats PNG/EPS/TIFF/JPG/JPEG with TeX figures converted to
+  PS or EPS; Times New Roman; "9pt, 11pt leading is preferred ... but should be no smaller than
+  7.5pt"; and colour online with black and white in print by default.
+NEW, and recorded:
+  panel labels: "Figure parts should be labelled alphabetically and in a consistent manner (left to
+    right, then top to bottom) ... Alphabetical labels should be italicized in roman brackets, e.g.
+    '(a)'" -> panel_labels lowercase.
+    DIRECT CONFLICT WORTH KNOWING: Nature requires panel labels "upright (not italic)"; the Royal
+    Society requires them italicised. Two publishers, opposite rules, same element. figspec checks
+    which tag level is used, not its styling, so neither italic rule is checked - but the conflict
+    is the clearest argument there is for per-journal specs.
+  numbers: "In numbers, thousands should be separated by thin spaces, not commas (e.g. 10 000 000)"
+    -> thousands_separator. Checkable: axis tick labels are readable from a built plot, and a comma
+    thousands separator is a digit followed by a comma and exactly three digits, which is what
+    scales::comma() emits and what a decimal comma is not.
+  tables: "Final submission: figures should be uploaded as separate files and tables must be
+    provided in an editable format." -> recorded in the tables block. This is the editable-text rule
+    predicted earlier when discussing whether tables were worth covering.
+NEW, stated but NOT recorded: a thin space between a value and its unit (300 nm, 400 um); a full
+  space either side of an equals sign; sub-parts labelled with bracketed roman numerals; figure
+  labels on a coloured background placed inside a white circle.

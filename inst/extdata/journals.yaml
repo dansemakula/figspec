@@ -302,7 +302,7 @@ journals:
   publisher: The Royal Society
   disciplines: multidisciplinary
   source_url: https://royalsociety.org/journals/authors/author-guidelines/
-  verified_on: '2026-08-21'
+  verified_on: '2026-08-22'
   requirements:
     formats:
     - png
@@ -317,11 +317,30 @@ journals:
       by default
     source_quote_font: 9pt, 11pt leading is preferred. Text can be reduced, where
       necessary or restricted for space, but should be no smaller than 7.5pt
-  notes: |
-    All figures are published in colour online but reproduced in black and white in print versions by default, so figures should remain readable without colour.
+    panel_labels: lowercase
+    source_quote_panel_labels: Figure parts should be labelled alphabetically and
+      in a consistent manner (left to right, then top to bottom) ... Alphabetical
+      labels should be italicized in roman brackets, e.g. (a)
+    thousands_separator: a thin space
+    source_quote_numbers: In numbers, thousands should be separated by thin spaces,
+      not commas (e.g. 10 000 000)
+  notes: 'Figure parts are labelled alphabetically, left to right then top to bottom,
+    all in the same position, with alphabetical labels italicised in round brackets
+    and sub-parts in bracketed roman numerals. figspec checks which tag level is used,
+    not its styling, so the italics and brackets are not checked. Worth noting that
+    Nature requires panel labels UPRIGHT, not italic, while the Royal Society requires
+    them italicised: a direct conflict between two publishers, and a reason per-journal
+    specs matter. The Royal Society also asks for a thin space between a value and
+    its unit and a full space either side of an equals sign; neither is checked, only
+    the thousands separator. Figures are published in colour online but reproduced
+    in black and white in print by default.'
   not_stated:
   - columns
   - dpi_min
+  tables:
+    format: editable
+    source_quote: 'Final submission: figures should be uploaded as separate files
+      and tables must be provided in an editable format.'
 - id: copernicus
   name: Copernicus Publications journals
   publisher: Copernicus (EGU)
@@ -921,8 +940,7 @@ journals:
     width_mm: 80.0
     height_mm: 40.0
     dpi_min: 600.0
-    formats:
-    - tiff
+    formats: tiff
     max_characters: 250.0
     source_quote: The figure should be a maximum size of 8 cm wide x 4 cm high ...
       Figures should be supplied as TIFF files, with a resolution of 600 dpi or greater
