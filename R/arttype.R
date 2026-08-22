@@ -9,13 +9,39 @@ plot_has_raster <- function(plot) {
   any(vapply(ls, function(l) any(class(l$geom) %in% RASTER_GEOMS), logical(1)))
 }
 
-plot_is_greyscale <- function(plot) {
+# Classify what a plot puts on the page, in the terms publishers use.
+#
+#   bitonal    pure black and white, no grey. This is line art in the prepress
+#              sense: a 1-bit image whose sharp edges alias badly at low
+#              resolution, which is why publishers ask 1200 dpi for it.
+#   grayscale  greys present but no hue. Continuous tone, so a lower bar.
+#   colour     any hue present.
+#   continuous a raster layer: photographs, heatmaps, density surfaces.
+#
+# Five publishers in the registry define line art as monochrome: Springer's
+# "Black and white graphic with no shading", ACS's "Black and white line art",
+# IEEE's "black and white line art", and Taylor & Francis and OUP both writing
+# "monochrome". A coloured chart is not line art on any of those definitions.
+classify_tone <- function(plot) {
+  if (plot_has_raster(plot)) return("continuous")
   cols <- plot_colours(plot)
-  if (!length(cols)) return(TRUE)
-  all(vapply(cols, function(c) {
-    m <- tryCatch(grDevices::col2rgb(c), error = function(e) NULL)
-    !is.null(m) && m[1] == m[2] && m[2] == m[3]
-  }, logical(1)))
+  if (!length(cols)) return("bitonal")
+  m <- vapply(cols, function(c) {
+    v <- tryCatch(grDevices::col2rgb(c), error = function(e) NULL)
+    if (is.null(v)) return(c(NA_real_, NA_real_, NA_real_))
+    as.numeric(v[, 1])
+  }, numeric(3))
+  m <- m[, !apply(is.na(m), 2, any), drop = FALSE]
+  if (!ncol(m)) return("bitonal")
+  grey <- apply(m, 2, function(v) v[1] == v[2] && v[2] == v[3])
+  if (any(!grey)) return("colour")
+  # All grey. Pure black and white is line art; anything in between is not.
+  levels <- m[1, ]
+  if (all(levels %in% c(0, 255))) "bitonal" else "grayscale"
+}
+
+plot_is_greyscale <- function(plot) {
+  classify_tone(plot) %in% c("bitonal", "grayscale")
 }
 
 #' Which resolution rule applies to this figure
@@ -44,25 +70,24 @@ suggest_art_type <- function(plot, journal = NULL) {
   if (!is_ggplot_object(plot)) {
     stop("`plot` must be a ggplot object.", call. = FALSE)
   }
-  raster <- plot_has_raster(plot)
-  grey <- plot_is_greyscale(plot)
-
-  suggestion <- if (raster) "combination" else "line"
+  tone <- classify_tone(plot)
+  suggestion <- switch(tone,
+    bitonal = "line", grayscale = "bw", colour = "colour", continuous = "combination")
 
   cli::cli_h1("Which resolution rule applies")
-  if (raster) {
-    cli::cli_alert_info(
-      "This plot draws continuous tone, so it is not pure line art. Publishers call an image carrying lettering {.strong combination art}."
-    )
-  } else if (grey) {
-    cli::cli_alert_info(
-      "This plot is lines, flat fills and text, with no colour and no continuous tone. That is {.strong line art} on every definition in the registry."
-    )
-  } else {
-    cli::cli_alert_info(
-      "This plot is lines, flat fills and text, in colour. Publishers disagree about this case: PNAS gives {.emph line art, e.g., bar graphs} regardless of colour, while Springer defines line art as a {.emph Black and white graphic with no shading}, which would make this combination art."
-    )
-  }
+  switch(tone,
+    bitonal = cli::cli_alert_info(
+      "This plot is pure black and white with no grey. That is {.strong line art} in the sense publishers mean, and it carries the highest resolution bar: sharp one-bit edges alias badly when sampled too coarsely."
+    ),
+    grayscale = cli::cli_alert_info(
+      "This plot uses grey but no colour, so it is {.strong grayscale art}, not line art. ggplot2's default bar fill is a mid grey, so a default bar chart lands here rather than in line art."
+    ),
+    colour = cli::cli_alert_info(
+      "This plot uses colour, so it is not line art: five publishers in the registry define line art as black and white or monochrome. Treat it as {.strong colour art}. Springer would call a colour diagram {.strong combination art}, which is a higher bar, so check its wording if you are submitting there."
+    ),
+    continuous = cli::cli_alert_info(
+      "This plot draws continuous tone. An image carrying lettering is {.strong combination art}; a photograph without lettering is a halftone."
+    ))
 
   if (!is.null(journal)) {
     spec <- journal_spec(journal)

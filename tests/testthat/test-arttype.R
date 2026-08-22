@@ -12,21 +12,42 @@ test_that("continuous-tone layers are told apart from lines and flat fills", {
       ggplot2::geom_tile()))
 })
 
-test_that("greyscale is distinguished from colour", {
-  expect_true(plot_is_greyscale(bars()))
-  expect_false(plot_is_greyscale(
-    ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
-      ggplot2::geom_point()))
-})
+test_that("tone is classified the way publishers define it", {
+  # Line art is monochrome: Springer's "Black and white graphic with no
+  # shading", ACS's and IEEE's "black and white line art", and Taylor & Francis
+  # and OUP both writing "monochrome". In prepress it is a one-bit image.
+  bitonal <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+    ggplot2::geom_point(colour = "black")
+  expect_equal(classify_tone(bitonal), "bitonal")
 
-test_that("the suggestion follows what the plot contains", {
-  expect_equal(suppressMessages(suggest_art_type(bars())), "line")
-  expect_equal(suppressMessages(suggest_art_type(raster_plot())), "combination")
-  # A coloured vector plot is still line art in the sense PNAS means, but the
-  # explanation must name the disagreement rather than hide it.
+  # ggplot2's default bar fill is #595959, a mid grey. That is grayscale art,
+  # NOT line art, and it carries a lower resolution bar.
+  expect_equal(classify_tone(bars()), "grayscale")
+
   coloured <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
     ggplot2::geom_point()
-  expect_equal(suppressMessages(suggest_art_type(coloured)), "line")
+  expect_equal(classify_tone(coloured), "colour")
+  expect_equal(classify_tone(raster_plot()), "continuous")
+})
+
+test_that("the suggestion follows the classification", {
+  expect_equal(suppressMessages(suggest_art_type(
+    ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+      ggplot2::geom_point(colour = "black"))), "line")
+  expect_equal(suppressMessages(suggest_art_type(bars())), "bw")
+  expect_equal(suppressMessages(suggest_art_type(raster_plot())), "combination")
+  expect_equal(suppressMessages(suggest_art_type(
+    ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
+      ggplot2::geom_point())), "colour")
+})
+
+test_that("a coloured plot is never suggested as line art", {
+  # Suggesting line art for a colour figure would push a user to 1200 dpi when
+  # the journal asks 300, which is the opposite of the harm this helper exists
+  # to prevent.
+  coloured <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
+    ggplot2::geom_point()
+  expect_false(identical(suppressMessages(suggest_art_type(coloured)), "line"))
 })
 
 test_that("the art type genuinely changes the verdict", {
@@ -43,23 +64,25 @@ test_that("the art type genuinely changes the verdict", {
     "fail")
 })
 
-test_that("a lenient default warns rather than passing silently", {
-  # Not choosing an art type checks against the general minimum, which for a
-  # plot that looks like line art can be a quarter of what the journal asks.
-  r <- check_journal(bars(), "bmj")
-  expect_match(r[r$check == "Resolution", ]$requirement, "looks like line art")
+test_that("the line-art nudge fires only for genuinely bitonal plots", {
+  bitonal <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+    ggplot2::geom_point(colour = "black")
+  r <- check_journal(bitonal, "bmj")
+  expect_match(r[r$check == "Resolution", ]$requirement, "pure black and white")
 
-  # Choosing explicitly is taken at face value: no second-guessing.
-  r2 <- check_journal(bars(), "bmj", art_type = "colour")
-  expect_false(grepl("looks like line art", r2[r2$check == "Resolution", ]$requirement))
+  # A grey bar chart is grayscale art, so no line-art nudge. This is the case I
+  # first got wrong: a default bar chart is not line art.
+  expect_false(grepl("pure black and white",
+                     check_journal(bars(), "bmj")[
+                       check_journal(bars(), "bmj")$check == "Resolution", ]$requirement))
 
-  # A continuous-tone plot is not line art, so no warning.
-  r3 <- check_journal(raster_plot(), "bmj")
-  expect_false(grepl("looks like line art", r3[r3$check == "Resolution", ]$requirement))
+  # Choosing explicitly is taken at face value.
+  r2 <- check_journal(bitonal, "bmj", art_type = "colour")
+  expect_false(grepl("pure black and white", r2[r2$check == "Resolution", ]$requirement))
 
-  # Nothing to warn about where the journal states no line-art rule.
-  r4 <- check_journal(bars(), "frontiers")
-  expect_false(grepl("looks like line art", r4[r4$check == "Resolution", ]$requirement))
+  # Nothing to say where the journal states no line-art rule.
+  r4 <- check_journal(bitonal, "frontiers")
+  expect_false(grepl("pure black and white", r4[r4$check == "Resolution", ]$requirement))
 })
 
 test_that("suggest_art_type refuses a file, which cannot be inspected this way", {

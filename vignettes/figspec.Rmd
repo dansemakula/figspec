@@ -143,18 +143,29 @@ Publishers set different resolutions for different kinds of artwork, and the
 gap is large: 300 dpi generally, against 600 to 1200 dpi for line art. Twelve
 entries in the registry state a separate line-art figure.
 
-Most R plots are line art. PNAS says so explicitly, giving "line art, e.g., bar
-graphs". So a bar chart saved at 300 dpi can be a quarter of what the journal
-asked for, and nothing in an ordinary workflow says so.
+Line art is **monochrome**, and that is not a quibble. Springer defines it as a
+"Black and white graphic with no shading"; ACS and IEEE both write "black and
+white line art"; Taylor & Francis and OUP both write "monochrome". In prepress
+it is a one-bit image, and it carries the highest resolution bar precisely
+because sharp one-bit edges alias badly when sampled too coarsely.
+
+So a colour figure is *not* line art, and asking 1200 dpi of it would be the
+wrong advice. `suggest_art_type()` classifies what the plot actually contains:
 
 ```{r}
-suggest_art_type(ggplot(mtcars, aes(factor(cyl))) + geom_bar(), "bmj")
+suggest_art_type(ggplot(mtcars, aes(wt, mpg)) + geom_point(colour = "black"), "bmj")
+```
+
+ggplot2's default bar fill is `#595959`, a mid grey, so a default bar chart is
+grayscale art rather than line art:
+
+```{r}
+suggest_art_type(ggplot(mtcars, aes(factor(cyl))) + geom_bar())
 ```
 
 `check_journal()` checks against the general minimum unless you say otherwise,
-and says so when a plot looks like line art and the journal holds line art to
-more. It does not change the verdict for you: publishers genuinely disagree
-about whether a coloured plot counts, so the choice stays yours.
+and mentions the line-art rule only when a plot really is pure black and white
+and the journal holds line art to more. It does not change the verdict for you.
 
 ## Checking a whole submission
 

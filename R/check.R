@@ -430,9 +430,9 @@ check_journal <- function(x, journal, column = "single",
     if (!art_type_given && !is_file && !is.null(spec$dpi_line_art) &&
         !is.null(required_dpi) &&
         as.numeric(spec$dpi_line_art) > as.numeric(required_dpi) &&
-        !plot_has_raster(x)) {
+        identical(classify_tone(x), "bitonal")) {
       line_art_warning <- paste0(
-        "; this plot looks like line art, which this journal holds to ",
+        "; this plot is pure black and white, which this journal holds to ",
         spec$dpi_line_art, " dpi - see suggest_art_type()"
       )
     }
