@@ -1,0 +1,179 @@
+---
+title: "The registry: provenance, and adding your own"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{The registry: provenance, and adding your own}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+```{r setup}
+library(figspec)
+```
+
+figspec's code is small. The registry is the part that makes it worth trusting,
+and it is built so that growing it cannot quietly corrupt it. This vignette
+covers how it is organised, and how to add to it.
+
+## Every entry names its source
+
+```{r}
+spec <- journal_spec("elsevier")
+spec$source_url
+spec$verified_on
+```
+
+The package **refuses to load** an entry without both. That is a load-time
+error, not a warning.
+
+Load-bearing numbers also carry the publisher's own wording, so an entry can be
+audited without leaving the file:
+
+```{r}
+spec$source_quote_width
+```
+
+## Three states, not two
+
+A blank field means one of two different things, and conflating them puts a
+claim in figspec's mouth that nobody earned.
+
+| In the entry | Reported as | Means |
+|---|---|---|
+| A value in `requirements:` | graded `pass` / `fail` | The publisher states it |
+| Listed in `not_stated:` | *not specified by publisher* | Someone read the page and confirmed it is absent |
+| In neither | *not yet harvested* | **Nobody has looked yet** |
+
+```{r}
+status <- registry_status()
+status[status$id %in% c("cell_press", "aps"),
+       c("id", "stated", "confirmed_absent", "unharvested")]
+```
+
+The three always sum to the full field list, so a half-finished entry cannot
+pass as a complete one. Listing a field in both `requirements:` and
+`not_stated:` is a load-time error.
+
+## Hedged wording
+
+Publishers hedge constantly. What decides how a rule is recorded is the **main
+verb of the sentence stating it**, not the presence of a hedge.
+
+| Wording | Recorded as |
+|---|---|
+| OUP: whole guide is *"tips rather than strict rules"*, then *"at least 300dpi"* | Requirement. The hedge is about achievability, not applicability |
+| Elsevier: *"a rule-of-thumb rather than a strict rule"*, then *"no smaller than 6 pt"* | Requirement |
+| MDPI: *"should be ... preferably no less than 600 dpi"* | Requirement. The verb is *should* |
+| Sage: *"We recommend having no more than 7 series"* | Advisory. The verb is *recommend*: reported, never graded |
+| PLOS: *"Use only Arial, Times, or Symbol font"* | Requirement. A closed set |
+| ACS: *"Helvetica or Arial fonts work well"* | Not recorded. It excludes nothing |
+
+The tie-breaker for anything that rule does not settle: **do not grade**. An
+unrecorded rule costs a user a check. A wrongly graded one tells them they
+broke a rule that does not exist.
+
+## Publisher-wide entries are defaults, not guarantees
+
+Most entries cover a whole portfolio, but publishers say plainly that
+individual journals override them. Elsevier's own page:
+
+> some of our publications have special instructions beyond the common
+> guidelines given here. Please check the journal-specific guide for authors
+
+Roughly a third of publishers decline to state column widths centrally at all,
+because widths depend on a journal's page layout. Taylor & Francis, Sage, AGU
+and MDPI all state resolution and formats but send you to the journal for size.
+
+```{r}
+fig_columns("taylor_francis")
+```
+
+## Guidelines change
+
+An entry read two years ago reads exactly like one read yesterday unless
+something says otherwise, and a confidently wrong registry is worse than no
+registry.
+
+```{r}
+stale_entries(max_age_days = 365)
+```
+
+## Adding a journal
+
+```{r, eval = FALSE}
+new_journal_entry("plos_biology", "PLOS Biology",
+                  "https://journals.plos.org/plosbiology/s/figures")
+```
+
+That prints a skeleton naming every field figspec understands. Fill in what the
+page states, list what you confirmed absent under `not_stated:`, and leave the
+rest alone — an untouched field reports as not yet harvested, which is true.
+
+Then validate before opening a pull request:
+
+```{r, eval = FALSE}
+validate_registry_file("my-journals.yaml")
+load_journals("my-journals.yaml")
+```
+
+Validation reports every problem rather than stopping at the first, and refuses
+entries with no provenance, entries putting a requirement inside `house_style:`,
+and entries claiming a field is both stated and absent.
+
+For a journal figspec does not ship, or an internal format of your own:
+
+```{r}
+register_journal(
+  id = "lab_report", name = "Our lab format",
+  source_url = "internal handbook v3", verified_on = "2026-08-22",
+  requirements = list(columns = list(single = 100, double = 170),
+                      font_min_pt = 9)
+)
+fig_width("lab_report", "double")
+```
+
+`journals()` marks these `origin = "user"`, so it stays visible which entries
+figspec stands behind. Provenance is required here too: if the requirements
+came from you rather than a publisher, say so in `source_url`.
+
+## Style is separate from compliance
+
+A house style is the visual half of a figure, and it is applied **underneath**
+the journal's requirements so it can never make a figure non-compliant.
+
+```{r}
+library(ggplot2)
+register_house_style(
+  "mylab",
+  theme_minimal() + theme(panel.grid.minor = element_blank(),
+                          axis.text = element_text(size = 5))
+)
+th <- theme_journal("plos_one", style = "mylab")
+```
+
+The style asked for 5 pt axis text; PLOS ONE states a floor of 8. The journal
+wins, figspec says which elements it overrode, and everything in the style that
+does not conflict is kept:
+
+```{r}
+class(th$panel.grid.minor)
+```
+
+Registry entries may also carry a `house_style:` block, which is never checked
+and never enforced. Putting a requirement field inside one is a load-time
+error. That line is what makes a `pass` mean something.
+
+## Collecting entries at scale
+
+`data-raw/harvest.R` in the package sources holds a toolkit: journal discovery
+through the DOAJ API, direct and archived fetch lanes, extraction of the
+publisher's own specification sentences, and emission of reviewable candidates.
+
+It never writes to the registry. It produces candidates with the publisher's
+wording attached, for a human to accept, correct or discard. Auto-populating
+the registry would destroy the one property that makes it worth trusting, which
+is that every value in it was read by somebody.

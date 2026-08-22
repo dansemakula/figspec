@@ -18,91 +18,178 @@ library(figspec)
 
 ## The problem
 
-A journal's figure requirements are specific and they differ between
-publishers. Cell Press asks for figures at 85, 114 or 174 mm and type between
-6 and 8 pt. Frontiers asks for 85 or 180 mm and type no smaller than 8 pt.
-PLOS ONE asks for a width between 66.8 and 190.5 mm and type between 8 and
-12 pt. Nothing in a normal plotting workflow makes any of that visible.
+Journals publish precise rules for the figures you submit, and the rules
+differ. Cell Press asks for 85, 114 or 174 mm wide with type between 6 and 8 pt.
+Science asks for 57, 121 or 184 mm with type no smaller than 5 pt. PNAS caps
+type at 12 pt and asks that numerical axes reach zero. Nature wants panel
+labels upright; the Royal Society wants them italicised.
 
-## Checking before you save
+Nothing in an ordinary plotting workflow makes any of that visible, and most
+people find out at the production stage, after acceptance.
+
+## The one moment that matters
+
+**Type size only exists before you save.** Once a figure is a TIFF it is
+pixels, and the point sizes are gone. That single fact shapes the whole
+workflow: check the plot object, then save it.
 
 ```{r}
-p <- ggplot(mtcars, aes(wt, mpg)) +
+p <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
   geom_point() +
-  labs(title = "Fuel economy", x = "Weight (1000 lbs)", y = "Miles per gallon")
+  labs(title = "Fuel economy", x = "Weight (1000 lbs)", y = "Miles per gallon",
+       colour = "Cylinders")
 
-check_journal(p, "plos_one")
+check_journal(p, "cell_press", column = "single")
 ```
 
-The type size check is the one that catches people. ggplot2's default base size
-is 11 pt, which puts the title at 13.2 pt and axis text at 8.8 pt. PLOS ONE
-caps figure type at 12 pt, so the title fails.
+Two real failures in an ordinary ggplot, from defaults nobody thinks about.
+ggplot2's base size is 11 pt, which puts text between 8.8 and 13.2 pt against
+Cell Press's 6 to 8. And ggplot2's default palette contains a red and a green,
+which Cell Press states should not be used together.
+
+## Reading the report
+
+Each requirement gets one of four outcomes, and only one of them is a problem
+you must fix.
+
+| Outcome | Meaning |
+|---|---|
+| `pass` | Meets the requirement |
+| `fail` | Breaches it |
+| `unspecified` | The publisher does not state this. Nothing can be concluded |
+| `unknown` | The requirement exists, but this input cannot answer it |
+
+`unspecified` splits further, and the distinction matters:
+
+```{r}
+r <- check_journal(p, "frontiers")
+r[r$check %in% c("File size", "Height"), c("check", "requirement", "status")]
+```
+
+Frontiers' file-size rule was read and confirmed absent, so it is *not
+specified by publisher*. Its height rule has not been resolved into a number by
+anyone, so it is *not yet harvested for this journal*. The first is a fact
+about Frontiers. The second is a fact about this registry, and saying so is the
+difference between a registry you can trust and one that is confidently wrong.
 
 ## Fixing it
 
-`theme_journal()` enforces the journal's typography without imposing a look of
-its own. It takes a base theme and pins every text element inside the
-journal's stated range.
+`theme_journal()` applies every requirement a theme can express: the font
+family, the type floor and ceiling, stated line weights, and structural rules
+such as Nature's requirement that axis lines and tick marks be drawn.
 
 ```{r}
-p_fixed <- p + theme_journal("plos_one")
-check_journal(p_fixed, "plos_one")
+fixed <- p +
+  scale_colour_figspec("cividis") +
+  scale_shape_manual(values = figspec_shapes(3)) +
+  aes(shape = factor(cyl)) +
+  theme_journal("cell_press")
+
+r <- check_journal(fixed, "cell_press", column = "single")
+r[r$status %in% c("pass", "fail"), c("check", "actual", "status")]
 ```
+
+## Colour, and why shape matters
+
+Three colour findings are reported, and which of them can *fail* depends on
+what the publisher actually states.
+
+```{r}
+check_colour_safety(p, "cell_press")[, c("check", "actual", "status")]
+```
+
+Red-and-green is a **requirement** for Cell Press because Cell Press states it.
+Greyscale separability is a requirement for the Royal Society, which prints in
+black and white by default. Colour-vision safety is reported for every journal
+but is always `unspecified`, because it is good practice rather than a
+published rule.
+
+Note the last row. If colours merge but shapes differ, the figure still reads:
+
+```{r}
+check_colour_safety(fixed, "royal_society")[
+  , c("check", "actual", "status")]
+```
+
+`figspec_palettes()` lists the palettes that ship with the package, each with
+its source. Cividis is safe both under colour vision deficiency and in
+greyscale; Okabe-Ito is safe under colour vision deficiency but **not** in
+greyscale, because two of its colours sit at almost the same lightness.
 
 ## Saving at the right size
 
-This is the part that matters most, and it is easy to get wrong.
-
-Type size in a figure is absolute. If you save a figure at 180 mm and the
-journal places it in an 85 mm column, the whole figure is scaled to 47% and
-your compliant 8 pt label arrives at 3.8 pt. Saving at the journal's own
-column width is what stops that happening.
+This is the part that is easiest to get wrong. Type size is absolute. Save a
+figure at 180 mm, have the journal place it in an 85 mm column, and everything
+is scaled to 47%: a compliant 8 pt label arrives at 3.8 pt.
 
 ```{r, eval = FALSE}
-ggsave_journal("figure_1.tiff", p_fixed, journal = "plos_one", column = "single")
+ggsave_journal("figure_1.tiff", fixed, journal = "cell_press", column = "single")
 ```
 
-`ggsave_journal()` reads the width from the registry, defaults the resolution
-to the journal's stated minimum, warns if the format is not one the journal
-accepts, and checks the file it just wrote.
+`ggsave_journal()` takes the width from the registry, defaults the resolution
+to the journal's stated minimum, picks a device that can render the required
+font, and re-checks the file it wrote.
 
-## Reading the registry
+Column names come from the journal, not from a fixed vocabulary:
 
 ```{r}
-journals(discipline = "physics")
+fig_columns("science")
+fig_columns("cell_press")
 ```
 
-```{r}
-journal_spec("cell_press")
+## Checking a whole submission
+
+```{r, eval = FALSE}
+check_submission("figures/", "cell_press")
+#> ✔ Figure_1.tiff  single  all requirements met
+#> ✖ Figure_2.tiff  double  failed: Resolution, File format
 ```
+
+Files are checked as files, so geometry, format, resolution and file size can
+be judged but type size cannot. That is why step one happens before saving.
+
+## In R Markdown or Quarto
+
+A large share of academic figures never pass through `ggsave()` at all: they
+come out of a knitr chunk at whatever `fig.width` happens to be.
+
+```{r}
+figspec_chunk_opts("cell_press", "double")
+```
+
+Put that in a setup chunk with `figspec_knitr_setup("cell_press", "double")`
+and every figure in the document is emitted at the journal's size.
+
+## When the paper is rejected
+
+The next journal has different rules, and they can be incompatible: Cell Press
+wants type between 6 and 8 pt, PLOS ONE between 8 and 12.
+
+```{r, eval = FALSE}
+refit_journal(my_plots, journal = "plos_one", outdir = "figures_plos/")
+```
+
+`refit_journal()` re-themes and re-exports the set. It works from plot objects
+and refuses saved files, because type size cannot be recovered from a finished
+TIFF and a re-fitted file could not be trusted.
+
+## Other display items
+
+Figures are not the only thing with rules.
+
+```{r}
+graphical_abstract_spec("rsc")
+```
+
+`table_spec()` and `media_spec()` do the same for tables and for supplementary
+video and audio.
 
 ## What figspec will not tell you
 
-figspec reports four outcomes, and only one of them is a problem you must fix.
+It will not tell you a figure is fine when the publisher never said what fine
+means. It will not convert a stated pixel size into millimetres without a
+stated resolution. It will not grade a recommendation as a failure. And it will
+not recover type size from a saved raster.
 
-`unspecified` means the publisher does not state that requirement. That is not
-a pass. If Frontiers says nothing about maximum file size, figspec will not
-reassure you that your file size is fine.
-
-`unknown` means the requirement exists but the input cannot answer it. Type
-size cannot be recovered from a TIFF, so checking a saved raster file reports
-type size as unknown. Check the plot object before you save it, where the
-answer is knowable.
-
-```{r}
-r <- check_journal(p_fixed, "frontiers")
-r[, c("check", "status")]
-```
-
-## Provenance
-
-Every entry names its source and the date it was read.
-
-```{r}
-spec <- journal_spec("frontiers")
-spec$source_url
-spec$verified_on
-```
-
-Author guidelines change. Treat the publisher's current page as the authority,
-and open an issue if you find an entry that has drifted.
+Those are all cases where the honest answer is "check this yourself", and
+figspec says so rather than guessing.
