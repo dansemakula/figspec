@@ -13,8 +13,11 @@ test_that("chunk height follows an explicit request", {
 })
 
 test_that("a substituted default is announced, not passed off as a requirement", {
-  # Nature's formatting guide states neither formats nor a resolution.
-  expect_message(figspec_chunk_opts("nature", "single"), "not a requirement")
+  # APS states a column width and a line minimum, but no resolution and no
+  # file formats, so figspec has to supply both and must say so.
+  expect_null(journal_spec("aps")$dpi_min)
+  expect_null(journal_spec("aps")$formats)
+  expect_message(figspec_chunk_opts("aps", "single"), "not a requirement")
 })
 
 test_that("no message is emitted when the journal states the values", {
