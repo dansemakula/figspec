@@ -389,8 +389,7 @@ journals:
 - id: aps
   name: American Physical Society journals
   publisher: American Physical Society
-  disciplines:
-  - physics
+  disciplines: physics
   source_url: https://journals.aps.org/authors/style-basics
   verified_on: '2026-04-04'
   requirements:
@@ -408,4 +407,121 @@ journals:
     be an inference rather than the publisher wording. Its 600 dpi guidance applies
     to scanned images specifically, not to figures in general, so no resolution minimum
     is recorded.'
+- id: elsevier
+  name: Elsevier journals
+  publisher: Elsevier
+  disciplines: multidisciplinary
+  source_url: https://www.elsevier.com/about/policies-and-standards/author/artwork-and-media-instructions/artwork-sizing
+  verified_on: '2026-08-22'
+  requirements:
+    columns:
+      single: 90.0
+      onehalf: 140.0
+      double: 190.0
+    width_min_mm: 30.0
+    source_quote_width: Minimal size 30 mm | Single column 90 mm | 1.5 column 140
+      mm | Double column (full width) 190 mm
+    dpi_min: 300.0
+    dpi_combination: 500.0
+    dpi_line_art: 1000.0
+    source_quote_dpi: 300 DPI for halftone images; 500 DPI for combination art; 1000
+      DPI for line art.
+    font_min_pt: 6.0
+    source_quote_font: the lettering on the artwork should have a finished, printed
+      size of 7 pt for normal text and no smaller than 6 pt for subscript and superscript
+      characters
+  notes: Elsevier calls its 7 pt lettering target a rule-of-thumb rather than a strict
+    rule and notes that other factors may dictate about 10 pt, so only the 6 pt floor
+    is recorded and no ceiling. Elsevier also states that some of its publications
+    have special instructions beyond these common guidelines, so the journal-specific
+    guide for authors takes precedence.
+- id: taylor_francis
+  name: Taylor & Francis and Routledge journals
+  publisher: Taylor & Francis
+  disciplines:
+  - multidisciplinary
+  - social-sciences
+  - humanities
+  source_url: https://authorservices.taylorandfrancis.com/publishing-your-research/making-your-submission/submit-electronic-artwork/
+  verified_on: '2026-08-22'
+  requirements:
+    dpi_min: 300.0
+    dpi_bw: 600.0
+    dpi_line_art: 1200.0
+    dpi_combination: 600.0
+    source_quote_dpi: Color photographic images - 300dpi; Grayscale photographic images
+      - 600dpi; Line art or monochrome images - 1200dpi; Combination images (photographs
+      and labelling) - 600dpi
+    min_line_pt: 0.3
+    source_quote_line: Any lines are a minimum of 0.3pt
+    font_families:
+    - Times
+    - Helvetica
+    - Arial
+    - Symbol
+    source_quote_font: Use standard fonts such as Times, Helvetica, Arial, and Symbol.
+      All fonts should be embedded in the image files.
+    formats:
+    - jpeg
+    - tiff
+    - eps
+    print_greyscale: yes
+    source_quote_greyscale: All images and figures will be reproduced in black and
+      white in the printed journal, but in color in the online journal free of charge.
+  not_stated: columns
+  notes: Taylor & Francis states no column width in its general artwork guide and
+    directs authors to the individual journal page. Files should be named Figure 1,
+    2, 3 in order of appearance.
+- id: agu
+  name: American Geophysical Union journals
+  publisher: AGU (Wiley)
+  disciplines:
+  - earth-sciences
+  - space-science
+  - environment
+  source_url: https://www.agu.org/publications/authors/journals/text-graphics-requirements
+  verified_on: '2026-08-22'
+  requirements:
+    formats:
+    - jpeg
+    - tiff
+    - eps
+    - ps
+    - pdf
+    source_quote_formats: 'AGU recommends that figures be prepared in one of the following
+      formats: JPG, TIFF, EPS, PS or PDF.'
+    panel_labels: lowercase
+    source_quote_panel_labels: Use lowercase letters (a, b, c...) to label parts of
+      the figure; do not use Arabic or Roman numerals.
+  not_stated:
+  - columns
+  - dpi_min
+  notes: AGU strongly encourages, but does not require, figures accessible to readers
+    with colour vision deficiency, naming rainbow-like and red-green palettes specifically,
+    and recommends patterns or symbols alongside colour so meaning does not rest on
+    colour alone. Because that is framed as encouragement rather than a rule, it is
+    not recorded as a requirement that can fail. An Internet Archive snapshot of the
+    older URL from 2024 stated 300-600 ppi and a 0.5 point line minimum; that text
+    is not on the live page, so it is not recorded.
+- id: mdpi
+  name: MDPI journals
+  publisher: MDPI
+  disciplines:
+  - multidisciplinary
+  source_url: https://www.mdpi.com/journal/sensors/instructions
+  verified_on: '2026-08-22'
+  requirements:
+    dpi_min: 600.0
+    source_quote_dpi: All figures should be of a high quality (preferably no less
+      than 600 dpi) in PNG, JPEG or TIFF formats.
+    formats:
+    - png
+    - jpeg
+    - tiff
+  not_stated:
+  - columns
+  notes: MDPI phrases its resolution rule as preferably no less than 600 dpi, which
+    is a preference rather than an absolute floor; the wording is kept in the entry
+    so a reviewer can judge it. Read from the shared instructions template as served
+    on the Sensors journal page; a journal-specific page overrides it.
 

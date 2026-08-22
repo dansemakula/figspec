@@ -142,3 +142,73 @@ points: "make the diameter of each data point at least 1 mm"
 dpi: "Avoid scanned images, but if they must be used, make scans with as high a resolution as
   possible (preferably 600 dpi or higher)". This is about SCANS specifically, not a general
   figure resolution minimum, so dpi_min is left unharvested rather than set to 600.
+
+## elsevier — Elsevier (all journals)
+source: https://www.elsevier.com/about/policies-and-standards/author/artwork-and-media-instructions/artwork-sizing
+harvested: 2026-08-22 (live page, via browser; the older /researcher/... URL now 404s)
+width_table (verbatim):
+  "Minimal size 30 mm | Single column 90 mm | 1.5 column 140 mm | Double column (full width) 190 mm"
+dpi: "300 DPI for halftone images; 500 DPI for combination art; 1000 DPI for line art."
+type: "the lettering on the artwork should have a finished, printed size of 7 pt for normal text
+  and no smaller than 6 pt for subscript and superscript characters"
+  NOTE: Elsevier calls this "a rule-of-thumb rather than a strict rule" and says other factors may
+  dictate ~10 pt. Recorded as font_min_pt 6 (their stated floor); no ceiling recorded, since 7 pt
+  is described as a target rather than a maximum.
+caveat (verbatim): "some of our publications have special instructions beyond the common guidelines
+  given here. Please check the journal-specific guide for authors"
+
+## taylor_francis — Taylor & Francis / Routledge (all journals)
+source: https://authorservices.taylorandfrancis.com/publishing-your-research/making-your-submission/submit-electronic-artwork/
+harvested: 2026-08-22 (live page, via browser)
+dpi (verbatim): "Color photographic images - 300dpi / Grayscale photographic images - 600dpi /
+  Line art or monochrome images - 1200dpi / Combination images (photographs and labelling) - 600dpi"
+line: "Any lines are a minimum of 0.3pt" / "Minimum line weight is 0.3pt for black lines on a white background."
+fonts: "Use standard fonts such as Times, Helvetica, Arial, and Symbol. All fonts should be embedded in the image files."
+formats: "please submit electronic artwork files in one of our preferred formats: JPEG, TIFF,
+  Microsoft Word (DOC or DOCX only)"; PS/EPS "recommended format for line art"
+greyscale: "All images and figures will be reproduced in black and white in the printed journal,
+  but in color in the online journal free of charge."
+naming: "Please name artwork files as Figure 1, 2, 3... etc. according to the order they appear in the text."
+width: NOT STATED on this page - "Check the individual journal's page for specific requirements."
+  IMPORTANT: a search-engine summary claimed 8.2 cm / 17.1 cm column widths for T&F. Those numbers
+  are NOT on this page; they appear to come from one journal's own instructions. Not recorded.
+
+## agu — American Geophysical Union (published with Wiley)
+source: https://www.agu.org/publications/authors/journals/text-graphics-requirements
+harvested: 2026-08-22 (live page; the older /publish-with-agu/... URL redirects here)
+formats: "AGU recommends that figures be prepared in one of the following formats: JPG, TIFF, EPS, PS or PDF."
+panel_labels: "Use lowercase letters (a, b, c...) to label parts of the figure; do not use Arabic
+  or Roman numerals."  -> lowercase, the opposite of Cell Press
+colour: "Authors are strongly encouraged to ensure that the figures and other visual elements of
+  their articles are accessible to people with color vision deficiency ... This includes, but is
+  not limited to, rainbow-like and red-green color palettes."
+  NOT recorded as avoid_colour_pairs. AGU frames this as "strongly encouraged", not required, and
+  a `fail` implies breaching a rule. Recorded in notes instead.
+redundant coding: "Use patterns or symbols in combination with color so that the differentiation of
+  elements does not rely on color alone"
+width/dpi: NOT STATED on the current page. NOTE: an Internet Archive snapshot from 2024-04-13 of the
+  older URL did carry "all raster graphics must have a resolution between 300 and 600 ppi (at final
+  size)" and "All lines must be at least 0.5 point". That text is not on the live page, so it is not
+  recorded: an entry must reflect what the publisher states now, not what it used to.
+
+## mdpi — MDPI journals
+source: https://www.mdpi.com/journal/sensors/instructions
+harvested: 2026-08-22 (live page, via browser)
+NOTE ON SCOPE: MDPI serves a shared instructions template across its journals; this was read from
+  the Sensors instance. Treated as publisher-wide, but a journal-specific page overrides it.
+dpi/formats: "All figures should be of a high quality (preferably no less than 600 dpi) in PNG,
+  JPEG or TIFF formats."
+  NOTE: "preferably no less than" is a hedge, not an absolute floor. Recorded as dpi_min 600 with
+  the wording kept so a reviewer can judge it.
+graphical abstract: "The minimum required size for the graphical abstract is 560 x 1100 pixels
+  (height x width)." - not a figure requirement, not recorded.
+width: NOT STATED.
+
+## BLOCKED AT 2026-08-22 - still need another route
+sage      journals.sagepub.com serves a Cloudflare "Just a moment..." challenge that does not clear
+          under browser automation; us.sagepub.com is not in the extension's allowed-sites list.
+          SAGE also appears to set figure specs PER JOURNAL rather than publisher-wide: its general
+          "Preparing your manuscript" page carries no numbers at all.
+oup       academic.oup.com not yet attempted live this round.
+ieee      needs the resolution-and-size sub-page, not the parent graphics page.
+rsc       the figures-graphics-images page carried no numbers when fetched directly.

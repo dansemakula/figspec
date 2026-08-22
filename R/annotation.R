@@ -68,7 +68,10 @@ annotation_rows <- function(plot, spec) {
   if (n_panels > 1L) {
     tag_level <- panel_tag_levels(plot)
     req <- if (!is.null(spec$panel_labels)) {
-      paste0("panels labelled with ", spec$panel_labels, " letters")
+      paste0("panels labelled with ",
+             switch(spec$panel_labels, uppercase = "capital letters",
+                    lowercase = "lower-case letters", numbers = "numbers",
+                    spec$panel_labels))
     } else NULL
     actual <- if (is.null(tag_level)) {
       paste0(n_panels, " panels, none labelled")
@@ -78,8 +81,11 @@ annotation_rows <- function(plot, spec) {
                     `1` = "numbers", I = "roman numerals", i = "roman numerals",
                     tag_level))
     }
-    ok <- !is.null(tag_level) &&
-      (!identical(spec$panel_labels, "uppercase") || identical(tag_level, "A"))
+    # Publishers differ: Cell Press asks for capital letters, AGU for lower
+    # case. Match the entry's own wording rather than assuming capitals.
+    wanted <- switch(spec$panel_labels %||% "",
+      uppercase = "A", lowercase = "a", numbers = "1", NULL)
+    ok <- !is.null(tag_level) && (is.null(wanted) || identical(tag_level, wanted))
     rows[[length(rows) + 1L]] <- graded("Panel labels", req, actual, ok)
   }
 
