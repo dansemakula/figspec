@@ -296,3 +296,51 @@ test_that("Springer labels figure parts in lower case and requires RGB", {
   # white, so it is not a rule figspec can check.
   expect_null(journal_spec("springer")$print_greyscale)
 })
+
+test_that("RSC journals and RSC books are different documents with different rules", {
+  j <- journal_spec("rsc"); b <- journal_spec("rsc_books")
+  expect_false(identical(j$source_url, b$source_url))
+  # Journals: 83 / 171 mm columns. Books: a single 200 x 120 mm canvas.
+  expect_equal(j$columns$single, 83)
+  expect_equal(j$columns$double, 171)
+  expect_equal(b$width_max_mm, 200)
+  # Both want 600 dpi, but only books cap the number of composite parts.
+  expect_equal(j$dpi_min, 600)
+  expect_equal(b$dpi_min, 600)
+  expect_null(j$max_panels)
+  expect_equal(b$max_panels, 4)
+})
+
+test_that("colour in print differs between the two RSC documents", {
+  # Journals: colour is free online and in print, so nothing follows about
+  # greyscale. Books: colour depends on the author's contract. Neither becomes
+  # a print_greyscale rule, but for different reasons, both recorded.
+  expect_null(journal_spec("rsc")$print_greyscale)
+  expect_null(journal_spec("rsc_books")$print_greyscale)
+  expect_match(journal_spec("rsc")$notes, "colour is free|Colour is free")
+  expect_match(journal_spec("rsc_books")$notes, "contract")
+})
+
+test_that("graphical abstract requirements are surfaced separately from figures", {
+  g <- graphical_abstract_spec("rsc")
+  expect_s3_class(g, "figspec_abstract_spec")
+  expect_equal(g$width_mm, 80)
+  expect_equal(g$height_mm, 40)
+  expect_equal(g$max_characters, 250)
+
+  # A graphical abstract is not a figure, so it must not leak into the figure
+  # checks: RSC's figure columns are 83 and 171 mm, not 80.
+  expect_equal(fig_width("rsc", "single"), 83)
+  expect_false("Graphical abstract" %in%
+                 check_journal(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+                                 ggplot2::geom_point(), "rsc")$check)
+
+  expect_message(graphical_abstract_spec("plos_one"), "No graphical abstract")
+})
+
+test_that("MDPI's pixel-based graphical abstract is recorded as stated", {
+  g <- graphical_abstract_spec("mdpi")
+  expect_match(g$size_px, "560")
+  # Stated in pixels with no resolution, so it is not converted to millimetres.
+  expect_null(g$width_mm)
+})

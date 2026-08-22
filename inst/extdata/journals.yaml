@@ -576,6 +576,10 @@ journals:
     is a preference rather than an absolute floor; the wording is kept in the entry
     so a reviewer can judge it. Read from the shared instructions template as served
     on the Sensors journal page; a journal-specific page overrides it.
+  graphical_abstract:
+    size_px: 560 x 1100 (height x width)
+    source_quote: The minimum required size for the graphical abstract is 560 x 1100
+      pixels (height x width).
 - id: sage
   name: Sage journals
   publisher: Sage Publishing
@@ -846,8 +850,7 @@ journals:
 - id: springer
   name: Springer journals
   publisher: Springer Nature
-  disciplines:
-  - multidisciplinary
+  disciplines: multidisciplinary
   source_url: https://link.springer.com/journal/11145/submission-guidelines
   verified_on: '2026-08-22'
   requirements:
@@ -875,8 +878,7 @@ journals:
     - tiff
     source_quote_formats: For vector graphics, the preferred format is EPS; for halftones,
       please use TIFF format. MSOffice files are also acceptable.
-    colour_mode:
-    - RGB
+    colour_mode: RGB
     panel_labels: lowercase
     source_quote_panel_labels: Figure parts should be denoted by lowercase letters
       (a, b, c, etc.)
@@ -891,4 +893,45 @@ journals:
     best to use. Its greyscale advice is conditional on the journal printing in black
     and white, so print_greyscale is not set. Springer also asks that titles and captions
     not appear inside the illustration and that shading and outline lettering be avoided.'
+- id: rsc
+  name: Royal Society of Chemistry journals
+  publisher: Royal Society of Chemistry
+  disciplines:
+  - chemistry
+  - materials-science
+  source_url: https://www.rsc.org/publishing/publish-with-us/publish-a-journal-article/chem-soc-rev
+  verified_on: '2026-08-22'
+  requirements:
+    columns:
+      single: 83.0
+      double: 171.0
+    source_quote_width: Images should fit within either single column (8.3 cm) or
+      double column (17.1 cm) width, and must be no longer than 23.3 cm.
+    height_max_mm: 233.0
+    dpi_min: 600.0
+    source_quote_dpi: Figures, Schemes and Charts should be supplied as TIFF files,
+      with a resolution of 600 dpi or greater.
+    formats:
+    - tiff
+    - eps
+    - pdf
+    source_quote_formats: You can supply EPS or PDF files instead, but we will need
+      to convert these to TIFF files in the final article.
+  graphical_abstract:
+    width_mm: 80.0
+    height_mm: 40.0
+    dpi_min: 600.0
+    formats:
+    - tiff
+    max_characters: 250.0
+    source_quote: The figure should be a maximum size of 8 cm wide x 4 cm high ...
+      Figures should be supplied as TIFF files, with a resolution of 600 dpi or greater
+      ... The text supplied should be 1-2 sentences long, using a maximum of 250 characters.
+  notes: Read from the Chem Soc Rev instance of RSC s standard journal guidance. Colour
+    is free both online and in print, and no greyscale requirement follows, so print_greyscale
+    is not set; RSC s BOOKS guidance differs, making colour depend on the author s
+    contract. RSC asks that text, numerical data and scale bars be clearly legible
+    and sized appropriately but gives no number, so no type size is recorded. Figures
+    must not be larger than a single page, and must not include logos, trademarks
+    or brand names.
 

@@ -231,10 +231,15 @@ The Title Case test is deliberately conservative. It ignores acronyms and short
 words, so `"Body mass index (BMI)"` and `"CO2 emissions per capita"` pass while
 `"Miles Per Gallon"` does not.
 
-**Supplementary media.** Video and audio have their own rules, separate from
-figures:
+**Graphical abstracts and supplementary media.** Both have their own rules,
+separate from figures. A graphical abstract is usually a far smaller canvas
+than a figure, and often carries a character limit on its text:
 
 ```r
+graphical_abstract_spec("rsc")
+#> Maximum size: 80 x 40 mm    Resolution: 600 dpi
+#> Formats: TIFF               Text limit: 250 characters
+
 media_spec("science")
 #> Video formats: MP4, MOV      Video codec: H.264
 #> Maximum frame size: 1920 x 1080

@@ -32,6 +32,7 @@ flatten_entry <- function(j, origin = "figspec") {
       house_style = j$house_style,
       tables = j$tables,
       media = j$media,
+      graphical_abstract = j$graphical_abstract,
       not_stated = j$not_stated,
       notes = j$notes,
       origin = origin

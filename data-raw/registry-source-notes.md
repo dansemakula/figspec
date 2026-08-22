@@ -463,3 +463,23 @@ WIDTH, and a phrasing trap: "For large-sized journals the figures should be 84 m
 greyscale: "If black and white will be shown in the print version, make sure that the main
   information will still be visible." Conditional on the journal printing in black and white, so
   print_greyscale is NOT set.
+
+## rsc — Royal Society of Chemistry JOURNALS (distinct from rsc_books)
+source: https://www.rsc.org/publishing/publish-with-us/publish-a-journal-article/chem-soc-rev
+harvested: 2026-08-22, supplied by the maintainer.
+SCOPE: read from the Chem Soc Rev instance of RSC's standard journal guidance.
+width/height: "Images should fit within either single column (8.3 cm) or double column (17.1 cm)
+  width, and must be no longer than 23.3 cm."
+dpi/formats: "Figures, Schemes and Charts should be supplied as TIFF files, with a resolution of
+  600 dpi or greater. You can supply EPS or PDF files instead, but we will need to convert these to
+  TIFF files in the final article."
+colour: "Colour images may be used free of charge both online and in print." No greyscale
+  requirement follows, so print_greyscale is NOT set - unlike RSC's books guidance, where colour
+  depends on the author's contract.
+type: "Any text, numerical data or scale bars should be clearly legible and sized appropriately so
+  that any data may be accurately interpreted." No number given, so nothing is recorded.
+CONTRAST WITH rsc_books: books are 200 x 120 mm at 600 dpi with a four-part composite limit;
+  journals are 83 or 171 mm wide by up to 233 mm. Keeping them as separate entries was right.
+graphical abstract (table of contents entry): "The figure should be a maximum size of 8 cm wide x
+  4 cm high"; "Figures should be supplied as TIFF files, with a resolution of 600 dpi or greater";
+  "The text supplied should be 1-2 sentences long, using a maximum of 250 characters."
