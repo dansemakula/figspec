@@ -127,3 +127,18 @@ MEDIA:
   size: "movies (limited to 50 MB each)" / "auxiliary supplementary materials (up to 10 files, total size limited to 25 MB)"
   NOTE: the sentence "Animated GIFs are not" is truncated on the publisher's own page; the
   prohibition is not recorded because its wording is incomplete at source.
+
+## aps — American Physical Society (Physical Review family)
+source: https://journals.aps.org/authors/style-basics
+retrieved: Internet Archive snapshot 2026-04-04 (the live page returns 403 to automated access)
+verified_on: 2026-04-04   <- the SNAPSHOT date, not the harvest date
+width: "Size to the width of a single manuscript column (8.5 cm or 3 3/8 in) or 1.5 or 2 columns for more detailed figures."
+  NOTE: no measurement is given for the 1.5- or 2-column widths, so only `single` is recorded.
+line: "0.18 mm (0.5 point)"
+letters: "The size of the smallest capital letters and numerals should be at least 2 mm."
+  NOT recorded as font_min_pt. Capital-letter height is not font size (cap height is roughly
+  70% of it), so converting 2 mm into points would be an inference, not the publisher's words.
+points: "make the diameter of each data point at least 1 mm"
+dpi: "Avoid scanned images, but if they must be used, make scans with as high a resolution as
+  possible (preferably 600 dpi or higher)". This is about SCANS specifically, not a general
+  figure resolution minimum, so dpi_min is left unharvested rather than set to 600.

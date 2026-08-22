@@ -175,8 +175,7 @@ journals:
     min_line_pt: 2
   notes: |
     The two-point minimum line width is unusually heavy compared with other publishers; it is stated as "Any lines in the graphic should be no smaller than two points wide."
-  not_stated:
-  - max_file_mb
+  not_stated: max_file_mb
 - id: iop
   name: IOP Publishing journals
   publisher: IOP Publishing
@@ -387,4 +386,26 @@ journals:
       or QuickTime (.mov) container format using H.264 video encoding.
   notes: 'A higher resolution is required at the revision stage under separate instructions.
     Science also states: avoid wide variation in type size within a single figure.'
+- id: aps
+  name: American Physical Society journals
+  publisher: American Physical Society
+  disciplines:
+  - physics
+  source_url: https://journals.aps.org/authors/style-basics
+  verified_on: '2026-04-04'
+  requirements:
+    columns:
+      single: 85.0
+    source_quote_width: Size to the width of a single manuscript column (8.5 cm or
+      3 3/8 in) or 1.5 or 2 columns for more detailed figures.
+    min_line_pt: 0.5
+    source_quote_line: 0.18 mm (0.5 point)
+  notes: 'Retrieved from an Internet Archive snapshot dated 2026-04-04; the live page
+    refuses automated access, so verified_on records the snapshot date and the live
+    page may since have changed. APS also states a minimum capital-letter height of
+    2 mm and a minimum data point diameter of 1 mm. Neither is recorded as a requirement
+    field: capital-letter height is not font size, and converting between them would
+    be an inference rather than the publisher wording. Its 600 dpi guidance applies
+    to scanned images specifically, not to figures in general, so no resolution minimum
+    is recorded.'
 

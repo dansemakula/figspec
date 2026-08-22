@@ -89,3 +89,35 @@ test_that("the skeleton names every field a contributor must consider", {
   }
   expect_match(joined, "not yet harvested", fixed = TRUE)
 })
+
+test_that("printing a spec distinguishes confirmed-absent from unharvested", {
+  # IOP's resolution rule was read and confirmed absent.
+  # cli writes to the message stream, not stdout.
+  iop <- capture.output(print(journal_spec("iop")), type = "message")
+  res_line <- grep("Minimum resolution", iop, value = TRUE)
+  expect_match(res_line, "not specified by publisher")
+
+  # APS was harvested only for width and line weight; nobody read its
+  # resolution rule, so the printout must not speak for the publisher.
+  aps <- capture.output(print(journal_spec("aps")), type = "message")
+  expect_match(grep("Minimum resolution", aps, value = TRUE), "not yet harvested")
+})
+
+test_that("an entry sourced from an archive records the snapshot date", {
+  aps <- journal_spec("aps")
+  # The live page 403s; the value came from a 2026-04-04 snapshot, and
+  # verified_on must say so rather than claiming today.
+  expect_equal(as.character(aps$verified_on), "2026-04-04")
+  expect_match(aps$notes, "Internet Archive")
+  expect_true(as.Date(aps$verified_on) < Sys.Date())
+})
+
+test_that("APS records only what its page unambiguously states", {
+  aps <- journal_spec("aps")
+  expect_equal(aps$columns$single, 85)      # "8.5 cm"
+  expect_equal(aps$min_line_pt, 0.5)        # "0.18 mm (0.5 point)"
+  # 2 mm capital-letter height is not font size, so it is not recorded as one.
+  expect_null(aps$font_min_pt)
+  # 600 dpi applies to scans, not figures generally.
+  expect_null(aps$dpi_min)
+})

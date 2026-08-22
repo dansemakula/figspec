@@ -83,9 +83,16 @@ print.figspec_spec <- function(x, ...) {
   }
   cli::cli_text("")
 
-  line <- function(label, value, unit = "") {
+  absent <- unlist(x$not_stated %||% list())
+  # A blank field is either confirmed absent or simply not yet harvested, and
+  # the printout must not turn the second into a claim about the publisher.
+  line <- function(label, value, unit = "", field = NULL) {
     if (is.null(value) || !length(value)) {
-      cli::cli_li("{.strong {label}:} {.emph not specified by publisher}")
+      if (!is.null(field) && all(field %in% absent)) {
+        cli::cli_li("{.strong {label}:} {.emph not specified by publisher}")
+      } else {
+        cli::cli_li("{.strong {label}:} {.emph not yet harvested}")
+      }
     } else {
       cli::cli_li("{.strong {label}:} {paste(value, collapse = ', ')}{unit}")
     }
@@ -98,18 +105,18 @@ print.figspec_spec <- function(x, ...) {
   } else {
     line("Width range", if (!is.null(x$width_min_mm)) {
       paste0(x$width_min_mm, "-", x$width_max_mm %||% "?")
-    }, " mm")
+    }, " mm", "columns")
   }
-  line("Max height", x$height_max_mm, " mm")
-  line("Minimum resolution", x$dpi_min, " dpi")
-  line("Line-art resolution", x$dpi_line_art, " dpi")
-  line("File formats", toupper(x$formats %||% NULL))
-  line("Fonts", x$font_families)
+  line("Max height", x$height_max_mm, " mm", "height_max_mm")
+  line("Minimum resolution", x$dpi_min, " dpi", "dpi_min")
+  line("Line-art resolution", x$dpi_line_art, " dpi", "dpi_line_art")
+  line("File formats", toupper(x$formats %||% NULL), "", "formats")
+  line("Fonts", x$font_families, "", "font_families")
   line("Type size", if (!is.null(x$font_min_pt)) {
     paste0(x$font_min_pt, if (!is.null(x$font_max_pt)) paste0("-", x$font_max_pt))
-  }, " pt")
-  line("Colour mode", x$colour_mode)
-  line("Max file size", x$max_file_mb, " MB")
+  }, " pt", "font_min_pt")
+  line("Colour mode", x$colour_mode, "", "colour_mode")
+  line("Max file size", x$max_file_mb, " MB", "max_file_mb")
   cli::cli_end()
 
   if (!is.null(x$notes)) {
