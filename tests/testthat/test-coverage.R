@@ -163,3 +163,49 @@ test_that("a default ggplot title breaches PNAS's 12 pt ceiling", {
   expect_equal(check_journal(fixed, "pnas", column = "medium")[
     check_journal(fixed, "pnas", column = "medium")$check == "Type size", ]$status, "pass")
 })
+
+test_that("ACS point measurements convert at 72 points to the inch", {
+  a <- journal_spec("acs")
+  expect_equal(a$columns$single, round(240 * 25.4 / 72, 1))   # 240 pt = 3.33 in
+  expect_equal(a$columns$double, round(504 * 25.4 / 72, 1))   # 504 pt = 7 in
+  expect_equal(a$height_max_mm, round(660 * 25.4 / 72, 1))    # 660 pt = 9.167 in
+  expect_equal(a$font_min_pt, 4.5)
+  expect_equal(a$min_line_pt, 0.5)
+  # "Helvetica or Arial fonts work well" is a suggestion, not a requirement.
+  expect_null(a$font_families)
+})
+
+test_that("resolution stated by art type is checked by art type", {
+  path <- withr::local_tempfile(fileext = ".png")
+  grDevices::png(path, width = 84, height = 60, units = "mm", res = 300)
+  plot(mtcars$wt, mtcars$mpg)
+  grDevices::dev.off()
+
+  # ACS: 300 colour, 600 grayscale, 1200 line art.
+  expect_equal(check_journal(path, "acs", dpi = 300)[
+    check_journal(path, "acs", dpi = 300)$check == "Resolution", ]$status, "pass")
+  expect_equal(check_journal(path, "acs", dpi = 300, art_type = "line")[
+    check_journal(path, "acs", dpi = 300, art_type = "line")$check == "Resolution", ]$status, "fail")
+})
+
+test_that("OUP records a line-width range, not just a floor", {
+  o <- journal_spec("oup")
+  expect_equal(o$min_line_pt, 0.25)
+  expect_equal(o$max_line_pt, 1)
+
+  too_thick <- ggplot2::ggplot(ggplot2::economics, ggplot2::aes(date, unemploy)) +
+    ggplot2::geom_line(linewidth = pt_to_ggplot_linewidth(3))
+  expect_equal(check_journal(too_thick, "oup")[
+    check_journal(too_thick, "oup")$check == "Line width", ]$status, "fail")
+})
+
+test_that("entries carry the caveats that make them auditable", {
+  # BMJ's source PDF may be a decade old and shows signs of adaptation.
+  expect_match(journal_spec("bmj")$notes, "2017")
+  # OUP calls its own document tips rather than strict rules.
+  expect_match(journal_spec("oup")$notes, "tips rather than strict rules")
+  # Neither publisher's proofing-pipeline resolution became a requirement.
+  # Word boundary again: "1200dpi" contains "200" as a substring.
+  expect_false(grepl("\\b200dpi", journal_spec("oup")$source_quote_dpi))
+  expect_false(grepl("proof", journal_spec("oup")$source_quote_dpi, ignore.case = TRUE))
+})

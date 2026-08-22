@@ -274,3 +274,56 @@ axes: "Ensure that numerical axes on all graphs go to 0, except for log axes."
 other stated rules, not currently checkable: "Avoid embedding text in graphics"; error bars must be
   clearly labelled and described; a number after a plus-or-minus sign must be identified as SEM or
   SD; P value, magnification or scale bar given where applicable; N stated in the legend.
+
+## acs — American Chemical Society journals
+source: https://researcher-resources.acs.org/publish/author_guidelines?coden=jacsat#preparing_graphics
+harvested: 2026-08-22. Live page refuses automated access; text supplied by the maintainer.
+dpi: "Black and white line art, 1200 dpi / Grayscale art, 600 dpi / Color art, 300 dpi"
+size: "Single-column graphics can be sized up to 240 points wide (3.33 in.) and double-column
+  graphics must be sized between 300 and 504 points (4.167 in. and 7 in.). The maximum depth for
+  all graphics is 660 points (9.167 in.) including the caption"
+  Converted at 72 pt to the inch: single 84.7 mm, double 177.8 mm (its 300 pt / 105.8 mm lower
+  bound is kept in notes, since the schema holds one width per named column), depth 232.8 mm.
+type: "Lettering should be no smaller than 4.5 points in the final published format."
+line: "Lines should be no thinner than 0.5 point."
+fonts: "Helvetica or Arial fonts work well for lettering." NOT recorded as a font list. "work well"
+  is a suggestion, not a requirement, the same call made for Sage's sans-serif guidance.
+colour: "Avoid relying on color alone to represent information. Use indicators such as symbols, text
+  labels, or patterns"; "Graphics intended to appear in black and white or grayscale should not be
+  submitted in color"; WCAG contrast of "4.5:1 for text and 3:1 for nontext elements" is cited.
+  The contrast figures are ACS quoting WCAG. Recorded in notes; no contrast check exists yet.
+
+## bmj — BMJ journals
+source: https://s16086.pcdn.co/wp-content/uploads/2017/01/Further-information-on-figure-preparation.pdf
+harvested: 2026-08-22 from the PDF.
+width: "17.35cm is our maximum allowable width for figures" and "as long as Width doesn't go below
+  8.3cm, everything is fine" -> 83 to 173.5 mm
+dpi: "A minimum resolution of 300 ppi will maintain the crisp edges of the lines and shapes";
+  grayscale 300 ppi; combination figures 300 ppi
+format: "flatten transparencies before saving as TIFF at a minimum of 300 ppi"
+CAVEATS: the PDF sits under a /2017/01/ upload path, so it may be nearly a decade old; and it
+  contains links to plosmedicine.org images, suggesting it was adapted from another publisher's
+  guide. The width figures differ from PLOS ONE's, so they do appear to be BMJ's own. Re-verify
+  before relying on this entry.
+
+## oup — Oxford University Press journals
+source: https://static.primary.prod.gcms.the-infra.com/static/site/journals/document/images-author-guidance.pdf
+harvested: 2026-08-22 from the PDF.
+FRAMING, verbatim: "Below are tips rather than strict rules, as image content, source material and
+  available software may constrain what you are able to achieve. Please use these guidelines
+  alongside any specific instructions provide on the website of the journal to which you are
+  submitting."
+  JUDGEMENT: recorded as requirements even so. The hedge is about whether an author can always
+  achieve the target, not about whether the numbers apply; each figure is stated as "at least",
+  "no less than" or "between". The wording is kept in notes so a reader sees the framing. If you
+  disagree, move these to advisory fields.
+dpi: "at least 300dpi for colour half-tones; at least 600dpi for greyscale half-tones; 600-900dpi
+  for combination half-tones and line art; at least 1200dpi for monochrome line art;
+  (pure vector images have no inherent resolution)"
+type: "Ensure text is no less than 7pt"
+line: "Set line thickness between 0.25pt and 1pt"
+NOT recorded: the font list is truncated in extraction ("...Roman, Courier or Symbol") so no font
+  list is recorded. "PDF proofs reduce raster image resolution to 200dpi" describes OUP's proofing
+  pipeline, not an author requirement - the same distinction as PNAS's 200 ppi statement.
+second source, partially harvested: Figures_accessibility_journals_edition_v2.2_2024.pdf covers
+  approved accessible fonts and contrast guidance; extraction was too garbled to record from.

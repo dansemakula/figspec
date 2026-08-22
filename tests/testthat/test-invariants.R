@@ -66,3 +66,16 @@ test_that("every registry entry still carries its provenance", {
     expect_match(as.character(j$verified_on), "^\\d{4}-\\d{2}-\\d{2}$", info = j$id)
   }
 })
+
+test_that("no recorded resolution quote is a publisher's own rendering pipeline", {
+  # Several publishers describe how THEY render articles (PNAS at 200 ppi, OUP
+  # proofs at 200 dpi). Those are not author requirements and must never end up
+  # in a recorded quote.
+  for (j in load_registry()) {
+    q <- j$source_quote_dpi
+    if (is.null(q)) next
+    expect_false(grepl("proof|processed to display|HTML display", q, ignore.case = TRUE),
+                 info = j$id)
+    expect_false(grepl("\\b200\\s*(dpi|ppi)", q, ignore.case = TRUE), info = j$id)
+  }
+})

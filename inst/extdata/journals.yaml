@@ -591,8 +591,7 @@ journals:
     source_quote_dpi: 300 ppi for grayscale or color images with no type or lettering,
       600-900 ppi for grayscale or color images with type, and 1000-1200 ppi for line
       art, e.g., bar graphs.
-    colour_mode:
-    - RGB
+    colour_mode: RGB
     source_quote_colour: Color mode should be RGB.
     axes_from_zero: yes
     source_quote_axes: Ensure that numerical axes on all graphs go to 0, except for
@@ -612,4 +611,91 @@ journals:
     means. PNAS also asks that text not be embedded in graphics, that error bars be
     labelled and described, that a number after a plus-or-minus sign be identified
     as SEM or SD, and that N be given in the legend.'
+- id: acs
+  name: American Chemical Society journals
+  publisher: ACS
+  disciplines:
+  - chemistry
+  - materials-science
+  source_url: https://researcher-resources.acs.org/publish/author_guidelines?coden=jacsat#preparing_graphics
+  verified_on: '2026-08-22'
+  requirements:
+    columns:
+      single: 84.7
+      double: 177.8
+    source_quote_width: Single-column graphics can be sized up to 240 points wide
+      (3.33 in.) and double-column graphics must be sized between 300 and 504 points
+      (4.167 in. and 7 in.).
+    height_max_mm: 232.8
+    dpi_min: 300.0
+    dpi_bw: 600.0
+    dpi_line_art: 1200.0
+    source_quote_dpi: Black and white line art, 1200 dpi; Grayscale art, 600 dpi;
+      Color art, 300 dpi
+    font_min_pt: 4.5
+    source_quote_font: Lettering should be no smaller than 4.5 points in the final
+      published format.
+    min_line_pt: 0.5
+    source_quote_line: Lines should be no thinner than 0.5 point.
+  notes: Double-column graphics must be at least 300 points (105.8 mm) as well as
+    at most 504 points; only the upper bound is recorded, since one width is held
+    per named column. The maximum depth of 232.8 mm includes the caption, at about
+    12 points per line. ACS says Helvetica or Arial fonts work well, which is a suggestion
+    rather than a requirement, so no font list is recorded. ACS asks authors not to
+    rely on colour alone and cites WCAG contrast of 4.5:1 for text and 3:1 for nontext
+    elements; no contrast check exists yet.
+- id: bmj
+  name: BMJ journals
+  publisher: BMJ
+  disciplines:
+  - medicine
+  - health
+  source_url: https://s16086.pcdn.co/wp-content/uploads/2017/01/Further-information-on-figure-preparation.pdf
+  verified_on: '2026-08-22'
+  requirements:
+    width_min_mm: 83.0
+    width_max_mm: 173.5
+    source_quote_width: 17.35cm is our maximum allowable width for figures ... as
+      long as Width doesn t go below 8.3cm, everything is fine
+    dpi_min: 300.0
+    source_quote_dpi: A minimum resolution of 300 ppi will maintain the crisp edges
+      of the lines and shapes.
+    formats:
+    - tiff
+  notes: Two cautions. The source PDF sits under a 2017 upload path and may be close
+    to a decade old. It also contains links to plosmedicine.org images, suggesting
+    it was adapted from another publisher guide, though its width figures differ from
+    PLOS ONE s and do appear to be BMJ s own. Re-verify before relying on this entry.
+- id: oup
+  name: Oxford University Press journals
+  publisher: Oxford University Press
+  disciplines:
+  - multidisciplinary
+  - medicine
+  - humanities
+  source_url: https://static.primary.prod.gcms.the-infra.com/static/site/journals/document/images-author-guidance.pdf
+  verified_on: '2026-08-22'
+  requirements:
+    dpi_min: 300.0
+    dpi_bw: 600.0
+    dpi_combination: 600.0
+    dpi_line_art: 1200.0
+    source_quote_dpi: at least 300dpi for colour half-tones; at least 600dpi for greyscale
+      half-tones; 600-900dpi for combination half-tones and line art; at least 1200dpi
+      for monochrome line art
+    font_min_pt: 7.0
+    source_quote_font: Ensure text is no less than 7pt
+    min_line_pt: 0.25
+    max_line_pt: 1.0
+    source_quote_line: Set line thickness between 0.25pt and 1pt
+  not_stated:
+  - columns
+  notes: 'OUP frames this document as tips rather than strict rules, because image
+    content, source material and software may constrain what an author can achieve,
+    and directs authors to the individual journal website as well. The figures are
+    recorded as requirements even so: the hedge concerns whether a target is always
+    achievable, not whether it applies, and each is stated as at least, no less than,
+    or between. OUP also says PDF proofs reduce raster images to 200dpi, which describes
+    its proofing pipeline rather than an author requirement, so it is not recorded.
+    Its font list was truncated in extraction and is not recorded.'
 
