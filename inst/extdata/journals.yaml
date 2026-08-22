@@ -1,0 +1,312 @@
+# figspec journal figure-specification registry
+#
+# CONTRACT FOR THIS FILE
+#
+#   Two kinds of information live here and they must never be mixed.
+#
+#   requirements:  What the publisher STATES in its author guidelines.
+#                  Sourced, auditable, and the only thing figspec will check a
+#                  figure against or report as pass/fail. If a publisher does
+#                  not state something, OMIT it. Never guess, never carry a
+#                  value over from a sibling journal, never infer one from a
+#                  published figure. An omitted field is reported as "not
+#                  specified by publisher", which is NOT the same as "passes".
+#
+#   house_style:   What a journal SUBJECTIVELY looks like. Taste, not rule.
+#                  Optional. Never checked, never enforced, never reported as a
+#                  requirement. Applied underneath requirements, so a house
+#                  style can never push a figure out of compliance.
+#
+#   source_url and verified_on are REQUIRED on every entry.
+#   source_quote_* holds the publisher wording for load-bearing numbers so an
+#   entry can be audited without leaving this file.
+#
+# Units: widths/heights in millimetres, type sizes in points, files in MB.
+
+schema_version: 2
+journals:
+- id: plos_one
+  name: PLOS ONE
+  publisher: PLOS
+  disciplines: multidisciplinary
+  source_url: https://journals.plos.org/plosone/s/figures
+  verified_on: '2026-08-21'
+  requirements:
+    width_min_mm: 66.8
+    width_max_mm: 190.5
+    height_max_mm: 222.25
+    source_quote_width: 'Minimum width: 6.68 cm (2.63 inches); Maximum width: 19.05
+      cm (7.5 inches)'
+    dpi_min: 300
+    dpi_max: 600
+    source_quote_dpi: Submit figures at the desired dimensions with a resolution no
+      greater than 300-600 dpi.
+    formats:
+    - tiff
+    - eps
+    font_families:
+    - Arial
+    - Times
+    - Symbol
+    font_min_pt: 8
+    font_max_pt: 12
+    source_quote_font: Use only Arial, Times, or Symbol font in 8-12 point.
+    colour_mode:
+    - RGB
+    - grayscale
+    max_file_mb: 10
+- id: nature
+  name: Nature
+  publisher: Springer Nature
+  disciplines: multidisciplinary
+  source_url: https://www.nature.com/nature/for-authors/formatting-guide
+  verified_on: '2026-08-21'
+  requirements:
+    columns:
+      single: 90
+      double: 180
+    source_quote_width: For guidance, Nature's standard figure sizes are 90 mm (single
+      column) and 180 mm (double column) and the full depth of the page is 170 mm.
+    height_max_mm: 170
+  tables:
+    orientation: portrait
+    title_style: short, one-line title in bold text
+    source_quote: Tables should each be presented on a separate page, portrait (not
+      landscape) orientation, and upright on the page, not sideways. Tables have a
+      short, one-line title in bold text. Tables should be as small as possible.
+    notes: |
+      Symbols and abbreviations are defined immediately below the table, followed by essential descriptive material, all in double-spaced text.
+  notes: |
+    Figure legends should be fewer than 300 words each. Lettering in figures should be lower-case with the first letter capitalized and no full stop. Scale bars should be used rather than magnification factors. This entry records the formatting guide; Nature asks for production-quality figures only after acceptance in principle, under a separate figure guide.
+- id: cell_press
+  name: Cell Press journals
+  publisher: Cell Press (Elsevier)
+  disciplines:
+  - life-sciences
+  - biomedical
+  source_url: https://www.cell.com/information-for-authors/figure-guidelines
+  verified_on: '2026-08-21'
+  requirements:
+    columns:
+      single: 85
+      onehalf: 114
+      double: 174
+    source_quote_width: 'Two-column formats (such as research articles and reviews):
+      8.5 cm (1 column), 11.4 cm (1.5 columns), and 17.4 cm (full width of the page)'
+    height_max_mm: 200
+    dpi_min: 300
+    dpi_line_art: 1000
+    dpi_bw: 500
+    source_quote_dpi: for color or grayscale figures, at least 300 dpi; for black
+      and white figures, at least 500 dpi; for line-art figures, at least 1,000 dpi
+      at the desired print size
+    formats:
+    - tiff
+    - pdf
+    - eps
+    - jpeg
+    font_families: Arial
+    font_min_pt: 6
+    font_max_pt: 8
+    source_quote_font: Text should be about 6-8 pt at the desired print size
+    colour_mode: RGB
+    max_file_mb: 20
+    min_line_pt: 0.5
+    max_line_pt: 1.5
+    avoid_colour_pairs:
+    - - red
+      - green
+    source_quote_colour_pairs: To accommodate all viewers, red and green should not be used
+      together
+  notes: |
+    Cell Press also publishes a three-column format for previews and commentaries with widths 5.5 cm, 11.4 cm and 17.4 cm. Red and green should not be used together.
+- id: star_protocols
+  name: STAR Protocols
+  publisher: Cell Press (Elsevier)
+  disciplines:
+  - life-sciences
+  - methods
+  source_url: https://www.cell.com/information-for-authors/figure-guidelines
+  verified_on: '2026-08-21'
+  requirements:
+    columns:
+      single: 134
+      double: 172
+    source_quote_width: 'For the journal STAR Protocols: 13.4 cm (1 column) and 17.2
+      cm (full width of the page)'
+    formats: jpeg
+    source_quote_format: For the journal STAR Protocols, figures must be provided
+      in JPG format.
+    max_file_mb: 20
+- id: frontiers
+  name: Frontiers journals
+  publisher: Frontiers Media
+  disciplines: multidisciplinary
+  source_url: https://www.frontiersin.org/guidelines/author-guidelines
+  verified_on: '2026-08-21'
+  requirements:
+    columns:
+      single: 85
+      double: 180
+    source_quote_width: Individual figures should not be longer than one page and
+      with a width that corresponds to one column (85 mm) or two columns (180 mm).
+    dpi_min: 300
+    source_quote_dpi: All images must have a resolution of 300 dpi at final size.
+    formats:
+    - tiff
+    - jpeg
+    - eps
+    font_min_pt: 8
+    source_quote_font: The smallest visible text should be no less than eight points
+      in height when viewed at actual size.
+    colour_mode: RGB
+    min_line_pt: 2
+  notes: |
+    The two-point minimum line width is unusually heavy compared with other publishers; it is stated as "Any lines in the graphic should be no smaller than two points wide."
+- id: iop
+  name: IOP Publishing journals
+  publisher: IOP Publishing
+  disciplines:
+  - physics
+  - engineering
+  source_url: https://publishingsupport.iopscience.iop.org/questions/figures-journal-articles/
+  verified_on: '2026-08-21'
+  requirements:
+    columns:
+      single: 85
+      double: 150
+    source_quote_width: 8.5cm for a small/single-column figure ... 15cm for a large/double-column
+      figure
+    formats:
+    - eps
+    - pdf
+    - tiff
+    - png
+    - jpeg
+    font_families:
+    - Times
+    - Helvetica
+    - Courier
+    - Symbol
+    font_min_pt: 8
+    font_max_pt: 12
+    source_quote_font: Aim for text sizes of 8 to 12 pt at the final figure size
+- id: cambridge
+  name: Cambridge University Press journals
+  publisher: Cambridge University Press
+  disciplines:
+  - multidisciplinary
+  - humanities
+  - social-sciences
+  source_url: https://www.cambridge.org/core/services/authors/journals/journals-artwork-guide
+  verified_on: '2026-08-21'
+  requirements:
+    dpi_min: 300
+    dpi_line_art: 1000
+    dpi_combination: 600
+    source_quote_dpi: Line art ... a minimum of 1000 dpi; halftone ... a minimum resolution
+      of 300 dpi; combination ... a minimum resolution of 600 dpi
+    formats:
+    - tiff
+    - eps
+    - pdf
+    - jpeg
+    font_families:
+    - Arial
+    - Courier
+    - Symbol
+    - Times
+    - Times New Roman
+    font_min_pt: 9
+    source_quote_font: 'We recommend that you use the following approved fonts, in
+      9 pt: Arial, Courier, Symbol, Times, Times New Roman'
+    colour_mode: CMYK
+    source_quote_colour: Where submitting colour illustrations, they should be supplied
+      in CMYK colour mode
+- id: royal_society
+  name: Royal Society journals
+  publisher: The Royal Society
+  disciplines: multidisciplinary
+  source_url: https://royalsociety.org/journals/authors/author-guidelines/
+  verified_on: '2026-08-21'
+  requirements:
+    formats:
+    - png
+    - eps
+    - tiff
+    - jpeg
+    font_families: Times New Roman
+    font_min_pt: 7.5
+    print_greyscale: true
+    source_quote_greyscale: All figures will be published in colour online (the version
+      of the record), but will be reproduced in black and white in any print versions by
+      default
+    source_quote_font: 9pt, 11pt leading is preferred. Text can be reduced, where
+      necessary or restricted for space, but should be no smaller than 7.5pt
+  notes: |
+    All figures are published in colour online but reproduced in black and white in print versions by default, so figures should remain readable without colour.
+- id: copernicus
+  name: Copernicus Publications journals
+  publisher: Copernicus (EGU)
+  disciplines:
+  - earth-sciences
+  - atmospheric-sciences
+  - environment
+  source_url: https://publications.copernicus.org/for_authors/manuscript_preparation.html
+  verified_on: '2026-08-21'
+  requirements:
+    width_min_mm: 80
+    source_quote_width: The width should not be less than 8 cm
+    dpi_min: 300
+    source_quote_dpi: should have a resolution of 300 dpi
+    formats:
+    - pdf
+    - ps
+    - eps
+    - jpeg
+    - png
+    - tiff
+    max_file_mb: 5
+  notes: |
+    Overall submission excluding supplements should not exceed 30 MB.
+- id: wiley
+  name: Wiley journals
+  publisher: Wiley
+  disciplines: multidisciplinary
+  source_url: https://authors.wiley.com/asset/photos/electronic_artwork_guidelines.pdf
+  verified_on: '2026-08-21'
+  requirements:
+    columns:
+      single: 80
+      double: 180
+    source_quote_width: Were figures created between 80 and 180 mm width? 300 to 600
+      DPI?
+    dpi_min: 300
+    dpi_line_art: 600
+    source_quote_dpi: Line art ... 600-1000 dpi ... Images ... 300 dpi
+    formats:
+    - eps
+    - pdf
+    - tiff
+    - png
+    max_file_mb: 10
+  notes: |
+    The Wiley artwork guidelines PDF is self-dated "Updated 1 September 2016". Individual Wiley journals may state stricter requirements; check the specific journal before relying on this entry.
+- id: jss
+  name: Journal of Statistical Software
+  publisher: Foundation for Open Access Statistics
+  disciplines:
+  - statistics
+  - computing
+  source_url: https://www.jstatsoft.org/pages/view/style
+  verified_on: '2026-08-21'
+  requirements:
+    formats:
+    - pdf
+    - png
+    - jpeg
+  notes: JSS prefers vector PDF for graphics. Raster graphics are illustrated in the
+    style guide with res = 144, with a note that higher resolutions may be needed.
+    Graphics annotation should be about the size of the figure caption or a little
+    smaller.
+

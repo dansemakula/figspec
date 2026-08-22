@@ -1,0 +1,8 @@
+^\.Rproj\.user$
+^data-raw$
+^\.github$
+^_pkgdown\.yml$
+^docs$
+^cran-comments\.md$
+^README\.Rmd$
+^Rplots\.pdf$

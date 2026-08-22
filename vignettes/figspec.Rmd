@@ -1,0 +1,108 @@
+---
+title: "Meeting a journal's figure requirements"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Meeting a journal's figure requirements}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+```{r setup}
+library(ggplot2)
+library(figspec)
+```
+
+## The problem
+
+A journal's figure requirements are specific and they differ between
+publishers. Cell Press asks for figures at 85, 114 or 174 mm and type between
+6 and 8 pt. Frontiers asks for 85 or 180 mm and type no smaller than 8 pt.
+PLOS ONE asks for a width between 66.8 and 190.5 mm and type between 8 and
+12 pt. Nothing in a normal plotting workflow makes any of that visible.
+
+## Checking before you save
+
+```{r}
+p <- ggplot(mtcars, aes(wt, mpg)) +
+  geom_point() +
+  labs(title = "Fuel economy", x = "Weight (1000 lbs)", y = "Miles per gallon")
+
+check_journal(p, "plos_one")
+```
+
+The type size check is the one that catches people. ggplot2's default base size
+is 11 pt, which puts the title at 13.2 pt and axis text at 8.8 pt. PLOS ONE
+caps figure type at 12 pt, so the title fails.
+
+## Fixing it
+
+`theme_journal()` enforces the journal's typography without imposing a look of
+its own. It takes a base theme and pins every text element inside the
+journal's stated range.
+
+```{r}
+p_fixed <- p + theme_journal("plos_one")
+check_journal(p_fixed, "plos_one")
+```
+
+## Saving at the right size
+
+This is the part that matters most, and it is easy to get wrong.
+
+Type size in a figure is absolute. If you save a figure at 180 mm and the
+journal places it in an 85 mm column, the whole figure is scaled to 47% and
+your compliant 8 pt label arrives at 3.8 pt. Saving at the journal's own
+column width is what stops that happening.
+
+```{r, eval = FALSE}
+ggsave_journal("figure_1.tiff", p_fixed, journal = "plos_one", column = "single")
+```
+
+`ggsave_journal()` reads the width from the registry, defaults the resolution
+to the journal's stated minimum, warns if the format is not one the journal
+accepts, and checks the file it just wrote.
+
+## Reading the registry
+
+```{r}
+journals(discipline = "physics")
+```
+
+```{r}
+journal_spec("cell_press")
+```
+
+## What figspec will not tell you
+
+figspec reports four outcomes, and only one of them is a problem you must fix.
+
+`unspecified` means the publisher does not state that requirement. That is not
+a pass. If Frontiers says nothing about maximum file size, figspec will not
+reassure you that your file size is fine.
+
+`unknown` means the requirement exists but the input cannot answer it. Type
+size cannot be recovered from a TIFF, so checking a saved raster file reports
+type size as unknown. Check the plot object before you save it, where the
+answer is knowable.
+
+```{r}
+r <- check_journal(p_fixed, "frontiers")
+r[, c("check", "status")]
+```
+
+## Provenance
+
+Every entry names its source and the date it was read.
+
+```{r}
+spec <- journal_spec("frontiers")
+spec$source_url
+spec$verified_on
+```
+
+Author guidelines change. Treat the publisher's current page as the authority,
+and open an issue if you find an entry that has drifted.
