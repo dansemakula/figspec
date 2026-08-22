@@ -16,7 +16,7 @@ requirement_keys <- function() {
     "colour_mode", "max_file_mb", "min_line_pt", "max_line_pt",
     "panel_labels", "text_case", "text_no_final_stop",
     "avoid_colour_pairs", "print_greyscale", "axes_from_zero", "max_panels", "axis_lines_and_ticks",
-    "avoid_coloured_text", "thousands_separator")
+    "avoid_coloured_text", "thousands_separator", "no_background_grid")
 }
 
 # Flatten one registry entry: requirements are lifted to the top level for

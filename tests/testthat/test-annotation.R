@@ -279,3 +279,29 @@ test_that("the Royal Society requires tables as editable text", {
   expect_equal(ts$format, "editable")
   expect_match(ts$source_quote, "editable format")
 })
+
+test_that("BMJ's no-grid rule is scoped to bars, as BMJ scopes it", {
+  # "Histograms should be presented ... with no background grid."
+  hist_default <- ggplot2::ggplot(mtcars, ggplot2::aes(mpg)) +
+    ggplot2::geom_histogram(bins = 10)
+  r <- check_journal(hist_default, "bmj")
+  expect_equal(r[r$check == "Background grid", ]$status, "fail")
+
+  no_grid <- hist_default + ggplot2::theme(panel.grid = ggplot2::element_blank())
+  expect_equal(check_journal(no_grid, "bmj")[
+    check_journal(no_grid, "bmj")$check == "Background grid", ]$status, "pass")
+
+  # A scatter plot is not a histogram, so the rule does not apply to it.
+  expect_false("Background grid" %in%
+                 check_journal(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+                                 ggplot2::geom_point(), "bmj")$check)
+})
+
+test_that("geom_bar and geom_histogram both count as bar layers", {
+  expect_true(has_bar_layer(ggplot2::ggplot(mtcars, ggplot2::aes(mpg)) +
+                              ggplot2::geom_histogram(bins = 5)))
+  expect_true(has_bar_layer(ggplot2::ggplot(mtcars, ggplot2::aes(factor(cyl))) +
+                              ggplot2::geom_bar()))
+  expect_false(has_bar_layer(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+                               ggplot2::geom_point()))
+})

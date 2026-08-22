@@ -138,6 +138,24 @@ labels_with_comma_thousands <- function(plot) {
   unique(labs[grepl("[0-9],[0-9]{3}", labs)])
 }
 
+# Background grid ---------------------------------------------------------
+
+# Whether a plot draws bars, which is what BMJ's rule is scoped to. geom_bar
+# and geom_histogram both build GeomBar.
+has_bar_layer <- function(plot) {
+  ls <- tryCatch(plot$layers, error = function(e) NULL)
+  if (is.null(ls) || !length(ls)) return(FALSE)
+  any(vapply(ls, function(l) inherits(l$geom, "GeomBar"), logical(1)))
+}
+
+grid_is_drawn <- function(plot) {
+  th <- tryCatch(ggplot2::ggplot_build(plot)$plot$theme, error = function(e) NULL)
+  if (is.null(th)) return(NA)
+  el <- tryCatch(ggplot2::calc_element("panel.grid", th), error = function(e) NULL)
+  if (is.null(el)) return(NA)
+  !inherits(el, "element_blank")
+}
+
 # Rows shared with check_journal() ----------------------------------------
 
 annotation_rows <- function(plot, spec) {
@@ -203,6 +221,17 @@ annotation_rows <- function(plot, spec) {
       "Text colour", "text not coloured",
       if (is.null(col)) NULL else paste0("text is ", col),
       !is.null(col) && !is_coloured(col)
+    )
+  }
+
+  # Background grid -------------------------------------------------------
+  # Scoped to bar and histogram layers, because that is how BMJ scopes it.
+  if (isTRUE(spec$no_background_grid) && has_bar_layer(plot)) {
+    drawn <- grid_is_drawn(plot)
+    rows[[length(rows) + 1L]] <- graded(
+      "Background grid", "histograms drawn with no background grid",
+      if (is.na(drawn)) NULL else if (drawn) "background grid is drawn" else "no background grid",
+      !is.na(drawn) && !drawn
     )
   }
 

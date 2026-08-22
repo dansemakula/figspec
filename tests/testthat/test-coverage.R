@@ -344,3 +344,33 @@ test_that("MDPI's pixel-based graphical abstract is recorded as stated", {
   # Stated in pixels with no resolution, so it is not converted to millimetres.
   expect_null(g$width_mm)
 })
+
+test_that("BMJ records its own line-art figure, not a summary's", {
+  b <- journal_spec("bmj")
+  # BMJ: "line art which should be 1200 dpi". A third-party summary said 600.
+  expect_equal(b$dpi_line_art, 1200)
+  expect_equal(b$dpi_min, 300)
+  # That summary also claimed a 10 MB per-figure cap, which BMJ does not state.
+  expect_null(b$max_file_mb)
+  expect_match(b$notes, "1200 dpi, twice that")
+})
+
+test_that("BMJ's unverifiable widths were withdrawn, not kept or denied", {
+  b <- journal_spec("bmj")
+  # Neither recorded nor marked confirmed-absent: nobody can currently verify
+  # them, and claiming BMJ states no width would be its own invention.
+  expect_null(b$width_max_mm)
+  expect_null(b$columns)
+  expect_false("columns" %in% unlist(b$not_stated %||% list()))
+
+  r <- check_journal(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+                       ggplot2::geom_point(), "bmj")
+  expect_equal(r[r$check == "Width", ]$requirement, "not yet harvested for this journal")
+})
+
+test_that("BMJ and Nature give opposite instructions on outlining text", {
+  # BMJ: "In EPS files, text (if present) should be outlined."
+  # Nature: "Do not outline text". Neither is checked; both are recorded.
+  expect_match(journal_spec("bmj")$notes, "outlined", ignore.case = TRUE)
+  expect_match(journal_spec("bmj")$notes, "opposite of Nature")
+})

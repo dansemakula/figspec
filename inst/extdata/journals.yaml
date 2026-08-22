@@ -757,21 +757,38 @@ journals:
   disciplines:
   - medicine
   - health
-  source_url: https://s16086.pcdn.co/wp-content/uploads/2017/01/Further-information-on-figure-preparation.pdf
+  source_url: https://authors.bmj.com/writing-and-formatting/formatting-your-paper/
   verified_on: '2026-08-22'
   requirements:
-    width_min_mm: 83.0
-    width_max_mm: 173.5
-    source_quote_width: 17.35cm is our maximum allowable width for figures ... as
-      long as Width doesn t go below 8.3cm, everything is fine
     dpi_min: 300.0
-    source_quote_dpi: A minimum resolution of 300 ppi will maintain the crisp edges
-      of the lines and shapes.
-    formats: tiff
-  notes: Two cautions. The source PDF sits under a 2017 upload path and may be close
-    to a decade old. It also contains links to plosmedicine.org images, suggesting
-    it was adapted from another publisher guide, though its width figures differ from
-    PLOS ONE s and do appear to be BMJ s own. Re-verify before relying on this entry.
+    dpi_line_art: 1200.0
+    source_quote_dpi: For non-vector files (e.g. TIFF, JPEG) a minimum resolution
+      of 300 dpi is required, except for line art which should be 1200 dpi.
+    formats:
+    - tiff
+    - eps
+    - jpeg
+    - pdf
+    source_quote_formats: Other images may be submitted in TIFF, EPS, JPEG or PDF
+      formats. Figures submitted in TIFF formats should be a single-layered flat file;
+      we cannot accept TIFF files which contain multiple pages.
+    no_background_grid: yes
+    source_quote_grid: Histograms should be presented in a simple, two-dimensional
+      format, with no background grid.
+  notes: 'Widths were withdrawn from this entry on 2026-08-22. They came from a PDF
+    under a 2017 upload path that also carried plosmedicine.org image links, and the
+    current BMJ page states no widths at all, so they cannot be verified. Width is
+    therefore neither recorded nor marked confirmed-absent: it reports as not yet
+    harvested, which is the true state. The withdrawn figures are kept in data-raw
+    should anyone verify them. A third-party summary supplied alongside BMJ s own
+    guidance claimed 600 dpi for line art and a 10 MB per figure cap. BMJ s own wording
+    says line art should be 1200 dpi, twice that, and gives no file-size cap. Neither
+    summary figure is recorded. BMJ asks that multi-part figures be submitted as a
+    single composite file, that TIFFs be single-layered and single-page, and that
+    figure legends not refer to colour. It requires text in EPS files to be OUTLINED,
+    which is the direct opposite of Nature s instruction not to outline text. Colour
+    online is free and authors are encouraged, not required, to supply black and white
+    versions for print, so print_greyscale is not set.'
 - id: oup
   name: Oxford University Press journals
   publisher: Oxford University Press

@@ -510,3 +510,40 @@ NEW, and recorded:
 NEW, stated but NOT recorded: a thin space between a value and its unit (300 nm, 400 um); a full
   space either side of an equals sign; sub-parts labelled with bracketed roman numerals; figure
   labels on a coloured background placed inside a white circle.
+
+## bmj — REPLACES the 2017 PDF entry
+source: https://authors.bmj.com/writing-and-formatting/formatting-your-paper/
+harvested: 2026-08-22, supplied by the maintainer.
+dpi (verbatim): "For non-vector files (e.g. TIFF, JPEG) a minimum resolution of 300 dpi is required,
+  except for line art which should be 1200 dpi."
+formats: "Other images may be submitted in TIFF, EPS, JPEG or PDF formats. Figures submitted in TIFF
+  formats should be a single-layered flat file; we cannot accept TIFF files which contain multiple
+  pages."
+grid: "Histograms should be presented in a simple, two-dimensional format, with no background grid."
+  -> no_background_grid, scoped to bar and histogram layers as BMJ scopes it. Worth knowing that
+  ggplot2's default theme DRAWS a background grid, so a default histogram fails this.
+composite: "For figures consisting of multiple images/parts, please ensure these are submitted as a
+  single composite file for processing. We are unable to accept figures that are submitted as
+  multiple files."
+colour: "Colour publication online is offered at no charge, but the figure legend must not refer to
+  the use of colours." Authors are "encouraged to supply colour illustrations for online publication
+  and black and white versions for print publication" - encouragement, so print_greyscale is NOT set.
+
+A THIRD-PARTY SUMMARY CONTRADICTED THE PUBLISHER, AGAIN.
+  A summary supplied alongside the real guidance claimed "Minimum resolution: 300 DPI for
+  photographs, 600 DPI for line art" and "Maximum file size: 10 MB per figure". BMJ's own wording,
+  in the same message, says line art "should be 1200 dpi" - twice the summary's figure. The 10 MB
+  cap does not appear in BMJ's wording at all. Neither summary figure is recorded. This is the third
+  time a second-hand source has produced a specific, plausible, wrong number: the others were
+  Taylor & Francis column widths of 8.2/17.1 cm and RSC Advances' 8.5 cm single column, both absent
+  from the publishers' own pages.
+
+WIDTHS WITHDRAWN. The earlier entry recorded 83 to 173.5 mm from a PDF under a 2017 upload path that
+  also contained plosmedicine.org image links. The current authors.bmj.com page states no widths at
+  all. Rather than keep numbers whose provenance is doubtful and which cannot now be verified, width
+  is moved OUT of requirements and is neither recorded nor marked confirmed-absent: it reports as
+  not yet harvested, which is the true state. The old figures are kept here should someone verify
+  them: "17.35cm is our maximum allowable width for figures" and "Width doesn't go below 8.3cm".
+
+CONFLICT WITH NATURE, worth knowing: BMJ says "In EPS files, text (if present) should be outlined."
+  Nature says "Do not outline text". Directly opposite instructions for the same operation.
