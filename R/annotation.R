@@ -89,6 +89,23 @@ annotation_rows <- function(plot, spec) {
     rows[[length(rows) + 1L]] <- graded("Panel labels", req, actual, ok)
   }
 
+  # Axis origin -----------------------------------------------------------
+  if (isTRUE(spec$axes_from_zero)) {
+    missing_zero <- axes_missing_zero(plot)
+    if (!is.null(missing_zero)) {
+      rows[[length(rows) + 1L]] <- graded(
+        "Axis origin", "numerical axes reach zero, except log axes",
+        if (length(missing_zero)) {
+          paste0(paste(toupper(missing_zero), collapse = " and "),
+                 " axis does not reach zero")
+        } else {
+          "all numerical axes reach zero"
+        },
+        length(missing_zero) == 0
+      )
+    }
+  }
+
   # Text case -------------------------------------------------------------
   labels <- plot_label_text(plot)
   states_rule <- identical(spec$text_case, "sentence") || isTRUE(spec$text_no_final_stop)
@@ -130,4 +147,27 @@ annotation_rows <- function(plot, spec) {
   }
 
   rows
+}
+
+# Axis origin -------------------------------------------------------------
+
+# Which continuous axes exclude zero. Log axes are exempt: zero is not on a
+# log scale at all. Discrete axes are not numeric, so the rule cannot apply.
+axes_missing_zero <- function(plot) {
+  b <- tryCatch(ggplot2::ggplot_build(plot), error = function(e) NULL)
+  if (is.null(b)) return(NULL)
+  pp <- tryCatch(b$layout$panel_params[[1]], error = function(e) NULL)
+  if (is.null(pp)) return(NULL)
+
+  out <- character(0)
+  for (ax in c("x", "y")) {
+    rng <- pp[[paste0(ax, ".range")]]
+    if (is.null(rng) || length(rng) != 2L || anyNA(rng)) next
+    sc <- tryCatch(pp[[ax]]$scale, error = function(e) NULL)
+    if (is.null(sc) || inherits(sc, "ScaleDiscretePosition")) next
+    trans <- tryCatch(pp[[ax]]$scale$trans$name, error = function(e) NULL)
+    if (!is.null(trans) && grepl("log", trans, ignore.case = TRUE)) next
+    if (rng[1] > 0 || rng[2] < 0) out <- c(out, ax)
+  }
+  out
 }

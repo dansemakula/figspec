@@ -236,3 +236,41 @@ width: NOT STATED. "Check that the artworks supplied match or exceed the dimensi
 other stated rules, not currently checkable: tables must be real text-based tables rather than
   figures; raw data must be supplied and "Screenshots of data will not be accepted"; every figure
   needs a number and title; charts must be labelled consistently as figures.
+
+## pnas — Proceedings of the National Academy of Sciences
+source: https://www.pnas.org/author-center/submitting-your-manuscript#manuscript-formatting-guidelines
+harvested: 2026-08-22. The live page refuses automated access; text supplied by the maintainer.
+sizes (verbatim): "Provide all images at final size. ... Small: approximately 9 cm x 6 cm /
+  Medium: approximately 11 cm x 11 cm / Large: approximately 18 cm x 22 cm"
+  NOTE: these are width x height pairs, not column widths, and PNAS hedges with "approximately".
+  Widths recorded as small 90 / medium 110 / large 180 mm. Only one overall height maximum can be
+  expressed in the current schema, so 220 mm (the large height) is recorded and the per-size pairs
+  are kept here and in notes.
+type: "Ensure that all numbers, letters, and symbols are no smaller than 6 points (2 mm) and no
+  larger than 12 points (6 mm) after reduction. Keep text sizing consistent within each graphic."
+formats: "Submit images in these file formats: TIFF, EPS, PDF, or PPT."
+dpi: NOT RECORDED, and NOT marked as absent either. PNAS states "article PDFs are processed to
+  display images at 200 ppi" and "The HTML display of an article offers 300 ppi for all images".
+  Those describe PNAS's own rendering pipeline, not a requirement on the author. The actual author
+  requirement lives in the separate "PNAS Digital Art Guidelines", which has not been read, so
+  resolution is left unharvested rather than confirmed absent.
+other stated rules: "Preassemble all composite figures." 3D images as PRC or U3D, each with a 2D
+  representation in TIFF, EPS or PDF.
+
+## pnas — SUPPLEMENT: PNAS Digital Art Guidelines
+source: PNAS Digital Art Guidelines (raster/vector comparison table), supplied by the maintainer
+harvested: 2026-08-22
+NOTE ON SHAPE: this is a two-column comparison table, Raster versus Vector. The "Requirements and
+  tips" row states the SAME resolution figures in both columns (one says ppi, the other dpi), so
+  they are author requirements rather than a property of either format.
+dpi (verbatim): "300 ppi for grayscale or color images with no type or lettering, 600-900 ppi for
+  grayscale or color images with type, and 1000-1200 ppi for line art, e.g., bar graphs."
+  Mapped: no type -> dpi_min 300; with type -> dpi_combination 600 (combination art means image
+  plus lettering); line art -> dpi_line_art 1000. Floors of the stated ranges are recorded.
+colour: "Color mode should be RGB."
+axes: "Ensure that numerical axes on all graphs go to 0, except for log axes."
+  RECORDED as axes_from_zero. Checkable: the built plot exposes each panel's axis range and
+  transform, so a log axis can be exempted and a discrete axis skipped.
+other stated rules, not currently checkable: "Avoid embedding text in graphics"; error bars must be
+  clearly labelled and described; a number after a plus-or-minus sign must be identified as SEM or
+  SD; P value, magnification or scale bar given where applicable; N stated in the legend.

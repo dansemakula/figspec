@@ -552,8 +552,7 @@ journals:
     max_series_recommended: 7.0
     source_quote_series: We recommend having no more than 7 series within a given
       data visualization.
-  not_stated:
-  - columns
+  not_stated: columns
   notes: Sage states no figure dimensions, only that artwork should match or exceed
     the dimensions of the journal, so no column width is recorded. Its font guidance
     is that lettering should not vary too much in size and type and that sans serif
@@ -561,4 +560,56 @@ journals:
     maximum is explicitly a recommendation, so figspec reports it without ever grading
     it as a failure. Sage also requires captions not to use words indicating colour,
     and will not accept screenshots of data.
+- id: pnas
+  name: PNAS
+  publisher: National Academy of Sciences
+  disciplines: multidisciplinary
+  source_url: https://www.pnas.org/author-center/submitting-your-manuscript#manuscript-formatting-guidelines
+  verified_on: '2026-08-22'
+  requirements:
+    columns:
+      small: 90.0
+      medium: 110.0
+      large: 180.0
+    source_quote_width: 'Small: approximately 9 cm x 6 cm / Medium: approximately
+      11 cm x 11 cm / Large: approximately 18 cm x 22 cm'
+    height_max_mm: 220.0
+    font_min_pt: 6.0
+    font_max_pt: 12.0
+    source_quote_font: Ensure that all numbers, letters, and symbols are no smaller
+      than 6 points (2 mm) and no larger than 12 points (6 mm) after reduction.
+    formats:
+    - tiff
+    - eps
+    - pdf
+    - ppt
+    source_quote_formats: 'Submit images in these file formats: TIFF, EPS, PDF, or
+      PPT.'
+    dpi_min: 300.0
+    dpi_combination: 600.0
+    dpi_line_art: 1000.0
+    source_quote_dpi: 300 ppi for grayscale or color images with no type or lettering,
+      600-900 ppi for grayscale or color images with type, and 1000-1200 ppi for line
+      art, e.g., bar graphs.
+    colour_mode:
+    - RGB
+    source_quote_colour: Color mode should be RGB.
+    axes_from_zero: yes
+    source_quote_axes: Ensure that numerical axes on all graphs go to 0, except for
+      log axes.
+  notes: 'PNAS states figure sizes as width by height pairs, hedged with approximately:
+    small 9 x 6 cm, medium 11 x 11 cm, large 18 x 22 cm. Only the widths are recorded
+    as named sizes and only the largest height as a maximum, because the schema holds
+    one height limit per entry. PNAS says article PDFs are processed to display images
+    at 200 ppi and HTML at 300 ppi; those describe its own rendering, not a requirement
+    on the author, so no resolution is recorded and none is marked absent. The author-facing
+    figure is in the separate PNAS Digital Art Guidelines, not yet read. PNAS also
+    asks that composite figures be preassembled and that text sizing be consistent
+    within a graphic. Resolution and colour mode come from the PNAS Digital Art Guidelines,
+    whose raster and vector columns state the same numbers. The stated ranges are
+    600-900 for images with type and 1000-1200 for line art; the floor of each is
+    recorded. Images with type are mapped to combination art, which is what that category
+    means. PNAS also asks that text not be embedded in graphics, that error bars be
+    labelled and described, that a number after a plus-or-minus sign be identified
+    as SEM or SD, and that N be given in the legend.'
 

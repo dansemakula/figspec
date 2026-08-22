@@ -78,3 +78,50 @@ test_that("no verdict is claimed where the publisher states no text rule", {
   expect_match(row$actual, "not checked")
   expect_false(grepl("follow sentence case", row$actual))
 })
+
+test_that("axes that exclude zero are found, with log axes exempt", {
+  scatter <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  expect_setequal(axes_missing_zero(scatter), c("x", "y"))
+
+  # A bar chart's count axis starts at zero.
+  bars <- ggplot2::ggplot(mtcars, ggplot2::aes(factor(cyl))) + ggplot2::geom_bar()
+  expect_length(axes_missing_zero(bars), 0)
+
+  # Zero is not on a log scale, so a log axis cannot be asked to reach it.
+  logged <- scatter + ggplot2::scale_y_log10()
+  expect_equal(axes_missing_zero(logged), "x")
+
+  expect_length(axes_missing_zero(scatter + ggplot2::expand_limits(x = 0, y = 0)), 0)
+})
+
+test_that("a discrete axis is not asked to reach zero", {
+  # A factor axis is not numeric, so the rule cannot apply to it.
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(factor(cyl), mpg)) + ggplot2::geom_col()
+  expect_false("x" %in% axes_missing_zero(p))
+})
+
+test_that("PNAS states the axis rule and is checked against it", {
+  scatter <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  r <- check_journal(scatter, "pnas", column = "medium")
+  row <- r[r$check == "Axis origin", ]
+  expect_equal(row$status, "fail")
+  expect_match(row$actual, "does not reach zero")
+
+  fixed <- scatter + ggplot2::expand_limits(x = 0, y = 0)
+  expect_equal(check_journal(fixed, "pnas", column = "medium")[
+    check_journal(fixed, "pnas", column = "medium")$check == "Axis origin", ]$status, "pass")
+})
+
+test_that("journals that state no axis rule raise no axis check", {
+  scatter <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  expect_false("Axis origin" %in% check_journal(scatter, "plos_one")$check)
+  expect_false("Axis origin" %in% check_journal(scatter, "cell_press")$check)
+})
+
+test_that("PNAS resolution now comes from the Digital Art Guidelines", {
+  p <- journal_spec("pnas")
+  expect_equal(p$dpi_min, 300)          # images with no type
+  expect_equal(p$dpi_combination, 600)  # images with type, floor of 600-900
+  expect_equal(p$dpi_line_art, 1000)    # floor of 1000-1200
+  expect_equal(unlist(p$colour_mode), "RGB")
+})
