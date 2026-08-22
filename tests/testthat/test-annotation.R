@@ -68,3 +68,13 @@ test_that("ellipsis is not treated as a final full stop", {
   expect_false(has_final_stop("Loading..."))
   expect_true(has_final_stop("A sentence."))
 })
+
+test_that("no verdict is claimed where the publisher states no text rule", {
+  # Title Case with a full stop, checked against a journal that says nothing.
+  bad <- base_plot() + ggplot2::labs(title = "Fuel Economy By Cylinder Count.")
+  r <- check_journal(bad, "cell_press")
+  row <- r[r$check == "Text case", ]
+  expect_equal(row$status, "unspecified")
+  expect_match(row$actual, "not checked")
+  expect_false(grepl("follow sentence case", row$actual))
+})

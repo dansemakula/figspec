@@ -85,7 +85,15 @@ annotation_rows <- function(plot, spec) {
 
   # Text case -------------------------------------------------------------
   labels <- plot_label_text(plot)
-  if (length(labels)) {
+  states_rule <- identical(spec$text_case, "sentence") || isTRUE(spec$text_no_final_stop)
+  if (length(labels) && !states_rule) {
+    # The publisher states no rule, so nothing was tested. Saying the labels
+    # "follow sentence case" would be a verdict we never reached.
+    rows[[length(rows) + 1L]] <- new_row(
+      "Text case", "not specified by publisher",
+      paste0(length(labels), " label(s), not checked"), "unspecified"
+    )
+  } else if (length(labels)) {
     problems <- character(0)
     if (isTRUE(spec$text_no_final_stop)) {
       hits <- labels[has_final_stop(labels)]
@@ -106,9 +114,7 @@ annotation_rows <- function(plot, spec) {
                                        paste(sQuote(title_case), collapse = ", ")))
       }
     }
-    req <- if (identical(spec$text_case, "sentence") || isTRUE(spec$text_no_final_stop)) {
-      "sentence case, first letter capitalised, no final full stop"
-    } else NULL
+    req <- "sentence case, first letter capitalised, no final full stop"
     actual <- if (length(problems)) {
       paste(problems, collapse = "; ")
     } else {
