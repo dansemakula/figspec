@@ -327,3 +327,41 @@ NOT recorded: the font list is truncated in extraction ("...Roman, Courier or Sy
   pipeline, not an author requirement - the same distinction as PNAS's 200 ppi statement.
 second source, partially harvested: Figures_accessibility_journals_edition_v2.2_2024.pdf covers
   approved accessible fonts and contrast guidance; extraction was too garbled to record from.
+
+## nature — SUPPLEMENT: Nature initial-submission page (substantially expands the entry)
+source: https://www.nature.com/nature/for-authors/initial-submission
+harvested: 2026-08-22, supplied by the maintainer.
+dpi/colour: "Provide images in RGB color and at 300 dpi or higher resolution."
+fonts: "Use the same typeface (Arial or Helvetica) for all figures. Use symbol font for Greek letters."
+width/type: "Figures are best prepared at a width of 90 mm (single column) and 180 mm (double
+  column) with a maximum height of 170mm. At this size, the font size should be 5-7pt."
+  The 90/180/170 figures corroborate the formatting guide harvested on 2026-08-21 from a different
+  URL, which is why they are unchanged; the 5-7 pt type range is new.
+colour pairs: "Use distinct colors with comparable visibility and avoid the use of red and green for
+  contrast." -> recorded as avoid_colour_pairs. Imperative, unlike AGU's "strongly encouraged".
+  The adjacent sentence, that recolouring to green and magenta "is strongly encouraged", is
+  encouragement and is kept in notes. "Use of the rainbow color scale should be avoided" likewise.
+formats: ".ai, .eps, .pdf, .ps, .svg for fully editable vector-based art; layered .psd or .tif for
+  editable layered art; .psd, .tif, .png or .jpg for bitmap images; .ppt if fully editable and
+  without styling effects; ChemDraw (.cdx) for chemical structures"
+DISCREPANCY WORTH KNOWING: this page says figure legends of "<250 words each". The formatting guide
+  harvested on 2026-08-21 says "Legends should be fewer than 300 words each". Two Nature author
+  pages, two numbers. Neither is recorded as a requirement; both are noted.
+
+## ieee — IEEE (MAGAZINES author centre)
+source: https://magazines.ieeeauthorcenter.ieee.org/create-your-ieee-magazine-article/article-submission-requirements/
+harvested: 2026-08-22, supplied by the maintainer.
+SCOPE CAUTION: this is IEEE's MAGAZINE guidance. IEEE journals have a separate author centre and
+  may differ. The entry is named accordingly rather than claiming to cover IEEE journals.
+width: "Most graphics are published at one column width (3.5 inches / 21 picas wide) or two column
+  width (7.16 inches / 43 picas wide)." -> 88.9 mm and 181.9 mm
+dpi: "IEEE standards for non-vector graphics are >300dpi for color and grayscale images; and >600dpi
+  for black and white 'line art.'"
+formats: "IEEE accepts PS, EPS, PDF, PNG, or TIFF formats for graphics submission." Office documents
+  are accepted only where the graphic was drawn in that program; JPEG for author photos only.
+pixels: "column-wide graphics are at least 1050 pixels wide and page-wide graphics are 2150 pixels
+  wide" - stated as a fallback where resolution is lower, not as a general rule. Not recorded.
+greyscale/CVD: "Evaluate your graphs by checking whether they can be interpreted correctly from a
+  greyscale printout." Framed within a tips section, so NOT recorded as print_greyscale. Its
+  red/green sentence describes what CVD readers find hard, and is not a prohibition, unlike
+  Nature's. Kept in notes.

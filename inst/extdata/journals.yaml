@@ -65,8 +65,8 @@ journals:
   name: Nature
   publisher: Springer Nature
   disciplines: multidisciplinary
-  source_url: https://www.nature.com/nature/for-authors/formatting-guide
-  verified_on: '2026-08-21'
+  source_url: https://www.nature.com/nature/for-authors/initial-submission
+  verified_on: '2026-08-22'
   requirements:
     columns:
       single: 90
@@ -78,6 +78,37 @@ journals:
     text_no_final_stop: yes
     source_quote_text_case: Lettering in figures (labelling of axes and so on) should
       be in lower-case type, with the first letter capitalized and no full stop.
+    dpi_min: 300.0
+    source_quote_dpi: Provide images in RGB color and at 300 dpi or higher resolution.
+    colour_mode:
+    - RGB
+    font_families:
+    - Arial
+    - Helvetica
+    source_quote_font_family: Use the same typeface (Arial or Helvetica) for all figures.
+      Use symbol font for Greek letters.
+    font_min_pt: 5.0
+    font_max_pt: 7.0
+    source_quote_font: Figures are best prepared at a width of 90 mm (single column)
+      and 180 mm (double column) with a maximum height of 170mm. At this size, the
+      font size should be 5-7pt.
+    formats:
+    - ai
+    - eps
+    - pdf
+    - ps
+    - svg
+    - psd
+    - tiff
+    - png
+    - jpeg
+    - ppt
+    - cdx
+    avoid_colour_pairs:
+    - - red
+      - green
+    source_quote_colour_pairs: Use distinct colors with comparable visibility and
+      avoid the use of red and green for contrast.
   tables:
     orientation: portrait
     title_style: short, one-line title in bold text
@@ -86,8 +117,13 @@ journals:
       short, one-line title in bold text. Tables should be as small as possible.
     notes: |
       Symbols and abbreviations are defined immediately below the table, followed by essential descriptive material, all in double-spaced text.
-  notes: |
-    Figure legends should be fewer than 300 words each. Lettering in figures should be lower-case with the first letter capitalized and no full stop. Scale bars should be used rather than magnification factors. This entry records the formatting guide; Nature asks for production-quality figures only after acceptance in principle, under a separate figure guide.
+  notes: Widths and maximum height are corroborated by Nature s formatting guide at
+    a different URL, harvested a day earlier. Nature strongly encourages recolouring
+    primary data to colour-safe combinations such as green and magenta, and says the
+    rainbow colour scale should be avoided; both are encouragement rather than rules
+    and are not graded. Two Nature author pages give different figure-legend word
+    limits, under 250 on the initial-submission page and fewer than 300 in the formatting
+    guide; neither is recorded.
 - id: cell_press
   name: Cell Press journals
   publisher: Cell Press (Elsevier)
@@ -660,8 +696,7 @@ journals:
     dpi_min: 300.0
     source_quote_dpi: A minimum resolution of 300 ppi will maintain the crisp edges
       of the lines and shapes.
-    formats:
-    - tiff
+    formats: tiff
   notes: Two cautions. The source PDF sits under a 2017 upload path and may be close
     to a decade old. It also contains links to plosmedicine.org images, suggesting
     it was adapted from another publisher guide, though its width figures differ from
@@ -688,8 +723,7 @@ journals:
     min_line_pt: 0.25
     max_line_pt: 1.0
     source_quote_line: Set line thickness between 0.25pt and 1pt
-  not_stated:
-  - columns
+  not_stated: columns
   notes: 'OUP frames this document as tips rather than strict rules, because image
     content, source material and software may constrain what an author can achieve,
     and directs authors to the individual journal website as well. The figures are
@@ -698,4 +732,37 @@ journals:
     or between. OUP also says PDF proofs reduce raster images to 200dpi, which describes
     its proofing pipeline rather than an author requirement, so it is not recorded.
     Its font list was truncated in extraction and is not recorded.'
+- id: ieee_magazines
+  name: IEEE magazines
+  publisher: IEEE
+  disciplines:
+  - engineering
+  - computer-science
+  source_url: https://magazines.ieeeauthorcenter.ieee.org/create-your-ieee-magazine-article/article-submission-requirements/
+  verified_on: '2026-08-22'
+  requirements:
+    columns:
+      single: 88.9
+      double: 181.9
+    source_quote_width: Most graphics are published at one column width (3.5 inches
+      / 21 picas wide) or two column width (7.16 inches / 43 picas wide).
+    dpi_min: 300.0
+    dpi_line_art: 600.0
+    source_quote_dpi: IEEE standards for non-vector graphics are >300dpi for color
+      and grayscale images; and >600dpi for black and white line art.
+    formats:
+    - ps
+    - eps
+    - pdf
+    - png
+    - tiff
+    source_quote_formats: IEEE accepts PS, EPS, PDF, PNG, or TIFF formats for graphics
+      submission.
+  notes: This is IEEE s guidance for MAGAZINES; IEEE journals have a separate author
+    centre and may differ. IEEE states that text within a graphic is replaced during
+    production to match magazine style. Where resolution is lower it accepts column-wide
+    graphics of at least 1050 pixels and page-wide of 2150, as a fallback rather than
+    a general rule, so that is not recorded. Its accessibility tips ask authors to
+    check whether a graph reads correctly from a greyscale printout and to use shape
+    as well as colour; framed as tips, so not graded.
 

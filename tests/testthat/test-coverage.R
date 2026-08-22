@@ -209,3 +209,47 @@ test_that("entries carry the caveats that make them auditable", {
   expect_false(grepl("\\b200dpi", journal_spec("oup")$source_quote_dpi))
   expect_false(grepl("proof", journal_spec("oup")$source_quote_dpi, ignore.case = TRUE))
 })
+
+test_that("Nature's expanded entry enforces its own narrow type range", {
+  n <- journal_spec("nature")
+  expect_equal(n$font_min_pt, 5)
+  expect_equal(n$font_max_pt, 7)
+  expect_setequal(unlist(n$font_families), c("Arial", "Helvetica"))
+  expect_equal(unlist(n$colour_mode), "RGB")
+  # Corroborated across two Nature author pages harvested a day apart.
+  expect_equal(n$columns$single, 90)
+  expect_equal(n$columns$double, 180)
+  expect_equal(n$height_max_mm, 170)
+
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point() +
+    ggplot2::labs(title = "Fuel economy")
+  # ggplot2's defaults run 8.8-13.2 pt, well outside 5-7.
+  expect_equal(check_journal(p, "nature")[
+    check_journal(p, "nature")$check == "Type size", ]$status, "fail")
+  fixed <- p + theme_journal("nature")
+  expect_equal(check_journal(fixed, "nature")[
+    check_journal(fixed, "nature")$check == "Type size", ]$status, "pass")
+})
+
+test_that("Nature forbids red with green, and says so imperatively", {
+  # "avoid the use of red and green for contrast" is an instruction, unlike
+  # AGU's "strongly encouraged", which is not recorded as a requirement.
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
+    ggplot2::geom_point()
+  expect_equal(check_journal(p, "nature")[
+    check_journal(p, "nature")$check == "Colour pairs", ]$status, "fail")
+
+  safe <- p + scale_colour_figspec("cividis")
+  expect_equal(check_journal(safe, "nature")[
+    check_journal(safe, "nature")$check == "Colour pairs", ]$status, "pass")
+
+  expect_null(journal_spec("agu")$avoid_colour_pairs)
+})
+
+test_that("IEEE inch measurements convert, and the entry names its scope", {
+  expect_equal(fig_width("ieee_magazines", "single"), round(3.5 * 25.4, 1))
+  expect_equal(fig_width("ieee_magazines", "double"), round(7.16 * 25.4, 1))
+  # This is IEEE's magazine guidance, not its journal guidance.
+  expect_match(journal_spec("ieee_magazines")$name, "magazines")
+  expect_match(journal_spec("ieee_magazines")$notes, "journals have a separate author centre")
+})
