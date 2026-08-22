@@ -27,7 +27,37 @@
 #                  harvested", because only the first is a fact about the
 #                  publisher; the second is a fact about this registry.
 #
-# Units: widths/heights in millimetres, type sizes in points, files in MB.
+#   RECORDING HEDGED WORDING
+#
+#     Publishers hedge constantly, and the hedge is not what decides. What
+#     decides is the MAIN VERB of the sentence that states the rule.
+#
+#     1. A hedge about the DOCUMENT does not downgrade a rule inside it.
+#        OUP calls its whole guide "tips rather than strict rules", then says
+#        "at least 300dpi for colour half-tones". That is recorded as a
+#        requirement: the hedge concerns whether an author can always achieve
+#        a target, not whether the target applies. Confirmed 2026-08-22.
+#
+#     2. A hedge about ACHIEVABILITY does not downgrade a rule either.
+#        Elsevier calls its 7 pt lettering "a rule-of-thumb rather than a
+#        strict rule" and still says "no smaller than 6 pt". Recorded.
+#
+#     3. A rule whose MAIN VERB is a recommendation goes in an advisory field
+#        and is REPORTED BUT NEVER GRADED. Sage says "We recommend having no
+#        more than 7 series": the verb is recommend, so it is
+#        max_series_recommended, and a figure with ten series is reported, not
+#        failed. Compare MDPI's "should be ... preferably no less than 600
+#        dpi", where the verb is should and preferably only softens it.
+#
+#     4. A LIST is recorded only where the publisher CLOSES it. PLOS says
+#        "Use only Arial, Times, or Symbol font", which excludes everything
+#        else, so font_families is recorded. ACS says Helvetica or Arial
+#        "work well" and Springer that it "is best to use" them; neither
+#        excludes anything, so neither is recorded.
+#
+#     When in doubt, do not grade. An unrecorded rule costs a user a check.
+#     A wrongly graded one tells them they broke a rule that does not exist.
+#
 
 schema_version: 2
 journals:

@@ -326,6 +326,23 @@ claim in figspec's mouth that nobody earned:
 | Field listed in `not_stated:` | `not specified by publisher` | Somebody read the page and confirmed the rule is absent |
 | Field in neither | `not yet harvested for this journal` | **Nobody has looked yet** |
 
+### How hedged wording is recorded
+
+Publishers hedge constantly. What decides is the **main verb of the sentence
+stating the rule**, not the presence of a hedge:
+
+| Publisher's wording | Recorded as |
+|---|---|
+| OUP: whole guide is *"tips rather than strict rules"*, then *"at least 300dpi"* | **Requirement** — the hedge is about achievability, not applicability |
+| Elsevier: *"a rule-of-thumb rather than a strict rule"*, then *"no smaller than 6 pt"* | **Requirement** |
+| MDPI: *"should be ... preferably no less than 600 dpi"* | **Requirement** — the verb is *should* |
+| Sage: *"We recommend having no more than 7 series"* | **Advisory** — the verb is *recommend*. Reported, never graded |
+| ACS: *"Helvetica or Arial fonts work well"* | **Not recorded** — excludes nothing |
+| PLOS: *"Use only Arial, Times, or Symbol font"* | **Requirement** — a closed set |
+
+When in doubt, don't grade. An unrecorded rule costs a user a check. A wrongly
+graded one tells them they broke a rule that does not exist.
+
 The first two are facts about the publisher. The third is a fact about this
 registry, and saying so is the difference between a registry you can trust and
 one that is confidently wrong. Listing a field in both places is a load-time

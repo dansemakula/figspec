@@ -313,10 +313,11 @@ FRAMING, verbatim: "Below are tips rather than strict rules, as image content, s
   available software may constrain what you are able to achieve. Please use these guidelines
   alongside any specific instructions provide on the website of the journal to which you are
   submitting."
-  JUDGEMENT: recorded as requirements even so. The hedge is about whether an author can always
+  JUDGEMENT, CONFIRMED BY THE MAINTAINER 2026-08-22: recorded as requirements. The hedge is about whether an author can always
   achieve the target, not about whether the numbers apply; each figure is stated as "at least",
-  "no less than" or "between". The wording is kept in notes so a reader sees the framing. If you
-  disagree, move these to advisory fields.
+  "no less than" or "between". The wording is kept in the entry so a reader sees the framing. This decision is now the
+  registry general policy for hedged wording; see RECORDING HEDGED WORDING at the top of
+  inst/extdata/journals.yaml.
 dpi: "at least 300dpi for colour half-tones; at least 600dpi for greyscale half-tones; 600-900dpi
   for combination half-tones and line art; at least 1200dpi for monochrome line art;
   (pure vector images have no inherent resolution)"

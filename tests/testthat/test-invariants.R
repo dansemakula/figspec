@@ -79,3 +79,63 @@ test_that("no recorded resolution quote is a publisher's own rendering pipeline"
     expect_false(grepl("\\b200\\s*(dpi|ppi)", q, ignore.case = TRUE), info = j$id)
   }
 })
+
+# The registry's policy for hedged wording, pinned across every case that
+# prompted it. See RECORDING HEDGED WORDING in inst/extdata/journals.yaml.
+
+test_that("a hedge about the document does not downgrade a rule inside it", {
+  # OUP calls its whole guide "tips rather than strict rules" and still states
+  # "at least 300dpi". Confirmed by the maintainer: graded.
+  expect_equal(journal_spec("oup")$dpi_min, 300)
+  expect_match(journal_spec("oup")$notes, "tips rather than strict rules")
+
+  path <- withr::local_tempfile(fileext = ".png")
+  grDevices::png(path, width = 84, height = 60, units = "mm", res = 150)
+  plot(mtcars$wt, mtcars$mpg)
+  grDevices::dev.off()
+  r <- check_journal(path, "oup", dpi = 150)
+  expect_equal(r[r$check == "Resolution", ]$status, "fail")
+})
+
+test_that("a hedge about achievability does not downgrade a rule", {
+  # Elsevier calls its lettering target "a rule-of-thumb rather than a strict
+  # rule" and still says "no smaller than 6 pt".
+  expect_equal(journal_spec("elsevier")$font_min_pt, 6)
+  expect_match(journal_spec("elsevier")$notes, "rule-of-thumb")
+})
+
+test_that("a rule whose main verb is a recommendation is never graded", {
+  # Sage: "We recommend having no more than 7 series".
+  s <- journal_spec("sage")
+  expect_equal(s$max_series_recommended, 7)
+  expect_false("max_series_recommended" %in% requirement_keys())
+
+  many <- data.frame(x = rep(1:5, 10), y = rep(1:10, each = 5),
+                     g = factor(rep(LETTERS[1:10], each = 5)))
+  p <- ggplot2::ggplot(many, ggplot2::aes(x, y, colour = g)) + ggplot2::geom_line()
+  row <- check_journal(p, "sage")[check_journal(p, "sage")$check == "Series count", ]
+  expect_equal(row$status, "unspecified")
+  expect_match(row$actual, "above the 7 recommended")
+})
+
+test_that("softened wording around a directive verb is still graded", {
+  # MDPI: "should be ... preferably no less than 600 dpi". The verb is should.
+  expect_equal(journal_spec("mdpi")$dpi_min, 600)
+  # Springer: "usually about 2-3 mm (8-12 pt)".
+  expect_equal(journal_spec("springer")$font_min_pt, 8)
+})
+
+test_that("a list is recorded only where the publisher closes it", {
+  # PLOS closes its set: "Use only Arial, Times, or Symbol font".
+  expect_setequal(unlist(journal_spec("plos_one")$font_families),
+                  c("Arial", "Times", "Symbol"))
+  # ACS says they "work well"; Springer that it "is best to use" them. Neither
+  # excludes anything, so neither is recorded.
+  expect_null(journal_spec("acs")$font_families)
+  expect_null(journal_spec("springer")$font_families)
+})
+
+test_that("an advisory field never appears among the graded requirement keys", {
+  advisory <- c("max_series_recommended")
+  expect_length(intersect(advisory, requirement_keys()), 0)
+})
