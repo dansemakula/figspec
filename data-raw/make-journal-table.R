@@ -23,15 +23,29 @@ tbl <- c(
           }, character(1)))
 )
 
+# A long table dominates the page and will only grow, so the scannable list
+# stays visible and the detail folds away. <details> renders on GitHub and in
+# pkgdown alike.
+names_line <- paste(rows$name, collapse = " · ")
+
 block <- c(
   "## Journals covered",
   "",
-  sprintf("%d entries, %d of them covering a publisher's whole portfolio.",
-          nrow(rows), sum(rows$scope == "publisher")),
+  sprintf("**%d entries**, %d of them covering a publisher's whole portfolio, across %d disciplines.",
+          nrow(rows), sum(rows$scope == "publisher"),
+          length(unique(unlist(strsplit(paste(rows$disc, collapse = ", "), ", "))))),
+  "",
+  names_line,
+  "",
+  "<details>",
+  "<summary><strong>Full table</strong> — ids, coverage, and how much has been harvested</summary>",
   "",
   tbl,
   "",
   "`Fields` counts the requirements harvested so far for that entry.",
+  "",
+  "</details>",
+  "",
   "[The full table of widths, resolutions and type sizes](https://dansemakula.github.io/figspec/articles/journals.html)",
   "is generated from the registry, as is",
   "[the reference to every function and option](https://dansemakula.github.io/figspec/articles/options.html).",

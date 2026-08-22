@@ -168,7 +168,12 @@ suggest_art_type(p, "bmj")
 
 ## Journals covered
 
-27 entries, 21 of them covering a publisher's whole portfolio.
+**27 entries**, 21 of them covering a publisher's whole portfolio, across 20 disciplines.
+
+American Chemical Society journals · American Geophysical Union journals · American Physical Society journals · BMJ journals · Cambridge University Press journals · Cell Press journals · Copernicus Publications journals · Elsevier journals · Frontiers journals · IEEE journals · IEEE magazines · IOP Publishing journals · Journal of Statistical Software · MDPI journals · Nature · Oxford University Press journals · PLOS ONE · PNAS · Royal Society journals · Royal Society of Chemistry books · Royal Society of Chemistry journals · Sage journals · Science · Springer journals · STAR Protocols · Taylor & Francis and Routledge journals · Wiley journals
+
+<details>
+<summary><strong>Full table</strong> — ids, coverage, and how much has been harvested</summary>
 
 | Journal or publisher | `id` | Covers | Fields |
 |---|---|---|---|
@@ -201,6 +206,9 @@ suggest_art_type(p, "bmj")
 | Wiley journals | `wiley` | all its journals | 5 |
 
 `Fields` counts the requirements harvested so far for that entry.
+
+</details>
+
 [The full table of widths, resolutions and type sizes](https://dansemakula.github.io/figspec/articles/journals.html)
 is generated from the registry, as is
 [the reference to every function and option](https://dansemakula.github.io/figspec/articles/options.html).
