@@ -11,11 +11,12 @@ template:
 home:
   title: Fit your plots to your journal's figure requirements
   description: >
-    figspec lets you fit your plots to your target journal's published figure
-    requirements, or check whether they already meet them, without looking
-    those requirements up every time. It brings the requirements of 27
-    publishers into your R session as data, builds your figure to meet them,
-    and exports it at exactly the stated size and resolution.
+    Journals publish precise rules for the figures you submit: column widths to
+    the millimetre, minimum resolution, which file formats they take, how small
+    type is allowed to get. The rules differ between publishers and are
+    scattered across author-guideline pages. figspec keeps them in one place,
+    applies them to your ggplot2 figures, and tells you where a figure would
+    fail.
 
 navbar:
   structure:

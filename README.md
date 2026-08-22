@@ -5,14 +5,14 @@
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
-figspec lets you quickly and reliably **fit your plots to** your target
-journal's published figure requirements, or **check whether they already meet
-them** — without looking those requirements up every time.
+Journals publish precise rules for the figures you submit: column widths to the
+millimetre, minimum resolution, which file formats they take, how small type is
+allowed to get. The rules are real, they differ between publishers, and they are
+scattered across author-guideline pages that are easy to skim past. Most people
+find out they got one wrong at the production stage, after acceptance.
 
-It brings the requirements of 27 publishers into your R session as data, builds
-your figure to meet them, and exports it at exactly the stated size and
-resolution. Every requirement records the page it came from and the date it was
-read.
+**figspec** keeps those requirements in one place, applies them to your ggplot2
+figures, and tells you where a figure would fail.
 
 ## Installation
 
@@ -25,7 +25,23 @@ figspec is **experimental**: the registry is roughly a fifth populated against
 the full field grid, and the API may still change. `registry_status()` reports
 exactly how much of each entry has been harvested.
 
-## How you use it
+## Why the width matters
+
+Type size in a figure is absolute. An 8 pt label is 8 pt. If you save a figure
+at 180 mm and the journal drops it into an 85 mm column, everything in it
+shrinks by more than half, and your 8 pt label lands at 3.8 pt. Saving at the
+journal's real column width is what keeps a compliant figure compliant.
+
+## Where this fits in your workflow
+
+figspec lets you quickly and reliably fit your plots to your target journal's
+published figure requirements, or check whether they already meet them, without
+looking those requirements up every time.
+
+It brings the requirements of 27 publishers into your R session as data, builds
+your figure to meet them, and exports it at exactly the stated size and
+resolution. Every requirement records the page it came from and the date it was
+read.
 
 ### 1. Check whether a plot meets a journal's requirements
 
