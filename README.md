@@ -166,6 +166,46 @@ art means monochrome.
 suggest_art_type(p, "bmj")
 ```
 
+## Journals covered
+
+27 entries, 21 of them covering a publisher's whole portfolio.
+
+| Journal or publisher | `id` | Covers | Fields |
+|---|---|---|---|
+| American Chemical Society journals | `acs` | all its journals | 7 |
+| American Geophysical Union journals | `agu` | all its journals | 2 |
+| American Physical Society journals | `aps` | all its journals | 2 |
+| BMJ journals | `bmj` | all its journals | 4 |
+| Cambridge University Press journals | `cambridge` | all its journals | 7 |
+| Cell Press journals | `cell_press` | all its journals | 15 |
+| Copernicus Publications journals | `copernicus` | all its journals | 4 |
+| Elsevier journals | `elsevier` | all its journals | 6 |
+| Frontiers journals | `frontiers` | all its journals | 6 |
+| IEEE journals | `ieee` | all its journals | 4 |
+| IEEE magazines | `ieee_magazines` | all its journals | 4 |
+| IOP Publishing journals | `iop` | all its journals | 5 |
+| Journal of Statistical Software | `jss` | this journal | 1 |
+| MDPI journals | `mdpi` | all its journals | 2 |
+| Nature | `nature` | this journal | 14 |
+| Oxford University Press journals | `oup` | all its journals | 7 |
+| PLOS ONE | `plos_one` | this journal | 11 |
+| PNAS | `pnas` | this journal | 10 |
+| Royal Society journals | `royal_society` | all its journals | 6 |
+| Royal Society of Chemistry books | `rsc_books` | all its journals | 5 |
+| Royal Society of Chemistry journals | `rsc` | all its journals | 4 |
+| Sage journals | `sage` | all its journals | 4 |
+| Science | `science` | this journal | 3 |
+| Springer journals | `springer` | all its journals | 11 |
+| STAR Protocols | `star_protocols` | this journal | 3 |
+| Taylor & Francis and Routledge journals | `taylor_francis` | all its journals | 8 |
+| Wiley journals | `wiley` | all its journals | 5 |
+
+`Fields` counts the requirements harvested so far for that entry.
+[The full table of widths, resolutions and type sizes](https://dansemakula.github.io/figspec/articles/journals.html)
+is generated from the registry, as is
+[the reference to every function and option](https://dansemakula.github.io/figspec/articles/options.html).
+Use `journal_spec(id)` for any entry's full specification and its source.
+
 ## Looking things up
 
 ```r

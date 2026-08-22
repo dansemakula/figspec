@@ -30,6 +30,8 @@ navbar:
         href: articles/figspec.html
       - text: Which journal am I submitting to?
         href: articles/journals.html
+      - text: Every function and what its options do
+        href: articles/options.html
       - text: "The registry: provenance, and adding your own"
         href: articles/registry.html
 
