@@ -20,6 +20,12 @@
 #   source_url and verified_on are REQUIRED on every entry.
 #   source_quote_* holds the publisher wording for load-bearing numbers so an
 #   entry can be audited without leaving this file.
+#   not_stated:    Fields somebody READ the publisher page for and confirmed
+#                  the publisher does not state. This is different from a
+#                  field nobody has looked at yet. figspec reports the first
+#                  as "not specified by publisher" and the second as "not yet
+#                  harvested", because only the first is a fact about the
+#                  publisher; the second is a fact about this registry.
 #
 # Units: widths/heights in millimetres, type sizes in points, files in MB.
 
@@ -169,6 +175,8 @@ journals:
     min_line_pt: 2
   notes: |
     The two-point minimum line width is unusually heavy compared with other publishers; it is stated as "Any lines in the graphic should be no smaller than two points wide."
+  not_stated:
+  - max_file_mb
 - id: iop
   name: IOP Publishing journals
   publisher: IOP Publishing
@@ -197,6 +205,10 @@ journals:
     font_min_pt: 8
     font_max_pt: 12
     source_quote_font: Aim for text sizes of 8 to 12 pt at the final figure size
+  not_stated:
+  - dpi_min
+  - colour_mode
+  - max_file_mb
 - id: cambridge
   name: Cambridge University Press journals
   publisher: Cambridge University Press
@@ -229,6 +241,9 @@ journals:
     colour_mode: CMYK
     source_quote_colour: Where submitting colour illustrations, they should be supplied
       in CMYK colour mode
+  not_stated:
+  - columns
+  - max_file_mb
 - id: royal_society
   name: Royal Society journals
   publisher: The Royal Society
@@ -251,6 +266,9 @@ journals:
       necessary or restricted for space, but should be no smaller than 7.5pt
   notes: |
     All figures are published in colour online but reproduced in black and white in print versions by default, so figures should remain readable without colour.
+  not_stated:
+  - columns
+  - dpi_min
 - id: copernicus
   name: Copernicus Publications journals
   publisher: Copernicus (EGU)
@@ -275,6 +293,9 @@ journals:
     max_file_mb: 5
   notes: |
     Overall submission excluding supplements should not exceed 30 MB.
+  not_stated:
+  - font_min_pt
+  - colour_mode
 - id: wiley
   name: Wiley journals
   publisher: Wiley
@@ -298,6 +319,9 @@ journals:
     max_file_mb: 10
   notes: |
     The Wiley artwork guidelines PDF is self-dated "Updated 1 September 2016". Individual Wiley journals may state stricter requirements; check the specific journal before relying on this entry.
+  not_stated:
+  - colour_mode
+  - font_min_pt
 - id: jss
   name: Journal of Statistical Software
   publisher: Foundation for Open Access Statistics
@@ -315,11 +339,13 @@ journals:
     style guide with res = 144, with a note that higher resolutions may be needed.
     Graphics annotation should be about the size of the figure caption or a little
     smaller.
+  not_stated:
+  - columns
+  - colour_mode
 - id: science
   name: Science
   publisher: AAAS
-  disciplines:
-  - multidisciplinary
+  disciplines: multidisciplinary
   source_url: https://www.science.org/content/page/instructions-preparing-initial-manuscript
   verified_on: '2026-08-22'
   requirements:

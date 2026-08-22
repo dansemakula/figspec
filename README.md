@@ -310,6 +310,22 @@ journal_spec("frontiers")$source_url
 #> "https://www.frontiersin.org/guidelines/author-guidelines"
 ```
 
+### Three states, not two
+
+A blank field means one of two different things, and conflating them puts a
+claim in figspec's mouth that nobody earned:
+
+| In the entry | Reported as | Means |
+|---|---|---|
+| Value in `requirements:` | graded `pass` / `fail` | The publisher states it |
+| Field listed in `not_stated:` | `not specified by publisher` | Somebody read the page and confirmed the rule is absent |
+| Field in neither | `not yet harvested for this journal` | **Nobody has looked yet** |
+
+The first two are facts about the publisher. The third is a fact about this
+registry, and saying so is the difference between a registry you can trust and
+one that is confidently wrong. Listing a field in both places is a load-time
+error.
+
 Fields a publisher does not state are **omitted**, never filled in from a
 sibling journal or from a plausible guess. The registry lives in a single
 readable file, [`inst/extdata/journals.yaml`](inst/extdata/journals.yaml), and
@@ -332,12 +348,49 @@ so rather than passing the default off as a rule.
 Guidelines change. Check the `verified_on` date, and treat the publisher's
 current page as the authority.
 
+## Maintaining the registry
+
+Author guidelines change, and an entry read two years ago reads exactly like
+one read yesterday unless something says so:
+
+```r
+registry_status()
+#>          id verified_on age_days stated confirmed_absent unharvested
+#>      nature  2026-08-21        1      2                0          15
+#>  cell_press  2026-08-21        1     13                0           4
+
+stale_entries(max_age_days = 365)
+```
+
+`stated` / `confirmed_absent` / `unharvested` are the three states below, and
+they always sum to the full field list, so a half-finished entry cannot pass
+as a complete one.
+
 ## Contributing a journal
 
-Add an entry to `inst/extdata/journals.yaml` with a `source_url` and
-`verified_on`, quote the publisher's wording for any width, resolution or type
-size, and omit anything they do not state. The package refuses to load a
-registry entry that has no provenance.
+```r
+new_journal_entry("plos_biology", "PLOS Biology",
+                  "https://journals.plos.org/plosbiology/s/figures")
+```
+
+prints a skeleton naming every field figspec understands. Fill in what the
+page states, list what you confirmed absent under `not_stated`, and leave the
+rest alone — an untouched field reports as not yet harvested, which is true.
+
+```r
+validate_registry_file("my-journals.yaml")   # before you open a pull request
+load_journals("my-journals.yaml")            # to use it in this session
+```
+
+The package refuses to load an entry with no provenance, one that puts a
+requirement in `house_style`, or one that claims a field is both stated and
+absent.
+
+`data-raw/harvest.R` holds a toolkit for collecting entries at scale: journal
+discovery through the DOAJ API, fetching, extraction of the publisher's own
+specification sentences, and emission of reviewable candidates. It never
+writes to the registry — auto-populating it would destroy the one property
+that makes it worth trusting.
 
 ## Licence
 

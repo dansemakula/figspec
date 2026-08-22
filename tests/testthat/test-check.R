@@ -24,10 +24,14 @@ test_that("a default plot breaches a journal ceiling and the theme repairs it", 
 })
 
 test_that("a requirement the publisher does not state is never a pass", {
-  # Frontiers states no maximum file size and no height limit.
   r <- check_journal(make_plot(), "frontiers")
+  # The harvest notes record Frontiers' file-size rule as confirmed absent.
   expect_equal(r[r$check == "File size", ]$status, "unspecified")
-  expect_equal(r[r$check == "Height", ]$status, "unspecified")
+  # Height is different: Frontiers says figures should be no longer than one
+  # page but gives no measurement, and nobody has resolved that into a number.
+  # Claiming the publisher states nothing would be an assumption, so this
+  # reports as unharvested rather than unspecified.
+  expect_equal(r[r$check == "Height", ]$status, "unknown")
   expect_false(any(r$status == "unspecified" & r$requirement != "not specified by publisher"))
 })
 

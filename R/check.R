@@ -235,6 +235,7 @@ inspect_file <- function(path) {
 # Report assembly --------------------------------------------------------
 
 UNSTATED <- "not specified by publisher"
+UNHARVESTED <- "not yet harvested for this journal"
 
 new_row <- function(check, requirement, actual, status) {
   # A publisher that states no requirement cannot be passed or failed. Rather
@@ -245,17 +246,28 @@ new_row <- function(check, requirement, actual, status) {
   if (identical(requirement, UNSTATED) && status %in% c("pass", "fail")) {
     status <- "unspecified"
   }
+  if (identical(requirement, UNHARVESTED) && status %in% c("pass", "fail")) {
+    status <- "unknown"
+  }
   data.frame(
     check = check, requirement = requirement, actual = actual,
     status = status, stringsAsFactors = FALSE
   )
 }
 
-# An unstated requirement is reported as unspecified. It must never be
-# recorded as a pass: the publisher has not told us what would pass.
-graded <- function(check, requirement, actual, ok) {
+# A blank requirement means one of two different things, and conflating them
+# puts a claim in figspec's mouth that nobody earned. If the entry records the
+# field in `not_stated`, somebody read the publisher's page and confirmed the
+# rule is absent. If it does not, nobody has looked yet. The first is a fact
+# about the publisher; the second is a fact about the registry.
+graded <- function(check, requirement, actual, ok, spec = NULL, fields = NULL) {
   if (is.null(requirement) || is.na(requirement) || !nzchar(requirement)) {
-    return(new_row(check, UNSTATED, actual %||% "-", "unspecified"))
+    confirmed <- !is.null(spec) && !is.null(fields) &&
+      length(fields) > 0 && all(fields %in% unlist(spec$not_stated %||% list()))
+    if (confirmed) {
+      return(new_row(check, UNSTATED, actual %||% "-", "unspecified"))
+    }
+    return(new_row(check, UNHARVESTED, actual %||% "-", "unknown"))
   }
   if (is.null(actual) || is.na(actual) || !nzchar(actual)) {
     return(new_row(check, requirement, "could not determine", "unknown"))
@@ -380,7 +392,8 @@ check_journal <- function(x, journal, column = "single",
     if (!is.null(spec$height_max_mm)) paste0("max ", spec$height_max_mm, " mm") else NULL,
     if (!is.null(actual_h)) paste0(fmt_num(actual_h), " mm") else NULL,
     !is.null(actual_h) && !is.null(spec$height_max_mm) &&
-      actual_h <= as.numeric(spec$height_max_mm) + 0.5
+      actual_h <= as.numeric(spec$height_max_mm) + 0.5,
+    spec, "height_max_mm"
   )
 
   # Resolution ------------------------------------------------------------
@@ -415,7 +428,8 @@ check_journal <- function(x, journal, column = "single",
       "Resolution", req_dpi_txt,
       if (!is.null(actual_dpi)) paste0(fmt_num(actual_dpi, 0), " dpi") else NULL,
       !is.null(actual_dpi) && !is.null(required_dpi) &&
-        actual_dpi >= as.numeric(required_dpi)
+        actual_dpi >= as.numeric(required_dpi),
+      spec, "dpi_min"
     )
   }
 
@@ -425,7 +439,8 @@ check_journal <- function(x, journal, column = "single",
     if (!is.null(spec$formats)) paste(toupper(unlist(spec$formats)), collapse = ", ") else NULL,
     if (!is.null(actual_format)) toupper(actual_format) else NULL,
     !is.null(actual_format) && !is.null(spec$formats) &&
-      tolower(actual_format) %in% tolower(unlist(spec$formats))
+      tolower(actual_format) %in% tolower(unlist(spec$formats)),
+    spec, "formats"
   )
 
   # Type size -------------------------------------------------------------
@@ -442,13 +457,13 @@ check_journal <- function(x, journal, column = "single",
     rows[[length(rows) + 1L]] <- graded(
       "Type size", req_txt,
       paste0("smallest ", fmt_num(smallest), " pt, largest ", fmt_num(largest), " pt"),
-      ok_txt
+      ok_txt, spec, "font_min_pt"
     )
   } else {
     rows[[length(rows) + 1L]] <- graded(
       "Type size",
       if (!is.null(spec$font_min_pt)) paste0("min ", spec$font_min_pt, " pt") else NULL,
-      NULL, NA
+      NULL, NA, spec, "font_min_pt"
     )
   }
 
@@ -462,7 +477,8 @@ check_journal <- function(x, journal, column = "single",
     if (!is.null(spec$font_families)) paste(unlist(spec$font_families), collapse = ", ") else NULL,
     actual_family,
     !is.null(actual_family) && !is.null(spec$font_families) &&
-      tolower(actual_family) %in% tolower(unlist(spec$font_families))
+      tolower(actual_family) %in% tolower(unlist(spec$font_families)),
+    spec, "font_families"
   )
 
   # Line width ------------------------------------------------------------
@@ -475,13 +491,13 @@ check_journal <- function(x, journal, column = "single",
     )
   } else NULL
   rows[[length(rows) + 1L]] <- if (!length(line_pts)) {
-    graded("Line width", lw_req, NULL, NA)
+    graded("Line width", lw_req, NULL, NA, spec, "min_line_pt")
   } else {
     ok_lw <- (is.null(spec$min_line_pt) || min(line_pts) >= as.numeric(spec$min_line_pt) - 1e-6) &&
       (is.null(spec$max_line_pt) || max(line_pts) <= as.numeric(spec$max_line_pt) + 1e-6)
     graded("Line width", lw_req,
            paste0(fmt_num(min(line_pts), 2), " to ", fmt_num(max(line_pts), 2), " pt"),
-           ok_lw)
+           ok_lw, spec, "min_line_pt")
   }
 
   # Point outline ---------------------------------------------------------
@@ -493,7 +509,8 @@ check_journal <- function(x, journal, column = "single",
       (is.null(spec$min_line_pt) ||
          min(shp$outline_pt) >= as.numeric(spec$min_line_pt) - 1e-6) &&
         (is.null(spec$max_line_pt) ||
-           max(shp$outline_pt) <= as.numeric(spec$max_line_pt) + 1e-6)
+           max(shp$outline_pt) <= as.numeric(spec$max_line_pt) + 1e-6),
+      spec, "min_line_pt"
     )
   }
 
@@ -504,7 +521,8 @@ check_journal <- function(x, journal, column = "single",
     if (!is.null(spec$colour_mode)) paste(unlist(spec$colour_mode), collapse = " or ") else NULL,
     actual_mode,
     !is.null(actual_mode) && !is.null(spec$colour_mode) &&
-      tolower(actual_mode) %in% tolower(unlist(spec$colour_mode))
+      tolower(actual_mode) %in% tolower(unlist(spec$colour_mode)),
+    spec, "colour_mode"
   )
 
   # Colour safety ---------------------------------------------------------
@@ -519,7 +537,8 @@ check_journal <- function(x, journal, column = "single",
     if (!is.null(spec$max_file_mb)) paste0("max ", spec$max_file_mb, " MB") else NULL,
     if (!is.null(actual_size)) paste0(fmt_num(actual_size, 2), " MB") else NULL,
     !is.null(actual_size) && !is.null(spec$max_file_mb) &&
-      actual_size <= as.numeric(spec$max_file_mb)
+      actual_size <= as.numeric(spec$max_file_mb),
+    spec, "max_file_mb"
   )
 
   out <- do.call(rbind, rows)

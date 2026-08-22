@@ -29,6 +29,7 @@ flatten_entry <- function(j, origin = "figspec") {
       house_style = j$house_style,
       tables = j$tables,
       media = j$media,
+      not_stated = j$not_stated,
       notes = j$notes,
       origin = origin
     )
@@ -67,6 +68,18 @@ validate_registry <- function(entries) {
         "Registry entry '", j$id,
         "' is missing `source_url` or `verified_on`. ",
         "Entries without provenance are not permitted.",
+        call. = FALSE
+      )
+    }
+    contradiction <- intersect(unlist(j$not_stated %||% list()),
+                               names(j$requirements %||% list()))
+    if (length(contradiction)) {
+      stop(
+        "Registry entry '", j$id, "' lists ",
+        paste(contradiction, collapse = ", "),
+        " in `not_stated` while also giving a value for it in `requirements`. ",
+        "A field cannot both be absent from the publisher's guidelines and ",
+        "taken from them.",
         call. = FALSE
       )
     }
