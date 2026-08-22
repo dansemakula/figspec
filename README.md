@@ -1,6 +1,8 @@
 # figspec
 
 <!-- badges: start -->
+[![R-CMD-check](https://github.com/dansemakula/figspec/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/dansemakula/figspec/actions/workflows/R-CMD-check.yaml)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
 Journals publish precise rules for the figures you submit: column widths to the
@@ -16,8 +18,12 @@ figures, and tells you where a figure would fail.
 
 ```r
 # install.packages("pak")
-pak::pak("semakuladaniel/figspec")
+pak::pak("dansemakula/figspec")
 ```
+
+figspec is **experimental**: the registry is roughly a fifth populated against
+the full field grid, and the API may still change. `registry_status()` reports
+exactly how much of each entry has been harvested.
 
 ## What it does
 

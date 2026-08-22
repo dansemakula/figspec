@@ -1,0 +1,57 @@
+name: Add or correct a journal
+description: Contribute figure requirements for a journal figspec does not cover, or fix one that is wrong.
+title: "[journal]: "
+labels: ["registry"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. One rule governs everything in the registry: **every value
+        must come from the publisher's own author guidelines**, and the entry
+        records where it came from and when it was read.
+
+        Please do not fill this in from a summary, a blog post, or another
+        package. Second-hand sources have three times given figspec a specific,
+        plausible, wrong number that the publisher's own page contradicted.
+  - type: input
+    id: journal
+    attributes:
+      label: Journal or publisher
+      placeholder: PLOS Biology
+    validations: {required: true}
+  - type: input
+    id: url
+    attributes:
+      label: URL of the author guidelines you read
+      description: The publisher's own page, not a summary of it.
+    validations: {required: true}
+  - type: input
+    id: date
+    attributes:
+      label: Date you read it (YYYY-MM-DD)
+    validations: {required: true}
+  - type: textarea
+    id: quotes
+    attributes:
+      label: What the page says
+      description: |
+        Paste the publisher's own wording for anything you want recorded:
+        widths, resolution, formats, type sizes, line widths, colour rules.
+        Verbatim, please, rather than paraphrased.
+      render: text
+    validations: {required: true}
+  - type: textarea
+    id: absent
+    attributes:
+      label: What the page does NOT state
+      description: |
+        Fields you looked for and confirmed are absent, so figspec can report
+        them as "not specified by publisher" rather than "not yet harvested".
+        Leave blank if you did not check.
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: Every value above is quoted from the page at the URL I gave, not from a summary of it.
+          required: true

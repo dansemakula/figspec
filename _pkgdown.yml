@@ -1,0 +1,23 @@
+url: https://dansemakula.github.io/figspec
+
+template:
+  bootstrap: 5
+
+reference:
+- title: Checking a figure
+  desc: What a journal requires, and whether this figure meets it.
+  contents: [check_journal, check_colour_safety, check_submission, submission_detail, suggest_art_type]
+- title: Building a compliant figure
+  contents: [theme_journal, ggsave_journal, figspec_preview, figspec_linewidth, figspec_shapes, figspec_linetypes]
+- title: Colour
+  contents: [figspec_palettes, figspec_palette, scale_colour_figspec, journal_palette]
+- title: R Markdown and Quarto
+  contents: [figspec_chunk_opts, figspec_knitr_setup]
+- title: Looking things up
+  contents: [journals, journal_spec, fig_width, fig_columns, table_spec, media_spec, graphical_abstract_spec]
+- title: Moving between journals
+  contents: [refit_journal]
+- title: Your own styles and journals
+  contents: [register_house_style, house_styles, remove_house_style, save_house_styles, register_journal, load_journals]
+- title: Maintaining the registry
+  contents: [registry_status, stale_entries, new_journal_entry, validate_registry_file]

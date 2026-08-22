@@ -42,4 +42,6 @@ Suggests:
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
 VignetteBuilder: knitr
+URL: https://github.com/dansemakula/figspec
+BugReports: https://github.com/dansemakula/figspec/issues
 Config/roxygen2/version: 8.0.0
