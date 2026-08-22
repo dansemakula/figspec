@@ -106,6 +106,15 @@ close_pairs <- function(original, transformed, threshold) {
   do.call(rbind, out)
 }
 
+# A crowded figure can produce dozens of merged pairs, and printing every one
+# buries the finding it is meant to communicate. Name a few and count the rest.
+list_pairs <- function(pairs, max_shown = 4) {
+  labels <- sprintf("%s/%s", pairs$a, pairs$b)
+  if (length(labels) <= max_shown) return(paste(labels, collapse = ", "))
+  paste0(paste(labels[seq_len(max_shown)], collapse = ", "),
+         " and ", length(labels) - max_shown, " more")
+}
+
 to_greyscale <- function(cols) {
   if (requireNamespace("colorspace", quietly = TRUE)) {
     return(colorspace::desaturate(cols))
@@ -205,8 +214,7 @@ colour_rows <- function(cols, spec, threshold = 10, plot = NULL) {
   grey_pairs <- close_pairs(cols, to_greyscale(cols), threshold)
   grey_actual <- if (nrow(grey_pairs)) {
     paste0(nrow(grey_pairs), " pair(s) merge in greyscale: ",
-           paste(sprintf("%s/%s", grey_pairs$a, grey_pairs$b),
-                 collapse = ", "))
+           list_pairs(grey_pairs))
   } else {
     "all colours separable in greyscale"
   }
@@ -241,28 +249,28 @@ colour_rows <- function(cols, spec, threshold = 10, plot = NULL) {
   }
 
   # Series count ----------------------------------------------------------
-  # Some publishers name a maximum but call it a recommendation. A
-  # recommendation is not a rule, so this is always reported as unspecified
-  # and never graded; the wording carries the comparison instead.
-  if (!is.null(plot)) {
+  # Only reported where a publisher names a limit. Some do, but call it a
+  # recommendation, so it is never graded: the wording carries the comparison
+  # instead. Where nobody names a limit there is nothing to say, and a bare
+  # "3 series" would be a measurement rather than a finding. Every other
+  # advisory row here reports something the reader can act on; this one would
+  # not. A figure with too many series shows up anyway, as colours that merge
+  # in greyscale or under colour vision deficiency.
+  rec <- spec$max_series_recommended
+  if (!is.null(plot) && !is.null(rec)) {
     n_series <- plot_series_count(plot)
     if (n_series > 0) {
-      rec <- spec$max_series_recommended
-      rows[[length(rows) + 1L]] <- if (!is.null(rec)) {
-        new_row(
-          "Series count",
-          paste0("no more than ", rec, " series (recommended, not required)"),
-          paste0(n_series, " series, ",
-                 if (n_series > as.numeric(rec)) {
-                   paste0("above the ", rec, " recommended")
-                 } else {
-                   paste0("within the ", rec, " recommended")
-                 }),
-          "unspecified"
-        )
-      } else {
-        new_row("Series count", UNSTATED, paste0(n_series, " series"), "unspecified")
-      }
+      rows[[length(rows) + 1L]] <- new_row(
+        "Series count",
+        paste0("no more than ", rec, " series (recommended, not required)"),
+        paste0(n_series, " series, ",
+               if (n_series > as.numeric(rec)) {
+                 paste0("above the ", rec, " recommended")
+               } else {
+                 paste0("within the ", rec, " recommended")
+               }),
+        "unspecified"
+      )
     }
   }
 

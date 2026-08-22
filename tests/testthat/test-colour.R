@@ -85,13 +85,25 @@ test_that("a recommended series maximum is reported but never graded", {
     check_journal(few, "sage")$check == "Series count", ]$actual, "within the 7")
 })
 
-test_that("series count is reported even where no publisher names one", {
+test_that("series count is not reported where no publisher names a limit", {
+  # A bare count is a measurement, not a finding. Every other advisory row
+  # reports something the reader can act on; this one would not.
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
     ggplot2::geom_point()
-  r <- check_journal(p, "plos_one")
-  row <- r[r$check == "Series count", ]
-  expect_equal(row$status, "unspecified")
-  expect_equal(row$actual, "3 series")
+  expect_false("Series count" %in% check_journal(p, "plos_one")$check)
+  expect_true("Series count" %in% check_journal(p, "sage")$check)
+})
+
+test_that("too many series still surfaces where no limit is stated", {
+  skip_if_not_installed("colorspace")
+  many <- data.frame(x = rep(1:5, 12), y = rep(1:12, each = 5),
+                     g = factor(rep(LETTERS[1:12], each = 5)))
+  p <- ggplot2::ggplot(many, ggplot2::aes(x, y, colour = g)) + ggplot2::geom_line()
+  # PLOS ONE names no series limit, but an over-crowded figure still shows up
+  # through colours that stop being separable.
+  r <- check_colour_safety(p, "plos_one")
+  expect_match(r[r$check == "Greyscale", ]$actual, "merge in greyscale")
+  expect_match(r[r$check == "Colour vision", ]$actual, "merge under")
 })
 
 test_that("an ungrouped plot raises no series check", {
@@ -109,4 +121,23 @@ test_that("Sage's stated rules are recorded and its loose ones are not", {
   # Sage gives no dimensions, only "match or exceed the dimensions of the journal".
   expect_null(s$columns)
   expect_true("columns" %in% unlist(s$not_stated))
+})
+
+test_that("a long list of merged pairs is summarised, not dumped", {
+  many <- data.frame(x = rep(1:5, 12), y = rep(1:12, each = 5),
+                     g = factor(rep(LETTERS[1:12], each = 5)))
+  p <- ggplot2::ggplot(many, ggplot2::aes(x, y, colour = g)) + ggplot2::geom_line()
+  r <- check_colour_safety(p, "royal_society")
+  msg <- r[r$check == "Greyscale", ]$actual
+  expect_match(msg, "^\\d+ pair\\(s\\) merge in greyscale")
+  expect_match(msg, "more$")
+  expect_lt(nchar(msg), 160)
+})
+
+test_that("a short list of merged pairs is shown in full", {
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
+    ggplot2::geom_point()
+  msg <- check_colour_safety(p, "royal_society")[
+    check_colour_safety(p, "royal_society")$check == "Greyscale", ]$actual
+  expect_false(grepl("more$", msg))
 })
