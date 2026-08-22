@@ -6,7 +6,35 @@ count_panels <- function(plot) {
   if (!inherits(plot, "patchwork")) return(1L)
   kids <- plot$patches$plots
   if (!length(kids)) return(1L)
-  1L + sum(vapply(kids, count_panels, integer(1)))
+  patchwork_self(plot) + sum(vapply(kids, count_panels, integer(1)))
+}
+
+# A patchwork holds its most recently added plot in its own slots and the
+# earlier ones in $patches$plots. When both operands are themselves patchworks,
+# as in (a|b|c)/(d|e|f), that slot holds no plot at all and counting it adds a
+# panel that does not exist. A real plot there always has at least one layer.
+patchwork_self <- function(plot) {
+  n <- tryCatch(length(plot$layers), error = function(e) 1L)
+  if (is.null(n) || is.na(n) || n == 0L) 0L else 1L
+}
+
+# Total visible parts, which is a different question from how many plots were
+# composed. A faceted plot is one object drawn as several panels, and a
+# publisher limiting "individual parts" means the panels a reader sees. Panel
+# LABELS, by contrast, are about composed sub-figures, so count_panels() stays
+# composition-only and this counts parts.
+#
+# Known limit: for a patchwork whose top-level plot is itself faceted, that
+# plot contributes 1 rather than its facet count.
+count_parts <- function(plot) {
+  if (inherits(plot, "patchwork")) {
+    kids <- plot$patches$plots
+    if (!length(kids)) return(1L)
+    return(patchwork_self(plot) + sum(vapply(kids, count_parts, integer(1))))
+  }
+  n <- tryCatch(length(ggplot2::ggplot_build(plot)$layout$panel_params),
+                error = function(e) 1L)
+  max(1L, as.integer(n))
 }
 
 # What a composition is labelling its panels with, if anything. patchwork
@@ -87,6 +115,17 @@ annotation_rows <- function(plot, spec) {
       uppercase = "A", lowercase = "a", numbers = "1", NULL)
     ok <- !is.null(tag_level) && (is.null(wanted) || identical(tag_level, wanted))
     rows[[length(rows) + 1L]] <- graded("Panel labels", req, actual, ok)
+  }
+
+  # Panel count -----------------------------------------------------------
+  if (!is.null(spec$max_panels)) {
+    n_parts <- count_parts(plot)
+    rows[[length(rows) + 1L]] <- graded(
+      "Panel count",
+      paste0("no more than ", spec$max_panels, " parts in a composite figure"),
+      paste0(n_parts, " part", if (n_parts != 1L) "s" else ""),
+      n_parts <= as.numeric(spec$max_panels)
+    )
   }
 
   # Axis origin -----------------------------------------------------------

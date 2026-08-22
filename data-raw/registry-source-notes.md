@@ -365,3 +365,23 @@ greyscale/CVD: "Evaluate your graphs by checking whether they can be interpreted
   greyscale printout." Framed within a tips section, so NOT recorded as print_greyscale. Its
   red/green sentence describes what CVD readers find hard, and is not a prohibition, unlike
   Nature's. Kept in notes.
+
+## rsc_books — Royal Society of Chemistry BOOKS
+source: https://www.rsc.org/publishing/publish-with-us/publish-a-book/prepare-and-submit-your-manuscript
+harvested: 2026-08-22, supplied by the maintainer.
+SCOPE CAUTION: this is RSC's guidance for BOOKS, not journals. The page speaks of "the printed
+  book", "the eBook version" and "Your contract". RSC journals have separate author guidance, and
+  an earlier attempt to fetch its figures-graphics-images page returned no numbers. Named
+  rsc_books so the entry does not claim journal coverage.
+dpi/size: "Figures should be supplied at a resolution of 600 dpi or greater and at a final size of
+  20 x 12 cm."
+photographs: "Photographs should be provided at the best resolution available (minimum 600 dpi) as
+  TIFF, PDF or JPEG files."
+formats: "All common image file types are accepted, eg TIFF, JPEG, PNG, EPS, PDF."
+panels: "Composite images should be limited to four individual parts." -> recorded as max_panels 4.
+colour: "Your contract will state whether the use of colour is allowed in the printed book or not.
+  The use of colour figures will be considered only where scientifically necessary." and captions
+  must "refrain from mentioning colour". Not recorded as print_greyscale: whether colour appears in
+  print depends on the author's contract, not on a rule figspec can check.
+NOT recorded: "Captions/atom labels = Arial, 7 pt" belongs to RSC's ChemDraw structure-drawing
+  settings, not to figures generally, so no font list or type size is taken from it.

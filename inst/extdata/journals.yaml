@@ -80,8 +80,7 @@ journals:
       be in lower-case type, with the first letter capitalized and no full stop.
     dpi_min: 300.0
     source_quote_dpi: Provide images in RGB color and at 300 dpi or higher resolution.
-    colour_mode:
-    - RGB
+    colour_mode: RGB
     font_families:
     - Arial
     - Helvetica
@@ -765,4 +764,34 @@ journals:
     a general rule, so that is not recorded. Its accessibility tips ask authors to
     check whether a graph reads correctly from a greyscale printout and to use shape
     as well as colour; framed as tips, so not graded.
+- id: rsc_books
+  name: Royal Society of Chemistry books
+  publisher: Royal Society of Chemistry
+  disciplines:
+  - chemistry
+  source_url: https://www.rsc.org/publishing/publish-with-us/publish-a-book/prepare-and-submit-your-manuscript
+  verified_on: '2026-08-22'
+  requirements:
+    width_max_mm: 200.0
+    height_max_mm: 120.0
+    source_quote_width: Figures should be supplied at a resolution of 600 dpi or greater
+      and at a final size of 20 x 12 cm.
+    dpi_min: 600.0
+    source_quote_dpi: Figures should be supplied at a resolution of 600 dpi or greater
+    formats:
+    - tiff
+    - jpeg
+    - png
+    - eps
+    - pdf
+    source_quote_formats: All common image file types are accepted, eg TIFF, JPEG,
+      PNG, EPS, PDF.
+    max_panels: 4.0
+    source_quote_panels: Composite images should be limited to four individual parts.
+  notes: 'This is RSC s guidance for BOOKS, not journals: the page refers to the printed
+    book, the eBook version and the author s contract. RSC journals have separate
+    guidance. Whether colour appears in print depends on that contract rather than
+    on a rule, so print_greyscale is not set, though captions must refrain from mentioning
+    colour. The Arial 7 pt figure belongs to RSC s ChemDraw structure-drawing settings,
+    not to figures generally, and is not recorded.'
 

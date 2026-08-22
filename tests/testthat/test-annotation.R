@@ -125,3 +125,52 @@ test_that("PNAS resolution now comes from the Digital Art Guidelines", {
   expect_equal(p$dpi_line_art, 1000)    # floor of 1000-1200
   expect_equal(unlist(p$colour_mode), "RGB")
 })
+
+test_that("panels are counted correctly through every composition shape", {
+  skip_if_not_installed("patchwork")
+  p <- base_plot()
+  # A patchwork keeps its most recent plot in its own slots. Where both
+  # operands are patchworks that slot holds no plot, and counting it invents a
+  # panel. This was a real off-by-one.
+  expect_equal(count_parts(p | p), 2L)
+  expect_equal(count_parts((p | p) / p), 3L)
+  expect_equal(count_parts(p | p | p), 3L)
+  expect_equal(count_parts((p | p) / (p | p)), 4L)
+  expect_equal(count_parts((p | p | p) / (p | p | p)), 6L)
+  expect_equal(count_parts(patchwork::wrap_plots(p, p, p, p, p, p)), 6L)
+})
+
+test_that("facets count as parts but not as labelled panels", {
+  # A faceted plot is one object drawn as several panels. RSC limits the parts
+  # a reader sees; Cell Press labels composed sub-figures. Different questions.
+  faceted <- base_plot() + ggplot2::facet_wrap(~cyl)
+  expect_equal(count_parts(faceted), 3L)
+  expect_equal(count_panels(faceted), 1L)
+})
+
+test_that("RSC's four-part limit is enforced", {
+  skip_if_not_installed("patchwork")
+  p <- base_plot()
+  within <- check_journal((p | p) / p, "rsc_books")
+  expect_equal(within[within$check == "Panel count", ]$status, "pass")
+  expect_equal(within[within$check == "Panel count", ]$actual, "3 parts")
+
+  over <- check_journal((p | p | p) / (p | p | p), "rsc_books")
+  expect_equal(over[over$check == "Panel count", ]$status, "fail")
+  expect_equal(over[over$check == "Panel count", ]$actual, "6 parts")
+
+  # A faceted plot with too many facets is also too many parts.
+  expect_equal(check_journal(p + ggplot2::facet_wrap(~carb), "rsc_books")[
+    check_journal(p + ggplot2::facet_wrap(~carb), "rsc_books")$check == "Panel count", ]$status,
+    "fail")
+})
+
+test_that("journals that state no panel limit raise no panel-count check", {
+  expect_false("Panel count" %in% check_journal(base_plot(), "plos_one")$check)
+})
+
+test_that("RSC's entry names its scope as books, not journals", {
+  expect_match(journal_spec("rsc_books")$name, "books")
+  expect_match(journal_spec("rsc_books")$notes, "not journals")
+  expect_null(journal_spec("rsc_books")$print_greyscale)
+})
