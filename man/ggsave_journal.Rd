@@ -8,7 +8,7 @@ ggsave_journal(
   filename,
   plot = ggplot2::last_plot(),
   journal,
-  column = c("single", "onehalf", "double"),
+  column = "single",
   height = NULL,
   units = c("mm", "cm", "in"),
   dpi = NULL,

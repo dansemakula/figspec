@@ -6,7 +6,7 @@
 \usage{
 figspec_knitr_setup(
   journal,
-  column = c("single", "onehalf", "double"),
+  column = "single",
   height = NULL,
   units = c("mm", "cm", "in")
 )

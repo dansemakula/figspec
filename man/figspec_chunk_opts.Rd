@@ -6,7 +6,7 @@
 \usage{
 figspec_chunk_opts(
   journal,
-  column = c("single", "onehalf", "double"),
+  column = "single",
   height = NULL,
   units = c("mm", "cm", "in")
 )

@@ -26,10 +26,9 @@
 #' unlink(out)
 #' @export
 ggsave_journal <- function(filename, plot = ggplot2::last_plot(), journal,
-                           column = c("single", "onehalf", "double"),
+                           column = "single",
                            height = NULL, units = c("mm", "cm", "in"),
                            dpi = NULL, check = TRUE, ...) {
-  column <- match.arg(column)
   units <- match.arg(units)
   spec <- journal_spec(journal)
 

@@ -28,6 +28,7 @@ flatten_entry <- function(j, origin = "figspec") {
       verified_on = as.character(j$verified_on),
       house_style = j$house_style,
       tables = j$tables,
+      media = j$media,
       notes = j$notes,
       origin = origin
     )

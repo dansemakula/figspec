@@ -167,6 +167,8 @@ that can be determined from your figure:
 | Line width | **yes** | no |
 | Colour mode | yes | yes (TIFF, PNG) |
 | Red/green pairing, greyscale, colour vision | **yes** | no |
+| Panel labels, text case | **yes** | no |
+| Video format, frame size, file size | n/a | yes, via `check_media()` |
 
 ```r
 p <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) + geom_point()
@@ -202,6 +204,49 @@ ggplot(economics, aes(date, unemploy)) +
   geom_line(linewidth = figspec_linewidth("frontiers")) +   # Frontiers states 2 pt
   theme_journal("frontiers")
 ```
+
+## Beyond the figure itself
+
+**Panel labels.** Cell Press states that panels are labelled with capital
+letters. figspec counts the panels in a patchwork composition and checks how
+they are tagged:
+
+```r
+check_journal((p1 | p2) / p3, "cell_press")
+#> ✖ Panel labels  3 panels, none labelled  (requires: panels labelled with uppercase letters)
+```
+
+Add `plot_annotation(tag_levels = "A")` and it passes; `tag_levels = "1"` still
+fails, because Cell Press asked for letters.
+
+**Text case.** Nature states that lettering should be lower-case with the first
+letter capitalised and no full stop:
+
+```r
+p + labs(title = "Fuel economy.", y = "Miles Per Gallon")
+#> ✖ Text case  ends with a full stop: 'Fuel economy.'; uses Title Case: 'Miles Per Gallon'
+```
+
+The Title Case test is deliberately conservative. It ignores acronyms and short
+words, so `"Body mass index (BMI)"` and `"CO2 emissions per capita"` pass while
+`"Miles Per Gallon"` does not.
+
+**Supplementary media.** Video and audio have their own rules, separate from
+figures:
+
+```r
+media_spec("science")
+#> Video formats: MP4, MOV      Video codec: H.264
+#> Maximum frame size: 1920 x 1080
+#> Preferred frame sizes: 640 x 480 or 1280 x 720
+#> Maximum file size: 50 MB
+
+check_media("movie_s1.mp4", "science")
+```
+
+Frame size is read from the MP4/MOV `tkhd` box or the GIF header. Codec and bit
+rate are recorded in the registry but reported as **not inspected** — reading
+them needs a media library, and a guess would be worse than nothing.
 
 ## Bring your own style
 

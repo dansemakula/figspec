@@ -4,16 +4,13 @@
 \alias{fig_width}
 \title{Figure width for a journal column}
 \usage{
-fig_width(
-  journal,
-  column = c("single", "onehalf", "double"),
-  units = c("mm", "cm", "in")
-)
+fig_width(journal, column = "single", units = c("mm", "cm", "in"))
 }
 \arguments{
 \item{journal}{Registry id, for example \code{"cell_press"}.}
 
-\item{column}{One of \code{"single"}, \code{"onehalf"} or \code{"double"}.}
+\item{column}{Column name, for example \code{"single"}, \code{"double"} or, for
+Science, \code{"triple"}.}
 
 \item{units}{Unit for the returned width: \code{"mm"}, \code{"cm"} or \code{"in"}.}
 }
@@ -22,12 +19,17 @@ A single numeric width, or an error if the journal does not state
 a width for that column.
 }
 \description{
-Resolves the width a figure should be saved at. Journals state widths either
-as named columns (single, one-and-a-half, double) or as an allowed range.
-When a journal states only a range, \code{column = "single"} returns the minimum
-and \code{column = "double"} the maximum.
+Resolves the width a figure should be saved at. Column names come from the
+journal itself rather than a fixed vocabulary: Science lays out in one, two
+or three columns, most journals in one, one-and-a-half or two. Use
+\code{\link[=fig_columns]{fig_columns()}} to see what a given journal offers.
+}
+\details{
+When a journal states a permitted range rather than named columns,
+\code{"single"} returns the minimum width and \code{"double"} the maximum.
 }
 \examples{
 fig_width("cell_press", "single")
+fig_width("science", "triple")
 fig_width("frontiers", "double", units = "in")
 }

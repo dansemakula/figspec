@@ -68,6 +68,10 @@ journals:
     source_quote_width: For guidance, Nature's standard figure sizes are 90 mm (single
       column) and 180 mm (double column) and the full depth of the page is 170 mm.
     height_max_mm: 170
+    text_case: sentence
+    text_no_final_stop: yes
+    source_quote_text_case: Lettering in figures (labelling of axes and so on) should
+      be in lower-case type, with the first letter capitalized and no full stop.
   tables:
     orientation: portrait
     title_style: short, one-line title in bold text
@@ -116,8 +120,10 @@ journals:
     avoid_colour_pairs:
     - - red
       - green
-    source_quote_colour_pairs: To accommodate all viewers, red and green should not be used
-      together
+    source_quote_colour_pairs: To accommodate all viewers, red and green should not
+      be used together
+    panel_labels: uppercase
+    source_quote_panel_labels: Different panels should be labeled with capital letters
   notes: |
     Cell Press also publishes a three-column format for previews and commentaries with widths 5.5 cm, 11.4 cm and 17.4 cm. Red and green should not be used together.
 - id: star_protocols
@@ -237,10 +243,10 @@ journals:
     - jpeg
     font_families: Times New Roman
     font_min_pt: 7.5
-    print_greyscale: true
+    print_greyscale: yes
     source_quote_greyscale: All figures will be published in colour online (the version
-      of the record), but will be reproduced in black and white in any print versions by
-      default
+      of the record), but will be reproduced in black and white in any print versions
+      by default
     source_quote_font: 9pt, 11pt leading is preferred. Text can be reduced, where
       necessary or restricted for space, but should be no smaller than 7.5pt
   notes: |
@@ -309,4 +315,50 @@ journals:
     style guide with res = 144, with a note that higher resolutions may be needed.
     Graphics annotation should be about the size of the figure caption or a little
     smaller.
+- id: science
+  name: Science
+  publisher: AAAS
+  disciplines:
+  - multidisciplinary
+  source_url: https://www.science.org/content/page/instructions-preparing-initial-manuscript
+  verified_on: '2026-08-22'
+  requirements:
+    columns:
+      single: 57.0
+      double: 121.0
+      triple: 184.0
+    source_quote_width: The width of figures, when printed, will usually be 5.7 cm
+      (2.24 inches or 1 column), 12.1 cm (4.76 inches or 2 columns), or 18.4 cm (7.24
+      inches or 3 columns).
+    dpi_min: 300.0
+    source_quote_dpi: please save images at a resolution of 300 dots per inch (dpi)
+      for initial submission
+    font_min_pt: 5.0
+    source_quote_font: a reduced size of about 7 points (2.5 mm) high, and not smaller
+      than 5 points
+  media:
+    video_formats:
+    - mp4
+    - mov
+    video_codec: H.264
+    frame_max:
+      width: 1920.0
+      height: 1080.0
+    frame_preferred:
+    - width: 640.0
+      height: 480.0
+    - width: 1280.0
+      height: 720.0
+    max_file_mb: 50.0
+    audio_formats:
+    - wav
+    - mp3
+    - m4a
+    audio_bitrate_kbps: 160.0
+    source_quote_frame: Aim to stay within 640 x 480 or 1280 x 720 resolution. Do
+      not exceed full HD frame size (1920 x 1080)
+    source_quote_format: Video clips should be saved in MPEG-4 (.mp4) (preferred)
+      or QuickTime (.mov) container format using H.264 video encoding.
+  notes: 'A higher resolution is required at the revision stage under separate instructions.
+    Science also states: avoid wide variation in type size within a single figure.'
 

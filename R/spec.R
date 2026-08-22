@@ -1,41 +1,77 @@
 #' Figure width for a journal column
 #'
-#' Resolves the width a figure should be saved at. Journals state widths either
-#' as named columns (single, one-and-a-half, double) or as an allowed range.
-#' When a journal states only a range, `column = "single"` returns the minimum
-#' and `column = "double"` the maximum.
+#' Resolves the width a figure should be saved at. Column names come from the
+#' journal itself rather than a fixed vocabulary: Science lays out in one, two
+#' or three columns, most journals in one, one-and-a-half or two. Use
+#' [fig_columns()] to see what a given journal offers.
+#'
+#' When a journal states a permitted range rather than named columns,
+#' `"single"` returns the minimum width and `"double"` the maximum.
 #'
 #' @param journal Registry id, for example `"cell_press"`.
-#' @param column One of `"single"`, `"onehalf"` or `"double"`.
+#' @param column Column name, for example `"single"`, `"double"` or, for
+#'   Science, `"triple"`.
 #' @param units Unit for the returned width: `"mm"`, `"cm"` or `"in"`.
 #' @return A single numeric width, or an error if the journal does not state
 #'   a width for that column.
 #' @examples
 #' fig_width("cell_press", "single")
+#' fig_width("science", "triple")
 #' fig_width("frontiers", "double", units = "in")
 #' @export
-fig_width <- function(journal, column = c("single", "onehalf", "double"),
-                      units = c("mm", "cm", "in")) {
-  column <- match.arg(column)
+fig_width <- function(journal, column = "single", units = c("mm", "cm", "in")) {
   units <- match.arg(units)
   spec <- journal_spec(journal)
+  if (!is.character(column) || length(column) != 1L) {
+    stop("`column` must be a single column name.", call. = FALSE)
+  }
 
-  w <- spec$columns[[column]]
-  if (is.null(w)) {
+  if (!is.null(spec$columns)) {
+    w <- spec$columns[[column]]
+    if (is.null(w)) {
+      stop(
+        "'", spec$name, "' does not have a '", column, "' column. It states: ",
+        paste0(names(spec$columns), " (", unlist(spec$columns), " mm)",
+               collapse = ", "), ".",
+        call. = FALSE
+      )
+    }
+  } else {
     w <- switch(column,
       single = spec$width_min_mm,
-      double = spec$width_max_mm %||% spec$columns$double,
-      onehalf = NULL
+      double = spec$width_max_mm,
+      NULL
     )
-  }
-  if (is.null(w)) {
-    stop(
-      "'", spec$name, "' does not state a ", column, "-column width. ",
-      "Set the width explicitly, and see ", spec$source_url,
-      call. = FALSE
-    )
+    if (is.null(w)) {
+      stop(
+        "'", spec$name, "' does not state a ", column, "-column width. ",
+        "Set the width explicitly, and see ", spec$source_url,
+        call. = FALSE
+      )
+    }
   }
   convert_length(as.numeric(w), "mm", units)
+}
+
+#' The column widths a journal states
+#'
+#' @param journal Registry id.
+#' @return A named numeric vector of widths in millimetres, or `NULL` when the
+#'   journal states a range rather than named columns.
+#' @examples
+#' fig_columns("science")
+#' fig_columns("cell_press")
+#' @export
+fig_columns <- function(journal) {
+  spec <- journal_spec(journal)
+  if (is.null(spec$columns)) {
+    message(
+      "'", spec$name, "' states a width range rather than named columns: ",
+      spec$width_min_mm %||% "?", " to ", spec$width_max_mm %||% "?", " mm."
+    )
+    return(invisible(NULL))
+  }
+  stats::setNames(as.numeric(unlist(spec$columns)), names(spec$columns))
 }
 
 #' @export

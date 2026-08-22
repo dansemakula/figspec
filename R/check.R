@@ -291,12 +291,11 @@ graded <- function(check, requirement, actual, ok) {
 #' p <- ggplot(mtcars, aes(wt, mpg)) + geom_point()
 #' check_journal(p, "frontiers")
 #' @export
-check_journal <- function(x, journal, column = c("single", "onehalf", "double"),
+check_journal <- function(x, journal, column = "single",
                           width = NULL, height = NULL,
                           units = c("mm", "cm", "in"),
                           dpi = NULL, format = NULL,
                           art_type = c("colour", "bw", "line", "combination")) {
-  column <- match.arg(column)
   units <- match.arg(units)
   art_type <- match.arg(art_type)
   spec <- journal_spec(journal)
@@ -500,6 +499,7 @@ check_journal <- function(x, journal, column = c("single", "onehalf", "double"),
   # Colour safety ---------------------------------------------------------
   if (!is_file) {
     rows <- c(rows, colour_rows(plot_colours(x), spec, plot = x))
+    rows <- c(rows, annotation_rows(x, spec))
   }
 
   # File size -------------------------------------------------------------

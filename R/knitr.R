@@ -17,9 +17,8 @@
 #' # In a setup chunk:
 #' # do.call(knitr::opts_chunk$set, figspec_chunk_opts("plos_one"))
 #' @export
-figspec_chunk_opts <- function(journal, column = c("single", "onehalf", "double"),
+figspec_chunk_opts <- function(journal, column = "single",
                                height = NULL, units = c("mm", "cm", "in")) {
-  column <- match.arg(column)
   units <- match.arg(units)
   spec <- journal_spec(journal)
 
@@ -58,7 +57,7 @@ figspec_chunk_opts <- function(journal, column = c("single", "onehalf", "double"
 #' # In a setup chunk:
 #' # figspec_knitr_setup("frontiers", "double")
 #' @export
-figspec_knitr_setup <- function(journal, column = c("single", "onehalf", "double"),
+figspec_knitr_setup <- function(journal, column = "single",
                                 height = NULL, units = c("mm", "cm", "in")) {
   if (!requireNamespace("knitr", quietly = TRUE)) {
     stop("knitr is required for figspec_knitr_setup().", call. = FALSE)

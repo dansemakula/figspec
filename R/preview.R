@@ -18,9 +18,8 @@
 #' if (interactive()) figspec_preview(p, "cell_press", "single")
 #' @export
 figspec_preview <- function(plot = ggplot2::last_plot(), journal,
-                            column = c("single", "onehalf", "double"),
+                            column = "single",
                             height = NULL, units = c("mm", "cm", "in")) {
-  column <- match.arg(column)
   units <- match.arg(units)
 
   width_mm <- fig_width(journal, column, "mm")

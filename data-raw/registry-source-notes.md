@@ -111,3 +111,19 @@ checklist: "Were figures created between 80 and 180 mm width? 300 to 600 DPI?"
 colour_mode: NOT STATED
 min_font: NOT STATED (only "Larger fonts make for easier reading")
 NOTE: document is self-dated 2016; re-verify against current Wiley Author Services before shipping.
+
+## science — Science (AAAS)
+source: https://www.science.org/content/page/instructions-preparing-initial-manuscript
+harvested: 2026-08-22
+width: "The width of figures, when printed, will usually be 5.7 cm (2.24 inches or 1 column), 12.1 cm (4.76 inches or 2 columns), or 18.4 cm (7.24 inches or 3 columns)."
+dpi: "please save images at a resolution of 300 dots per inch (dpi) for initial submission. A higher resolution applies for figures submitted at the revision stage"
+type_size: "Symbols and lettering should be large enough to be legible after reduction [a reduced size of about 7 points (2.5 mm) high, and not smaller than 5 points]."
+type_variation: "Avoid wide variation in type size within a single figure."
+formats: "It is best to create your figures as vector-based files ... We cannot accept PowerPoint files or files that are not readable by Adobe Photoshop or Adobe Illustrator."
+MEDIA:
+  video_format: "Video clips should be saved in MPEG-4 (.mp4) (preferred) or QuickTime (.mov) container format using H.264 video encoding."
+  video_frame: "Aim to stay within 640 x 480 or 1280 x 720 resolution. Do not exceed full HD frame size (1920 x 1080), as this makes the files quite large and will cause them to be transcoded/sized to an acceptable resolution."
+  audio_format: "For audio files, please use .wav, .mp3, or .m4a format, with a bit rate of 160 kb/s."
+  size: "movies (limited to 50 MB each)" / "auxiliary supplementary materials (up to 10 files, total size limited to 25 MB)"
+  NOTE: the sentence "Animated GIFs are not" is truncated on the publisher's own page; the
+  prohibition is not recorded because its wording is incomplete at source.

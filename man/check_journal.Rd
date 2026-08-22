@@ -7,7 +7,7 @@
 check_journal(
   x,
   journal,
-  column = c("single", "onehalf", "double"),
+  column = "single",
   width = NULL,
   height = NULL,
   units = c("mm", "cm", "in"),
