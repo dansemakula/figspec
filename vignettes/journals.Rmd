@@ -1,0 +1,84 @@
+---
+title: "Which journal am I submitting to?"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Which journal am I submitting to?}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", echo = FALSE)
+```
+
+```{r setup, include = FALSE}
+library(figspec)
+fmt <- function(x, unit = "") {
+  if (is.null(x) || !length(x) || all(is.na(x))) return("–")
+  paste0(paste(unlist(x), collapse = ", "), unit)
+}
+```
+
+Everything below is generated from the registry itself, so it cannot drift from
+what the package actually holds. A dash means the publisher states nothing, or
+nobody has harvested it yet — `journal_spec()` tells you which.
+
+```{r}
+reg <- figspec:::load_registry()
+rows <- do.call(rbind, lapply(reg, function(j) {
+  cols <- if (!is.null(j$columns)) {
+    paste(paste0(names(j$columns), " ", unlist(j$columns)), collapse = ", ")
+  } else if (!is.null(j$width_min_mm) || !is.null(j$width_max_mm)) {
+    paste0(j$width_min_mm %||% "?", "–", j$width_max_mm %||% "?")
+  } else "–"
+  data.frame(
+    Journal = j$name,
+    id = j$id,
+    `Width (mm)` = cols,
+    `dpi` = fmt(j$dpi_min),
+    `Line art` = fmt(j$dpi_line_art),
+    `Type (pt)` = if (is.null(j$font_min_pt)) "–" else
+      paste0(j$font_min_pt, if (!is.null(j$font_max_pt)) paste0("–", j$font_max_pt) else "+"),
+    Formats = fmt(toupper(unlist(j$formats %||% NULL))),
+    check.names = FALSE, stringsAsFactors = FALSE)
+}))
+rows <- rows[order(rows$Journal), ]
+knitr::kable(rows, row.names = FALSE)
+```
+
+## Where publishers disagree
+
+The registry makes some conflicts plain, and they are the reason a single
+"industry standard" does not exist.
+
+**Panel labels.** Cell Press wants capital letters. AGU, Nature, Springer and
+the Royal Society all want lower case. Nature wants them *upright, not italic*;
+the Royal Society wants them *italicised*. Same element, opposite rules.
+
+**Outlining text.** BMJ requires text in EPS files to be outlined. Nature
+instructs authors not to outline text.
+
+**Line art resolution.** Twelve entries state a separate figure for line art,
+from 600 dpi (IEEE, Wiley) to 1200 dpi (BMJ, ACS, OUP, Springer, Taylor &
+Francis) — against a general minimum of 300 almost everywhere. See
+`suggest_art_type()`, and note that line art means *monochrome*: five
+publishers define it as black and white.
+
+**Colour in print.** Frontiers and PLOS say nothing about greyscale. The Royal
+Society, Sage and Taylor & Francis print in black and white by default, so
+figures must survive it. RSC prints colour free. RSC's *books* make it depend
+on the author's contract.
+
+## How complete is each entry
+
+```{r}
+st <- registry_status()
+st <- st[order(-st$stated), c("id", "stated", "confirmed_absent", "unharvested", "verified_on")]
+names(st) <- c("id", "stated", "confirmed absent", "not yet harvested", "read on")
+knitr::kable(st, row.names = FALSE)
+```
+
+`stated` is what the publisher says. `confirmed absent` is what somebody read
+the page for and found missing. `not yet harvested` is what nobody has checked.
+The three always sum to the full field list, so a half-finished entry cannot
+pass as a complete one.

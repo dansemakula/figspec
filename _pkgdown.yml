@@ -2,6 +2,39 @@ url: https://dansemakula.github.io/figspec
 
 template:
   bootstrap: 5
+  bslib:
+    primary: "#1f4e5f"
+    base_font: {google: "Source Sans 3"}
+    heading_font: {google: "Source Sans 3"}
+    code_font: {google: "JetBrains Mono"}
+
+home:
+  title: Check figures against what the journal actually requires
+  description: >
+    Journals publish precise figure requirements: column widths to the
+    millimetre, minimum resolution, permitted formats, how small type may get.
+    figspec keeps them in one sourced registry, applies them to your ggplot2
+    figures, and tells you where a figure would fail — before submission
+    rather than at production.
+
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+    right: [search, github]
+  components:
+    articles:
+      text: Articles
+      menu:
+      - text: Meeting a journal's figure requirements
+        href: articles/figspec.html
+      - text: Which journal am I submitting to?
+        href: articles/journals.html
+      - text: "The registry: provenance, and adding your own"
+        href: articles/registry.html
+
+authors:
+  Daniel Semakula:
+    href: https://github.com/dansemakula
 
 reference:
 - title: Checking a figure
@@ -14,7 +47,7 @@ reference:
 - title: R Markdown and Quarto
   contents: [figspec_chunk_opts, figspec_knitr_setup]
 - title: Looking things up
-  contents: [journals, journal_spec, fig_width, fig_columns, table_spec, media_spec, graphical_abstract_spec]
+  contents: [journals, journal_spec, fig_width, fig_columns, table_spec, media_spec, check_media, graphical_abstract_spec]
 - title: Moving between journals
   contents: [refit_journal]
 - title: Your own styles and journals

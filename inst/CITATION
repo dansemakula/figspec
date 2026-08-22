@@ -1,0 +1,24 @@
+citHeader("To cite figspec in publications, please use:")
+
+bibentry(
+  bibtype  = "Manual",
+  title    = "{figspec}: Check and Export Figures Against Journal Submission Requirements",
+  author   = person("Daniel", "Semakula"),
+  year     = "2026",
+  note     = "R package version 0.1.0",
+  url      = "https://github.com/dansemakula/figspec",
+  textVersion = paste(
+    "Semakula, D. (2026).",
+    "figspec: Check and Export Figures Against Journal Submission Requirements.",
+    "R package version 0.1.0.",
+    "https://github.com/dansemakula/figspec"
+  )
+)
+
+citFooter(
+  "figspec's registry records figure requirements taken from journal author",
+  "guidelines, each entry naming the page it was read from and the date. If a",
+  "requirement matters to your argument, cite the publisher's guidelines as",
+  "well: journal_spec(<id>)$source_url gives the page, and $verified_on the",
+  "date it was read."
+)
