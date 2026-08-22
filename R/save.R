@@ -36,12 +36,7 @@ ggsave_journal <- function(filename, plot = ggplot2::last_plot(), journal,
 
   ext <- tolower(tools::file_ext(filename))
   if (!nzchar(ext)) {
-    ext <- if (is.null(spec$formats)) {
-      default_note(spec, "formats", "PDF", "which file formats it accepts")
-      "pdf"
-    } else {
-      tolower(unlist(spec$formats)[[1]])
-    }
+    ext <- default_format(spec)
     filename <- paste0(filename, ".", ext)
   }
   if (!is.null(spec$formats) && !ext %in% tolower(unlist(spec$formats))) {
@@ -150,6 +145,27 @@ ggsave_journal <- function(filename, plot = ggplot2::last_plot(), journal,
     }
   }
   invisible(filename)
+}
+
+# Formats R can actually write. A journal may accept Illustrator, Photoshop or
+# PowerPoint files, and listing them first does not mean R can produce one, so
+# a default has to be drawn from what a device exists for.
+WRITABLE_FORMATS <- c("pdf", "eps", "ps", "svg", "tiff", "tif", "png", "jpeg", "jpg")
+
+default_format <- function(spec) {
+  fmts <- tolower(unlist(spec$formats %||% list()))
+  writable <- intersect(fmts, WRITABLE_FORMATS)
+  if (length(writable)) return(writable[[1]])
+  if (length(fmts)) {
+    stop(
+      "'", spec$name, "' lists ", paste(toupper(fmts), collapse = ", "),
+      ", none of which R can write. Give an explicit file extension, or export ",
+      "one of those formats from another program.",
+      call. = FALSE
+    )
+  }
+  default_note(spec, "formats", "PDF", "which file formats it accepts")
+  "pdf"
 }
 
 # Prefer ragg for raster output: it renders text more accurately and writes

@@ -5,14 +5,14 @@
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
-Journals publish precise rules for the figures you submit: column widths to the
-millimetre, minimum resolution, which file formats they take, how small type is
-allowed to get. The rules are real, they differ between publishers, and they are
-scattered across author-guideline pages that are easy to skim past. Most people
-find out they got one wrong at the production stage, after acceptance.
+figspec lets you quickly and reliably **fit your plots to** your target
+journal's published figure requirements, or **check whether they already meet
+them** — without looking those requirements up every time.
 
-**figspec** keeps those requirements in one place, applies them to your ggplot2
-figures, and tells you where a figure would fail.
+It brings the requirements of 27 publishers into your R session as data, builds
+your figure to meet them, and exports it at exactly the stated size and
+resolution. Every requirement records the page it came from and the date it was
+read.
 
 ## Installation
 
@@ -25,116 +25,122 @@ figspec is **experimental**: the registry is roughly a fifth populated against
 the full field grid, and the API may still change. `registry_status()` reports
 exactly how much of each entry has been harvested.
 
-## What it does
+## How you use it
+
+### 1. Check whether a plot meets a journal's requirements
+
+Pass the plot and the journal. You get one row per requirement.
 
 ```r
 library(ggplot2)
 library(figspec)
 
-p <- ggplot(mtcars, aes(wt, mpg)) +
+p <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
   geom_point() +
   labs(title = "Fuel economy")
 
-check_journal(p, "plos_one")
-#> ── PLOS ONE ────────────────────────────────────────────────
-#> ✔ Width         66.8 mm       (requires: min 66.8 mm, max 190.5 mm)
-#> ✖ Type size     smallest 8.8 pt, largest 13.2 pt
-#>                               (requires: min 8 pt, max 12 pt)
-#> ! Resolution    could not determine   (requires: min 300 dpi)
+check_journal(p, "cell_press", column = "single")
+#> ✔ Width         85 mm                       (requires: single 85 | double 174 mm)
+#> ✖ Type size     smallest 8.8, largest 13.2 pt   (requires: min 6 pt, max 8 pt)
+#> ✖ Colour pairs  red and green both used         (requires: not used together)
 ```
 
-A default ggplot2 title is 13.2 pt. PLOS ONE caps figure type at 12 pt. That is
-the kind of thing nobody checks by hand.
+Two failures in an ordinary ggplot, from defaults nobody thinks about: ggplot2
+runs 8.8–13.2 pt against Cell Press's 6–8, and its default palette contains a
+red and a green.
 
-Fix it by building on the journal's own typography, then save at the width the
-journal actually asks for:
+**Check the plot object, not the saved file.** Type size, line width and colour
+cannot be recovered from a TIFF.
+
+### 2. Fit a plot to a journal
+
+`theme_journal()` applies everything the journal states that a theme can carry:
+font family, type floor and ceiling, line weights, and structural rules such as
+Nature's requirement that axis lines and tick marks be drawn.
 
 ```r
-p <- p + theme_journal("plos_one")
-
-ggsave_journal("figure_1.tiff", p, journal = "plos_one", column = "single")
+p + theme_journal("cell_press")
 ```
 
-`ggsave_journal()` takes the width from the registry, defaults the resolution to
-the journal's stated minimum, picks a device that can render the required font,
-and re-checks the file it wrote.
-
-Where a journal is silent, figspec says so rather than inventing a requirement:
+Add compliant values where they live on the layer rather than the theme:
 
 ```r
-figspec_chunk_opts("nature")
-#> 'Nature' does not state a minimum resolution. Using 300 dpi as a figspec
-#> default - this is not a requirement of the journal.
+p +
+  scale_colour_figspec("cividis") +                  # safe in print and for CVD
+  scale_shape_manual(values = figspec_shapes(3)) +   # a second cue besides colour
+  geom_line(linewidth = figspec_linewidth("cell_press")) +
+  theme_journal("cell_press")
 ```
 
-## More than sizing
-
-`theme_journal()` applies every requirement that a theme can express — font
-family, type floor and ceiling, and stated minimum line weights. Geom line
-widths live on the layer rather than the theme, so pass
-`figspec_linewidth()` to layers that draw lines.
-
-## Why the width matters
-
-Type size in a figure is absolute. An 8 pt label is 8 pt. If you save a figure
-at 180 mm and the journal drops it into an 85 mm column, everything in it
-shrinks by more than half, and your 8 pt label lands at 3.8 pt. Saving at the
-journal's real column width is what keeps a compliant figure compliant.
-
-## Where this fits in your workflow
-
-figspec is a checker, not a plotting library. You keep whatever you already
-use — ggplot2, patchwork, ggpubr, base R — and add one line at the point that
-matters.
-
-**While you are designing the figure.** The most common way a compliant figure
-becomes non-compliant is being drawn at laptop size and submitted into an
-85 mm column, which shrinks everything by more than half.
+### 3. Export at exactly the stated size and resolution
 
 ```r
-figspec_preview(p, "cell_press", "single")   # a window at the real published size
+ggsave_journal("figure_1.tiff", p, journal = "cell_press", column = "single")
 ```
 
-**In R Markdown or Quarto**, where the size comes from chunk options and never
-touches `ggsave()`:
+Takes the width from the registry, defaults the resolution to the journal's
+minimum, picks a device that can render the required font, and re-checks the
+file it wrote.
+
+### 4. Look up what a journal requires
 
 ```r
-# setup chunk
-figspec_knitr_setup("plos_one", column = "single")
+journals(discipline = "physics")     # browse by field
+journal_spec("cell_press")           # the full specification, with its source
+fig_columns("science")               # single 57, double 121, triple 184
+fig_width("frontiers", "double")     # 180
 ```
 
-**At export:**
+### 5. Check a whole submission
 
 ```r
-ggsave_journal("figure_1.tiff", p, journal = "plos_one", column = "single")
+check_submission("figures/", "cell_press")
+#> ✔ Figure_1.tiff  single  all requirements met
+#> ✖ Figure_2.tiff  double  failed: Resolution, File format
 ```
 
-**When the submission is assembled** — every figure has to pass, not just the
-one you remembered to check:
+### 6. Move a figure set to a different journal
 
-```r
-check_submission("figures/", "plos_one")
-#> ✔ figure_1.tiff  single  all requirements met
-#> ✖ figure_2.tiff  double  failed: Resolution, File format
-```
-
-**When the paper is rejected and goes elsewhere**, with different widths,
-formats and type limits:
+Rejected, and the next journal's rules are incompatible? Cell Press wants type
+6–8 pt; PLOS ONE wants 8–12.
 
 ```r
 refit_journal(my_plots, journal = "plos_one", outdir = "figures_plos/")
 ```
 
-`refit_journal()` works from plot objects, not saved files, and refuses to
-pretend otherwise: type size cannot be recovered from a finished TIFF.
+Re-themes and re-exports the set. Works from plot objects, since type size
+cannot be recovered from a finished file.
 
-### Base R and other plotting systems
+### 7. Use it in Quarto or R Markdown
 
-Base R graphics produce no object to inspect, so they are checked as files.
-Base R's `png()` does not record resolution, so tell figspec what you used:
+Where figure size comes from chunk options rather than `ggsave()`:
 
 ```r
-check_submission("figures/", "plos_one", dpi = 300)
+figspec_knitr_setup("cell_press", column = "double")
+```
+
+### 8. Add your own style, or your own journal
+
+```r
+register_house_style("mylab", theme_minimal())
+p + theme_journal("frontiers", style = "mylab")
+
+register_journal("lab_report", "Our lab format",
+                 source_url = "internal handbook v3", verified_on = "2026-08-22",
+                 requirements = list(columns = list(single = 100, double = 170),
+                                     font_min_pt = 9))
+```
+
+A style is applied *underneath* the journal's requirements, so it can never
+push a figure out of compliance.
+
+### 9. Find out which resolution rule applies
+
+Publishers hold line art to three or four times the general minimum, and line
+art means monochrome.
+
+```r
+suggest_art_type(p, "bmj")
 ```
 
 ## Looking things up

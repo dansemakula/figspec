@@ -9,13 +9,13 @@ template:
     code_font: {google: "JetBrains Mono"}
 
 home:
-  title: Check figures against what the journal actually requires
+  title: Fit your plots to your journal's figure requirements
   description: >
-    Journals publish precise figure requirements: column widths to the
-    millimetre, minimum resolution, permitted formats, how small type may get.
-    figspec keeps them in one sourced registry, applies them to your ggplot2
-    figures, and tells you where a figure would fail — before submission
-    rather than at production.
+    figspec lets you fit your plots to your target journal's published figure
+    requirements, or check whether they already meet them, without looking
+    those requirements up every time. It brings the requirements of 27
+    publishers into your R session as data, builds your figure to meet them,
+    and exports it at exactly the stated size and resolution.
 
 navbar:
   structure:

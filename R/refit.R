@@ -42,7 +42,7 @@ refit_journal <- function(plots, journal, outdir,
   }
   dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
   spec <- journal_spec(journal)
-  fmt <- tolower(format %||% unlist(spec$formats)[[1]] %||% "pdf")
+  fmt <- if (is.null(format)) default_format(spec) else tolower(format)
 
   col_for <- function(nm) {
     if (length(column) == 1L && is.null(names(column))) return(column)

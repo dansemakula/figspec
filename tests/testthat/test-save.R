@@ -66,3 +66,37 @@ test_that("vector formats are reported as resolution independent", {
   expect_equal(r[r$check == "Resolution", ]$status, "pass")
   expect_equal(r[r$check == "Width", ]$status, "pass")
 })
+
+test_that("a default format is one R can actually write", {
+  # Nature lists .ai first, which is Adobe Illustrator. R has no device for it,
+  # so taking the first listed format produced "Unknown graphics device".
+  fmts <- tolower(unlist(journal_spec("nature")$formats))
+  expect_equal(fmts[[1]], "ai")
+  expect_equal(default_format(journal_spec("nature")), "eps")
+
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  dir <- withr::local_tempdir()
+  suppressWarnings(suppressMessages(
+    ggsave_journal(file.path(dir, "no_extension"), p, "nature", check = FALSE)
+  ))
+  expect_true(file.exists(file.path(dir, "no_extension.eps")))
+})
+
+test_that("refit_journal picks a writable format too", {
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  dir <- withr::local_tempdir()
+  res <- suppressWarnings(suppressMessages(refit_journal(list(fig1 = p), "nature", dir)))
+  expect_equal(res$file, "fig1.eps")
+})
+
+test_that("a journal listing only unwritable formats fails with a usable message", {
+  withr::defer(.figspec_cache$user_journals <- NULL)
+  register_journal("only_ai", "Only AI", "handbook", "2026-08-22",
+                   requirements = list(columns = list(single = 90),
+                                       formats = list("ai", "psd")))
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  expect_error(
+    ggsave_journal(file.path(withr::local_tempdir(), "x"), p, "only_ai"),
+    "none of which R can write"
+  )
+})
