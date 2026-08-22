@@ -318,6 +318,7 @@ check_journal <- function(x, journal, column = "single",
                           units = c("mm", "cm", "in"),
                           dpi = NULL, format = NULL,
                           art_type = c("colour", "bw", "line", "combination")) {
+  art_type_given <- !missing(art_type)
   units <- match.arg(units)
   art_type <- match.arg(art_type)
   spec <- journal_spec(journal)
@@ -420,9 +421,25 @@ check_journal <- function(x, journal, column = "single",
       if (!is.null(spec$dpi_line_art) && art_type != "line") paste0("line art ", spec$dpi_line_art),
       if (!is.null(spec$dpi_combination) && art_type != "combination") paste0("combination ", spec$dpi_combination)
     )
+    # Where the caller did not choose an art type, figspec checks against the
+    # general minimum. Most statistical plots are line art in the sense
+    # publishers mean, and several hold line art to three or four times the
+    # general minimum, so say so rather than let a lenient default pass
+    # silently. The verdict is not changed: the choice stays the caller's.
+    line_art_warning <- NULL
+    if (!art_type_given && !is_file && !is.null(spec$dpi_line_art) &&
+        !is.null(required_dpi) &&
+        as.numeric(spec$dpi_line_art) > as.numeric(required_dpi) &&
+        !plot_has_raster(x)) {
+      line_art_warning <- paste0(
+        "; this plot looks like line art, which this journal holds to ",
+        spec$dpi_line_art, " dpi - see suggest_art_type()"
+      )
+    }
     req_dpi_txt <- if (is.null(required_dpi)) NULL else {
       paste0("min ", required_dpi, " dpi for ", art_type,
-             if (length(others)) paste0("; also states ", paste(others, collapse = ", "), " dpi") else "")
+             if (length(others)) paste0("; also states ", paste(others, collapse = ", "), " dpi") else "",
+             line_art_warning %||% "")
     }
     rows[[length(rows) + 1L]] <- graded(
       "Resolution", req_dpi_txt,

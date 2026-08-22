@@ -137,6 +137,25 @@ fig_columns("science")
 fig_columns("cell_press")
 ```
 
+## Which resolution rule applies
+
+Publishers set different resolutions for different kinds of artwork, and the
+gap is large: 300 dpi generally, against 600 to 1200 dpi for line art. Twelve
+entries in the registry state a separate line-art figure.
+
+Most R plots are line art. PNAS says so explicitly, giving "line art, e.g., bar
+graphs". So a bar chart saved at 300 dpi can be a quarter of what the journal
+asked for, and nothing in an ordinary workflow says so.
+
+```{r}
+suggest_art_type(ggplot(mtcars, aes(factor(cyl))) + geom_bar(), "bmj")
+```
+
+`check_journal()` checks against the general minimum unless you say otherwise,
+and says so when a plot looks like line art and the journal holds line art to
+more. It does not change the verdict for you: publishers genuinely disagree
+about whether a coloured plot counts, so the choice stays yours.
+
 ## Checking a whole submission
 
 ```{r, eval = FALSE}
