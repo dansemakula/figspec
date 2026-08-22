@@ -65,3 +65,48 @@ test_that("colour vision deficiency is reported but never as a requirement", {
 test_that("colour checks refuse a saved file rather than guessing", {
   expect_error(check_colour_safety("fig.tiff", "cell_press"), "ggplot object")
 })
+
+test_that("a recommended series maximum is reported but never graded", {
+  many <- data.frame(x = rep(1:5, 10), y = rep(1:10, each = 5),
+                     g = factor(rep(LETTERS[1:10], each = 5)))
+  p <- ggplot2::ggplot(many, ggplot2::aes(x, y, colour = g)) + ggplot2::geom_line()
+
+  # Sage recommends no more than 7 series. Ten exceeds it, but "recommend" is
+  # not "require", so this must never be a failure.
+  r <- check_journal(p, "sage")
+  row <- r[r$check == "Series count", ]
+  expect_equal(row$status, "unspecified")
+  expect_match(row$actual, "10 series, above the 7 recommended")
+  expect_match(row$requirement, "not required")
+
+  few <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
+    ggplot2::geom_point()
+  expect_match(check_journal(few, "sage")[
+    check_journal(few, "sage")$check == "Series count", ]$actual, "within the 7")
+})
+
+test_that("series count is reported even where no publisher names one", {
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
+    ggplot2::geom_point()
+  r <- check_journal(p, "plos_one")
+  row <- r[r$check == "Series count", ]
+  expect_equal(row$status, "unspecified")
+  expect_equal(row$actual, "3 series")
+})
+
+test_that("an ungrouped plot raises no series check", {
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  expect_false("Series count" %in% check_journal(p, "sage")$check)
+})
+
+test_that("Sage's stated rules are recorded and its loose ones are not", {
+  s <- journal_spec("sage")
+  expect_equal(s$dpi_min, 300)
+  expect_equal(s$dpi_line_art, 800)
+  expect_true(isTRUE(s$print_greyscale))
+  # "sans serif is usually the default" is too loose to be a font list.
+  expect_null(s$font_families)
+  # Sage gives no dimensions, only "match or exceed the dimensions of the journal".
+  expect_null(s$columns)
+  expect_true("columns" %in% unlist(s$not_stated))
+})

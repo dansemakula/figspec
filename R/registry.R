@@ -13,7 +13,9 @@ requirement_keys <- function() {
   c("columns", "width_min_mm", "width_max_mm", "height_max_mm",
     "dpi_min", "dpi_max", "dpi_line_art", "dpi_bw", "dpi_combination",
     "formats", "font_families", "font_min_pt", "font_max_pt",
-    "colour_mode", "max_file_mb", "min_line_pt", "max_line_pt")
+    "colour_mode", "max_file_mb", "min_line_pt", "max_line_pt",
+    "panel_labels", "text_case", "text_no_final_stop",
+    "avoid_colour_pairs", "print_greyscale")
 }
 
 # Flatten one registry entry: requirements are lifted to the top level for

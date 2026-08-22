@@ -212,3 +212,27 @@ sage      journals.sagepub.com serves a Cloudflare "Just a moment..." challenge 
 oup       academic.oup.com not yet attempted live this round.
 ieee      needs the resolution-and-size sub-page, not the parent graphics page.
 rsc       the figures-graphics-images page carried no numbers when fetched directly.
+
+## sage — Sage journals   [SUPERSEDES the earlier "blocked" note]
+source: https://www.sagepub.com/journals/information-for-authors/preparing-your-manuscript
+harvested: 2026-08-22. The page is JS-rendered and returned empty to both get_page_text and
+  innerText extraction; the text was supplied by the maintainer reading it in a normal browser.
+formats: "TIFF, JPEG: Common format for pictures (containing no text or graphs). EPS: Preferred
+  format for graphs and line art (retains quality when enlarging/zooming in)."
+dpi: "Rasterized based files (i.e. with .tiff or .jpeg extension) require a resolution of at least
+  300 dpi (dots per inch). Line art should be supplied with a minimum resolution of 800 dpi."
+greyscale: "images supplied in colour will be published in color online and black and white in print
+  (unless otherwise arranged). Therefore, it is important that you supply images that are
+  comprehensible in black and white as well (i.e. by using color with a distinctive pattern or
+  dotted lines). The captions should reflect this by not using words indicating colour."
+series: "We recommend having no more than 7 series within a given data visualization."
+  RECORDED AS max_series_recommended, an advisory field. Sage says "recommend", not "require", so
+  figspec reports the comparison and never grades it as a failure. Same call as AGU's colour
+  guidance.
+fonts: "The lettering used in the artwork should not vary too much in size and type (usually Sans
+  Serif font is a default)." NOT recorded as a font list - too loose to check against.
+width: NOT STATED. "Check that the artworks supplied match or exceed the dimensions of the journal"
+  gives no measurement.
+other stated rules, not currently checkable: tables must be real text-based tables rather than
+  figures; raw data must be supplied and "Screenshots of data will not be accepted"; every figure
+  needs a number and title; charts must be labelled consistently as figures.

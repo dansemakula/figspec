@@ -38,6 +38,16 @@ plot_linewidths <- function(plot) {
   sort(unique(ggplot_linewidth_to_pt(lw)))
 }
 
+# How many data series a plot draws. ggplot2 assigns each series a group, and
+# leaves group at -1 when nothing is grouped.
+plot_series_count <- function(plot) {
+  built <- tryCatch(ggplot2::ggplot_build(plot)$data, error = function(e) NULL)
+  if (is.null(built)) return(0L)
+  grp <- unlist(lapply(built, function(d) d$group))
+  grp <- grp[!is.na(grp) & grp > 0]
+  length(unique(grp))
+}
+
 plot_linetypes <- function(plot) {
   built <- ggplot2::ggplot_build(plot)$data
   lt <- unlist(lapply(built, function(d) d$linetype))
@@ -228,6 +238,32 @@ colour_rows <- function(cols, spec, threshold = 10, plot = NULL) {
     rows[[length(rows) + 1L]] <- new_row(
       "Colour vision", UNSTATED, cvd_actual, "unspecified"
     )
+  }
+
+  # Series count ----------------------------------------------------------
+  # Some publishers name a maximum but call it a recommendation. A
+  # recommendation is not a rule, so this is always reported as unspecified
+  # and never graded; the wording carries the comparison instead.
+  if (!is.null(plot)) {
+    n_series <- plot_series_count(plot)
+    if (n_series > 0) {
+      rec <- spec$max_series_recommended
+      rows[[length(rows) + 1L]] <- if (!is.null(rec)) {
+        new_row(
+          "Series count",
+          paste0("no more than ", rec, " series (recommended, not required)"),
+          paste0(n_series, " series, ",
+                 if (n_series > as.numeric(rec)) {
+                   paste0("above the ", rec, " recommended")
+                 } else {
+                   paste0("within the ", rec, " recommended")
+                 }),
+          "unspecified"
+        )
+      } else {
+        new_row("Series count", UNSTATED, paste0(n_series, " series"), "unspecified")
+      }
+    }
   }
 
   # Whether anything other than colour distinguishes the series ------------

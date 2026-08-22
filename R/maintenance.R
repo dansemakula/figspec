@@ -146,7 +146,8 @@ validate_registry_file <- function(path) {
                                      paste(clash, collapse = ", ")))
     }
     unknown <- setdiff(names(j$requirements %||% list()),
-                       c(requirement_keys(), grep("^source_quote", names(j$requirements %||% list()), value = TRUE)))
+                       c(requirement_keys(), "max_series_recommended",
+                         grep("^source_quote", names(j$requirements %||% list()), value = TRUE)))
     if (length(unknown)) {
       problems <- c(problems, paste0(id, ": unrecognised requirement field(s): ",
                                      paste(unknown, collapse = ", ")))

@@ -506,8 +506,7 @@ journals:
 - id: mdpi
   name: MDPI journals
   publisher: MDPI
-  disciplines:
-  - multidisciplinary
+  disciplines: multidisciplinary
   source_url: https://www.mdpi.com/journal/sensors/instructions
   verified_on: '2026-08-22'
   requirements:
@@ -518,10 +517,48 @@ journals:
     - png
     - jpeg
     - tiff
-  not_stated:
-  - columns
+  not_stated: columns
   notes: MDPI phrases its resolution rule as preferably no less than 600 dpi, which
     is a preference rather than an absolute floor; the wording is kept in the entry
     so a reviewer can judge it. Read from the shared instructions template as served
     on the Sensors journal page; a journal-specific page overrides it.
+- id: sage
+  name: Sage journals
+  publisher: Sage Publishing
+  disciplines:
+  - social-sciences
+  - multidisciplinary
+  - health
+  source_url: https://www.sagepub.com/journals/information-for-authors/preparing-your-manuscript
+  verified_on: '2026-08-22'
+  requirements:
+    formats:
+    - tiff
+    - jpeg
+    - eps
+    source_quote_formats: 'TIFF, JPEG: Common format for pictures (containing no text
+      or graphs). EPS: Preferred format for graphs and line art (retains quality when
+      enlarging/zooming in).'
+    dpi_min: 300.0
+    dpi_line_art: 800.0
+    source_quote_dpi: Rasterized based files (i.e. with .tiff or .jpeg extension)
+      require a resolution of at least 300 dpi (dots per inch). Line art should be
+      supplied with a minimum resolution of 800 dpi.
+    print_greyscale: yes
+    source_quote_greyscale: images supplied in colour will be published in color online
+      and black and white in print (unless otherwise arranged). Therefore, it is important
+      that you supply images that are comprehensible in black and white as well (i.e.
+      by using color with a distinctive pattern or dotted lines).
+    max_series_recommended: 7.0
+    source_quote_series: We recommend having no more than 7 series within a given
+      data visualization.
+  not_stated:
+  - columns
+  notes: Sage states no figure dimensions, only that artwork should match or exceed
+    the dimensions of the journal, so no column width is recorded. Its font guidance
+    is that lettering should not vary too much in size and type and that sans serif
+    is usually the default; that is too loose to record as a font list. The seven-series
+    maximum is explicitly a recommendation, so figspec reports it without ever grading
+    it as a failure. Sage also requires captions not to use words indicating colour,
+    and will not accept screenshots of data.
 
