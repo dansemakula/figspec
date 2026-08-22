@@ -278,6 +278,12 @@ graded <- function(check, requirement, actual, ok) {
 #'   `png()` and `tiff()` devices do not, whereas ragg does.
 #' @param format Output format, for example `"tiff"`. Only used when `x` is a
 #'   ggplot object.
+#' @param art_type Which resolution rule applies. Publishers set different
+#'   minimums for different kinds of artwork: Cell Press asks 300 dpi for
+#'   colour or greyscale, 500 for black and white, and 1000 for line art.
+#'   figspec cannot tell which one your figure is, so it checks against
+#'   `"colour"` by default and names the other thresholds in the report rather
+#'   than quietly applying the most lenient one.
 #' @return An object of class `figspec_report`, a data frame of one row per
 #'   requirement.
 #' @examples
@@ -288,9 +294,11 @@ graded <- function(check, requirement, actual, ok) {
 check_journal <- function(x, journal, column = c("single", "onehalf", "double"),
                           width = NULL, height = NULL,
                           units = c("mm", "cm", "in"),
-                          dpi = NULL, format = NULL) {
+                          dpi = NULL, format = NULL,
+                          art_type = c("colour", "bw", "line", "combination")) {
   column <- match.arg(column)
   units <- match.arg(units)
+  art_type <- match.arg(art_type)
   spec <- journal_spec(journal)
   rows <- list()
   info <- list()
@@ -376,12 +384,28 @@ check_journal <- function(x, journal, column = c("single", "onehalf", "double"),
       "vector format, resolution independent", "pass"
     )
   } else {
+    required_dpi <- switch(art_type,
+      colour = spec$dpi_min,
+      bw = spec$dpi_bw %||% spec$dpi_min,
+      line = spec$dpi_line_art %||% spec$dpi_min,
+      combination = spec$dpi_combination %||% spec$dpi_min
+    )
+    # Name every threshold the publisher states. A figure judged as colour art
+    # must not look compliant when it is really line art held to a higher bar.
+    others <- c(
+      if (!is.null(spec$dpi_bw) && art_type != "bw") paste0("black and white ", spec$dpi_bw),
+      if (!is.null(spec$dpi_line_art) && art_type != "line") paste0("line art ", spec$dpi_line_art),
+      if (!is.null(spec$dpi_combination) && art_type != "combination") paste0("combination ", spec$dpi_combination)
+    )
+    req_dpi_txt <- if (is.null(required_dpi)) NULL else {
+      paste0("min ", required_dpi, " dpi for ", art_type,
+             if (length(others)) paste0("; also states ", paste(others, collapse = ", "), " dpi") else "")
+    }
     rows[[length(rows) + 1L]] <- graded(
-      "Resolution",
-      if (!is.null(spec$dpi_min)) paste0("min ", spec$dpi_min, " dpi") else NULL,
+      "Resolution", req_dpi_txt,
       if (!is.null(actual_dpi)) paste0(fmt_num(actual_dpi, 0), " dpi") else NULL,
-      !is.null(actual_dpi) && !is.null(spec$dpi_min) &&
-        actual_dpi >= as.numeric(spec$dpi_min)
+      !is.null(actual_dpi) && !is.null(required_dpi) &&
+        actual_dpi >= as.numeric(required_dpi)
     )
   }
 

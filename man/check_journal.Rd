@@ -12,7 +12,8 @@ check_journal(
   height = NULL,
   units = c("mm", "cm", "in"),
   dpi = NULL,
-  format = NULL
+  format = NULL,
+  art_type = c("colour", "bw", "line", "combination")
 )
 }
 \arguments{
@@ -35,6 +36,13 @@ judge physical size for files that do not record it themselves - base R's
 
 \item{format}{Output format, for example \code{"tiff"}. Only used when \code{x} is a
 ggplot object.}
+
+\item{art_type}{Which resolution rule applies. Publishers set different
+minimums for different kinds of artwork: Cell Press asks 300 dpi for
+colour or greyscale, 500 for black and white, and 1000 for line art.
+figspec cannot tell which one your figure is, so it checks against
+\code{"colour"} by default and names the other thresholds in the report rather
+than quietly applying the most lenient one.}
 }
 \value{
 An object of class \code{figspec_report}, a data frame of one row per

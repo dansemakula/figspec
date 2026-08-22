@@ -80,3 +80,23 @@ test_that("supplying the resolution makes an unrecorded file measurable", {
   expect_equal(r[r$check == "Width", ]$status, "pass")
   expect_equal(r[r$check == "Resolution", ]$status, "pass")
 })
+
+test_that("resolution is judged against the rule for the stated art type", {
+  path <- withr::local_tempfile(fileext = ".png")
+  grDevices::png(path, width = 85, height = 60, units = "mm", res = 300)
+  plot(mtcars$wt, mtcars$mpg)
+  grDevices::dev.off()
+
+  # Cell Press states 300 dpi for colour, 500 for black and white and 1000 for
+  # line art. 300 dpi passes as colour art and fails as line art.
+  expect_equal(check_journal(path, "cell_press", dpi = 300)[
+    check_journal(path, "cell_press", dpi = 300)$check == "Resolution", ]$status, "pass")
+  expect_equal(check_journal(path, "cell_press", dpi = 300, art_type = "line")[
+    check_journal(path, "cell_press", dpi = 300, art_type = "line")$check == "Resolution", ]$status, "fail")
+})
+
+test_that("the other stated resolution thresholds are named, not hidden", {
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  r <- check_journal(p, "cell_press", dpi = 300)
+  expect_match(r[r$check == "Resolution", ]$requirement, "line art 1000")
+})
