@@ -82,7 +82,17 @@ theme_journal <- function(journal, base = NULL, style = NULL, base_size = NULL,
 
   # Pin every element that a base theme usually shrinks with rel(), so the
   # journal's floor holds regardless of which base theme was supplied.
-  base + ggplot2::theme(
+  # Where a publisher requires axis lines and tick marks, draw them: the point
+  # of theme_journal is to meet the stated requirements, and ggplot2's default
+  # theme leaves the axis line out.
+  furniture <- if (isTRUE(spec$axis_lines_and_ticks)) {
+    ggplot2::theme(axis.line = ggplot2::element_line(colour = "black"),
+                   axis.ticks = ggplot2::element_line(colour = "black"))
+  } else {
+    ggplot2::theme()
+  }
+
+  base + furniture + ggplot2::theme(
     text = ggplot2::element_text(family = base_family, size = base_size),
     axis.text = ggplot2::element_text(size = min_pt),
     axis.title = ggplot2::element_text(size = base_size),

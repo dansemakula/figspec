@@ -86,6 +86,39 @@ has_final_stop <- function(x) grepl("\\.\\s*$", x) & !grepl("\\.\\.\\.\\s*$", x)
 
 starts_lower <- function(x) grepl("^[a-z]", x)
 
+# Axis furniture and text colour ------------------------------------------
+
+# Which of the axis lines and tick marks a plot leaves out. ggplot2's default
+# theme draws tick marks but no axis line, using the panel border instead, so a
+# journal asking for both is a real requirement rather than a formality.
+missing_axis_furniture <- function(plot) {
+  th <- tryCatch(ggplot2::ggplot_build(plot)$plot$theme, error = function(e) NULL)
+  if (is.null(th)) return(NULL)
+  blank <- function(el) {
+    e <- tryCatch(ggplot2::calc_element(el, th), error = function(e) NULL)
+    is.null(e) || inherits(e, "element_blank")
+  }
+  out <- character(0)
+  if (blank("axis.line")) out <- c(out, "axis lines")
+  if (blank("axis.ticks")) out <- c(out, "tick marks")
+  out
+}
+
+# A grey has equal red, green and blue channels, so this catches an actual hue
+# rather than any departure from pure black.
+is_coloured <- function(col) {
+  if (is.null(col) || !length(col) || is.na(col)) return(FALSE)
+  m <- tryCatch(grDevices::col2rgb(col), error = function(e) NULL)
+  if (is.null(m)) return(FALSE)
+  !(m[1] == m[2] && m[2] == m[3])
+}
+
+plot_text_colour <- function(plot) {
+  th <- tryCatch(ggplot2::ggplot_build(plot)$plot$theme, error = function(e) NULL)
+  if (is.null(th)) return(NULL)
+  tryCatch(ggplot2::calc_element("text", th)$colour, error = function(e) NULL)
+}
+
 # Rows shared with check_journal() ----------------------------------------
 
 annotation_rows <- function(plot, spec) {
@@ -125,6 +158,32 @@ annotation_rows <- function(plot, spec) {
       paste0("no more than ", spec$max_panels, " parts in a composite figure"),
       paste0(n_parts, " part", if (n_parts != 1L) "s" else ""),
       n_parts <= as.numeric(spec$max_panels)
+    )
+  }
+
+  # Axis lines and tick marks ---------------------------------------------
+  if (isTRUE(spec$axis_lines_and_ticks)) {
+    missing_bits <- missing_axis_furniture(plot)
+    if (!is.null(missing_bits)) {
+      rows[[length(rows) + 1L]] <- graded(
+        "Axis furniture", "axis lines and tick marks included",
+        if (length(missing_bits)) {
+          paste0("missing ", paste(missing_bits, collapse = " and "))
+        } else {
+          "axis lines and tick marks present"
+        },
+        length(missing_bits) == 0
+      )
+    }
+  }
+
+  # Text colour -----------------------------------------------------------
+  if (isTRUE(spec$avoid_coloured_text)) {
+    col <- plot_text_colour(plot)
+    rows[[length(rows) + 1L]] <- graded(
+      "Text colour", "text not coloured",
+      if (is.null(col)) NULL else paste0("text is ", col),
+      !is.null(col) && !is_coloured(col)
     )
   }
 

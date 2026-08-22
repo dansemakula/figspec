@@ -174,3 +174,58 @@ test_that("RSC's entry names its scope as books, not journals", {
   expect_match(journal_spec("rsc_books")$notes, "not journals")
   expect_null(journal_spec("rsc_books")$print_greyscale)
 })
+
+test_that("Nature requires axis lines, which ggplot2's default theme omits", {
+  p <- base_plot()
+  # theme_grey draws tick marks but no axis line, using the panel border, so
+  # this is a real requirement rather than a formality.
+  expect_equal(missing_axis_furniture(p), "axis lines")
+  r <- check_journal(p, "nature")
+  expect_equal(r[r$check == "Axis furniture", ]$status, "fail")
+  expect_match(r[r$check == "Axis furniture", ]$actual, "missing axis lines")
+})
+
+test_that("theme_journal satisfies the axis requirement rather than only reporting it", {
+  fixed <- base_plot() + theme_journal("nature")
+  expect_length(missing_axis_furniture(fixed), 0)
+  expect_equal(check_journal(fixed, "nature")[
+    check_journal(fixed, "nature")$check == "Axis furniture", ]$status, "pass")
+})
+
+test_that("both pieces of axis furniture are reported when both are missing", {
+  bare <- base_plot() + ggplot2::theme_void()
+  expect_setequal(missing_axis_furniture(bare), c("axis lines", "tick marks"))
+})
+
+test_that("coloured text fails Nature, and grey text does not", {
+  base <- base_plot() + theme_journal("nature")
+  expect_equal(check_journal(base, "nature")[
+    check_journal(base, "nature")$check == "Text colour", ]$status, "pass")
+
+  red <- base + ggplot2::theme(text = ggplot2::element_text(colour = "red"))
+  expect_equal(check_journal(red, "nature")[
+    check_journal(red, "nature")$check == "Text colour", ]$status, "fail")
+
+  # A grey has equal channels, so it is not a hue.
+  grey <- base + ggplot2::theme(text = ggplot2::element_text(colour = "grey30"))
+  expect_equal(check_journal(grey, "nature")[
+    check_journal(grey, "nature")$check == "Text colour", ]$status, "pass")
+  expect_false(is_coloured("grey30"))
+  expect_true(is_coloured("red"))
+})
+
+test_that("journals stating no axis or text-colour rule raise no such checks", {
+  p <- base_plot()
+  r <- check_journal(p, "plos_one")
+  expect_false("Axis furniture" %in% r$check)
+  expect_false("Text colour" %in% r$check)
+})
+
+test_that("Nature labels panels in lower case, like AGU and unlike Cell Press", {
+  skip_if_not_installed("patchwork")
+  p <- base_plot(); comp <- (p | p) / p
+  lower <- check_journal(comp + patchwork::plot_annotation(tag_levels = "a"), "nature")
+  expect_equal(lower[lower$check == "Panel labels", ]$status, "pass")
+  upper <- check_journal(comp + patchwork::plot_annotation(tag_levels = "A"), "nature")
+  expect_equal(upper[upper$check == "Panel labels", ]$status, "fail")
+})

@@ -43,9 +43,11 @@ test_that("registry_status reports age and how much is harvested", {
   expect_true(all(c("id","age_days","stale","stated","confirmed_absent","unharvested")
                   %in% names(st)))
   expect_equal(nrow(st), length(load_registry()))
-  # Nature was harvested from the formatting guide only, so most fields are open.
-  nat <- st[st$id == "nature", ]
-  expect_gt(nat$unharvested, nat$stated)
+  # Deliberately not asserting how much any one journal has been harvested:
+  # that is a fact about today's registry, not about the code, and it changes
+  # every time an entry is filled in. Nature already broke this test once by
+  # improving. What must hold is the accounting.
+  expect_true(all(st$stated >= 0 & st$confirmed_absent >= 0 & st$unharvested >= 0))
   # Every field is accounted for in exactly one of the three states.
   expect_true(all(st$stated + st$confirmed_absent + st$unharvested ==
                     length(requirement_keys())))

@@ -385,3 +385,33 @@ colour: "Your contract will state whether the use of colour is allowed in the pr
   print depends on the author's contract, not on a rule figspec can check.
 NOT recorded: "Captions/atom labels = Arial, 7 pt" belongs to RSC's ChemDraw structure-drawing
   settings, not to figures generally, so no font list or type size is taken from it.
+
+## nature — SUPPLEMENT 2: Nature research figure guide (the dedicated specification)
+source: https://research-figure-guide.nature.com/figures/preparing-figures-our-specifications/
+harvested: 2026-08-22.
+CORROBORATION: independently states "Use standard fonts (e.g., Arial or Helvetica)", "Maximum text
+  size: 7 pt", "Minimum text size: 5 pt" and a 300 dpi minimum for photographic images. Three Nature
+  author pages now agree on typeface, type range and resolution.
+NEW, and recorded:
+  panel labels: "Separate panels in multi-panelled figures should be labelled with 8-pt bold,
+    upright (not italic) and lowercase a, b, c, etc." -> panel_labels lowercase. The 8-pt bold part
+    is not checked; figspec reads which tag level is used, not its styling.
+  axes: "Axis lines and tick marks to be included" -> axis_lines_and_ticks. Worth noting that
+    ggplot2's default theme draws tick marks but NOT an axis line, so a default plot fails this.
+    theme_journal now supplies both where a publisher requires them.
+  text colour: "Avoid coloured text; keylines, keys, etc. should be used instead" ->
+    avoid_coloured_text. A grey has equal RGB channels and is not treated as a hue.
+NEW, stated but NOT recorded:
+  "Scale bars should be used rather than magnification factors" and "Keep the scale bar and any text
+    on a separate, editable layer" - not derivable from a ggplot.
+  "All axes to be labelled with units in parentheses, e.g. Data (unit)" - deliberately not checked.
+    A count or a proportion has no unit, so requiring parentheses on every axis label would fire on
+    correct figures.
+  "An accessible colour palette to be used", citing Wong, B. Points of view: Colour blindness -
+    figspec's colour-vision check already reports this, and no palette is prescribed.
+  "Do not outline text", "Embed fonts (True Type 2 or 42)", "Use Symbol font for glyphs and the
+    Greek alphabet", amino-acid sequences in Courier.
+dpi ambiguity: this page says "For images, minimum 450 dpi" in an export section while also saying
+  "The maximum dpi of online proofs is 450 dpi". The latter describes Nature's rendering. dpi_min
+  stays at the 300 that two Nature pages state for photographic images.
+widths: NOT STATED here, which is why source_url remains the initial-submission page.
