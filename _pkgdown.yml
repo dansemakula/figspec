@@ -42,9 +42,9 @@ reference:
   desc: What a journal requires, and whether this figure meets it.
   contents: [check_journal, check_colour_safety, check_submission, submission_detail, suggest_art_type]
 - title: Building a compliant figure
-  contents: [theme_journal, ggsave_journal, figspec_preview, figspec_linewidth, figspec_shapes, figspec_linetypes]
+  contents: [fit_journal, theme_journal, ggsave_journal, figspec_preview, figspec_linewidth, figspec_shapes, figspec_linetypes]
 - title: Colour
-  contents: [figspec_palettes, figspec_palette, scale_colour_figspec, journal_palette]
+  contents: [figspec_palettes, figspec_palette, scale_colour_figspec, scale_shape_figspec, journal_palette]
 - title: R Markdown and Quarto
   contents: [figspec_chunk_opts, figspec_knitr_setup]
 - title: Looking things up
