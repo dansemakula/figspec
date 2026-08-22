@@ -11,8 +11,11 @@ allowed to get. The rules are real, they differ between publishers, and they are
 scattered across author-guideline pages that are easy to skim past. Most people
 find out they got one wrong at the production stage, after acceptance.
 
-**figspec** keeps those requirements in one place, applies them to your ggplot2
-figures, and tells you where a figure would fail.
+figspec brings the requirements of 27 publishers into your R session as data,
+builds your figure to meet them, and exports it at exactly the stated size and
+resolution. You can fit a plot to your target journal as you draw it, or check
+one you have already finished, without looking those requirements up every
+time. Every requirement records the page it came from and the date it was read.
 
 ## Installation
 
@@ -25,32 +28,51 @@ figspec is **experimental**: the registry is roughly a fifth populated against
 the full field grid, and the API may still change. `registry_status()` reports
 exactly how much of each entry has been harvested.
 
-## Why the width matters
-
-Type size in a figure is absolute. An 8 pt label is 8 pt. If you save a figure
-at 180 mm and the journal drops it into an 85 mm column, everything in it
-shrinks by more than half, and your 8 pt label lands at 3.8 pt. Saving at the
-journal's real column width is what keeps a compliant figure compliant.
-
 ## Where this fits in your workflow
 
-figspec lets you quickly and reliably fit your plots to your target journal's
-published figure requirements, or check whether they already meet them, without
-looking those requirements up every time.
+Draw your plot the way you always do. Once you know where you are submitting,
+bring the journal into the plot and figspec takes care of the requirements, or
+hand it a figure you have already finished and it will tell you where that
+figure stands.
 
-It brings the requirements of 27 publishers into your R session as data, builds
-your figure to meet them, and exports it at exactly the stated size and
-resolution. Every requirement records the page it came from and the date it was
-read.
+### 1. Bring the journal in while you are plotting
 
-### 1. Check whether a plot meets a journal's requirements
-
-Pass the plot and the journal. You get one row per requirement.
+Add the journal the same way you would add a colour scale, and the figure comes
+out built to specification.
 
 ```r
 library(ggplot2)
 library(figspec)
 
+ggplot(mtcars, aes(wt, mpg, colour = factor(cyl), shape = factor(cyl))) +
+  geom_point() +
+  fit_journal("cell_press")
+```
+
+That one line carries the journal's typography, its stated line weights, its
+structural rules such as axis lines and tick marks, and colours and shapes
+chosen to survive whatever that journal does to a figure in production. Where a
+publisher prints in black and white, the palette shifts to one that keeps its
+colours apart in greyscale.
+
+Add it last, and keep your own palette if you have already chosen one:
+
+```r
+  scale_colour_viridis_d() +
+  fit_journal("plos_one", colour = FALSE)
+```
+
+Line widths inside a geom live on the layer, so pass those through directly:
+
+```r
+  geom_line(linewidth = figspec_linewidth("cell_press"))
+```
+
+### 2. Check whether a plot meets a journal's requirements
+
+Pass the plot and the journal, and you get one row per requirement.
+
+```r
 p <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
   geom_point() +
   labs(title = "Fuel economy")
@@ -61,32 +83,12 @@ check_journal(p, "cell_press", column = "single")
 #> ✖ Colour pairs  red and green both used         (requires: not used together)
 ```
 
-Two failures in an ordinary ggplot, from defaults nobody thinks about: ggplot2
-runs 8.8–13.2 pt against Cell Press's 6–8, and its default palette contains a
-red and a green.
+Two failures in an ordinary ggplot, both from defaults nobody thinks about.
+ggplot2 runs 8.8 to 13.2 pt where Cell Press allows 6 to 8, and its default
+palette pairs a red with a green.
 
-**Check the plot object, not the saved file.** Type size, line width and colour
-cannot be recovered from a TIFF.
-
-### 2. Fit a plot to a journal
-
-`theme_journal()` applies everything the journal states that a theme can carry:
-font family, type floor and ceiling, line weights, and structural rules such as
-Nature's requirement that axis lines and tick marks be drawn.
-
-```r
-p + theme_journal("cell_press")
-```
-
-Add compliant values where they live on the layer rather than the theme:
-
-```r
-p +
-  scale_colour_figspec("cividis") +                  # safe in print and for CVD
-  scale_shape_manual(values = figspec_shapes(3)) +   # a second cue besides colour
-  geom_line(linewidth = figspec_linewidth("cell_press")) +
-  theme_journal("cell_press")
-```
+Check the plot object while you still have it. Type size, line width and colour
+all disappear into pixels once a figure is written to a TIFF.
 
 ### 3. Export at exactly the stated size and resolution
 
@@ -94,9 +96,13 @@ p +
 ggsave_journal("figure_1.tiff", p, journal = "cell_press", column = "single")
 ```
 
-Takes the width from the registry, defaults the resolution to the journal's
-minimum, picks a device that can render the required font, and re-checks the
-file it wrote.
+This takes the width from the registry, defaults the resolution to the
+journal's minimum, chooses a device that can render the required font, and
+re-checks the file it has just written.
+
+Saving at the journal's real column width is what keeps a compliant figure
+compliant. Type size is absolute: an 8 pt label stays 8 pt, so a figure drawn
+at 180 mm and dropped into an 85 mm column takes that label down to 3.8 pt.
 
 ### 4. Look up what a journal requires
 
@@ -117,19 +123,19 @@ check_submission("figures/", "cell_press")
 
 ### 6. Move a figure set to a different journal
 
-Rejected, and the next journal's rules are incompatible? Cell Press wants type
-6–8 pt; PLOS ONE wants 8–12.
+Rejected, and the next journal's rules clash with the last one's? Cell Press
+allows type between 6 and 8 pt; PLOS ONE wants 8 to 12.
 
 ```r
 refit_journal(my_plots, journal = "plos_one", outdir = "figures_plos/")
 ```
 
-Re-themes and re-exports the set. Works from plot objects, since type size
-cannot be recovered from a finished file.
+This re-themes and re-exports the whole set. It works from plot objects, since
+type size cannot be recovered once a figure has been written to a file.
 
 ### 7. Use it in Quarto or R Markdown
 
-Where figure size comes from chunk options rather than `ggsave()`:
+Where figure size comes from chunk options:
 
 ```r
 figspec_knitr_setup("cell_press", column = "double")
@@ -139,7 +145,7 @@ figspec_knitr_setup("cell_press", column = "double")
 
 ```r
 register_house_style("mylab", theme_minimal())
-p + theme_journal("frontiers", style = "mylab")
+p + fit_journal("frontiers", style = "mylab")
 
 register_journal("lab_report", "Our lab format",
                  source_url = "internal handbook v3", verified_on = "2026-08-22",
@@ -147,8 +153,9 @@ register_journal("lab_report", "Our lab format",
                                      font_min_pt = 9))
 ```
 
-A style is applied *underneath* the journal's requirements, so it can never
-push a figure out of compliance.
+Your style is applied underneath the journal's requirements, so it can shape
+how a figure looks while the journal keeps the final word on anything it has
+specified.
 
 ### 9. Find out which resolution rule applies
 
@@ -177,14 +184,13 @@ fig_width("frontiers", "double", units = "in")
 | `unspecified` | **The publisher does not state this requirement.** Nothing can be concluded. |
 | `unknown` | The requirement exists, but this input cannot answer it — type size in a raster file, for example. |
 
-`unspecified` is deliberately not a pass. If a publisher is silent on maximum
-height, figspec will not tell you your figure is fine; it will tell you the
-publisher said nothing and leave the judgement to you.
+When a publisher is silent on maximum height, figspec tells you so and leaves
+the judgement with you. Silence gets reported as silence.
 
 ## Colour, line weight and the rest
 
-figspec is not only about size. It checks every property a journal states and
-that can be determined from your figure:
+figspec covers every property a journal states and that can be read from your
+figure:
 
 | Property | From a plot object | From a saved file |
 |---|---|---|
@@ -222,8 +228,7 @@ Note the outcomes. Red/green is a **requirement** for Cell Press because Cell
 Press states it, so it can fail. Greyscale is a requirement for the Royal
 Society, which prints in black and white by default. Colour-vision safety is
 reported for every journal but is always `unspecified`, because it is good
-practice rather than a published rule — figspec will show you the finding but
-will not claim a journal demanded it.
+practice, so figspec shows you the finding and leaves it as advice.
 
 Line weights are checked too, against the range the publisher states:
 
@@ -343,7 +348,7 @@ journal_spec("frontiers")$source_url
 #> "https://www.frontiersin.org/guidelines/author-guidelines"
 ```
 
-### Three states, not two
+### The three states of a field
 
 A blank field means one of two different things, and conflating them puts a
 claim in figspec's mouth that nobody earned:
@@ -357,11 +362,11 @@ claim in figspec's mouth that nobody earned:
 ### How hedged wording is recorded
 
 Publishers hedge constantly. What decides is the **main verb of the sentence
-stating the rule**, not the presence of a hedge:
+stating the rule**:
 
 | Publisher's wording | Recorded as |
 |---|---|
-| OUP: whole guide is *"tips rather than strict rules"*, then *"at least 300dpi"* | **Requirement** — the hedge is about achievability, not applicability |
+| OUP: whole guide is *"tips rather than strict rules"*, then *"at least 300dpi"* | **Requirement** — the hedge is about achieving the target, and the target still applies |
 | Elsevier: *"a rule-of-thumb rather than a strict rule"*, then *"no smaller than 6 pt"* | **Requirement** |
 | MDPI: *"should be ... preferably no less than 600 dpi"* | **Requirement** — the verb is *should* |
 | Sage: *"We recommend having no more than 7 series"* | **Advisory** — the verb is *recommend*. Reported, never graded |
@@ -387,13 +392,13 @@ Each entry keeps two things strictly apart:
 | Block | What it holds | Checked? |
 |---|---|---|
 | `requirements:` | What the publisher **states** in its guidelines | Yes — this is the only thing `pass`/`fail` refers to |
-| `house_style:` | What a journal's figures **look like**. Taste, not rule | Never |
+| `house_style:` | What a journal's figures **look like**. A matter of taste | Never |
 
 Putting a requirement field inside `house_style` is a load-time error. That
 line is what makes a `pass` mean something.
 
 Where a journal is silent and figspec has to supply a working default, it says
-so rather than passing the default off as a rule.
+so, and marks the value as its own.
 
 Guidelines change. Check the `verified_on` date, and treat the publisher's
 current page as the authority.

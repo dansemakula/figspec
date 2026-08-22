@@ -28,7 +28,7 @@ spec$verified_on
 ```
 
 The package **refuses to load** an entry without both. That is a load-time
-error, not a warning.
+error, which stops the load outright.
 
 Load-bearing numbers also carry the publisher's own wording, so an entry can be
 audited without leaving the file:
@@ -37,7 +37,7 @@ audited without leaving the file:
 spec$source_quote_width
 ```
 
-## Three states, not two
+## The three states of a field
 
 A blank field means one of two different things, and conflating them puts a
 claim in figspec's mouth that nobody earned.
@@ -61,11 +61,11 @@ pass as a complete one. Listing a field in both `requirements:` and
 ## Hedged wording
 
 Publishers hedge constantly. What decides how a rule is recorded is the **main
-verb of the sentence stating it**, not the presence of a hedge.
+verb of the sentence stating it**.
 
 | Wording | Recorded as |
 |---|---|
-| OUP: whole guide is *"tips rather than strict rules"*, then *"at least 300dpi"* | Requirement. The hedge is about achievability, not applicability |
+| OUP: whole guide is *"tips rather than strict rules"*, then *"at least 300dpi"* | Requirement. The hedge is about achieving the target, and the target still applies |
 | Elsevier: *"a rule-of-thumb rather than a strict rule"*, then *"no smaller than 6 pt"* | Requirement |
 | MDPI: *"should be ... preferably no less than 600 dpi"* | Requirement. The verb is *should* |
 | Sage: *"We recommend having no more than 7 series"* | Advisory. The verb is *recommend*: reported, never graded |
@@ -76,7 +76,7 @@ The tie-breaker for anything that rule does not settle: **do not grade**. An
 unrecorded rule costs a user a check. A wrongly graded one tells them they
 broke a rule that does not exist.
 
-## Publisher-wide entries are defaults, not guarantees
+## Publisher-wide entries are defaults
 
 Most entries cover a whole portfolio, but publishers say plainly that
 individual journals override them. Elsevier's own page:
@@ -120,7 +120,7 @@ validate_registry_file("my-journals.yaml")
 load_journals("my-journals.yaml")
 ```
 
-Validation reports every problem rather than stopping at the first, and refuses
+Validation reports every problem it finds in one pass, and refuses
 entries with no provenance, entries putting a requirement inside `house_style:`,
 and entries claiming a field is both stated and absent.
 

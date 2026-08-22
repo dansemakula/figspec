@@ -6,7 +6,15 @@
 \alias{figspec-package}
 \title{figspec: Check and Export Figures Against Journal Submission Requirements}
 \description{
-Academic journals publish precise requirements for submitted figures: column widths, minimum resolution, permitted file formats, minimum type size and colour mode. These requirements are scattered across publisher websites and are easy to miss until a manuscript reaches production. 'figspec' provides a curated, source-referenced registry of those requirements, a theme and export helper that applies them to 'ggplot2' figures, and a checker that reports where a figure would fail. Every registry entry records the publisher page it was taken from and the date it was verified, and requirements a publisher does not state are reported as unspecified rather than assumed to pass.
+Fit plots to a target journal's published figure requirements, or check whether they already meet them, without looking those requirements up every time. Brings the requirements of many publishers into the R session as data, builds 'ggplot2' figures to meet them, and exports at exactly the stated size and resolution. Covers width, resolution, file format, type size and font, line and point weights, colour mode and colour safety, panel labelling and axis rules. Every requirement records the publisher page it was taken from and the date it was read; a requirement a publisher does not state is reported as unspecified rather than assumed to pass.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/dansemakula/figspec}
+  \item Report bugs at \url{https://github.com/dansemakula/figspec/issues}
+}
+
 }
 \author{
 \strong{Maintainer}: Daniel Semakula, MD, MPH, PhD \email{semakuladaniel@gmail.com} [copyright holder]

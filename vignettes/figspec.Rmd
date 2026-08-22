@@ -27,11 +27,29 @@ labels upright; the Royal Society wants them italicised.
 Nothing in an ordinary plotting workflow makes any of that visible, and most
 people find out at the production stage, after acceptance.
 
-## The one moment that matters
+## Bring the journal in as you plot
 
-**Type size only exists before you save.** Once a figure is a TIFF it is
-pixels, and the point sizes are gone. That single fact shapes the whole
-workflow: check the plot object, then save it.
+The simplest way to meet a journal's requirements is to build the figure to
+them from the start. Add the journal the way you would add a colour scale:
+
+```{r}
+fitted <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl), shape = factor(cyl))) +
+  geom_point() +
+  labs(title = "Fuel economy", x = "Weight (1000 lbs)", y = "Miles per gallon") +
+  fit_journal("cell_press")
+
+check_journal(fitted, "cell_press", column = "single")[, c("check", "actual", "status")]
+```
+
+That one line carries the journal's typography, its stated line weights, its
+structural rules, and colours and shapes chosen to survive what the journal
+does to a figure in production.
+
+## Checking a figure you have already drawn
+
+Type size lives in the plot object. Once a figure becomes a TIFF it is pixels,
+and the point sizes have gone with it, so the moment to check is while you
+still hold the plot.
 
 ```{r}
 p <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
@@ -101,8 +119,8 @@ check_colour_safety(p, "cell_press")[, c("check", "actual", "status")]
 Red-and-green is a **requirement** for Cell Press because Cell Press states it.
 Greyscale separability is a requirement for the Royal Society, which prints in
 black and white by default. Colour-vision safety is reported for every journal
-but is always `unspecified`, because it is good practice rather than a
-published rule.
+and stays `unspecified`, since it is good practice that publishers leave to
+your judgement.
 
 Note the last row. If colours merge but shapes differ, the figure still reads:
 
@@ -130,7 +148,7 @@ ggsave_journal("figure_1.tiff", fixed, journal = "cell_press", column = "single"
 to the journal's stated minimum, picks a device that can render the required
 font, and re-checks the file it wrote.
 
-Column names come from the journal, not from a fixed vocabulary:
+Column names come from the journal itself:
 
 ```{r}
 fig_columns("science")
@@ -143,7 +161,8 @@ Publishers set different resolutions for different kinds of artwork, and the
 gap is large: 300 dpi generally, against 600 to 1200 dpi for line art. Twelve
 entries in the registry state a separate line-art figure.
 
-Line art is **monochrome**, and that is not a quibble. Springer defines it as a
+Line art means **monochrome**, and the distinction carries real weight.
+Springer defines it as a
 "Black and white graphic with no shading"; ACS and IEEE both write "black and
 white line art"; Taylor & Francis and OUP both write "monochrome". In prepress
 it is a one-bit image, and it carries the highest resolution bar precisely
@@ -157,7 +176,7 @@ suggest_art_type(ggplot(mtcars, aes(wt, mpg)) + geom_point(colour = "black"), "b
 ```
 
 ggplot2's default bar fill is `#595959`, a mid grey, so a default bar chart is
-grayscale art rather than line art:
+grayscale art:
 
 ```{r}
 suggest_art_type(ggplot(mtcars, aes(factor(cyl))) + geom_bar())
@@ -205,7 +224,7 @@ TIFF and a re-fitted file could not be trusted.
 
 ## Other display items
 
-Figures are not the only thing with rules.
+Journals set rules for other display items too.
 
 ```{r}
 graphical_abstract_spec("rsc")
@@ -214,12 +233,13 @@ graphical_abstract_spec("rsc")
 `table_spec()` and `media_spec()` do the same for tables and for supplementary
 video and audio.
 
-## What figspec will not tell you
+## Where figspec hands the judgement back to you
 
-It will not tell you a figure is fine when the publisher never said what fine
-means. It will not convert a stated pixel size into millimetres without a
-stated resolution. It will not grade a recommendation as a failure. And it will
-not recover type size from a saved raster.
+Where a publisher never said what compliance means, figspec reports the
+silence. It leaves a pixel size in pixels until a resolution arrives to convert
+it with. It reports a recommendation as a recommendation. And when type size is
+the question it asks for the plot object, since a saved raster has already
+turned that into pixels.
 
-Those are all cases where the honest answer is "check this yourself", and
-figspec says so rather than guessing.
+Each of those is a moment where the honest answer is "check this yourself", and
+figspec says so plainly instead of filling the gap with a guess.
