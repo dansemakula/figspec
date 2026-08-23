@@ -307,8 +307,20 @@ CAVEATS: the PDF sits under a /2017/01/ upload path, so it may be nearly a decad
   before relying on this entry.
 
 ## oup — Oxford University Press journals
-source: https://static.primary.prod.gcms.the-infra.com/static/site/journals/document/images-author-guidance.pdf
-harvested: 2026-08-22 from the PDF.
+source: https://academic.oup.com/pages/for-authors/journals/preparing-and-submitting-your-manuscript
+harvested: 2026-08-22 from the PDF that page links to under "Figures".
+LINK ROT, 2026-08-23: the PDF itself,
+  https://static.primary.prod.gcms.the-infra.com/static/site/journals/document/images-author-guidance.pdf,
+  now returns HTTP 404, in a browser as well as to curl, and has no usable snapshot in
+  the Internet Archive (the 2022 capture is itself a 404). OUP's live author page still
+  links to that exact URL, so the guidance has not been withdrawn - OUP has broken its
+  own asset link. source_url now names the live page rather than the dead file, because
+  a source_url a reader cannot open is not provenance. The numbers below stand as read
+  on 2026-08-22 and have not been re-read since; re-verify if OUP restores the document.
+  The companion Figures_accessibility_journals_edition_v2.2_2024.pdf is 404 as well.
+  Note also that individual OUP journals publish their own figures and differ from each
+  other - Policy and Society states 350dpi/600dpi line art, English states 300dpi/1200dpi
+  - so this entry is the publisher-level guidance, not a guarantee for every OUP title.
 FRAMING, verbatim: "Below are tips rather than strict rules, as image content, source material and
   available software may constrain what you are able to achieve. Please use these guidelines
   alongside any specific instructions provide on the website of the journal to which you are

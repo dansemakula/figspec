@@ -796,8 +796,8 @@ journals:
   - multidisciplinary
   - medicine
   - humanities
-  source_url: https://static.primary.prod.gcms.the-infra.com/static/site/journals/document/images-author-guidance.pdf
-  verified_on: '2026-08-22'
+  source_url: https://academic.oup.com/pages/for-authors/journals/preparing-and-submitting-your-manuscript
+  verified_on: '2026-08-23'
   requirements:
     dpi_min: 300.0
     dpi_bw: 600.0
@@ -819,7 +819,15 @@ journals:
     achievable, not whether it applies, and each is stated as at least, no less than,
     or between. OUP also says PDF proofs reduce raster images to 200dpi, which describes
     its proofing pipeline rather than an author requirement, so it is not recorded.
-    Its font list was truncated in extraction and is not recorded.'
+    Its font list was truncated in extraction and is not recorded. The figures here
+    were read on 2026-08-22 from OUP''s own images-author-guidance.pdf, at
+    https://static.primary.prod.gcms.the-infra.com/static/site/journals/document/images-author-guidance.pdf.
+    That URL returned 404 on 2026-08-23 while the page recorded above still links
+    to it, so OUP has broken its own asset link rather than withdrawn the guidance.
+    source_url therefore names the live page OUP sends authors to; the numbers
+    themselves have not been re-read since the document went down, and should be
+    re-verified if it comes back. Note that individual OUP journals state their own
+    figures and can differ from these.'
 - id: ieee_magazines
   name: IEEE magazines
   publisher: IEEE
