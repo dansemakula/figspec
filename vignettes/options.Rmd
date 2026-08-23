@@ -18,19 +18,20 @@ and what every one of its options does.
 Bring a journal's requirements into a plot as you build it
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `journal` | Registry id, for example "cell_press". |
 | `colour` | Whether to set the colour and fill scales. Turn this off to keep a palette you have chosen yourself. |
 | `shapes` | Whether to set the shape scale. |
 | `style` | A house style registered with register_house_style(), applied underneath the journal's requirements. |
 | `base_size` | Base type size in points, passed to theme_journal(). |
+| `color` | American spelling of colour. Takes precedence when given. R's partial matching cannot cover this one, because color is not a prefix of colour - the spellings diverge at the fifth letter. |
 
 ### `theme_journal()`
 
 A ggplot2 theme that satisfies a journal's typography rules
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `journal` | Registry id, for example "plos_one". |
 | `base` | A ggplot2 theme to build on. Defaults to ggplot2::theme_bw(). |
 | `style` | A house style to apply: a name registered with register_house_style(), a ggplot2 theme, or a function returning one. Styles are applied underneath the journal's requirements and can never override them. |
@@ -42,7 +43,7 @@ A ggplot2 theme that satisfies a journal's typography rules
 Discrete colour and fill scales using a figspec palette
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `palette` | Palette id, from figspec_palettes(). |
 
 ### `scale_shape_figspec()`
@@ -50,7 +51,7 @@ Discrete colour and fill scales using a figspec palette
 A discrete shape scale using shapes that stay legible at journal size
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `style` | Passed to figspec_shapes(). |
 
 ### `figspec_linewidth()`
@@ -58,7 +59,7 @@ A discrete shape scale using shapes that stay legible at journal size
 Line width that satisfies a journal's minimum
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `journal` | Registry id. |
 
 ### `figspec_shapes()`
@@ -66,7 +67,7 @@ Line width that satisfies a journal's minimum
 Point shapes that stay legible at journal size
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `n` | How many shapes are needed. |
 | `style` | "solid" for filled marks, "hollow" for outlines, or "filled" for shapes 21 to 25, which take a fill and an outline colour separately. |
 
@@ -75,7 +76,7 @@ Point shapes that stay legible at journal size
 Line types that stay distinct in print
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `n` | How many line types are needed. |
 
 ## Checking
@@ -85,7 +86,7 @@ Line types that stay distinct in print
 Check a figure against a journal's requirements
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `x` | A ggplot object, or a path to a figure file. |
 | `journal` | Registry id, for example "frontiers". |
 | `column` | Which column width the figure is intended for. One of "single", "onehalf" or "double". |
@@ -100,7 +101,7 @@ Check a figure against a journal's requirements
 Check a figure's colours for safety in print and for colour-blind readers
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `plot` | A ggplot object. |
 | `journal` | Registry id. |
 | `threshold` | Perceptual distance (CIE Delta-E 2000) below which two colours are treated as too close to tell apart. Defaults to 10, the point at which two colours read as clearly different rather than as shades of one another. This is a judgement of figspec's, not a journal requirement, and you can raise it if you want a stricter figure. |
@@ -110,7 +111,7 @@ Check a figure's colours for safety in print and for colour-blind readers
 Check a whole set of figures against one journal
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `path` | A directory, or a character vector of file paths. |
 | `journal` | Registry id, for example "plos_one". |
 | `column` | Which column width the figures target. Either one value for all files, or a named character vector mapping file name to column. |
@@ -123,7 +124,7 @@ Check a whole set of figures against one journal
 Which resolution rule applies to this figure
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `plot` | A ggplot object. |
 | `journal` | Optional registry id. When given, the journal's own thresholds are shown alongside the suggestion. |
 
@@ -132,7 +133,7 @@ Which resolution rule applies to this figure
 Check a supplementary media file against a journal's requirements
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `path` | Path to a media file. |
 | `journal` | Registry id. |
 
@@ -143,7 +144,7 @@ Check a supplementary media file against a journal's requirements
 Save a figure at a journal's required size and resolution
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `filename` | Output path. The extension selects the format. If it has no extension, the journal's first accepted format is used. |
 | `plot` | Plot to save. Defaults to the last plot displayed. |
 | `journal` | Registry id, for example "cell_press". |
@@ -158,7 +159,7 @@ Save a figure at a journal's required size and resolution
 Re-export a set of figures for a different journal
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `plots` | A named list of plot objects. Names become file stems. |
 | `journal` | Registry id of the journal to fit to. |
 | `outdir` | Directory to write into. Created if it does not exist. |
@@ -171,7 +172,7 @@ Re-export a set of figures for a different journal
 Preview a figure at the size it will actually be published
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `plot` | Plot to preview. Defaults to the last plot displayed. |
 | `journal` | Registry id. |
 | `column` | Which column width to preview at. |
@@ -183,7 +184,7 @@ Preview a figure at the size it will actually be published
 Chunk options that produce journal-compliant figures in R Markdown or Quarto
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `journal` | Registry id, for example "plos_one". |
 | `column` | Which column width to size to. |
 | `height` | Figure height. Defaults to three quarters of the width, which is a convenience rather than a journal requirement. |
@@ -194,7 +195,7 @@ Chunk options that produce journal-compliant figures in R Markdown or Quarto
 Set knitr chunk options for a journal
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `journal` | Registry id, for example "plos_one". |
 | `column` | Which column width to size to. |
 | `height` | Figure height. Defaults to three quarters of the width, which is a convenience rather than a journal requirement. |
@@ -207,7 +208,7 @@ Set knitr chunk options for a journal
 List the journals in the registry
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `discipline` | Optional character vector. Keep only entries tagged with at least one of these disciplines, for example "physics". |
 
 ### `journal_spec()`
@@ -215,7 +216,7 @@ List the journals in the registry
 Look up one journal's figure specification
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `journal` | Registry id, for example "plos_one". Use journals() to see the available ids. |
 
 ### `fig_width()`
@@ -223,7 +224,7 @@ Look up one journal's figure specification
 Figure width for a journal column
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `journal` | Registry id, for example "cell_press". |
 | `column` | Column name, for example "single", "double" or, for Science, "triple". |
 | `units` | Unit for the returned width: "mm", "cm" or "in". |
@@ -233,7 +234,7 @@ Figure width for a journal column
 The column widths a journal states
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `journal` | Registry id. |
 
 ### `figspec_palettes()`
@@ -247,7 +248,7 @@ _No options._
 The colours in a figspec palette
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `palette` | Palette id, from figspec_palettes(). |
 | `n` | Number of colours to return. Defaults to all of them. |
 
@@ -256,7 +257,7 @@ The colours in a figspec palette
 Table requirements for a journal
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `journal` | Registry id, for example "nature". |
 
 ### `media_spec()`
@@ -264,7 +265,7 @@ Table requirements for a journal
 Supplementary media requirements for a journal
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `journal` | Registry id, for example "science". |
 
 ### `graphical_abstract_spec()`
@@ -272,7 +273,7 @@ Supplementary media requirements for a journal
 Graphical abstract requirements for a journal
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `journal` | Registry id, for example "rsc". |
 
 ### `journal_palette()`
@@ -280,7 +281,7 @@ Graphical abstract requirements for a journal
 The palette recorded for a journal's house style
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `journal` | Registry id. |
 
 ## Your own styles and journals
@@ -290,7 +291,7 @@ The palette recorded for a journal's house style
 Register a house style of your own
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `name` | Short name you will refer to the style by. |
 | `theme` | A ggplot2 theme object, or a function returning one. |
 | `description` | Optional one-line description. |
@@ -306,7 +307,7 @@ _No options._
 Save and reload your house styles
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `path` | File to write to or read from. |
 
 ### `register_journal()`
@@ -314,7 +315,7 @@ Save and reload your house styles
 Add your own journal to the registry
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `id` | Short identifier, used everywhere a journal is named. |
 | `name` | Human-readable journal name. |
 | `source_url` | Where the requirements came from. |
@@ -327,7 +328,7 @@ Add your own journal to the registry
 Load journal entries from your own registry file
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `path` | Path to a YAML file. |
 
 ## Maintaining the registry
@@ -337,7 +338,7 @@ Load journal entries from your own registry file
 How current is each registry entry, and how complete
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `max_age_days` | Age beyond which an entry is flagged for rechecking. Defaults to 365. |
 | `as_of` | Date to measure against. Defaults to today. |
 
@@ -346,7 +347,7 @@ How current is each registry entry, and how complete
 Entries that need rechecking
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `max_age_days` | Age beyond which an entry is flagged for rechecking. Defaults to 365. |
 | `as_of` | Date to measure against. Defaults to today. |
 
@@ -355,7 +356,7 @@ Entries that need rechecking
 A skeleton for a new registry entry
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `id` | Short identifier for the entry. |
 | `name` | Journal or publisher name. |
 | `source_url` | The author-guidelines page the values will come from. |
@@ -365,6 +366,6 @@ A skeleton for a new registry entry
 Validate a registry file before loading it
 
 | Option | What it does |
-|---|---|
+|:--------------------------|:--------------------------------------------------------------------------|
 | `path` | Path to a YAML file in registry format. |
 

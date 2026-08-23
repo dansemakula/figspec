@@ -9,7 +9,8 @@ fit_journal(
   colour = TRUE,
   shapes = TRUE,
   style = NULL,
-  base_size = NULL
+  base_size = NULL,
+  color = NULL
 )
 }
 \arguments{
@@ -24,6 +25,10 @@ keep a palette you have chosen yourself.}
 underneath the journal's requirements.}
 
 \item{base_size}{Base type size in points, passed to \code{\link[=theme_journal]{theme_journal()}}.}
+
+\item{color}{American spelling of \code{colour}. Takes precedence when given.
+R's partial matching cannot cover this one, because \code{color} is not a
+prefix of \code{colour} - the spellings diverge at the fifth letter.}
 }
 \value{
 A list of ggplot2 components, to add to a plot with \code{+}.

@@ -2,9 +2,12 @@
 % Please edit documentation in R/colour.R
 \name{check_colour_safety}
 \alias{check_colour_safety}
+\alias{check_color_safety}
 \title{Check a figure's colours for safety in print and for colour-blind readers}
 \usage{
 check_colour_safety(plot, journal, threshold = 10)
+
+check_color_safety(plot, journal, threshold = 10)
 }
 \arguments{
 \item{plot}{A ggplot object.}

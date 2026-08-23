@@ -1,7 +1,7 @@
 # figspec
 
 <!-- badges: start -->
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-f59331?style=flat-square&labelColor=8fa3ac)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- The R-CMD-check badge points at a workflow that only exists once the
      repository is on GitHub. Until then it renders as a broken image, so it
      waits here:
@@ -501,4 +501,23 @@ that makes it worth trusting.
 
 ## Licence
 
-MIT
+The package code is released under the MIT licence. `LICENSE` carries the
+copyright line CRAN reads; `LICENSE.md` carries the full text.
+
+The registry needs a word of its own, because it is not code.
+
+What it records are **facts about published requirements** — that Cell Press
+asks for 85 mm, that BMJ asks 1200 dpi of line art. Facts are not anyone's
+property, and figspec states them freely.
+
+Load-bearing numbers also carry a **short verbatim quotation** of the sentence
+the publisher wrote, in the `source_quote_*` fields, so an entry can be audited
+without leaving the file. Those sentences are the publishers' own words,
+quoted for verification and attribution and kept to the length that job needs.
+Every one names the page it came from and the date it was read. Publishers
+retain whatever rights they hold in their own wording, and nothing here grants
+you a licence to reproduce their guidelines at length.
+
+If you need to rely on a requirement, cite the publisher's page as well as
+figspec. `journal_spec(<id>)$source_url` gives you the page and
+`$verified_on` the date it was read.

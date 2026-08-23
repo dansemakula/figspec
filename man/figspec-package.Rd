@@ -17,11 +17,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Daniel Semakula, MD, MPH, PhD \email{semakuladaniel@gmail.com} [copyright holder]
+\strong{Maintainer}: Daniel Semakula \email{semakuladaniel@gmail.com} (MD, MPH, PhD) [copyright holder]
 
 Authors:
 \itemize{
-  \item Daniel Semakula, MD, MPH, PhD \email{semakuladaniel@gmail.com} [copyright holder]
+  \item Daniel Semakula \email{semakuladaniel@gmail.com} (MD, MPH, PhD) [copyright holder]
 }
 
 }

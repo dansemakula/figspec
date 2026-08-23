@@ -183,6 +183,10 @@ check_colour_safety <- function(plot, journal, threshold = 10) {
   )
 }
 
+#' @rdname check_colour_safety
+#' @export
+check_color_safety <- check_colour_safety
+
 # Shared by check_colour_safety() and check_journal().
 colour_rows <- function(cols, spec, threshold = 10, plot = NULL) {
   rows <- list()

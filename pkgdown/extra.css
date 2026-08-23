@@ -237,8 +237,6 @@ main dl dd:last-child { border-bottom: none; }
 
 /* ---- Sidebars and navigation ------------------------------------------- */
 
-#toc .nav-link.active, aside .nav-link.active { color: var(--fs-teal-deep); font-weight: 600; }
-aside h2, .pkg-links h2 { font-size: .95rem; color: var(--fs-muted); }
 .navbar-brand { color: var(--fs-teal-deep) !important; font-weight: 700; }
 
 main a { color: var(--fs-teal-deep); }
@@ -303,14 +301,9 @@ main blockquote > :last-child { margin-bottom: 0; }
 }
 .template-home main .page-header { border-bottom: none; margin-bottom: .2rem; }
 
-/* The opening paragraph is the pitch. It reads as one on its own only if it is
-   set apart from the body text that follows it. */
-.template-home main > .section > p:first-of-type {
-  font-size: 1.12rem;
-  line-height: 1.6;
-  color: var(--fs-muted);
-  margin-bottom: 1rem;
-}
+/* The opening paragraph was set larger and in the muted grey, as a lead. Grey
+   reads as de-emphasis, which is backwards for the sentence that has to carry
+   the page, so it takes the body's own colour and size. */
 
 /* pkgdown leaves an empty <span> line at the end of some rendered chunks, and
    the <pre>'s own bottom margin falls inside the bordered box rather than
@@ -328,13 +321,29 @@ main div.sourceCode > pre { margin-bottom: 0; }
 
 /* ---- Sidebar ------------------------------------------------------------ */
 
-aside .nav-link, #toc .nav-link { padding: .18rem .55rem; }
-#toc .nav-link:hover, aside .nav-link:hover { color: var(--fs-accent); }
-#toc .nav-link.active, aside .nav-link.active {
-  background: var(--fs-teal-soft);
+/* The current page is marked on the rail itself rather than by filling the row
+   behind it: the rail's segment thickens into teal and the label takes the
+   same colour. Nothing else on the page carries a filled pill, so nothing has
+   to compete with it. */
+#toc > .nav a.nav-link.active,
+#toc > .nav a.nav-link.active:hover,
+aside nav a.nav-link.active {
+  background: none;
+  background-color: transparent;
   border-left-color: var(--fs-teal);
   color: var(--fs-teal-deep);
   font-weight: 600;
+  transform: none;
+}
+
+/* The nested list sits inside the parent's rail, indented rather than railed
+   again, so the two levels do not draw two parallel lines. */
+#toc > .nav .nav a.nav-link { margin-left: 0; padding-left: 1.6rem; }
+aside h2, .pkg-links h2 {
+  font-size: .95rem;
+  color: var(--fs-muted);
+  letter-spacing: .02em;
+  margin-bottom: .35rem;
 }
 
 /* ---- Top navigation ----------------------------------------------------- */
@@ -419,15 +428,31 @@ aside .nav-link, #toc .nav-link { padding: .18rem .55rem; }
 /* A hairline rail down the group with the current page marked on it, so the
    eye can find where it is without reading every entry. */
 
-#toc > ul, aside nav > ul { border-left: 1px solid var(--fs-rule); padding-left: 0; }
-#toc .nav-link, aside .nav-link {
+/* pkgdown's own rules are written as `#toc > .nav a.nav-link`, which outranks
+   anything shorter, so these have to match it selector for selector. */
+#toc > .nav { border-left: 1px solid var(--fs-rule); }
+
+#toc > .nav a.nav-link,
+aside nav a.nav-link {
   color: var(--fs-muted);
+  background: none;
   border-left: 2px solid transparent;
-  border-radius: 0 .35rem .35rem 0;
+  border-radius: 0;
   margin-left: -1px;
-  transition: background-color .12s ease, color .12s ease;
+  margin-bottom: 0;
+  padding: .32rem 0 .32rem .8rem;
+  line-height: 1.45;
+  transition: color .14s ease, border-color .14s ease, transform .14s ease;
 }
-#toc .nav-link:hover, aside .nav-link:hover { background: var(--fs-code-bg); }
+
+#toc > .nav a.nav-link:hover,
+#toc > .nav a.nav-link:focus,
+aside nav a.nav-link:hover {
+  background: none;
+  color: var(--fs-ink);
+  border-left-color: var(--fs-teal-line);
+  transform: translateX(2px);
+}
 
 /* ---- The four outcomes -------------------------------------------------- */
 /* A report says one of four things about each requirement, and the difference

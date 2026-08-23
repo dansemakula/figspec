@@ -44,6 +44,10 @@ groups <- list(
                                      "new_journal_entry", "validate_registry_file")
 )
 
+# A 26/74 split, written as dashes so pandoc emits the same <colgroup> for
+# every table on the page.
+OPTION_TABLE_RULE <- paste0("|:", strrep("-", 26), "|:", strrep("-", 74), "|")
+
 out <- c(
   "---", "title: \"Every function and what its options do\"",
   "output: rmarkdown::html_vignette", "vignette: >",
@@ -63,7 +67,12 @@ for (g in names(groups)) {
     out <- c(out, paste0("### `", fn, "()`"), "", rd_title(path), "")
     if (is.null(args)) { out <- c(out, "_No options._", ""); next }
     args <- args[args$arg != "...", , drop = FALSE]
-    out <- c(out, "| Option | What it does |", "|---|---|",
+    # Pandoc sets a table's column widths from the widest cell it finds in the
+    # source, so tables with short descriptions came out with a narrow first
+    # column and tables with long ones came out wide - no two lined up down
+    # the page. A separator row of fixed proportions pins every table to the
+    # same 26/74 split.
+    out <- c(out, "| Option | What it does |", OPTION_TABLE_RULE,
              sprintf("| `%s` | %s |", args$arg, gsub("\\|", "\\\\|", args$desc)), "")
   }
 }

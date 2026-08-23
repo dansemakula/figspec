@@ -25,6 +25,9 @@
 #' @param style A house style registered with [register_house_style()], applied
 #'   underneath the journal's requirements.
 #' @param base_size Base type size in points, passed to [theme_journal()].
+#' @param color American spelling of `colour`. Takes precedence when given.
+#'   R's partial matching cannot cover this one, because `color` is not a
+#'   prefix of `colour` - the spellings diverge at the fifth letter.
 #' @return A list of ggplot2 components, to add to a plot with `+`.
 #' @examples
 #' library(ggplot2)
@@ -40,7 +43,8 @@
 #'   fit_journal("plos_one", colour = FALSE)
 #' @export
 fit_journal <- function(journal, colour = TRUE, shapes = TRUE,
-                        style = NULL, base_size = NULL) {
+                        style = NULL, base_size = NULL, color = NULL) {
+  if (!is.null(color)) colour <- color
   spec <- journal_spec(journal)
   parts <- list(theme_journal(journal, style = style, base_size = base_size))
 

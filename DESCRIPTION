@@ -2,9 +2,10 @@ Package: figspec
 Title: Check and Export Figures Against Journal Submission Requirements
 Version: 0.1.0
 Authors@R: 
-    person("Daniel", "Semakula, MD, MPH, PhD",
+    person("Daniel", "Semakula",
            email = "semakuladaniel@gmail.com",
-           role = c("aut", "cre", "cph"))
+           role = c("aut", "cre", "cph"),
+           comment = "MD, MPH, PhD")
 Description: Fit plots to a target journal's published figure requirements, or
     check whether they already meet them, without looking those requirements up
     every time. Brings the requirements of many publishers into the R session as
