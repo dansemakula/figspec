@@ -161,3 +161,147 @@ validate_registry_file <- function(path) {
   for (p in problems) cli::cli_li(p)
   invisible(FALSE)
 }
+
+# Link checking -----------------------------------------------------------
+
+# A publisher that blocks robots refuses the request, not the page. Seven of
+# the registry's 27 sources answer 403 to a scripted request while the page
+# itself is perfectly alive, so a checker that reads 403 as a dead link reports
+# seven false alarms for every true one and stops being worth running. These
+# are the codes that mean "the server declined to serve *you*".
+BLOCKED_CODES <- c(401L, 403L, 405L, 406L, 429L, 451L, 501L)
+DEAD_CODES <- c(404L, 410L)
+
+# Classify one response. `code` is NA when nothing came back at all.
+source_verdict <- function(code) {
+  if (is.na(code)) return("unreachable")
+  if (code >= 200 && code < 300) return("ok")
+  if (code %in% DEAD_CODES) return("dead")
+  if (code %in% BLOCKED_CODES) return("blocked")
+  if (code >= 500) return("server error")
+  "unexpected"
+}
+
+# HEAD is cheap and enough for a status code, but some servers reject the
+# method itself rather than the request, so a refusal is retried as a GET
+# before it is believed.
+fetch_status <- function(url, timeout) {
+  probe <- function(nobody) {
+    h <- curl::new_handle(followlocation = TRUE, nobody = nobody,
+                          timeout = timeout, connecttimeout = timeout)
+    tryCatch({
+      r <- curl::curl_fetch_memory(url, handle = h)
+      list(code = as.integer(r$status_code), final = r$url)
+    }, error = function(e) list(code = NA_integer_, final = NA_character_))
+  }
+  res <- probe(nobody = TRUE)
+  if (!is.na(res$code) && res$code %in% BLOCKED_CODES) {
+    got <- probe(nobody = FALSE)
+    if (!is.na(got$code)) res <- got
+  }
+  res
+}
+
+#' Are the pages the registry cites still there
+#'
+#' Every entry names the page it was read from, and a page can be taken down
+#' without anything in the registry changing. This asks each source URL whether
+#' it still resolves.
+#'
+#' A publisher that blocks robots is not a broken link. Seven of the sources in
+#' the registry answer `403` to a scripted request while the page opens fine in
+#' a browser, so those are reported as *blocked* and are not failures. Only
+#' `404` and `410` are read as dead. The distinction is the whole point: a
+#' checker that counted every refusal as a death would cry wolf seven times for
+#' each real one.
+#'
+#' This reaches the network, so it is for maintainers rather than for use
+#' inside anything that has to run offline.
+#'
+#' @param ids Entries to check. Defaults to all of them.
+#' @param timeout Seconds to wait for each response.
+#' @return A data frame with one row per entry: `id`, `url`, `http` (the status
+#'   code, `NA` if nothing answered), `verdict`, and `final_url` where a
+#'   redirect led somewhere else. Ordered worst first.
+#' @seealso [registry_status()] for how old an entry is, [stale_entries()] for
+#'   which are due a recheck.
+#' @examplesIf interactive() && requireNamespace("curl", quietly = TRUE)
+#' check_sources("plos_one")
+#' @export
+check_sources <- function(ids = NULL, timeout = 10) {
+  if (!requireNamespace("curl", quietly = TRUE)) {
+    figspec_abort(
+      c("{.fn check_sources} needs the curl package.",
+        ">" = 'Install it with {.code install.packages("curl")}.'),
+      "needs_package", package = "curl")
+  }
+  reg <- load_registry()
+  if (!is.null(ids)) {
+    unknown <- setdiff(ids, names(reg))
+    if (length(unknown)) {
+      figspec_abort(
+        c("No registry entr{?y/ies} named {.val {unknown}}.",
+          "i" = "See {.fn journals} for what is recorded."),
+        "not_found", ids = unknown)
+    }
+    reg <- reg[ids]
+  }
+
+  rows <- lapply(reg, function(j) {
+    res <- fetch_status(j$source_url, timeout)
+    final <- if (!is.na(res$final) && !identical(res$final, j$source_url)) {
+      res$final
+    } else {
+      NA_character_
+    }
+    data.frame(id = j$id, url = j$source_url, http = res$code,
+               verdict = source_verdict(res$code), final_url = final,
+               stringsAsFactors = FALSE)
+  })
+  out <- do.call(rbind, rows)
+  rownames(out) <- NULL
+  # Worst first, so the thing that needs doing is at the top.
+  rank <- match(out$verdict,
+                c("dead", "unreachable", "server error", "unexpected",
+                  "blocked", "ok"))
+  out <- out[order(rank, out$id), , drop = FALSE]
+  rownames(out) <- NULL
+  structure(out, class = c("figspec_sources", "data.frame"))
+}
+
+#' @export
+print.figspec_sources <- function(x, ...) {
+  cli::cli_h1("Registry sources")
+  dead <- x[x$verdict == "dead", , drop = FALSE]
+  other <- x[!x$verdict %in% c("ok", "blocked", "dead"), , drop = FALSE]
+  blocked <- x[x$verdict == "blocked", , drop = FALSE]
+  ok <- sum(x$verdict == "ok")
+
+  if (nrow(dead)) {
+    cli::cli_alert_danger("{nrow(dead)} source{?s} {?is/are} gone:")
+    for (i in seq_len(nrow(dead))) {
+      cli::cli_li("{dead$id[i]} - {dead$http[i]} {.url {dead$url[i]}}")
+    }
+  }
+  if (nrow(other)) {
+    cli::cli_alert_warning("{nrow(other)} source{?s} did not answer cleanly:")
+    for (i in seq_len(nrow(other))) {
+      cli::cli_li("{other$id[i]} - {other$verdict[i]} {.url {other$url[i]}}")
+    }
+  }
+  moved <- x[!is.na(x$final_url), , drop = FALSE]
+  if (nrow(moved)) {
+    cli::cli_alert_info("{nrow(moved)} source{?s} redirected:")
+    for (i in seq_len(nrow(moved))) {
+      cli::cli_li("{moved$id[i]} - now {.url {moved$final_url[i]}}")
+    }
+  }
+  if (!nrow(dead) && !nrow(other)) {
+    cli::cli_alert_success("No source is gone.")
+  }
+  cli::cli_text("")
+  cli::cli_text(
+    "{ok} answered, {nrow(blocked)} blocked the request{cli::qty(nrow(blocked))}{?/ (not a failure - the page is there, the robot is not welcome)}."
+  )
+  invisible(x)
+}

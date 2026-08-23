@@ -36,6 +36,7 @@ Imports:
     yaml
 Suggests: 
     colorspace,
+    curl,
     knitr,
     patchwork,
     ragg,
