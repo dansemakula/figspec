@@ -9,17 +9,42 @@
 -->
 <!-- badges: end -->
 
-Journals publish precise rules for the figures you submit: column widths to the
-millimetre, minimum resolution, which file formats they take, how small type is
-allowed to get. The rules are real, they differ between publishers, and they are
-scattered across author-guideline pages that are easy to skim past. Most people
-find out they got one wrong at the production stage, after acceptance.
+figspec builds a figure to a specification, exports it at exactly that size and
+resolution, and then checks the result and tells you where it falls short.
 
-figspec brings the requirements of 27 publishers into your R session as data,
-builds your figure to meet them, and exports it at exactly the stated size and
-resolution. You can fit a plot to your target journal as you draw it, or check
-one you have already finished, without looking those requirements up every
-time. Every requirement records the page it came from and the date it was read.
+It does two jobs.
+
+**Figures to a journal's requirements.** Journals publish precise rules for the
+figures you submit: column widths to the millimetre, minimum resolution, which
+file formats they take, how small type is allowed to get. The rules are real,
+they differ between publishers, and they are scattered across author-guideline
+pages that are easy to skim past. Most people find out they got one wrong at
+the production stage, after acceptance. figspec brings the requirements of 27
+publishers into your R session as data, and every requirement records the page
+it came from and the date it was read.
+
+```r
+ggplot(mtcars, aes(wt, mpg)) + geom_point() + fit_journal("cell_press")
+
+fig_save("figure_1.tiff", journal = "cell_press")
+```
+
+**Figures at an exact panel size.** You can tell R how big the image file is.
+You cannot normally tell it how big the *plot area* is — so a figure with long
+axis labels ends up with a smaller plot area than one with short labels, even
+at the same width, and a set of them looks uneven on the page. figspec sizes by
+the panel and works the canvas out for you.
+
+```r
+fig_save("figure_1.png", p, panel_width = 62)      # plot area is 62 mm, exactly
+
+pw <- fig_panel_width(figs, journal = "cell_press") # the width a set can share
+```
+
+No journal is needed for the second job, and a journal is only one place a
+specification can come from — you can write your own, or register a house
+style. See `vignette("panels")` for panel sizing and `vignette("journals")` for
+the registry.
 
 ## Installation
 
@@ -81,7 +106,7 @@ p <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
   geom_point() +
   labs(title = "Fuel economy")
 
-check_journal(p, "cell_press", column = "single")
+fig_check(p, "cell_press", column = "single")
 #> ✔ Width         85 mm                       (requires: single 85 | double 174 mm)
 #> ✖ Type size     smallest 8.8, largest 13.2 pt   (requires: min 6 pt, max 8 pt)
 #> ✖ Colour pairs  red and green both used         (requires: not used together)
@@ -97,7 +122,7 @@ all disappear into pixels once a figure is written to a TIFF.
 ### 3. Export at exactly the stated size and resolution
 
 ```r
-ggsave_journal("figure_1.tiff", p, journal = "cell_press", column = "single")
+fig_save("figure_1.tiff", p, journal = "cell_press", column = "single")
 ```
 
 This takes the width from the registry, defaults the resolution to the
@@ -297,7 +322,7 @@ letters. figspec counts the panels in a patchwork composition and checks how
 they are tagged:
 
 ```r
-check_journal((p1 | p2) / p3, "cell_press")
+fig_check((p1 | p2) / p3, "cell_press")
 #> ✖ Panel labels  3 panels, none labelled  (requires: panels labelled with uppercase letters)
 ```
 

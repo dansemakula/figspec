@@ -4,7 +4,7 @@ make_files <- function(dir, journal, n = 2) {
     ggplot2::geom_point() + theme_journal(journal)
   for (i in seq_len(n)) {
     suppressWarnings(suppressMessages(
-      ggsave_journal(file.path(dir, sprintf("figure_%d.tiff", i)), p,
+      fig_save(file.path(dir, sprintf("figure_%d.tiff", i)), p,
                      journal, check = FALSE)
     ))
   }

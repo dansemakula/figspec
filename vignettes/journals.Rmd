@@ -19,9 +19,17 @@ fmt <- function(x, unit = "") {
 }
 ```
 
+The registry is figspec's main source of specifications: the published figure
+requirements of the publishers below, brought into the R session as data. It is
+not the only source — you can write a specification by hand, load internal
+formats with `load_journals()`, or register a house style — but it is the one
+the package maintains and stands behind.
+
 Everything below is generated from the registry itself, so it cannot drift from
 what the package actually holds. A dash means the publisher states nothing, or
-nobody has harvested it yet — `journal_spec()` tells you which.
+nobody has harvested it yet — `journal_spec()` tells you which. That difference
+is deliberate and figspec keeps it visible: one is a fact about the publisher,
+the other a fact about the registry, and neither is a pass.
 
 ```{r}
 reg <- figspec:::load_registry()
@@ -82,3 +90,23 @@ knitr::kable(st, row.names = FALSE)
 the page for and found missing. `not yet harvested` is what nobody has checked.
 The three always sum to the full field list, so a half-finished entry cannot
 pass as a complete one.
+
+## Using a specification that is not in here
+
+Anywhere a function takes a `journal`, it will also take a specification you
+supply — from `journal_spec()`, or as a plain named list of the same fields:
+
+```{r, echo = TRUE, eval = FALSE}
+house <- list(name = "House style", dpi_min = 600, formats = list("tiff"))
+fig_check("figure_1.tiff", house)
+```
+
+A field your specification does not mention is reported as **not specified**,
+which is distinct from the registry's *not yet harvested*: you wrote the
+specification, so its silence is your own, not a gap in figspec's reading of a
+publisher's page.
+
+Pass no specification at all and `fig_check()` becomes an inspection — it
+reports the figure's size, resolution, format and file size, and states plainly
+that nothing was judged. Nothing passes and nothing fails, because there was
+nothing to pass or fail against.

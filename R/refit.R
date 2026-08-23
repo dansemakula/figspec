@@ -30,15 +30,17 @@
 refit_journal <- function(plots, journal, outdir,
                           column = "single", retheme = TRUE, format = NULL) {
   if (!is.list(plots) || is.null(names(plots)) || any(!nzchar(names(plots)))) {
-    stop("`plots` must be a named list of plot objects.", call. = FALSE)
+    figspec_abort(
+      c("{.arg plots} must be a named list of plot objects.",
+        "i" = "The names become the file names, so every element needs one."),
+      "bad_input")
   }
   if (!all(vapply(plots, is_ggplot_object, logical(1)))) {
-    stop(
-      "`refit_journal()` works on plot objects, not saved files. Type size ",
-      "cannot be recovered from a saved figure, so a re-fitted file could ",
-      "not be trusted.",
-      call. = FALSE
-    )
+    figspec_abort(
+      c("{.fn refit_journal} works on plot objects, not saved files.",
+        "i" = "Type size cannot be recovered from a saved figure, so a
+               re-fitted file could not be trusted."),
+      "bad_input")
   }
   dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
   spec <- journal_spec(journal)
@@ -55,7 +57,7 @@ refit_journal <- function(plots, journal, outdir,
     p <- plots[[nm]]
     if (isTRUE(retheme)) p <- p + theme_journal(journal)
     dest <- file.path(outdir, paste0(nm, ".", fmt))
-    ggsave_journal(dest, p, journal = journal, column = col_for(nm), check = FALSE)
+    fig_save(dest, p, journal = journal, column = col_for(nm), check = FALSE)
     written <- c(written, dest)
   }
   check_submission(written, journal, column = column)

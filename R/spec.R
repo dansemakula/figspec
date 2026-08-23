@@ -23,18 +23,20 @@ fig_width <- function(journal, column = "single", units = c("mm", "cm", "in")) {
   units <- match.arg(units)
   spec <- journal_spec(journal)
   if (!is.character(column) || length(column) != 1L) {
-    stop("`column` must be a single column name.", call. = FALSE)
+    figspec_abort(
+      c("{.arg column} must be a single column name.",
+        "x" = if (length(column) != 1L) "You gave {length(column)} value{?s}." else "You gave {.cls {class(column)}}."),
+      "bad_input")
   }
 
   if (!is.null(spec$columns)) {
     w <- spec$columns[[column]]
     if (is.null(w)) {
-      stop(
-        "'", spec$name, "' does not have a '", column, "' column. It states: ",
-        paste0(names(spec$columns), " (", unlist(spec$columns), " mm)",
-               collapse = ", "), ".",
-        call. = FALSE
-      )
+      stated <- paste0(names(spec$columns), " (", unlist(spec$columns), " mm)")
+      figspec_abort(
+        c("{spec$name} does not have a {.val {column}} column.",
+          "i" = "It states: {stated}."),
+        "not_found", column = column, available = names(spec$columns))
     }
   } else {
     w <- switch(column,
@@ -43,11 +45,11 @@ fig_width <- function(journal, column = "single", units = c("mm", "cm", "in")) {
       NULL
     )
     if (is.null(w)) {
-      stop(
-        "'", spec$name, "' does not state a ", column, "-column width. ",
-        "Set the width explicitly, and see ", spec$source_url,
-        call. = FALSE
-      )
+      figspec_abort(
+        c("{spec$name} does not state a {column}-column width.",
+          "i" = "It gives a width range rather than named columns.",
+          ">" = "Set the width explicitly, and see {.url {spec$source_url}}."),
+        "not_found", column = column)
     }
   }
   convert_length(as.numeric(w), "mm", units)

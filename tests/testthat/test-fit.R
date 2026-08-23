@@ -6,7 +6,7 @@ grouped <- function() {
 
 test_that("one line builds a figure that meets the journal", {
   fitted <- grouped() + fit_journal("cell_press")
-  r <- check_journal(fitted, "cell_press", column = "single")
+  r <- fig_check(fitted, "cell_press", column = "single")
   expect_equal(nrow(r[r$status == "fail", ]), 0)
   expect_equal(r[r$check == "Type size", ]$status, "pass")
   expect_equal(r[r$check == "Colour pairs", ]$status, "pass")
@@ -31,8 +31,8 @@ test_that("you can keep your own palette and take everything else", {
     fit_journal("cell_press", colour = FALSE)
   expect_false(any(figspec_palette("okabe_ito", 3) %in% plot_colours(own)))
   # The typography still arrives.
-  expect_equal(check_journal(own, "cell_press")[
-    check_journal(own, "cell_press")$check == "Type size", ]$status, "pass")
+  expect_equal(fig_check(own, "cell_press")[
+    fig_check(own, "cell_press")$check == "Type size", ]$status, "pass")
 })
 
 test_that("it composes onto a plot that maps neither colour nor shape", {

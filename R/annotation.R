@@ -37,9 +37,13 @@ count_parts <- function(plot) {
   max(1L, as.integer(n))
 }
 
-# What a composition is labelling its panels with, if anything. patchwork
-# calls these tag levels: "A" for capitals, "a" for lower case, "1" for
-# numbers, "I" or "i" for roman numerals.
+# What a figure is labelling its panels with, if anything. patchwork calls
+# these tag levels: "A" for capitals, "a" for lower case, "1" for numbers,
+# "I" or "i" for roman numerals.
+#
+# A faceted plot has panels too, and a publisher asking for labelled panels
+# means the parts a reader sees, not the objects that were composed. But
+# facets carry no tag machinery, so the labels have to be found in the layers.
 panel_tag_levels <- function(plot) {
   if (inherits(plot, "patchwork")) {
     lv <- plot$patches$annotation$tag_levels
@@ -47,8 +51,61 @@ panel_tag_levels <- function(plot) {
     return(NULL)
   }
   tag <- tryCatch(plot$labels$tag, error = function(e) NULL)
-  if (is.null(tag)) return(NULL)
-  if (grepl("^[A-Z]", tag)) "A" else if (grepl("^[a-z]", tag)) "a" else "1"
+  if (!is.null(tag)) {
+    return(if (grepl("^[A-Z]", tag)) "A" else if (grepl("^[a-z]", tag)) "a" else "1")
+  }
+  facet_tag_levels(plot)
+}
+
+# Tags applied by tag_panels() are recorded on the plot, so figspec can always
+# recognise its own work. Anything else has to be inferred, and inference here
+# is deliberately strict: a text layer counts as panel labels only when it has
+# exactly one label per panel AND those labels are a complete tag sequence.
+# A looser test would read an ordinary annotation as a panel label and report a
+# pass nobody earned.
+facet_tag_levels <- function(plot) {
+  marked <- tryCatch(attr(plot, "figspec_panel_tags"), error = function(e) NULL)
+  if (!is.null(marked)) return(as.character(marked)[[1]])
+
+  n <- tryCatch(length(ggplot2::ggplot_build(plot)$layout$panel_params),
+                error = function(e) 0L)
+  if (is.null(n) || n < 2L) return(NULL)
+
+  layers <- tryCatch(plot$layers, error = function(e) NULL)
+  for (ly in layers %||% list()) {
+    if (!inherits(ly$geom, c("GeomText", "GeomLabel"))) next
+    d <- tryCatch(ly$data, error = function(e) NULL)
+    if (!is.data.frame(d) || nrow(d) != n) next
+    lab <- tryCatch(as.character(d[[rlang_label_col(ly, d)]]), error = function(e) NULL)
+    lv <- tag_sequence_level(lab)
+    if (!is.null(lv)) return(lv)
+  }
+  NULL
+}
+
+# The column a text layer draws from, which may be named by the layer's own
+# mapping rather than being called "label".
+rlang_label_col <- function(ly, d) {
+  m <- tryCatch(ly$mapping$label, error = function(e) NULL)
+  nm <- if (!is.null(m)) all.vars(m)[1] else NULL
+  if (!is.null(nm) && nm %in% names(d)) return(nm)
+  if ("label" %in% names(d)) return("label")
+  names(d)[[1]]
+}
+
+# Which tag vocabulary a set of labels is, if it is a complete one. Brackets
+# and trailing punctuation are conventions around the tag, not part of it.
+tag_sequence_level <- function(lab) {
+  if (is.null(lab) || anyNA(lab) || !length(lab)) return(NULL)
+  bare <- gsub("^[[:punct:][:space:]]+|[[:punct:][:space:]]+$", "", lab)
+  n <- length(bare)
+  if (n > length(LETTERS)) return(NULL)
+  seqs <- list(A = LETTERS[seq_len(n)], a = letters[seq_len(n)],
+               `1` = as.character(seq_len(n)),
+               I = as.character(utils::as.roman(seq_len(n))),
+               i = tolower(as.character(utils::as.roman(seq_len(n)))))
+  for (lv in names(seqs)) if (identical(bare, seqs[[lv]])) return(lv)
+  NULL
 }
 
 # Text case ---------------------------------------------------------------
@@ -156,13 +213,16 @@ grid_is_drawn <- function(plot) {
   !inherits(el, "element_blank")
 }
 
-# Rows shared with check_journal() ----------------------------------------
+# Rows shared with fig_check() ----------------------------------------
 
 annotation_rows <- function(plot, spec) {
   rows <- list()
 
   # Panel labels ----------------------------------------------------------
-  n_panels <- count_panels(plot)
+  # Counted as parts, not as compositions: a three-facet figure shows a reader
+  # three panels, and a publisher asking for labelled panels means those.
+  # Gating on compositions let every faceted figure past unexamined.
+  n_panels <- count_parts(plot)
   if (n_panels > 1L) {
     tag_level <- panel_tag_levels(plot)
     req <- if (!is.null(spec$panel_labels)) {

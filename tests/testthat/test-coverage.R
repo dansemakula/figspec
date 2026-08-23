@@ -2,13 +2,13 @@ test_that("a confirmed-absent field and an unharvested field are told apart", {
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
 
   # Frontiers: the harvest notes record file size as NOT STATED.
-  fr <- check_journal(p, "frontiers")
+  fr <- fig_check(p, "frontiers")
   expect_equal(fr[fr$check == "File size", ]$requirement, "not specified by publisher")
   expect_equal(fr[fr$check == "File size", ]$status, "unspecified")
 
   # Nature: nobody has harvested its file-size rule. That is a fact about the
   # registry, not about Nature.
-  na <- check_journal(p, "nature")
+  na <- fig_check(p, "nature")
   expect_equal(na[na$check == "File size", ]$requirement, "not yet harvested for this journal")
   expect_equal(na[na$check == "File size", ]$status, "unknown")
 })
@@ -17,7 +17,7 @@ test_that("an unharvested requirement is never passed or failed", {
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
     ggplot2::geom_point()
   for (id in journals()$id) {
-    r <- suppressMessages(check_journal(p, id))
+    r <- suppressMessages(fig_check(p, id))
     bad <- r[r$requirement == "not yet harvested for this journal" &
                r$status %in% c("pass", "fail"), ]
     expect_equal(nrow(bad), 0, info = paste(id, paste(bad$check, collapse = ", ")))
@@ -143,7 +143,7 @@ test_that("PNAS records only what is required of the author", {
   expect_false(grepl("processed to display|HTML display", p$source_quote_dpi))
   expect_match(p$source_quote_dpi, "no type or lettering")
 
-  r <- check_journal(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+  r <- fig_check(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
                        ggplot2::geom_point(), "pnas", column = "medium")
   expect_match(r[r$check == "Resolution", ]$requirement, "min 300 dpi")
 })
@@ -151,19 +151,20 @@ test_that("PNAS records only what is required of the author", {
 test_that("PNAS's named sizes work like any other column vocabulary", {
   expect_equal(fig_width("pnas", "medium"), 110)
   expect_equal(fig_width("pnas", "large", "cm"), 18)
-  expect_error(fig_width("pnas", "double"), "does not have a 'double' column")
+  expect_error(fig_width("pnas", "double"), class = "figspec_not_found")
+  expect_error(fig_width("pnas", "double"), "does not have a")
 })
 
 test_that("a default ggplot title breaches PNAS's 12 pt ceiling", {
   # ggplot2's default title is rel(1.2) of an 11 pt base = 13.2 pt.
   titled <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
     ggplot2::geom_point() + ggplot2::labs(title = "Fuel economy")
-  r <- check_journal(titled, "pnas", column = "medium")
+  r <- fig_check(titled, "pnas", column = "medium")
   expect_equal(r[r$check == "Type size", ]$status, "fail")
 
   fixed <- titled + theme_journal("pnas")
-  expect_equal(check_journal(fixed, "pnas", column = "medium")[
-    check_journal(fixed, "pnas", column = "medium")$check == "Type size", ]$status, "pass")
+  expect_equal(fig_check(fixed, "pnas", column = "medium")[
+    fig_check(fixed, "pnas", column = "medium")$check == "Type size", ]$status, "pass")
 })
 
 test_that("ACS point measurements convert at 72 points to the inch", {
@@ -184,10 +185,10 @@ test_that("resolution stated by art type is checked by art type", {
   grDevices::dev.off()
 
   # ACS: 300 colour, 600 grayscale, 1200 line art.
-  expect_equal(check_journal(path, "acs", dpi = 300)[
-    check_journal(path, "acs", dpi = 300)$check == "Resolution", ]$status, "pass")
-  expect_equal(check_journal(path, "acs", dpi = 300, art_type = "line")[
-    check_journal(path, "acs", dpi = 300, art_type = "line")$check == "Resolution", ]$status, "fail")
+  expect_equal(fig_check(path, "acs", dpi = 300)[
+    fig_check(path, "acs", dpi = 300)$check == "Resolution", ]$status, "pass")
+  expect_equal(fig_check(path, "acs", dpi = 300, art_type = "line")[
+    fig_check(path, "acs", dpi = 300, art_type = "line")$check == "Resolution", ]$status, "fail")
 })
 
 test_that("OUP records a line-width range, not just a floor", {
@@ -197,8 +198,8 @@ test_that("OUP records a line-width range, not just a floor", {
 
   too_thick <- ggplot2::ggplot(ggplot2::economics, ggplot2::aes(date, unemploy)) +
     ggplot2::geom_line(linewidth = pt_to_ggplot_linewidth(3))
-  expect_equal(check_journal(too_thick, "oup")[
-    check_journal(too_thick, "oup")$check == "Line width", ]$status, "fail")
+  expect_equal(fig_check(too_thick, "oup")[
+    fig_check(too_thick, "oup")$check == "Line width", ]$status, "fail")
 })
 
 test_that("entries carry the caveats that make them auditable", {
@@ -226,11 +227,11 @@ test_that("Nature's expanded entry enforces its own narrow type range", {
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point() +
     ggplot2::labs(title = "Fuel economy")
   # ggplot2's defaults run 8.8-13.2 pt, well outside 5-7.
-  expect_equal(check_journal(p, "nature")[
-    check_journal(p, "nature")$check == "Type size", ]$status, "fail")
+  expect_equal(fig_check(p, "nature")[
+    fig_check(p, "nature")$check == "Type size", ]$status, "fail")
   fixed <- p + theme_journal("nature")
-  expect_equal(check_journal(fixed, "nature")[
-    check_journal(fixed, "nature")$check == "Type size", ]$status, "pass")
+  expect_equal(fig_check(fixed, "nature")[
+    fig_check(fixed, "nature")$check == "Type size", ]$status, "pass")
 })
 
 test_that("Nature forbids red with green, and says so imperatively", {
@@ -238,12 +239,12 @@ test_that("Nature forbids red with green, and says so imperatively", {
   # AGU's "strongly encouraged", which is not recorded as a requirement.
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
     ggplot2::geom_point()
-  expect_equal(check_journal(p, "nature")[
-    check_journal(p, "nature")$check == "Colour pairs", ]$status, "fail")
+  expect_equal(fig_check(p, "nature")[
+    fig_check(p, "nature")$check == "Colour pairs", ]$status, "fail")
 
   safe <- p + scale_colour_figspec("cividis")
-  expect_equal(check_journal(safe, "nature")[
-    check_journal(safe, "nature")$check == "Colour pairs", ]$status, "pass")
+  expect_equal(fig_check(safe, "nature")[
+    fig_check(safe, "nature")$check == "Colour pairs", ]$status, "pass")
 
   expect_null(journal_spec("agu")$avoid_colour_pairs)
 })
@@ -332,7 +333,7 @@ test_that("graphical abstract requirements are surfaced separately from figures"
   # checks: RSC's figure columns are 83 and 171 mm, not 80.
   expect_equal(fig_width("rsc", "single"), 83)
   expect_false("Graphical abstract" %in%
-                 check_journal(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+                 fig_check(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
                                  ggplot2::geom_point(), "rsc")$check)
 
   expect_message(graphical_abstract_spec("plos_one"), "No graphical abstract")
@@ -363,7 +364,7 @@ test_that("BMJ's unverifiable widths were withdrawn, not kept or denied", {
   expect_null(b$columns)
   expect_false("columns" %in% unlist(b$not_stated %||% list()))
 
-  r <- check_journal(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+  r <- fig_check(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
                        ggplot2::geom_point(), "bmj")
   expect_equal(r[r$check == "Width", ]$requirement, "not yet harvested for this journal")
 })

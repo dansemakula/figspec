@@ -56,32 +56,32 @@ test_that("the art type genuinely changes the verdict", {
   plot(1:3)
   grDevices::dev.off()
   # BMJ: 300 dpi generally, 1200 for line art. A bar chart is line art.
-  expect_equal(check_journal(path, "bmj", dpi = 300, art_type = "colour")[
-    check_journal(path, "bmj", dpi = 300, art_type = "colour")$check == "Resolution", ]$status,
+  expect_equal(fig_check(path, "bmj", dpi = 300, art_type = "colour")[
+    fig_check(path, "bmj", dpi = 300, art_type = "colour")$check == "Resolution", ]$status,
     "pass")
-  expect_equal(check_journal(path, "bmj", dpi = 300, art_type = "line")[
-    check_journal(path, "bmj", dpi = 300, art_type = "line")$check == "Resolution", ]$status,
+  expect_equal(fig_check(path, "bmj", dpi = 300, art_type = "line")[
+    fig_check(path, "bmj", dpi = 300, art_type = "line")$check == "Resolution", ]$status,
     "fail")
 })
 
 test_that("the line-art nudge fires only for genuinely bitonal plots", {
   bitonal <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
     ggplot2::geom_point(colour = "black")
-  r <- check_journal(bitonal, "bmj")
+  r <- fig_check(bitonal, "bmj")
   expect_match(r[r$check == "Resolution", ]$requirement, "pure black and white")
 
   # A grey bar chart is grayscale art, so no line-art nudge. This is the case I
   # first got wrong: a default bar chart is not line art.
   expect_false(grepl("pure black and white",
-                     check_journal(bars(), "bmj")[
-                       check_journal(bars(), "bmj")$check == "Resolution", ]$requirement))
+                     fig_check(bars(), "bmj")[
+                       fig_check(bars(), "bmj")$check == "Resolution", ]$requirement))
 
   # Choosing explicitly is taken at face value.
-  r2 <- check_journal(bitonal, "bmj", art_type = "colour")
+  r2 <- fig_check(bitonal, "bmj", art_type = "colour")
   expect_false(grepl("pure black and white", r2[r2$check == "Resolution", ]$requirement))
 
   # Nothing to say where the journal states no line-art rule.
-  r4 <- check_journal(bitonal, "frontiers")
+  r4 <- fig_check(bitonal, "frontiers")
   expect_false(grepl("pure black and white", r4[r4$check == "Resolution", ]$requirement))
 })
 

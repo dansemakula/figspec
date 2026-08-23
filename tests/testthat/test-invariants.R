@@ -18,7 +18,7 @@ variant_plots <- function() {
 test_that("a requirement the publisher never stated is never passed or failed", {
   for (id in journals()$id) {
     for (nm in names(variant_plots())) {
-      r <- suppressMessages(check_journal(variant_plots()[[nm]], id))
+      r <- suppressMessages(fig_check(variant_plots()[[nm]], id))
       offenders <- r[r$requirement == "not specified by publisher" &
                        r$status %in% c("pass", "fail"), ]
       expect_equal(
@@ -32,7 +32,7 @@ test_that("a requirement the publisher never stated is never passed or failed", 
 
 test_that("every status is one of the four defined outcomes", {
   for (id in journals()$id) {
-    r <- suppressMessages(check_journal(variant_plots()$coloured, id))
+    r <- suppressMessages(fig_check(variant_plots()$coloured, id))
     expect_true(all(r$status %in% c("pass", "fail", "unspecified", "unknown")),
                 info = id)
   }
@@ -53,10 +53,10 @@ test_that("a vector file does not pass a resolution rule that does not exist", {
   f <- withr::local_tempfile(fileext = ".pdf")
   ggplot2::ggsave(f, variant_plots()$plain, width = 85, height = 60, units = "mm")
   # Royal Society states no minimum resolution.
-  r <- check_journal(f, "royal_society")
+  r <- fig_check(f, "royal_society")
   expect_equal(r[r$check == "Resolution", ]$status, "unspecified")
   # Cell Press does state one, so a vector file passes it.
-  r2 <- check_journal(f, "cell_press")
+  r2 <- fig_check(f, "cell_press")
   expect_equal(r2[r2$check == "Resolution", ]$status, "pass")
 })
 
@@ -93,7 +93,7 @@ test_that("a hedge about the document does not downgrade a rule inside it", {
   grDevices::png(path, width = 84, height = 60, units = "mm", res = 150)
   plot(mtcars$wt, mtcars$mpg)
   grDevices::dev.off()
-  r <- check_journal(path, "oup", dpi = 150)
+  r <- fig_check(path, "oup", dpi = 150)
   expect_equal(r[r$check == "Resolution", ]$status, "fail")
 })
 
@@ -113,7 +113,7 @@ test_that("a rule whose main verb is a recommendation is never graded", {
   many <- data.frame(x = rep(1:5, 10), y = rep(1:10, each = 5),
                      g = factor(rep(LETTERS[1:10], each = 5)))
   p <- ggplot2::ggplot(many, ggplot2::aes(x, y, colour = g)) + ggplot2::geom_line()
-  row <- check_journal(p, "sage")[check_journal(p, "sage")$check == "Series count", ]
+  row <- fig_check(p, "sage")[fig_check(p, "sage")$check == "Series count", ]
   expect_equal(row$status, "unspecified")
   expect_match(row$actual, "above the 7 recommended")
 })

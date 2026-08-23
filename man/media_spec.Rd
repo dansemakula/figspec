@@ -16,7 +16,7 @@ when the registry records none for that journal.
 \description{
 Journals publish separate rules for video and audio submitted as
 supplementary material: container format, codec, frame size and file size.
-These are not figure requirements and are not checked by \code{\link[=check_journal]{check_journal()}}.
+These are not figure requirements and are not checked by \code{\link[=fig_check]{fig_check()}}.
 }
 \examples{
 media_spec("science")

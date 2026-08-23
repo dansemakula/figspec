@@ -28,7 +28,7 @@ minimum, or 9 pt when the journal states none.}
 \item{base_family}{Font family. Defaults to the graphics device's own font.
 The journal's named font is \emph{not} forced here, because a family the
 current device cannot resolve makes the plot fail to render at all.
-\code{\link[=ggsave_journal]{ggsave_journal()}} applies the journal's font at save time, where the
+\code{\link[=fig_save]{fig_save()}} applies the journal's font at save time, where the
 device is known. Pass a family explicitly to override.}
 }
 \value{
@@ -44,7 +44,7 @@ because of a relative sizing rule in the base theme.
 \details{
 This only holds if the figure is saved at the journal's stated width, since
 type size is fixed in points but a figure scaled down after the fact takes
-its text with it. \code{\link[=ggsave_journal]{ggsave_journal()}} saves at the right width for you.
+its text with it. \code{\link[=fig_save]{fig_save()}} saves at the right width for you.
 }
 \examples{
 library(ggplot2)

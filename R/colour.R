@@ -166,8 +166,11 @@ simulate_cvd <- function(cols, type) {
 #' @export
 check_colour_safety <- function(plot, journal, threshold = 10) {
   if (!is_ggplot_object(plot)) {
-    stop("`plot` must be a ggplot object. Colours cannot be recovered ",
-         "reliably from a saved figure.", call. = FALSE)
+    figspec_abort(
+      c("{.arg plot} must be a ggplot object.",
+        "i" = "Colours cannot be recovered reliably from a saved figure -
+               compression and colour conversion have already changed them."),
+      "bad_input")
   }
   spec <- journal_spec(journal)
   cols <- plot_colours(plot)
@@ -187,7 +190,7 @@ check_colour_safety <- function(plot, journal, threshold = 10) {
 #' @export
 check_color_safety <- check_colour_safety
 
-# Shared by check_colour_safety() and check_journal().
+# Shared by check_colour_safety() and fig_check().
 colour_rows <- function(cols, spec, threshold = 10, plot = NULL) {
   rows <- list()
 

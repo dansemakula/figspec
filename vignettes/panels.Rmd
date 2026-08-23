@@ -1,0 +1,201 @@
+---
+title: "Sizing figures by panel, not by canvas"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Sizing figures by panel, not by canvas}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+Every figure has two widths, and the one you can normally set is not the one a
+reader notices.
+
+* The **canvas** is the image file. `ggsave(width = 85, units = "mm")` sets this.
+* The **panel** is the plot area left over once the axis title, the tick
+  labels, the tick marks, the legend and the margins have taken their share.
+
+You set the canvas. The panel gets whatever is left. So a figure with long tick
+labels has a smaller plot area than one with short labels, even when both were
+saved at exactly the same width — and side by side on a page, they look
+uneven. That mismatch is the most common reason a set of figures looks
+unfinished, and it is invisible in the code.
+
+figspec lets you set the panel instead, and works the canvas out for you.
+
+```{r setup}
+library(figspec)
+library(ggplot2)
+```
+
+## The problem, in three figures
+
+Three plots of the same data. They differ only in the magnitude of the y
+values, which changes how wide the tick labels are.
+
+```{r}
+figs <- list(
+  fig1 = ggplot(mtcars, aes(wt, mpg)) + geom_point(),
+  fig2 = ggplot(mtcars, aes(wt, mpg * 100000)) + geom_point(),
+  fig3 = ggplot(mtcars, aes(wt, mpg / 100)) + geom_point()
+)
+```
+
+Saved the usual way, all three are 85 mm wide — the single-column width Cell
+Press asks for. `check_submission()` measures what that leaves for the plot
+area:
+
+```{r}
+check_submission(figs, "cell_press")
+```
+
+Same canvas, three different plot areas. Nothing here is wrong: every figure
+meets the journal's stated width. But the middle one has millimetres less room
+to draw in, and on the printed page you can see it.
+
+Note how that is reported. **No publisher states a rule about panel
+consistency, so figspec never calls it a failure.** It is an observation about
+your figures, printed apart from the pass and fail lines and never counted
+among them. A green tick against an invented rule would be the same error as
+inventing the rule.
+
+## Setting a panel width
+
+`fig_save()` takes `panel_width`. Give it a number and the plot area comes out
+that size exactly, whatever the labels do:
+
+```{r}
+f <- tempfile(fileext = ".png")
+
+fig_geometry(fig_save(f, figs$fig1, panel_width = 62))
+fig_geometry(fig_save(f, figs$fig2, panel_width = 62))
+```
+
+Both panels are 62 mm. The canvases differ, because the second figure needs
+more room for its labels — which is the right way round. The panel is what you
+care about; the canvas is the consequence.
+
+## Making a set match
+
+For a set, the panel width you can share is set by the figure with the *least*
+room — the one with the longest tick labels. `fig_panel_width()` measures every
+figure and returns the widest panel all of them can use:
+
+```{r}
+pw <- fig_panel_width(figs, journal = "cell_press", format = "tiff")
+pw
+attr(pw, "per_figure")
+```
+
+`fig2` is the binding constraint. Pass that number back to `fig_save()` and
+every figure comes out with the same plot area, still at the journal's 85 mm
+canvas — the slack goes to the margin rather than stretching the panel:
+
+```{r}
+for (nm in names(figs)) {
+  fig_save(file.path(tempdir(), paste0(nm, ".tiff")), figs[[nm]],
+           journal = "cell_press", panel_width = pw)
+}
+
+check_submission(lapply(figs, fig_panel_size, width = pw), "cell_press")
+```
+
+## Letting the journal decide
+
+If you only have one figure and simply want it to use its column as fully as
+possible, `panel_width = "max"` takes the widest panel that still fits:
+
+```{r}
+fig_geometry(fig_save(f, figs$fig1, journal = "cell_press", panel_width = "max"))
+```
+
+Note that `"max"` is per figure. It gives *this* figure the largest panel it
+can have, which is not the same as giving a *set* matching panels — for that
+you want `fig_panel_width()` above.
+
+## Canvas and panel together
+
+`width` and `panel_width` are not alternatives. They are two constraints on one
+equation:
+
+```
+canvas = panel + decoration
+```
+
+The third term is measured, not guessed, so figspec can solve for whichever you
+leave out. Give both and both are honoured — the leftover becomes margin:
+
+```{r}
+fig_geometry(fig_save(f, figs$fig1, width = 120, panel_width = 62))
+```
+
+Ask for a pair that cannot exist and it refuses, naming the two values that
+would work. You cannot arrive at those without doing the measurement, so the
+error carries them:
+
+```{r, error = TRUE}
+fig_save(f, figs$fig1, width = 70, panel_width = 62)
+```
+
+Under a journal, the column width pins the canvas — a figure that is not the
+column width gets rescaled in production, and rescaling is what drives type
+below the stated minimum. So an over-wide panel is refused for the same reason:
+
+```{r, error = TRUE}
+fig_save(f, figs$fig1, journal = "cell_press", panel_width = 200)
+```
+
+## Facets and compositions
+
+A panel width applies to *each* panel, which is what keeps panels comparable
+between figures rather than between layouts. A three-facet figure at 30 mm
+panels is three 30 mm panels wide, not 30 mm in total:
+
+```{r}
+faceted <- ggplot(mtcars, aes(wt, mpg)) + geom_point() + facet_wrap(~cyl)
+fig_geometry(fig_save(f, faceted, panel_width = 30))
+```
+
+The same holds for a patchwork composition, measured through the nesting.
+
+## Setting a panel without saving
+
+`fig_panel_size()` does the geometry and hands back a figure you can print,
+inspect or pass on. It keeps the plot it was built from, so the result can
+still be checked in full — type size, font and colour live on the plot, not on
+the layout, and would otherwise be lost:
+
+```{r}
+sized <- fig_panel_size(figs$fig1, width = 62, height = 45)
+fig_geometry(sized)
+```
+
+## What a figure is right now
+
+`fig_geometry()` reports where the space in a figure is going, which is usually
+the fastest way to see why one is not the size you expected:
+
+```{r}
+fig_geometry(figs$fig2)
+```
+
+An unsized plot reports `NA` for its panel and canvas, and a real number for
+its decoration. That is not a failure to measure — a panel with no size of its
+own genuinely has no width until a canvas is chosen. The decoration, which
+depends only on the labels and the font, is known either way.
+
+The per-side figures are usually what you want. A total tells you the canvas
+has to grow; the sides tell you *why*, and they have different fixes — a wide
+right margin is a legend to move, a wide left margin is axis labels to shorten.
+
+```{r fig.width = 5, fig.height = 3.6}
+plot(fig_geometry(fig_panel_size(figs$fig1, width = 60, height = 40)))
+```
+
+```{r, include = FALSE}
+unlink(f)
+unlink(file.path(tempdir(), paste0(names(figs), ".tiff")))
+```

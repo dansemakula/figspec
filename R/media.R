@@ -4,7 +4,7 @@
 #'
 #' Journals publish separate rules for video and audio submitted as
 #' supplementary material: container format, codec, frame size and file size.
-#' These are not figure requirements and are not checked by [check_journal()].
+#' These are not figure requirements and are not checked by [fig_check()].
 #'
 #' @param journal Registry id, for example `"science"`.
 #' @return A list of the stated media requirements, or `NULL` with a message
@@ -129,12 +129,16 @@ inspect_media <- function(path) {
 #' # check_media("movie_s1.mp4", "science")
 #' @export
 check_media <- function(path, journal) {
-  if (!file.exists(path)) stop("File not found: ", path, call. = FALSE)
+  if (!file.exists(path)) figspec_abort("File not found: {.file {path}}.", "not_found", path = path)
   spec <- journal_spec(journal)
   media <- spec$media
   if (is.null(media)) {
-    stop("No supplementary media requirements are recorded for '", spec$name,
-         "'. See ", spec$source_url, call. = FALSE)
+    figspec_abort(
+      c("No supplementary media requirements are recorded for {spec$name}.",
+        "i" = "That is a gap in the registry, not a statement that the
+               publisher has no rules.",
+        ">" = "Check the guidelines yourself: {.url {spec$source_url}}"),
+      "not_found", journal = spec$name)
   }
   info <- inspect_media(path)
   rows <- list()

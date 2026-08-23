@@ -75,8 +75,8 @@ test_that("every documented option value with a British spelling accepts both", 
   skip_if_not_installed("ggplot2")
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
   expect_identical(
-    check_journal(p, "cell_press", art_type = "color"),
-    check_journal(p, "cell_press", art_type = "colour")
+    fig_check(p, "cell_press", art_type = "color"),
+    fig_check(p, "cell_press", art_type = "colour")
   )
 })
 
@@ -91,7 +91,7 @@ test_that("a value with no British spelling is untouched", {
 test_that("a genuine typo is still an error, not silently corrected", {
   skip_if_not_installed("ggplot2")
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
-  expect_error(check_journal(p, "cell_press", art_type = "colr"))
+  expect_error(fig_check(p, "cell_press", art_type = "colr"))
 })
 
 test_that("colour arguments answer to the American spelling", {

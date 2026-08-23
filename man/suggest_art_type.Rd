@@ -13,7 +13,7 @@ suggest_art_type(plot, journal = NULL)
 thresholds are shown alongside the suggestion.}
 }
 \value{
-The suggested \code{art_type} for \code{\link[=check_journal]{check_journal()}}, invisibly.
+The suggested \code{art_type} for \code{\link[=fig_check]{fig_check()}}, invisibly.
 }
 \description{
 Publishers set different resolutions for different kinds of artwork, and the

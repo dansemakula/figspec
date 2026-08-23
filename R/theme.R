@@ -8,7 +8,7 @@
 #'
 #' This only holds if the figure is saved at the journal's stated width, since
 #' type size is fixed in points but a figure scaled down after the fact takes
-#' its text with it. [ggsave_journal()] saves at the right width for you.
+#' its text with it. [fig_save()] saves at the right width for you.
 #'
 #' @param journal Registry id, for example `"plos_one"`.
 #' @param base A ggplot2 theme to build on. Defaults to [ggplot2::theme_bw()].
@@ -21,7 +21,7 @@
 #' @param base_family Font family. Defaults to the graphics device's own font.
 #'   The journal's named font is *not* forced here, because a family the
 #'   current device cannot resolve makes the plot fail to render at all.
-#'   [ggsave_journal()] applies the journal's font at save time, where the
+#'   [fig_save()] applies the journal's font at save time, where the
 #'   device is known. Pass a family explicitly to override.
 #' @return A ggplot2 theme object.
 #' @examples

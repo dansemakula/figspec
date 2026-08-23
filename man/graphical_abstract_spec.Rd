@@ -17,7 +17,7 @@ registry records none for that journal.
 Many journals ask for a graphical abstract, or table-of-contents entry, and
 set separate rules for it: usually a much smaller canvas than a figure, and
 sometimes a character limit on the accompanying text. These are not figure
-requirements and are not checked by \code{\link[=check_journal]{check_journal()}}.
+requirements and are not checked by \code{\link[=fig_check]{fig_check()}}.
 }
 \examples{
 graphical_abstract_spec("rsc")

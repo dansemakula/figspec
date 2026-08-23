@@ -3,7 +3,7 @@
 #' Many journals ask for a graphical abstract, or table-of-contents entry, and
 #' set separate rules for it: usually a much smaller canvas than a figure, and
 #' sometimes a character limit on the accompanying text. These are not figure
-#' requirements and are not checked by [check_journal()].
+#' requirements and are not checked by [fig_check()].
 #'
 #' @param journal Registry id, for example `"rsc"`.
 #' @return A list of the stated requirements, or `NULL` with a message when the

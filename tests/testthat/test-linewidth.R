@@ -17,21 +17,21 @@ test_that("line width is checked against the journal's stated range", {
   # Cell Press states 0.5 to 1.5 pt.
   too_thick <- ggplot2::ggplot(ggplot2::economics, ggplot2::aes(date, unemploy)) +
     ggplot2::geom_line(linewidth = pt_to_ggplot_linewidth(4))
-  r <- check_journal(too_thick, "cell_press")
+  r <- fig_check(too_thick, "cell_press")
   expect_equal(r[r$check == "Line width", ]$status, "fail")
 
   ok <- ggplot2::ggplot(ggplot2::economics, ggplot2::aes(date, unemploy)) +
     ggplot2::geom_line(linewidth = pt_to_ggplot_linewidth(1))
-  expect_equal(check_journal(ok, "cell_press")[
-    check_journal(ok, "cell_press")$check == "Line width", ]$status, "pass")
+  expect_equal(fig_check(ok, "cell_press")[
+    fig_check(ok, "cell_press")$check == "Line width", ]$status, "pass")
 })
 
 test_that("colour mode is checked where the publisher states one", {
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
   # Cell Press states RGB; R renders RGB.
-  expect_equal(check_journal(p, "cell_press")[
-    check_journal(p, "cell_press")$check == "Colour mode", ]$status, "pass")
+  expect_equal(fig_check(p, "cell_press")[
+    fig_check(p, "cell_press")$check == "Colour mode", ]$status, "pass")
   # Cambridge states CMYK, which R cannot produce.
-  expect_equal(check_journal(p, "cambridge")[
-    check_journal(p, "cambridge")$check == "Colour mode", ]$status, "fail")
+  expect_equal(fig_check(p, "cambridge")[
+    fig_check(p, "cambridge")$check == "Colour mode", ]$status, "fail")
 })

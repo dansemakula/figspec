@@ -1,8 +1,8 @@
 ---
-title: "Meeting a journal's figure requirements"
+title: "Getting started with figspec"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Meeting a journal's figure requirements}
+  %\VignetteIndexEntry{Getting started with figspec}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -16,7 +16,29 @@ library(ggplot2)
 library(figspec)
 ```
 
-## The problem
+## Two jobs
+
+figspec builds a figure to a specification, exports it at exactly that size and
+resolution, then checks the result and says where it falls short.
+
+A specification can come from two places, and the package does two jobs
+accordingly.
+
+**A journal's published requirements.** Name a target journal and the width,
+resolution, file format, typography and colour rules come from its author
+guidelines, as data, with the page they were read from and the date. This is
+what the rest of this article covers.
+
+**A size you choose yourself.** No journal need be involved. The most useful
+case is setting the *plot panel* rather than the image, so a set of figures
+shares one plot area whatever their axis labels do — something R cannot
+otherwise express. That has its own article: `vignette("panels")`.
+
+You can also write a specification by hand, or register a house style, and
+check against it exactly as though it were a journal. Wherever this article
+says "journal", a specification of your own works the same way.
+
+## The problem journals create
 
 Journals publish precise rules for the figures you submit, and the rules
 differ. Cell Press asks for 85, 114 or 174 mm wide with type between 6 and 8 pt.
@@ -38,7 +60,7 @@ fitted <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl), shape = factor(cyl))
   labs(title = "Fuel economy", x = "Weight (1000 lbs)", y = "Miles per gallon") +
   fit_journal("cell_press")
 
-report <- check_journal(fitted, "cell_press", column = "single")
+report <- fig_check(fitted, "cell_press", column = "single")
 knitr::kable(report[, c("check", "actual", "status")], row.names = FALSE)
 ```
 
@@ -58,7 +80,7 @@ p <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
   labs(title = "Fuel economy", x = "Weight (1000 lbs)", y = "Miles per gallon",
        colour = "Cylinders")
 
-check_journal(p, "cell_press", column = "single")
+fig_check(p, "cell_press", column = "single")
 ```
 
 Two real failures in an ordinary ggplot, from defaults nobody thinks about.
@@ -81,7 +103,7 @@ you must fix.
 `unspecified` splits further, and the distinction matters:
 
 ```{r}
-r <- check_journal(p, "frontiers")
+r <- fig_check(p, "frontiers")
 knitr::kable(
   r[r$check %in% c("File size", "Height"), c("check", "requirement", "status")],
   row.names = FALSE
@@ -107,7 +129,7 @@ fixed <- p +
   aes(shape = factor(cyl)) +
   theme_journal("cell_press")
 
-r <- check_journal(fixed, "cell_press", column = "single")
+r <- fig_check(fixed, "cell_press", column = "single")
 knitr::kable(
   r[r$status %in% c("pass", "fail"), c("check", "actual", "status")],
   row.names = FALSE
@@ -148,15 +170,22 @@ greyscale, because two of its colours sit at almost the same lightness.
 
 ## Saving at the right size
 
+Sizes here are canvas sizes: the image file is the width the journal states.
+That is what compliance means, and it is what `fig_save()` does by default.
+There is a second width — the plot area inside the image — which the journal
+says nothing about and which is what makes a set of figures look even or
+uneven. `vignette("panels")` covers it.
+
+
 This is the part that is easiest to get wrong. Type size is absolute. Save a
 figure at 180 mm, have the journal place it in an 85 mm column, and everything
 is scaled to 47%: a compliant 8 pt label arrives at 3.8 pt.
 
 ```{r, eval = FALSE}
-ggsave_journal("figure_1.tiff", fixed, journal = "cell_press", column = "single")
+fig_save("figure_1.tiff", fixed, journal = "cell_press", column = "single")
 ```
 
-`ggsave_journal()` takes the width from the registry, defaults the resolution
+`fig_save()` takes the width from the registry, defaults the resolution
 to the journal's stated minimum, picks a device that can render the required
 font, and re-checks the file it wrote.
 
@@ -195,7 +224,7 @@ grayscale art:
 suggest_art_type(ggplot(mtcars, aes(factor(cyl))) + geom_bar())
 ```
 
-`check_journal()` checks against the general minimum unless you say otherwise,
+`fig_check()` checks against the general minimum unless you say otherwise,
 and mentions the line-art rule only when a plot really is pure black and white
 and the journal holds line art to more. It does not change the verdict for you.
 
@@ -256,3 +285,17 @@ turned that into pixels.
 
 Each of those is a moment where the honest answer is "check this yourself", and
 figspec says so plainly instead of filling the gap with a guess.
+
+The same rule governs what figspec will *not* claim. Panel consistency across a
+set of figures is reported, because it is measurable and it is usually what an
+author is trying to fix — but never as a pass or a failure, because no
+publisher asks for it. A green tick against an invented rule would be the same
+error as inventing the rule.
+
+## Where to go next
+
+* `vignette("panels")` — sizing by the plot panel rather than the image, and
+  making a set of figures match.
+* `vignette("journals")` — every entry in the registry, and how complete each
+  one is.
+* `vignette("options")` — every function and what its arguments do.

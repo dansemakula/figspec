@@ -15,14 +15,14 @@ test_that("a hollow point's outline is checked against the line-width rule", {
   # Frontiers states a 2 pt minimum; ggplot2's default stroke is far thinner.
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
     ggplot2::geom_point(shape = 1)
-  r <- check_journal(p, "frontiers")
+  r <- fig_check(p, "frontiers")
   expect_equal(r[r$check == "Point outline", ]$status, "fail")
 })
 
 test_that("solid shapes raise no outline check", {
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
     ggplot2::geom_point(shape = 16)
-  r <- check_journal(p, "frontiers")
+  r <- fig_check(p, "frontiers")
   expect_false("Point outline" %in% r$check)
 })
 
@@ -44,8 +44,9 @@ test_that("shape coding rescues a palette that merges in greyscale", {
 })
 
 test_that("more shapes than stay distinct is an error, not a silent recycle", {
+  expect_error(figspec_shapes(10), class = "figspec_unsupported")
+  expect_error(figspec_linetypes(10), class = "figspec_unsupported")
   expect_error(figspec_shapes(10), "stay reliably distinct")
-  expect_error(figspec_linetypes(10), "stay reliably distinct")
   expect_equal(figspec_shapes(3), c(16, 17, 15))
   expect_equal(figspec_linetypes(3), c("solid", "dashed", "dotted"))
 })

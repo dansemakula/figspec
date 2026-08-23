@@ -36,7 +36,7 @@ A ggplot2 theme that satisfies a journal's typography rules
 | `base` | A ggplot2 theme to build on. Defaults to ggplot2::theme_bw(). |
 | `style` | A house style to apply: a name registered with register_house_style(), a ggplot2 theme, or a function returning one. Styles are applied underneath the journal's requirements and can never override them. |
 | `base_size` | Base type size in points. Defaults to the journal's stated minimum, or 9 pt when the journal states none. |
-| `base_family` | Font family. Defaults to the graphics device's own font. The journal's named font is not forced here, because a family the current device cannot resolve makes the plot fail to render at all. ggsave_journal() applies the journal's font at save time, where the device is known. Pass a family explicitly to override. |
+| `base_family` | Font family. Defaults to the graphics device's own font. The journal's named font is not forced here, because a family the current device cannot resolve makes the plot fail to render at all. fig_save() applies the journal's font at save time, where the device is known. Pass a family explicitly to override. |
 
 ### `scale_colour_figspec()`
 
@@ -81,7 +81,7 @@ Line types that stay distinct in print
 
 ## Checking
 
-### `check_journal()`
+### `fig_check()`
 
 Check a figure against a journal's requirements
 
@@ -139,7 +139,7 @@ Check a supplementary media file against a journal's requirements
 
 ## Exporting
 
-### `ggsave_journal()`
+### `fig_save()`
 
 Save a figure at a journal's required size and resolution
 

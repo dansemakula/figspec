@@ -9,14 +9,15 @@ template:
     code_font: {google: "JetBrains Mono"}
 
 home:
-  title: Fit your plots to your journal's figure requirements
+  title: Build, check and export figures to a specification
   description: >
-    Journals publish precise rules for the figures you submit: column widths to
-    the millimetre, minimum resolution, which file formats they take, how small
-    type is allowed to get. The rules differ between publishers and are
-    scattered across author-guideline pages. figspec keeps them in one place,
-    applies them to your ggplot2 figures, and tells you where a figure would
-    fail.
+    figspec sizes a figure by its plot panel as well as by the image, exports
+    it at exactly that size and resolution, and then checks the result and says
+    where it falls short. Its main registry holds the published figure
+    requirements of 27 publishers - column widths to the millimetre, minimum
+    resolution, accepted formats, how small type may get - so a target journal
+    can be named instead of a specification written. Every registry requirement
+    records the page it came from and the date it was read.
 
 navbar:
   structure:
@@ -29,8 +30,10 @@ navbar:
     articles:
       text: Articles
       menu:
-      - text: Meeting a journal's figure requirements
+      - text: Getting started with figspec
         href: articles/figspec.html
+      - text: Sizing figures by panel, not by canvas
+        href: articles/panels.html
       - text: Which journal am I submitting to?
         href: articles/journals.html
       - text: Every function and what its options do
@@ -44,10 +47,15 @@ authors:
 
 reference:
 - title: Checking a figure
-  desc: What a journal requires, and whether this figure meets it.
-  contents: [check_journal, check_colour_safety, check_submission, submission_detail, suggest_art_type]
+  desc: What a specification requires, and whether this figure meets it.
+  contents: [fig_check, check_colour_safety, check_submission, submission_detail, suggest_art_type]
+- title: Sizing and exporting
+  desc: >
+    Set the plot panel as well as the image, and export at exactly that size
+    and resolution.
+  contents: [fig_save, fig_panel_size, fig_panel_width, fig_geometry]
 - title: Building a compliant figure
-  contents: [fit_journal, theme_journal, ggsave_journal, figspec_preview, figspec_linewidth, figspec_shapes, figspec_linetypes]
+  contents: [fit_journal, theme_journal, tag_panels, figspec_preview, figspec_linewidth, figspec_shapes, figspec_linetypes]
 - title: Colour
   contents: [figspec_palettes, figspec_palette, scale_colour_figspec, scale_shape_figspec, journal_palette]
 - title: R Markdown and Quarto

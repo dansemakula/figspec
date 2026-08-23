@@ -73,7 +73,7 @@ test_that("a recommended series maximum is reported but never graded", {
 
   # Sage recommends no more than 7 series. Ten exceeds it, but "recommend" is
   # not "require", so this must never be a failure.
-  r <- check_journal(p, "sage")
+  r <- fig_check(p, "sage")
   row <- r[r$check == "Series count", ]
   expect_equal(row$status, "unspecified")
   expect_match(row$actual, "10 series, above the 7 recommended")
@@ -81,8 +81,8 @@ test_that("a recommended series maximum is reported but never graded", {
 
   few <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
     ggplot2::geom_point()
-  expect_match(check_journal(few, "sage")[
-    check_journal(few, "sage")$check == "Series count", ]$actual, "within the 7")
+  expect_match(fig_check(few, "sage")[
+    fig_check(few, "sage")$check == "Series count", ]$actual, "within the 7")
 })
 
 test_that("series count is not reported where no publisher names a limit", {
@@ -90,8 +90,8 @@ test_that("series count is not reported where no publisher names a limit", {
   # reports something the reader can act on; this one would not.
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
     ggplot2::geom_point()
-  expect_false("Series count" %in% check_journal(p, "plos_one")$check)
-  expect_true("Series count" %in% check_journal(p, "sage")$check)
+  expect_false("Series count" %in% fig_check(p, "plos_one")$check)
+  expect_true("Series count" %in% fig_check(p, "sage")$check)
 })
 
 test_that("too many series still surfaces where no limit is stated", {
@@ -108,7 +108,7 @@ test_that("too many series still surfaces where no limit is stated", {
 
 test_that("an ungrouped plot raises no series check", {
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
-  expect_false("Series count" %in% check_journal(p, "sage")$check)
+  expect_false("Series count" %in% fig_check(p, "sage")$check)
 })
 
 test_that("Sage's stated rules are recorded and its loose ones are not", {

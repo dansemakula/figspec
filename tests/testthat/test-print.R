@@ -44,7 +44,7 @@ test_that("no printed report line exceeds the console width, URLs aside", {
     ggplot2::labs(title = "Fuel economy", colour = "Cylinders")
   withr::with_options(list(width = 80, cli.width = 80), {
     for (j in journals()$id) {
-      out <- capture.output(print(check_journal(p, j)), type = "message")
+      out <- capture.output(print(fig_check(p, j)), type = "message")
       # A bare URL is one unbreakable token; wrapping it would break the link.
       out <- out[!grepl("https?://", out)]
       expect_true(all(nchar(out) <= 80),

@@ -61,14 +61,14 @@ plot_is_greyscale <- function(plot) {
 #' @param plot A ggplot object.
 #' @param journal Optional registry id. When given, the journal's own
 #'   thresholds are shown alongside the suggestion.
-#' @return The suggested `art_type` for [check_journal()], invisibly.
+#' @return The suggested `art_type` for [fig_check()], invisibly.
 #' @examples
 #' library(ggplot2)
 #' suggest_art_type(ggplot(mtcars, aes(factor(cyl))) + geom_bar(), "bmj")
 #' @export
 suggest_art_type <- function(plot, journal = NULL) {
   if (!is_ggplot_object(plot)) {
-    stop("`plot` must be a ggplot object.", call. = FALSE)
+    figspec_abort("{.arg plot} must be a ggplot object.", "bad_input")
   }
   tone <- classify_tone(plot)
   suggestion <- switch(tone,
@@ -107,7 +107,7 @@ suggest_art_type <- function(plot, journal = NULL) {
 
   cli::cli_text("")
   cli::cli_alert_success(
-    'Suggested: check_journal(plot, journal, art_type = "{suggestion}")'
+    'Suggested: fig_check(plot, journal, art_type = "{suggestion}")'
   )
   alert_wrap(
     "This is a suggestion from what the plot contains, not a rule. Where publishers disagree, the stricter reading costs file size; the looser one risks a figure below the resolution the journal asked for."

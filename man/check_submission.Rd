@@ -2,11 +2,11 @@
 % Please edit documentation in R/submission.R
 \name{check_submission}
 \alias{check_submission}
-\title{Check a whole set of figures against one journal}
+\title{Check a whole set of figures together}
 \usage{
 check_submission(
-  path,
-  journal,
+  x,
+  journal = NULL,
   column = "single",
   dpi = NULL,
   pattern = "\\\\.(tiff?|png|jpe?g|pdf|eps|ps|svg)$",
@@ -14,45 +14,53 @@ check_submission(
 )
 }
 \arguments{
-\item{path}{A directory, or a character vector of file paths.}
+\item{x}{A list of plots; or a directory; or a character vector of file
+paths.}
 
-\item{journal}{Registry id, for example \code{"plos_one"}.}
+\item{journal}{Registry id, for example \code{"plos_one"}; a specification from
+\code{\link[=journal_spec]{journal_spec()}}; or \code{NULL} to inspect the figures without judging them.}
 
 \item{column}{Which column width the figures target. Either one value for
-all files, or a named character vector mapping file name to column.}
+all, or a named character vector mapping name to column.}
 
 \item{dpi}{Resolution the files were written at. Useful for files that do
 not record it, such as those from base R's \code{png()} device.}
 
-\item{pattern}{Regular expression selecting files when \code{path} is a
-directory. Defaults to common figure extensions.}
+\item{pattern}{Regular expression selecting files when \code{x} is a directory.
+Defaults to common figure extensions.}
 
 \item{recursive}{Whether to descend into subdirectories.}
 }
 \value{
 An object of class \code{figspec_submission}: a data frame with one row
-per file. The full per-requirement reports are kept in the \code{"reports"}
+per figure. The full per-requirement reports are kept in the \code{"reports"}
 attribute.
 }
 \description{
-A submission is a set of figures, and they all have to pass. This runs
-\code{\link[=check_journal]{check_journal()}} over every figure and returns one row per file, so the
-result is something you can read at a glance or hand to a co-author.
+A submission is a set of figures that have to pass as a set. This runs
+\code{\link[=fig_check]{fig_check()}} over every one and returns a row each, so the result is
+something you can read at a glance or hand to a co-author.
 }
 \details{
-Files are checked as files, which means geometry, format, resolution and
-file size can be judged but type size cannot: point sizes do not survive
-into a raster file. Check the plot objects with \code{\link[=check_journal]{check_journal()}} before
-saving if you need type size verified.
+Give it plot objects rather than files where you can. A written file has
+lost the information that only the plot carries: type size and panel
+geometry do not survive into a raster. From files, geometry, format,
+resolution and file size can still be judged.
 }
+\section{Panel consistency}{
+Given plot objects, this also reports the plot area of each figure. Figures
+that meet the same width requirement still have different plot areas when
+their axis labels differ in length, and on the page that is what makes a set
+look uneven. No publisher states a rule about it, so it is never reported as
+a failure — it is an observation about your own figures, and \code{\link[=fig_save]{fig_save()}}
+with a shared \code{panel_width} from \code{\link[=fig_panel_width]{fig_panel_width()}} is the fix.
+}
+
 \examples{
 library(ggplot2)
-dir <- file.path(tempdir(), "figs")
-dir.create(dir, showWarnings = FALSE)
-p <- ggplot(mtcars, aes(wt, mpg)) + geom_point() + theme_journal("frontiers")
-suppressWarnings(
-  ggsave_journal(file.path(dir, "figure_1.tiff"), p, "frontiers", check = FALSE)
+figs <- list(
+  fig1 = ggplot(mtcars, aes(wt, mpg)) + geom_point(),
+  fig2 = ggplot(mtcars, aes(wt, mpg * 100000)) + geom_point()
 )
-check_submission(dir, "frontiers")
-unlink(dir, recursive = TRUE)
+check_submission(figs, "frontiers")
 }

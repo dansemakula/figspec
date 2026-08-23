@@ -236,6 +236,15 @@ inspect_file <- function(path) {
 
 UNSTATED <- "not specified by publisher"
 UNHARVESTED <- "not yet harvested for this journal"
+# A third case, distinct from both. "Not specified by publisher" is a fact
+# about a publisher and "not yet harvested" is a fact about the registry;
+# neither is true when the caller simply did not give a specification. Saying
+# either would put a claim in figspec's mouth that nobody made.
+NO_SPEC <- "no specification given"
+# And a fourth. A specification written by the user, rather than read off a
+# publisher's page, cannot be "awaiting harvest": there is no page to read. A
+# field it does not mention is simply one the author did not state.
+UNSTATED_USER <- "not specified"
 
 new_row <- function(check, requirement, actual, status) {
   # A publisher that states no requirement cannot be passed or failed. Rather
@@ -311,9 +320,9 @@ graded <- function(check, requirement, actual, ok, spec = NULL, fields = NULL) {
 #' @examples
 #' library(ggplot2)
 #' p <- ggplot(mtcars, aes(wt, mpg)) + geom_point()
-#' check_journal(p, "frontiers")
+#' fig_check(p, "frontiers")
 #' @export
-check_journal <- function(x, journal, column = "single",
+fig_check <- function(x, journal = NULL, column = "single",
                           width = NULL, height = NULL,
                           units = c("mm", "cm", "in"),
                           dpi = NULL, format = NULL,
@@ -325,13 +334,38 @@ check_journal <- function(x, journal, column = "single",
   # wrapped around it.
   art_type <- british_spelling(art_type)
   art_type <- match.arg(art_type)
-  spec <- journal_spec(journal)
+  # With no specification there is nothing to judge against, so the report
+  # becomes an inspection: it says what the figure is and states plainly that
+  # no requirement was supplied. An empty spec produces exactly that, because
+  # every check already refuses to pass or fail an unstated requirement.
+  # A figure sized by fig_panel_size() is a gtable carrying its source plot.
+  # Check the plot, so nothing is lost by having set a panel size.
+  if (inherits(x, "gtable")) {
+    src <- attr(x, "figspec_plot")
+    if (is.null(src)) {
+      figspec_abort(
+        c("This gtable does not carry the plot it was built from.",
+          "i" = "Laying a plot out discards its theme, layers and scales, so
+                 type size, font and colour cannot be read back.",
+          ">" = "Pass the plot itself, or a figure built with
+                 {.fn fig_panel_size}, which keeps it."),
+        "bad_input")
+    }
+    x <- src
+  }
+  no_spec <- is.null(journal)
+  from_registry <- !no_spec && is.character(journal) && length(journal) == 1L
+  spec <- if (no_spec) {
+    structure(list(name = "no specification"), class = c("figspec_spec", "list"))
+  } else {
+    journal_spec(journal)
+  }
   rows <- list()
   info <- list()
 
   is_file <- is.character(x) && length(x) == 1L
   if (is_file) {
-    if (!file.exists(x)) stop("File not found: ", x, call. = FALSE)
+    if (!file.exists(x)) figspec_abort("File not found: {.file {x}}.", "not_found", path = x)
     info <- inspect_file(x)
     actual_w <- info$width_mm
     actual_h <- info$height_mm
@@ -360,7 +394,10 @@ check_journal <- function(x, journal, column = "single",
     px_note <- NULL
     text_sizes <- collect_text_sizes(x)
   } else {
-    stop("`x` must be a ggplot object or a path to a figure file.", call. = FALSE)
+    figspec_abort(
+      c("{.arg x} must be a ggplot object or a path to a figure file.",
+        "x" = "You gave {.cls {class(x)}}."),
+      "bad_input")
   }
 
   # Width -----------------------------------------------------------------
@@ -564,9 +601,23 @@ check_journal <- function(x, journal, column = "single",
 
   out <- do.call(rbind, rows)
   rownames(out) <- NULL
+  if (no_spec) {
+    # Not "unspecified by the publisher" and not "not yet harvested": there is
+    # no publisher and no registry entry in play. Say the third thing.
+    out$requirement <- NO_SPEC
+    out$status <- "unspecified"
+  } else if (!from_registry) {
+    # A hand-written or loaded specification. Silence about a field is the
+    # author's own omission, not a gap in figspec's registry, so it must not be
+    # reported as one.
+    gap <- out$requirement == UNHARVESTED
+    out$requirement[gap] <- UNSTATED_USER
+    out$status[gap] <- "unspecified"
+  }
   structure(
     out,
-    journal = spec$name,
+    no_spec = no_spec,
+    journal = if (no_spec) NULL else spec$name,
     journal_id = spec$id,
     source_url = spec$source_url,
     verified_on = spec$verified_on,
@@ -611,7 +662,7 @@ report_row <- function(check, actual, requirement, width, lab_w = 12L) {
 
 #' @export
 print.figspec_report <- function(x, ...) {
-  cli::cli_h1("{attr(x, 'journal')}")
+  cli::cli_h1("{attr(x, 'journal') %||% 'Figure inspection'}")
   cli::cli_text("{.emph checked: {attr(x, 'input')}}")
   cli::cli_text("")
   w <- max(cli::console_width(), 50L)
@@ -629,17 +680,34 @@ print.figspec_report <- function(x, ...) {
   }
   fails <- sum(x$status == "fail")
   cli::cli_text("")
-  if (fails == 0) {
+  # With no specification there is nothing to have failed, and saying "no
+  # failures" would read as a clean bill of health that nothing was checked
+  # for. Report the absence instead.
+  if (isTRUE(attr(x, "no_spec"))) {
+    cli::cli_alert_info(
+      "Nothing was checked: no specification was given. Pass a journal id, or ",
+      "a specification of your own, to have these judged."
+    )
+  } else if (fails == 0) {
     cli::cli_alert_success("No failures against the requirements on record.")
   } else {
     cli::cli_alert_danger("{fails} requirement{?s} not met.")
   }
   n_open <- sum(x$status %in% c("unspecified", "unknown"))
-  if (n_open > 0) {
+  if (n_open > 0 && !isTRUE(attr(x, "no_spec"))) {
     cli::cli_alert_info(
       "{n_open} requirement{?s} could not be judged automatically - check by hand."
     )
   }
-  cli::cli_text("{.strong Source:} {.url {attr(x, 'source_url')}} (verified {attr(x, 'verified_on')})")
+  # A source line with nothing in it reads as a missing citation rather than as
+  # an absent one, so print it only when there is a source to cite.
+  src <- attr(x, "source_url")
+  if (!is.null(src) && nzchar(src)) {
+    seen <- attr(x, "verified_on")
+    cli::cli_text(
+      "{.strong Source:} {.url {src}}",
+      if (!is.null(seen) && nzchar(seen)) " (verified {seen})" else ""
+    )
+  }
   invisible(x)
 }
