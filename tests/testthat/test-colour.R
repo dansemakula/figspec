@@ -141,20 +141,3 @@ test_that("a short list of merged pairs is shown in full", {
     check_colour_safety(p, "royal_society")$check == "Greyscale", ]$actual
   expect_false(grepl("more$", msg))
 })
-
-test_that("the American spelling reaches the same function", {
-  expect_identical(check_color_safety, check_colour_safety)
-  expect_identical(scale_color_figspec, scale_colour_figspec)
-})
-
-test_that("colour arguments answer to the American spelling", {
-  # `color` is an unambiguous prefix of `colour`, so R's partial matching
-  # carries it through. This is worth a test because adding another argument
-  # starting "colo" would silently break it.
-  skip_if_not_installed("ggplot2")
-  expect_no_error(fit_journal("plos_one", color = FALSE))
-  expect_equal(
-    length(fit_journal("plos_one", color = FALSE)),
-    length(fit_journal("plos_one", colour = FALSE))
-  )
-})

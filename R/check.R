@@ -305,7 +305,7 @@ graded <- function(check, requirement, actual, ok, spec = NULL, fields = NULL) {
 #'   colour or greyscale, 500 for black and white, and 1000 for line art.
 #'   figspec cannot tell which one your figure is, so it checks against
 #'   `"colour"` by default and names the other thresholds in the report rather
-#'   than quietly applying the most lenient one.
+#'   than quietly applying the most lenient one. `"color"` is accepted too.
 #' @return An object of class `figspec_report`, a data frame of one row per
 #'   requirement.
 #' @examples
@@ -320,6 +320,10 @@ check_journal <- function(x, journal, column = "single",
                           art_type = c("colour", "bw", "line", "combination")) {
   art_type_given <- !missing(art_type)
   units <- match.arg(units)
+  # match.arg() reads its choices from the formal, so it needs a bare symbol;
+  # the spelling is normalised into the variable before the call rather than
+  # wrapped around it.
+  art_type <- british_spelling(art_type)
   art_type <- match.arg(art_type)
   spec <- journal_spec(journal)
   rows <- list()

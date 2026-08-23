@@ -78,3 +78,12 @@ alert_wrap <- function(text, type = c("info", "success", "danger", "warning")) {
   names(text) <- rep(bullet, length(text))
   cli::cli_bullets(text)
 }
+
+# "color" is not a prefix of "colour" - the spellings diverge at the fifth
+# letter - so neither R's partial argument matching nor match.arg() can carry
+# the American form on its own. Anywhere a caller may reasonably type one, the
+# value passes through here first.
+british_spelling <- function(x) {
+  if (!is.character(x)) return(x)
+  sub("color", "colour", x, fixed = TRUE)
+}

@@ -94,7 +94,7 @@ Check a figure against a journal's requirements
 | `units` | Units for width and height. |
 | `dpi` | Resolution. For a ggplot object, the resolution you intend to save at. For a file, the resolution it was written at, which lets figspec judge physical size for files that do not record it themselves - base R's png() and tiff() devices do not, whereas ragg does. |
 | `format` | Output format, for example "tiff". Only used when x is a ggplot object. |
-| `art_type` | Which resolution rule applies. Publishers set different minimums for different kinds of artwork: Cell Press asks 300 dpi for colour or greyscale, 500 for black and white, and 1000 for line art. figspec cannot tell which one your figure is, so it checks against "colour" by default and names the other thresholds in the report rather than quietly applying the most lenient one. |
+| `art_type` | Which resolution rule applies. Publishers set different minimums for different kinds of artwork: Cell Press asks 300 dpi for colour or greyscale, 500 for black and white, and 1000 for line art. figspec cannot tell which one your figure is, so it checks against "colour" by default and names the other thresholds in the report rather than quietly applying the most lenient one. "color" is accepted too. |
 
 ### `check_colour_safety()`
 

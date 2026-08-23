@@ -42,7 +42,7 @@ minimums for different kinds of artwork: Cell Press asks 300 dpi for
 colour or greyscale, 500 for black and white, and 1000 for line art.
 figspec cannot tell which one your figure is, so it checks against
 \code{"colour"} by default and names the other thresholds in the report rather
-than quietly applying the most lenient one.}
+than quietly applying the most lenient one. \code{"color"} is accepted too.}
 }
 \value{
 An object of class \code{figspec_report}, a data frame of one row per
