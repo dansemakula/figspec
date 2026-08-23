@@ -312,8 +312,11 @@ main blockquote > :last-child { margin-bottom: 0; }
   margin-bottom: 1rem;
 }
 
-/* pkgdown leaves an empty <span> line at the end of every rendered chunk. */
+/* pkgdown leaves an empty <span> line at the end of some rendered chunks, and
+   the <pre>'s own bottom margin falls inside the bordered box rather than
+   below it. Both show up as a blank line before the block's lower edge. */
 main pre code > span:last-child:empty { display: none; }
+main div.sourceCode > pre { margin-bottom: 0; }
 
 /* ---- Function reference pages ------------------------------------------ */
 

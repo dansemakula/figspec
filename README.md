@@ -1,8 +1,12 @@
 # figspec
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/dansemakula/figspec/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/dansemakula/figspec/actions/workflows/R-CMD-check.yaml)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+<!-- The R-CMD-check badge points at a workflow that only exists once the
+     repository is on GitHub. Until then it renders as a broken image, so it
+     waits here:
+[![R-CMD-check](https://github.com/dansemakula/figspec/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/dansemakula/figspec/actions/workflows/R-CMD-check.yaml)
+-->
 <!-- badges: end -->
 
 Journals publish precise rules for the figures you submit: column widths to the
