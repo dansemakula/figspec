@@ -581,24 +581,47 @@ check_journal <- function(x, journal, column = "single",
   out
 }
 
+# One row of a report, laid out to the console width. A row that fits stays on
+# one line with its columns aligned; a row that does not carries its
+# requirement on wrapped continuation lines, indented to sit under `actual`.
+# cli's alerts do not wrap at all, which is what sent these lines off the side
+# of the page.
+BULLET_W <- 2L
+
+report_row <- function(check, actual, requirement, width, lab_w = 12L) {
+  lab <- paste0(format(check, width = lab_w), " ")
+  req <- paste0("requires: ", requirement)
+  one <- trimws(paste0(lab, format(actual, width = 26), "  ", req), "right")
+  if (BULLET_W + nchar(one) <= width) {
+    return(list(head = one, rest = character()))
+  }
+  indent <- strrep(" ", BULLET_W + lab_w + 1L)
+  avail <- max(width - nchar(indent), 24L)
+  head_txt <- strwrap(actual, width = avail)
+  if (!length(head_txt)) head_txt <- ""
+  list(
+    head = paste0(lab, head_txt[1]),
+    rest = paste0(indent, c(head_txt[-1], strwrap(req, width = avail)))
+  )
+}
+
 #' @export
 print.figspec_report <- function(x, ...) {
   cli::cli_h1("{attr(x, 'journal')}")
   cli::cli_text("{.emph checked: {attr(x, 'input')}}")
   cli::cli_text("")
-  sym <- c(pass = "v", fail = "x", unspecified = "-", unknown = "?")
+  w <- max(cli::console_width(), 50L)
+  lab_w <- max(nchar(x$check), 1L)
   for (i in seq_len(nrow(x))) {
     r <- x[i, ]
-    label <- paste0(
-      format(r$check, width = 12), " ",
-      format(r$actual, width = 34), " ", "(requires: ", r$requirement, ")"
-    )
+    ln <- report_row(r$check, r$actual, r$requirement, w, lab_w)
     switch(r$status,
-      pass = cli::cli_alert_success(label),
-      fail = cli::cli_alert_danger(label),
-      unspecified = cli::cli_alert_info(label),
-      unknown = cli::cli_alert_warning(label)
+      pass = cli::cli_alert_success("{ln$head}"),
+      fail = cli::cli_alert_danger("{ln$head}"),
+      unspecified = cli::cli_alert_info("{ln$head}"),
+      unknown = cli::cli_alert_warning("{ln$head}")
     )
+    if (length(ln$rest)) cli::cli_verbatim(ln$rest)
   }
   fails <- sum(x$status == "fail")
   cli::cli_text("")

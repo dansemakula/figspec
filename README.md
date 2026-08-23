@@ -227,10 +227,10 @@ fig_width("frontiers", "double", units = "in")
 
 | Outcome | Meaning |
 |---|---|
-| `pass` | Meets the requirement. |
-| `fail` | Breaches it. Fix this. |
-| `unspecified` | **The publisher does not state this requirement.** Nothing can be concluded. |
-| `unknown` | The requirement exists, but this input cannot answer it — type size in a raster file, for example. |
+| <span class="fs-status fs-pass">pass</span> | Meets the requirement. |
+| <span class="fs-status fs-fail">fail</span> | Breaches it. Fix this. |
+| <span class="fs-status fs-unspecified">unspecified</span> | **The publisher does not state this requirement.** Nothing can be concluded. |
+| <span class="fs-status fs-unknown">unknown</span> | The requirement exists, but this input cannot answer it — type size in a raster file, for example. |
 
 When a publisher is silent on maximum height, figspec tells you so and leaves
 the judgement with you. Silence gets reported as silence.

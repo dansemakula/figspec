@@ -34,7 +34,7 @@ Load-bearing numbers also carry the publisher's own wording, so an entry can be
 audited without leaving the file:
 
 ```{r}
-spec$source_quote_width
+writeLines(strwrap(spec$source_quote_width))
 ```
 
 ## The three states of a field

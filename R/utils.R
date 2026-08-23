@@ -48,13 +48,33 @@ is_ggplot_object <- function(x) {
   inherits(x, "ggplot") || inherits(x, "ggassemble")
 }
 
+# message() does not fold at the console width either, so a sentence assembled
+# from registry text runs off the side of the screen and off the side of a
+# rendered vignette.
+msg_wrap <- function(...) {
+  txt <- paste0(...)
+  width <- max(getOption("width", 80L) - 2L, 30L)
+  message(paste(strwrap(txt, width = width), collapse = "\n"))
+}
+
 # A working default has to be supplied when a publisher is silent, but it must
 # never be passed off as the publisher's requirement.
 default_note <- function(spec, field, value, what) {
-  message(
+  msg_wrap(
     "'", spec$name, "' does not state ", what, ". Using ", value,
     " as a figspec default - this is not a requirement of the journal. ",
     "See ", spec$source_url
   )
   value
+}
+
+# cli's alerts do not wrap, so a long sentence runs off the side of the console
+# and off the side of a rendered vignette. cli_bullets() carries the same
+# symbols and does wrap, with a hanging indent under the text.
+alert_wrap <- function(text, type = c("info", "success", "danger", "warning")) {
+  bullet <- switch(match.arg(type),
+    info = "i", success = "v", danger = "x", warning = "!"
+  )
+  names(text) <- rep(bullet, length(text))
+  cli::cli_bullets(text)
 }

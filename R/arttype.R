@@ -76,16 +76,16 @@ suggest_art_type <- function(plot, journal = NULL) {
 
   cli::cli_h1("Which resolution rule applies")
   switch(tone,
-    bitonal = cli::cli_alert_info(
+    bitonal = alert_wrap(
       "This plot is pure black and white with no grey. That is {.strong line art} in the sense publishers mean, and it carries the highest resolution bar: sharp one-bit edges alias badly when sampled too coarsely."
     ),
-    grayscale = cli::cli_alert_info(
+    grayscale = alert_wrap(
       "This plot uses grey but no colour, so it is {.strong grayscale art}, not line art. ggplot2's default bar fill is a mid grey, so a default bar chart lands here rather than in line art."
     ),
-    colour = cli::cli_alert_info(
+    colour = alert_wrap(
       "This plot uses colour, so it is not line art: five publishers in the registry define line art as black and white or monochrome. Treat it as {.strong colour art}. Springer would call a colour diagram {.strong combination art}, which is a higher bar, so check its wording if you are submitting there."
     ),
-    continuous = cli::cli_alert_info(
+    continuous = alert_wrap(
       "This plot draws continuous tone. An image carrying lettering is {.strong combination art}; a photograph without lettering is a halftone."
     ))
 
@@ -109,7 +109,7 @@ suggest_art_type <- function(plot, journal = NULL) {
   cli::cli_alert_success(
     'Suggested: check_journal(plot, journal, art_type = "{suggestion}")'
   )
-  cli::cli_alert_info(
+  alert_wrap(
     "This is a suggestion from what the plot contains, not a rule. Where publishers disagree, the stricter reading costs file size; the looser one risks a figure below the resolution the journal asked for."
   )
   invisible(suggestion)

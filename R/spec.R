@@ -65,7 +65,7 @@ fig_width <- function(journal, column = "single", units = c("mm", "cm", "in")) {
 fig_columns <- function(journal) {
   spec <- journal_spec(journal)
   if (is.null(spec$columns)) {
-    message(
+    msg_wrap(
       "'", spec$name, "' states a width range rather than named columns: ",
       spec$width_min_mm %||% "?", " to ", spec$width_max_mm %||% "?", " mm."
     )
@@ -146,7 +146,7 @@ print.figspec_spec <- function(x, ...) {
 table_spec <- function(journal) {
   spec <- journal_spec(journal)
   if (is.null(spec$tables)) {
-    message("No table requirements are recorded for '", spec$name,
+    msg_wrap("No table requirements are recorded for '", spec$name,
             "'. See ", spec$source_url)
     return(invisible(NULL))
   }

@@ -130,7 +130,7 @@ journal_palette <- function(journal) {
   spec <- journal_spec(journal)
   pal <- spec$house_style$palette
   if (is.null(pal)) {
-    message(
+    msg_wrap(
       "No house-style palette is recorded for '", spec$name,
       "'. figspec does not invent one: no publisher in the registry states ",
       "which colours to use. See figspec_palettes() for palettes chosen to ",

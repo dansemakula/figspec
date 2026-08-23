@@ -38,7 +38,8 @@ fitted <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl), shape = factor(cyl))
   labs(title = "Fuel economy", x = "Weight (1000 lbs)", y = "Miles per gallon") +
   fit_journal("cell_press")
 
-check_journal(fitted, "cell_press", column = "single")[, c("check", "actual", "status")]
+report <- check_journal(fitted, "cell_press", column = "single")
+knitr::kable(report[, c("check", "actual", "status")], row.names = FALSE)
 ```
 
 That one line carries the journal's typography, its stated line weights, its
@@ -72,16 +73,19 @@ you must fix.
 
 | Outcome | Meaning |
 |---|---|
-| `pass` | Meets the requirement |
-| `fail` | Breaches it |
-| `unspecified` | The publisher does not state this. Nothing can be concluded |
-| `unknown` | The requirement exists, but this input cannot answer it |
+| <span class="fs-status fs-pass">pass</span> | Meets the requirement |
+| <span class="fs-status fs-fail">fail</span> | Breaches it |
+| <span class="fs-status fs-unspecified">unspecified</span> | The publisher does not state this. Nothing can be concluded |
+| <span class="fs-status fs-unknown">unknown</span> | The requirement exists, but this input cannot answer it |
 
 `unspecified` splits further, and the distinction matters:
 
 ```{r}
 r <- check_journal(p, "frontiers")
-r[r$check %in% c("File size", "Height"), c("check", "requirement", "status")]
+knitr::kable(
+  r[r$check %in% c("File size", "Height"), c("check", "requirement", "status")],
+  row.names = FALSE
+)
 ```
 
 Frontiers' file-size rule was read and confirmed absent, so it is *not
@@ -104,7 +108,10 @@ fixed <- p +
   theme_journal("cell_press")
 
 r <- check_journal(fixed, "cell_press", column = "single")
-r[r$status %in% c("pass", "fail"), c("check", "actual", "status")]
+knitr::kable(
+  r[r$status %in% c("pass", "fail"), c("check", "actual", "status")],
+  row.names = FALSE
+)
 ```
 
 ## Colour, and why shape matters
@@ -113,7 +120,10 @@ Three colour findings are reported, and which of them can *fail* depends on
 what the publisher actually states.
 
 ```{r}
-check_colour_safety(p, "cell_press")[, c("check", "actual", "status")]
+knitr::kable(
+  check_colour_safety(p, "cell_press")[, c("check", "actual", "status")],
+  row.names = FALSE
+)
 ```
 
 Red-and-green is a **requirement** for Cell Press because Cell Press states it.
@@ -125,8 +135,10 @@ your judgement.
 Note the last row. If colours merge but shapes differ, the figure still reads:
 
 ```{r}
-check_colour_safety(fixed, "royal_society")[
-  , c("check", "actual", "status")]
+knitr::kable(
+  check_colour_safety(fixed, "royal_society")[, c("check", "actual", "status")],
+  row.names = FALSE
+)
 ```
 
 `figspec_palettes()` lists the palettes that ship with the package, each with
@@ -172,7 +184,8 @@ So a colour figure is *not* line art, and asking 1200 dpi of it would be the
 wrong advice. `suggest_art_type()` classifies what the plot actually contains:
 
 ```{r}
-suggest_art_type(ggplot(mtcars, aes(wt, mpg)) + geom_point(colour = "black"), "bmj")
+line_art <- ggplot(mtcars, aes(wt, mpg)) + geom_point(colour = "black")
+suggest_art_type(line_art, "bmj")
 ```
 
 ggplot2's default bar fill is `#595959`, a mid grey, so a default bar chart is

@@ -26,7 +26,7 @@ figspec_preview <- function(plot = ggplot2::last_plot(), journal,
   height_mm <- if (is.null(height)) width_mm * 0.75 else convert_length(height, units, "mm")
 
   if (!interactive()) {
-    message(
+    msg_wrap(
       "figspec_preview() opens a graphics window and does nothing in a ",
       "non-interactive session. The figure would be ",
       fmt_num(width_mm), " by ", fmt_num(height_mm), " mm."
@@ -40,7 +40,7 @@ figspec_preview <- function(plot = ggplot2::last_plot(), journal,
     unit = "in", noRStudioGD = TRUE
   )
   print(plot)
-  message(
+  msg_wrap(
     "Previewing at ", fmt_num(width_mm), " x ", fmt_num(height_mm),
     " mm, the ", column, "-column size for '", journal_spec(journal)$name,
     "'. This window is the published size."

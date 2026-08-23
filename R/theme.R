@@ -61,7 +61,7 @@ theme_journal <- function(journal, base = NULL, style = NULL, base_size = NULL,
   if (!is.null(style_theme)) {
     overridden <- style_overrides(style_theme, min_pt, max_pt)
     if (length(overridden)) {
-      message(
+      msg_wrap(
         "'", spec$name, "' requires type ",
         if (is.null(max_pt)) paste0("of at least ", min_pt, " pt")
         else paste0("between ", min_pt, " and ", max_pt, " pt"),
@@ -127,7 +127,7 @@ theme_journal <- function(journal, base = NULL, style = NULL, base_size = NULL,
 figspec_linewidth <- function(journal) {
   spec <- journal_spec(journal)
   if (is.null(spec$min_line_pt)) {
-    message("'", spec$name, "' states no minimum line width.")
+    msg_wrap("'", spec$name, "' states no minimum line width.")
     return(invisible(NULL))
   }
   pt_to_ggplot_linewidth(spec$min_line_pt)

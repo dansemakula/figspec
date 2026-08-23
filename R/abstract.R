@@ -14,7 +14,7 @@
 graphical_abstract_spec <- function(journal) {
   spec <- journal_spec(journal)
   if (is.null(spec$graphical_abstract)) {
-    message("No graphical abstract requirements are recorded for '", spec$name,
+    msg_wrap("No graphical abstract requirements are recorded for '", spec$name,
             "'. See ", spec$source_url)
     return(invisible(NULL))
   }

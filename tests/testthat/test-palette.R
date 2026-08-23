@@ -41,5 +41,10 @@ test_that("scales apply the palette", {
 })
 
 test_that("no journal palette is invented", {
-  expect_message(journal_palette("plos_one"), "does not invent one")
+  # Messages fold at the console width, so a phrase can straddle a line break.
+  # This test is about what is said, not where it wraps.
+  withr::with_options(
+    list(width = 200),
+    expect_message(journal_palette("plos_one"), "does not invent one")
+  )
 })

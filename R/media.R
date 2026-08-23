@@ -15,7 +15,7 @@
 media_spec <- function(journal) {
   spec <- journal_spec(journal)
   if (is.null(spec$media)) {
-    message("No supplementary media requirements are recorded for '",
+    msg_wrap("No supplementary media requirements are recorded for '",
             spec$name, "'. See ", spec$source_url)
     return(invisible(NULL))
   }
