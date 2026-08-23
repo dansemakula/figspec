@@ -151,3 +151,62 @@ code.fs-fail { color: #a12d2d; }
   font-size: 1.08rem;
   line-height: 1.65;
 }
+
+/* ---- Type scale --------------------------------------------------------
+   pkgdown was rendering at an 18px base, which scales every heading, rule and
+   margin up with it and makes a page feel heavy. Back to 16px, the size Quarto
+   and Bootstrap both assume, with a slightly longer line to keep it readable.
+   ------------------------------------------------------------------------ */
+
+body {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+main p, main li { font-size: 1rem; line-height: 1.65; }
+
+main h1 { font-size: 1.95rem; letter-spacing: -.015em; margin-bottom: .6rem; }
+main h2 { font-size: 1.4rem;  letter-spacing: -.01em; }
+main h3 { font-size: 1.12rem; }
+main h4 { font-size: 1rem; }
+
+main pre, main code { font-size: .875rem; }
+main div.sourceCode { border-radius: .4rem; }
+main pre { padding: .75rem .9rem; line-height: 1.5; }
+
+/* A hairline reads as structure; a 2px rule reads as a divider between
+   documents. */
+.template-article h2, .template-home h2 {
+  border-bottom: 1px solid var(--fs-teal-line);
+}
+
+/* ---- Reference index ---------------------------------------------------
+   pkgdown lays this out as a definition list with the name and its description
+   in adjacent columns. Boxing them turned each entry into two disconnected
+   cards, so this keeps the pairing and separates entries with a hairline
+   instead. ------------------------------------------------------------- */
+
+.template-reference-index dl.row { margin-bottom: 1.4rem; row-gap: 0; }
+
+.template-reference-index dl.row > dt { padding: .3rem 0 0; margin-bottom: 0; }
+.template-reference-index dl.row > dd { padding: 0 0 .35rem; margin-bottom: 0; }
+
+.template-reference-index dl.row > dt { font-weight: 500; }
+.template-reference-index dl.row > dt code { font-size: .9rem; }
+
+.template-reference-index dl.row > dd {
+  font-size: .93rem;
+  color: var(--bs-secondary-color);
+}
+
+.template-reference-index .section > h2 {
+  margin-top: 1.9rem;
+  margin-bottom: .2rem;
+}
+.template-reference-index .section > p { margin-bottom: .5rem; }
+
+/* ---- Page titles ------------------------------------------------------- */
+
+main > h1, .template-home h1 { margin-bottom: .35rem; }
+.page-header, main > h1 + hr { margin-bottom: .9rem; }
+.template-home main > hr:first-of-type { margin: .6rem 0 1rem; }
