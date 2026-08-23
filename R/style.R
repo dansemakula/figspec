@@ -30,8 +30,10 @@
 #' @export
 register_house_style <- function(name, theme, description = NULL) {
   if (!is.function(theme) && !inherits(theme, "theme")) {
-    stop("`theme` must be a ggplot2 theme object or a function returning one.",
-         call. = FALSE)
+    figspec_abort(
+      c("{.arg theme} must be a ggplot2 theme, or a function returning one.",
+        "x" = "You gave {.cls {class(theme)}}."),
+      "bad_input")
   }
   styles <- .figspec_cache$styles %||% list()
   styles[[name]] <- list(name = name, theme = theme,
@@ -115,15 +117,22 @@ resolve_style <- function(style) {
   if (is.character(style) && length(style) == 1L) {
     styles <- .figspec_cache$styles %||% list()
     if (!style %in% names(styles)) {
-      stop("No house style named '", style, "'. Registered: ",
-           if (length(styles)) paste(names(styles), collapse = ", ") else "none",
-           call. = FALSE)
+      figspec_abort(
+        c("No house style named {.val {style}}.",
+          "i" = if (length(styles)) {
+            "Registered: {.val {names(styles)}}."
+          } else {
+            "No house styles are registered yet - see {.fn register_house_style}."
+          }),
+        "not_found", style = style)
     }
     th <- styles[[style]]$theme
     return(if (is.function(th)) th() else th)
   }
-  stop("`style` must be a style name, a ggplot2 theme, or a function.",
-       call. = FALSE)
+  figspec_abort(
+    c("{.arg style} must be a style name, a ggplot2 theme, or a function.",
+      "x" = "You gave {.cls {class(style)}}."),
+    "bad_input")
 }
 
 # Report which of a style's type sizes the journal's requirements override, so

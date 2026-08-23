@@ -1,3 +1,32 @@
+# Errors ------------------------------------------------------------------
+
+# Every error figspec raises carries a class, so a caller can catch the kind of
+# problem it has rather than matching on the wording. `figspec_error` is the
+# parent; the specific class says what went wrong:
+#
+#   bad_input       an argument is the wrong type or shape
+#   missing_arg     something required was not supplied
+#   not_found       a named thing -- journal, palette, style, file -- is unknown
+#   unsupported     a request the package cannot serve
+#   bad_registry    a registry entry is malformed
+#   needs_package   an optional package is not installed
+#   bad_size        a size that would take the graphics device down
+#   size_conflict   two sizes that cannot both hold
+#
+# `call` is the frame the user called, so the error is attributed to the
+# exported function rather than to an internal helper. `.envir` is the frame the
+# message was written in, which is where cli looks up `{...}` expressions.
+figspec_abort <- function(msg, class, call = parent.frame(), ...,
+                          .envir = parent.frame()) {
+  cli::cli_abort(
+    msg,
+    class = c(paste0("figspec_", class), "figspec_error"),
+    call = call,
+    .envir = .envir,
+    ...
+  )
+}
+
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
 MM_PER_IN <- 25.4
@@ -17,10 +46,17 @@ convert_length <- function(x, from, to, dpi = NULL) {
       cm = v * 10,
       `in` = v * MM_PER_IN,
       px = {
-        if (is.null(dpi)) stop("`dpi` is required to convert pixels.", call. = FALSE)
+        if (is.null(dpi)) figspec_abort(
+              c("{.arg dpi} is needed to convert pixels to a physical size.",
+                "i" = "A pixel has no size of its own until a resolution says how
+                       many of them make an inch."),
+              "missing_arg")
         v / dpi * MM_PER_IN
       },
-      stop("Unsupported unit: ", u, call. = FALSE)
+      figspec_abort(
+            c("Unsupported unit {.val {u}}.",
+              "i" = "Use {.val mm}, {.val cm}, {.val in}, {.val pt} or {.val px}."),
+            "unsupported", unit = u)
     )
   }
   from_mm <- function(v, u) {
@@ -29,10 +65,19 @@ convert_length <- function(x, from, to, dpi = NULL) {
       cm = v / 10,
       `in` = v / MM_PER_IN,
       px = {
-        if (is.null(dpi)) stop("`dpi` is required to convert pixels.", call. = FALSE)
+        if (is.null(dpi)) {
+          figspec_abort(
+            c("{.arg dpi} is needed to convert pixels to a physical size.",
+              "i" = "A pixel has no size of its own until a resolution says
+                     how many of them make an inch."),
+            "missing_arg")
+        }
         v / MM_PER_IN * dpi
       },
-      stop("Unsupported unit: ", u, call. = FALSE)
+      figspec_abort(
+        c("Unsupported unit {.val {u}}.",
+          "i" = "Use {.val mm}, {.val cm}, {.val in} or {.val px}."),
+        "unsupported", unit = u)
     )
   }
   from_mm(to_mm(x, from), to)

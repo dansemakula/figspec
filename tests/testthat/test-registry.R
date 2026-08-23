@@ -10,7 +10,8 @@ test_that("every registry entry carries its provenance", {
 
 test_that("registry validation rejects entries without provenance", {
   bad <- list(list(id = "x", name = "X"))
-  expect_error(validate_registry(bad), "provenance")
+  expect_error(validate_registry(bad), class = "figspec_bad_registry")
+  expect_error(validate_registry(bad), "[Pp]rovenance")
 })
 
 test_that("registry validation rejects duplicate ids", {
@@ -18,6 +19,7 @@ test_that("registry validation rejects duplicate ids", {
     list(id = "x", source_url = "u", verified_on = "2026-01-01"),
     list(id = "x", source_url = "u", verified_on = "2026-01-01")
   )
+  expect_error(validate_registry(dup), class = "figspec_bad_registry")
   expect_error(validate_registry(dup), "Duplicate")
 })
 
@@ -33,7 +35,8 @@ test_that("journals() returns one row per entry and filters by discipline", {
 
 test_that("unknown journal ids fail with a usable message", {
   expect_error(journal_spec("plos_onee"), "plos_one")
-  expect_error(journal_spec("not_a_journal"), "journals\\(\\)")
+  expect_error(journal_spec("not_a_journal"), class = "figspec_not_found")
+  expect_error(journal_spec("not_a_journal"), "journals")
 })
 
 test_that("table requirements are surfaced when recorded and absent otherwise", {
@@ -62,11 +65,16 @@ test_that("a user can register their own journal", {
 test_that("user journals still require provenance", {
   expect_error(
     register_journal("x", "X", NULL, NULL, requirements = list()),
-    "provenance"
+    "[Pp]rovenance"
   )
 })
 
 test_that("a requirement smuggled into house_style is refused", {
+  expect_error(
+    register_journal("y", "Y", "u", "2026-08-22",
+                     house_style = list(font_min_pt = 4)),
+    class = "figspec_bad_registry"
+  )
   expect_error(
     register_journal("y", "Y", "u", "2026-08-22",
                      house_style = list(font_min_pt = 4)),

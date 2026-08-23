@@ -66,12 +66,12 @@ figspec_shapes <- function(n, style = c("solid", "hollow", "filled")) {
   )
   pool <- sets[[style]]
   if (n > length(pool)) {
-    stop(
-      "Only ", length(pool), " ", style, " shapes stay reliably distinct at ",
-      "journal size; ", n, " requested. Consider splitting the figure into ",
-      "panels rather than adding shapes readers cannot separate.",
-      call. = FALSE
-    )
+    figspec_abort(
+      c("Only {length(pool)} {style} shapes stay reliably distinct at journal
+         size, and {n} were asked for.",
+        ">" = "Split the figure into panels rather than adding shapes a reader
+               cannot separate."),
+      "unsupported", available = length(pool), requested = n)
   }
   pool[seq_len(n)]
 }
@@ -90,8 +90,11 @@ figspec_shapes <- function(n, style = c("solid", "hollow", "filled")) {
 figspec_linetypes <- function(n) {
   pool <- c("solid", "dashed", "dotted", "dotdash", "longdash", "twodash")
   if (n > length(pool)) {
-    stop("Only ", length(pool), " line types stay reliably distinct; ", n,
-         " requested.", call. = FALSE)
+    figspec_abort(
+      c("Only {length(pool)} line types stay reliably distinct, and {n} were
+         asked for.",
+        ">" = "Distinguish the extra series by colour or by panel instead."),
+      "unsupported", available = length(pool), requested = n)
   }
   pool[seq_len(n)]
 }

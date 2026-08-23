@@ -30,7 +30,9 @@ test_that("Okabe-Ito is colour-vision safe but NOT greyscale safe", {
 })
 
 test_that("a palette will not recycle colours to fill a request", {
-  expect_error(figspec_palette("cividis", 20), "Pick a different palette")
+  expect_error(figspec_palette("cividis", 20), class = "figspec_unsupported")
+  expect_error(figspec_palette("cividis", 20), "Pick a palette with more")
+  expect_error(figspec_palette("nope"), class = "figspec_not_found")
   expect_error(figspec_palette("nope"), "Unknown palette")
 })
 

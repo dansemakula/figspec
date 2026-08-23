@@ -60,7 +60,10 @@ figspec_chunk_opts <- function(journal, column = "single",
 figspec_knitr_setup <- function(journal, column = "single",
                                 height = NULL, units = c("mm", "cm", "in")) {
   if (!requireNamespace("knitr", quietly = TRUE)) {
-    stop("knitr is required for figspec_knitr_setup().", call. = FALSE)
+    figspec_abort(
+      c("{.fn figspec_knitr_setup} needs the knitr package.",
+        ">" = 'Install it with {.code install.packages("knitr")}.'),
+      "needs_package", package = "knitr")
   }
   opts <- figspec_chunk_opts(journal, column, height, units)
   invisible(do.call(knitr::opts_chunk$set, opts))

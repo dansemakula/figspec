@@ -77,15 +77,20 @@ figspec_palettes <- function() {
 figspec_palette <- function(palette = "okabe_ito", n = NULL) {
   reg <- figspec_palette_registry()
   if (!palette %in% names(reg)) {
-    stop("Unknown palette '", palette, "'. Available: ",
-         paste(names(reg), collapse = ", "), call. = FALSE)
+    figspec_abort(
+      c("Unknown palette {.val {palette}}.",
+        "i" = "Available: {.val {names(reg)}}."),
+      "not_found", palette = palette)
   }
   cols <- reg[[palette]]$colours
   if (is.null(n)) return(cols)
   if (n > length(cols)) {
-    stop("Palette '", palette, "' has ", length(cols), " colours; ", n,
-         " requested. Pick a different palette rather than recycling colours.",
-         call. = FALSE)
+    figspec_abort(
+      c("Palette {.val {palette}} has {length(cols)} colours, and {n} were asked for.",
+        "i" = "Recycling would put the same colour on two series, which a
+               reader cannot tell apart.",
+        ">" = "Pick a palette with more colours, or split the figure."),
+      "unsupported", palette = palette, available = length(cols), requested = n)
   }
   cols[seq_len(n)]
 }

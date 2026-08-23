@@ -57,45 +57,47 @@ load_registry <- function(refresh = FALSE) {
 validate_registry <- function(entries) {
   ids <- vapply(entries, function(j) j$id %||% NA_character_, character(1))
   if (anyNA(ids)) {
-    stop("Every registry entry must have an `id`.", call. = FALSE)
+    figspec_abort("Every registry entry must have an {.field id}.",
+                  "bad_registry")
   }
   if (anyDuplicated(ids)) {
-    stop(
-      "Duplicate registry ids: ",
-      paste(unique(ids[duplicated(ids)]), collapse = ", "),
-      call. = FALSE
-    )
+    dupes <- unique(ids[duplicated(ids)])
+    figspec_abort(
+      c("Duplicate registry {cli::qty(dupes)}id{?s}: {.val {dupes}}.",
+        "i" = "An id is how an entry is looked up, so it has to be unique."),
+      "bad_registry", ids = dupes)
   }
   for (j in entries) {
     if (is.null(j$source_url) || is.null(j$verified_on)) {
-      stop(
-        "Registry entry '", j$id,
-        "' is missing `source_url` or `verified_on`. ",
-        "Entries without provenance are not permitted.",
-        call. = FALSE
-      )
+      figspec_abort(
+        c("Registry entry {.val {j$id}} is missing {.field source_url} or
+           {.field verified_on}.",
+          "i" = "Provenance is not optional: a requirement nobody can trace
+                 back to a published page is a claim figspec cannot stand
+                 behind."),
+        "bad_registry", id = j$id)
     }
     contradiction <- intersect(unlist(j$not_stated %||% list()),
                                names(j$requirements %||% list()))
     if (length(contradiction)) {
-      stop(
-        "Registry entry '", j$id, "' lists ",
-        paste(contradiction, collapse = ", "),
-        " in `not_stated` while also giving a value for it in `requirements`. ",
-        "A field cannot both be absent from the publisher's guidelines and ",
-        "taken from them.",
-        call. = FALSE
-      )
+      figspec_abort(
+        c("Registry entry {.val {j$id}} contradicts itself over
+           {.field {contradiction}}.",
+          "x" = "It is listed in {.field not_stated} and also given a value in
+                 {.field requirements}.",
+          "i" = "A field cannot both be absent from the publisher's guidelines
+                 and taken from them."),
+        "bad_registry", id = j$id, fields = contradiction)
     }
     leaked <- intersect(names(j$house_style %||% list()), requirement_keys())
     if (length(leaked)) {
-      stop(
-        "Registry entry '", j$id, "' puts requirement field(s) (",
-        paste(leaked, collapse = ", "), ") inside `house_style`. ",
-        "A house style is taste, not a rule, and is never checked. ",
-        "Move these to `requirements:` or remove them.",
-        call. = FALSE
-      )
+      figspec_abort(
+        c("Registry entry {.val {j$id}} puts {cli::qty(leaked)}requirement field{?s}
+           {.field {leaked}} inside {.field house_style}.",
+          "i" = "A house style is taste, not a rule, and is never checked - so
+                 a requirement placed there would silently never be enforced.",
+          ">" = "Move {cli::qty(leaked)}{?it/them} to {.field requirements}, or remove {?it/them}."),
+        "bad_registry", id = j$id, fields = leaked)
     }
   }
   invisible(TRUE)
@@ -219,19 +221,32 @@ journals <- function(discipline = NULL) {
 #' journal_spec("frontiers")
 #' @export
 journal_spec <- function(journal) {
+  # A specification does not have to come from the registry. Passing one back
+  # in unchanged is what lets a house style, an internal format loaded with
+  # load_journals(), or a hand-written list be checked and exported against on
+  # the same footing as a published journal.
+  if (inherits(journal, "figspec_spec")) return(journal)
+  if (is.list(journal) && !is.null(names(journal))) {
+    return(structure(journal, class = c("figspec_spec", "list")))
+  }
   reg <- load_registry()
   if (!is.character(journal) || length(journal) != 1L) {
-    stop("`journal` must be a single registry id.", call. = FALSE)
+    figspec_abort(
+      c("{.arg journal} must be a registry id, a specification from
+         {.fn journal_spec}, or a named list of requirements.",
+        "x" = "You gave {.cls {class(journal)}}."),
+      "bad_input")
   }
   if (!journal %in% names(reg)) {
     close <- agrep(journal, names(reg), value = TRUE, max.distance = 0.4)
-    msg <- paste0("Unknown journal id: '", journal, "'.")
-    if (length(close)) {
-      msg <- paste0(msg, " Did you mean: ", paste(close, collapse = ", "), "?")
-    } else {
-      msg <- paste0(msg, " See journals() for available ids.")
-    }
-    stop(msg, call. = FALSE)
+    figspec_abort(
+      c("Unknown journal id: {.val {journal}}.",
+        if (length(close)) {
+          c("i" = "Did you mean {.val {close}}?")
+        } else {
+          c(">" = "See {.fn journals} for the ids on record.")
+        }),
+      "not_found", journal = journal, suggestions = close)
   }
   structure(reg[[journal]], class = c("figspec_spec", "list"))
 }
