@@ -473,3 +473,40 @@ main details > summary::after {
 }
 main details[open] > summary::after { transform: rotate(-90deg); }
 main details > summary::before { content: none; }
+
+/* ---- Page width and the gutter between the columns ---------------------- */
+/* pkgdown caps `main` at 50rem inside a 75% grid cell and, above 1400px, adds
+   a 5rem margin to the sidebar. The two columns therefore stop well short of
+   the container's right edge - about 110px of the page went unused, which is
+   why the search box in the navbar sat further right than the sidebar ended.
+   Treating the row as one centred flex unit closes the gutter and balances
+   what is left over across both margins instead of dumping it on the right. */
+
+/* Only the widest Bootstrap container needs narrowing. Capping `.container`
+   unconditionally would also flatten the stepped max-widths it uses lower
+   down, leaving the page flush against the edge of a 900px window. */
+@media (min-width: 1400px) {
+  .container { max-width: 1200px; }
+}
+
+/* From the breakpoint where pkgdown stops stacking the sidebar. Below 992px
+   Bootstrap's own grid left the two columns touching, with the sidebar too
+   narrow to read; the gutter and the sidebar both scale with the viewport
+   instead of stepping. */
+@media (min-width: 768px) {
+  .container > .row {
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: clamp(1.5rem, 4vw, 3rem);
+  }
+  .container > .row > main {
+    flex: 1 1 auto;
+    max-width: 52rem;
+    min-width: 0;
+  }
+  .container > .row > aside {
+    flex: 0 0 clamp(11rem, 22vw, 18rem);
+    max-width: 18rem;
+    margin-left: 0 !important;
+  }
+}
