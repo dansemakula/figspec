@@ -4,16 +4,20 @@
    and dark themes pkgdown ships. */
 
 :root {
-  --fs-teal:        #1f4e5f;
-  --fs-teal-soft:   #e8f0f2;
-  --fs-teal-line:   #cfdde1;
-  --fs-accent:      #b4632c;
-  --fs-accent-soft: #fbf1e9;
+  --fs-teal:        #1a7391;
+  --fs-teal-deep:   #145d76;
+  --fs-teal-soft:   #e6f3f8;
+  --fs-teal-line:   #c4dfe9;
+  --fs-accent:      #d97528;
+  --fs-accent-soft: #fdf1e6;
 }
 
 [data-bs-theme="dark"] {
-  --fs-teal-soft:   #16303a;
-  --fs-teal-line:   #2b4d58;
+  --fs-teal:        #4fb3d1;
+  --fs-teal-deep:   #7cc9e0;
+  --fs-teal-soft:   #12333f;
+  --fs-teal-line:   #2c5666;
+  --fs-accent:      #e8934f;
   --fs-accent-soft: #3a2a1d;
 }
 
@@ -22,14 +26,14 @@
 details {
   border: 1px solid var(--fs-teal-line);
   border-radius: .5rem;
-  margin: 1.25rem 0;
+  margin: 1rem 0;
   background: var(--bs-body-bg);
   overflow: hidden;
 }
 
 details > summary {
   cursor: pointer;
-  padding: .7rem 1rem;
+  padding: .6rem .95rem;
   background: var(--fs-teal-soft);
   color: var(--fs-teal);
   font-weight: 600;
@@ -37,7 +41,7 @@ details > summary {
   transition: background .15s ease;
 }
 
-[data-bs-theme="dark"] details > summary { color: #b9d6de; }
+[data-bs-theme="dark"] details > summary { color: var(--fs-teal-deep); }
 
 details > summary::-webkit-details-marker { display: none; }
 
@@ -59,7 +63,7 @@ details > table { margin: 1rem; width: calc(100% - 2rem); }
 .template-article table, .template-home table, .template-reference-topic table {
   border-collapse: collapse;
   width: 100%;
-  margin: 1.25rem 0;
+  margin: 1rem 0;
   font-size: .93rem;
 }
 
@@ -76,7 +80,7 @@ details > table { margin: 1rem; width: calc(100% - 2rem); }
 
 .template-article table td, .template-home table td,
 .template-reference-topic table td {
-  padding: .5rem .7rem;
+  padding: .42rem .7rem;
   border-top: 1px solid var(--fs-teal-line);
   vertical-align: top;
 }
@@ -94,18 +98,18 @@ details > table { margin: 1rem; width: calc(100% - 2rem); }
 }
 
 #arguments + dl > dt, #arguments ~ dl dt {
-  color: var(--fs-teal);
+  color: var(--fs-teal-deep);
   font-family: var(--bs-font-monospace);
   font-weight: 600;
-  padding-top: .45rem;
+  padding-top: .35rem;
 }
 
 [data-bs-theme="dark"] #arguments + dl > dt,
-[data-bs-theme="dark"] #arguments ~ dl dt { color: #8fc3d1; }
+[data-bs-theme="dark"] #arguments ~ dl dt { color: var(--fs-teal-deep); }
 
 #arguments + dl > dd, #arguments ~ dl dd {
-  margin-bottom: .8rem;
-  padding-bottom: .55rem;
+  margin-bottom: .55rem;
+  padding-bottom: .4rem;
   border-bottom: 1px dashed var(--fs-teal-line);
 }
 
@@ -118,12 +122,28 @@ code.fs-fail { color: #a12d2d; }
 
 .template-article h2, .template-home h2 {
   border-bottom: 2px solid var(--fs-teal-line);
-  padding-bottom: .3rem;
-  margin-top: 2.2rem;
+  padding-bottom: .25rem;
+  margin-top: 1.7rem;
+  margin-bottom: .7rem;
 }
 
-.template-article h3 { color: var(--fs-teal); margin-top: 1.8rem; }
-[data-bs-theme="dark"] .template-article h3 { color: #8fc3d1; }
+.template-article h3, .template-home h3 {
+  color: var(--fs-teal-deep);
+  margin-top: 1.3rem;
+  margin-bottom: .5rem;
+}
+
+/* pkgdown leaves a lot of air around prose and code. Close it up so a page
+   reads as one column rather than a series of separated blocks. */
+.template-article main p, .template-home main p,
+.template-reference-topic main p { margin-bottom: .75rem; }
+
+.template-article main div.sourceCode,
+.template-home main div.sourceCode,
+.template-reference-topic main div.sourceCode { margin: .8rem 0; }
+
+.template-article main ul, .template-home main ul { margin-bottom: .8rem; }
+.template-reference-topic h2 { margin-top: 1.6rem; }
 
 /* ---- Home page lead --------------------------------------------------- */
 
