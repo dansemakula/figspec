@@ -87,3 +87,44 @@ test_that("the file is checked, not what the plot object intended", {
   s <- vector_text_sizes(f)
   expect_true(all(abs(s$size_pt - round(s$size_pt)) < 1e-6))
 })
+
+test_that("a vector format with no text yields nothing rather than zero sizes", {
+  f <- tempfile(fileext = ".svg"); on.exit(unlink(f))
+  writeLines('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>', f)
+  expect_null(vector_text_sizes(f))
+})
+
+test_that("a corrupt file in a readable format is refused, not half-read", {
+  f <- tempfile(fileext = ".pdf"); on.exit(unlink(f))
+  writeBin(as.raw(sample(0:255, 500, TRUE)), f)
+  expect_null(suppressWarnings(vector_text_sizes(f)))
+})
+
+test_that("a PostScript file written by another producer is still read", {
+  # R writes `/Font1 findfont 9 s`, using its own shorthand. Other producers
+  # write `9 scalefont` in full, and both have to be recognised.
+  f <- tempfile(fileext = ".eps"); on.exit(unlink(f))
+  writeLines(c("%!PS-Adobe-3.0 EPSF-3.0",
+               "/Helvetica findfont 11 scalefont setfont",
+               "/Helvetica findfont 7 scalefont setfont"), f)
+  s <- vector_text_sizes(f)
+  expect_setequal(s$size_pt, c(11, 7))
+})
+
+test_that("the format is taken from the argument when one is given", {
+  # inspect_file() already knows the format, so vector_text_sizes() should not
+  # have to re-derive it from an extension that may be missing or wrong.
+  f <- tempfile(); on.exit(unlink(f))
+  writeLines('<svg><text style="font-size: 6.50px">x</text></svg>', f)
+  expect_null(vector_text_sizes(f))
+  s <- vector_text_sizes(f, format = "svg")
+  expect_equal(s$size_pt, 6.5)
+})
+
+test_that("a size of zero or a negative size is discarded", {
+  f <- tempfile(fileext = ".svg"); on.exit(unlink(f))
+  writeLines(paste('<svg><text style="font-size: 0px">a</text>',
+                   '<text style="font-size: 8px">b</text></svg>'), f)
+  s <- vector_text_sizes(f)
+  expect_equal(s$size_pt, 8)
+})
