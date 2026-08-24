@@ -107,3 +107,83 @@ test_that("the other stated resolution thresholds are named, not hidden", {
   r <- fig_check(p, "cell_press", dpi = 300)
   expect_match(r[r$check == "Resolution", ]$requirement, "line art 1000")
 })
+
+# The JPEG reader -------------------------------------------------------------
+#
+# JPEG is the trickiest raster format here to walk: a chain of segments where
+# the dimensions live in a start-of-frame marker whose code varies, and the
+# resolution in an optional JFIF header that may say it has no resolution at
+# all. Both of those were read wrongly before these tests existed.
+
+jpeg_fixture <- function(width, height, res = NA) {
+  f <- tempfile(fileext = ".jpg")
+  if (is.na(res)) {
+    grDevices::jpeg(f, width = width, height = height, units = "px")
+  } else {
+    grDevices::jpeg(f, width = width, height = height, units = "px", res = res)
+  }
+  print(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point())
+  grDevices::dev.off()
+  f
+}
+
+test_that("a JPEG gives up its dimensions the right way round", {
+  # The frame header stores height before width. Reading them in the other
+  # order returned the width as the height and a component count as the width.
+  skip_if_not_installed("ggplot2")
+  f <- jpeg_fixture(600, 400); on.exit(unlink(f))
+  info <- read_jpeg_info(f)
+  expect_equal(info$width_px, 600)
+  expect_equal(info$height_px, 400)
+})
+
+test_that("a non-square JPEG is not read square", {
+  skip_if_not_installed("ggplot2")
+  f <- jpeg_fixture(320, 240); on.exit(unlink(f))
+  info <- read_jpeg_info(f)
+  expect_equal(info$width_px, 320)
+  expect_equal(info$height_px, 240)
+  expect_false(info$width_px == info$height_px)
+})
+
+test_that("a JFIF density with no units is not reported as a resolution", {
+  # Units 0 means the density pair is an aspect ratio and carries no physical
+  # size. R's own jpeg() device writes exactly that, with the numbers 72 and
+  # 72, so treating it as dpi reported 72 dpi as a fact and failed the figure
+  # against every journal asking for 300.
+  skip_if_not_installed("ggplot2")
+  f <- jpeg_fixture(600, 400); on.exit(unlink(f))
+  expect_null(read_jpeg_info(f)$dpi)
+})
+
+test_that("a file that is not a JPEG is refused rather than misread", {
+  f <- tempfile(fileext = ".jpeg"); on.exit(unlink(f))
+  writeBin(charToRaw("this is plainly not a jpeg"), f)
+  expect_null(read_jpeg_info(f))
+})
+
+test_that("a JPEG with no recorded resolution is unknown, not assumed", {
+  skip_if_not_installed("ggplot2")
+  f <- jpeg_fixture(1004, 709); on.exit(unlink(f))
+  r <- fig_check(f, "frontiers")
+  expect_equal(r$status[r$check == "Resolution"], "unknown")
+  expect_false(r$status[r$check == "Resolution"] == "fail")
+})
+
+test_that("a JPEG resolution given by the caller is used", {
+  # Because the file records none, dpi has to be supplied for the geometry to
+  # mean anything - which is what the dpi argument is for.
+  skip_if_not_installed("ggplot2")
+  f <- jpeg_fixture(1004, 709); on.exit(unlink(f))
+  r <- fig_check(f, "frontiers", dpi = 300)
+  expect_equal(r$status[r$check == "Resolution"], "pass")
+  expect_equal(r$status[r$check == "Width"], "pass")
+})
+
+test_that("a JPEG is judged against the format list, not assumed acceptable", {
+  skip_if_not_installed("ggplot2")
+  f <- jpeg_fixture(400, 300); on.exit(unlink(f))
+  # PLOS ONE accepts TIFF and EPS only.
+  r <- fig_check(f, "plos_one", dpi = 300)
+  expect_equal(r$status[r$check == "File format"], "fail")
+})

@@ -263,13 +263,22 @@ read_jpeg_info <- function(path) {
     if (marker %in% c(216L, 217L)) { i <- i + 2L; next }
     len <- be(i + 2L)
     if (marker == 224L && i + 13L <= length(raw)) {
+      # JFIF: identifier and version, then a units byte at offset 11 and the
+      # horizontal density at 12. Units 1 and 2 are per-inch and
+      # per-centimetre. Units 0 means the two density numbers express an
+      # aspect ratio and carry no physical size at all, so there is no
+      # resolution to report - R's own jpeg() device writes exactly that.
       unit <- as.integer(raw[i + 11L])
       xd <- be(i + 12L)
-      if (xd > 0) info$dpi <- if (unit == 2L) xd * 2.54 else xd
+      if (xd > 0 && unit %in% c(1L, 2L)) {
+        info$dpi <- if (unit == 2L) xd * 2.54 else xd
+      }
     }
     if (marker %in% c(192L:195L, 197L:199L, 201L:203L, 205L:207L)) {
-      info$height_px <- be(i + 7L)
-      info$width_px <- be(i + 9L)
+      # Start of frame: length, then one byte of sample precision, then the
+      # height and the width, in that order.
+      info$height_px <- be(i + 5L)
+      info$width_px <- be(i + 7L)
       break
     }
     i <- i + 2L + len
