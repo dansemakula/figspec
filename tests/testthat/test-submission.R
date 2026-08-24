@@ -1,3 +1,5 @@
+# Checking a set of figures together, from plot objects and from files.
+
 make_files <- function(dir, journal, n = 2) {
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +

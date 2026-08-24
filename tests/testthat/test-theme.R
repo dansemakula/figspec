@@ -1,3 +1,6 @@
+# theme_journal(): that a journal's type floor and ceiling reach the theme
+# elements derived from base_size, not just base_size itself.
+
 test_that("theme_journal holds the journal's type floor across all elements", {
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
     ggplot2::geom_point() +

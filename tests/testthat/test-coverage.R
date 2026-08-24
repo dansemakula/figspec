@@ -1,3 +1,11 @@
+# The registry's accounting, and the recorded values themselves.
+#
+# Two different things are tested here. First, that every field of every entry
+# is in exactly one of three states - stated, confirmed absent, never read -
+# and that the last two are never graded. Second, that specific values match
+# what the publisher actually wrote, with the reasoning recorded alongside each
+# so a future maintainer can see why a figure was or was not recorded.
+
 test_that("a confirmed-absent field and an unharvested field are told apart", {
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
 

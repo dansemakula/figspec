@@ -1,3 +1,6 @@
+# House styles: registering, applying and removing them, and the rule that one
+# may never contain a field fig_check() grades against.
+
 withr::defer(.figspec_cache$styles <- NULL, teardown_env())
 
 test_that("a house style can be registered, listed and removed", {

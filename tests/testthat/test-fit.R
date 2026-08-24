@@ -1,3 +1,6 @@
+# fit_journal(): that one line added to a plot carries the journal's
+# typography, scales and structural rules, and composes cleanly.
+
 grouped <- function() {
   ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl),
                                        shape = factor(cyl))) +

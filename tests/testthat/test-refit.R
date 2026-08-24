@@ -1,3 +1,5 @@
+# Re-exporting a set of figures against a different journal's specification.
+
 test_that("a set of plots is re-exported to another journal's spec", {
   skip_if_not_installed("ragg")
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()

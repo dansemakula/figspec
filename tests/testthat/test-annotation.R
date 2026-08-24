@@ -1,3 +1,9 @@
+# Structural and typographic rules: panel counting and labelling, text case,
+# axis furniture, axis origins and tick-label formatting.
+#
+# Several of these guard against reading something as evidence when it is not:
+# an ordinary text layer as panel labels, a factor axis as a numeric one.
+
 base_plot <- function() {
   ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
 }

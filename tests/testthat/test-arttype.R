@@ -1,3 +1,9 @@
+# Classifying what a figure puts on the page, which decides which of a
+# publisher's resolution minimums applies.
+#
+# The rule under test throughout: line art means monochrome, so a coloured or
+# grey plot must never be suggested as line art.
+
 bars <- function() ggplot2::ggplot(mtcars, ggplot2::aes(factor(cyl))) + ggplot2::geom_bar()
 raster_plot <- function() {
   ggplot2::ggplot(ggplot2::faithfuld, ggplot2::aes(waiting, eruptions, fill = density)) +

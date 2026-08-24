@@ -1,3 +1,6 @@
+# fig_check() itself: reading measurements out of a plot, and the four outcomes
+# a row can carry.
+
 make_plot <- function() {
   ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
     ggplot2::geom_point() +

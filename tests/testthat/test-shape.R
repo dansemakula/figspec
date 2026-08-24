@@ -1,3 +1,6 @@
+# Point shapes and their outlines, including that a marker's stroke is subject
+# to a journal's minimum line width like any other stroke.
+
 test_that("stroke converts to points and back", {
   expect_equal(stroke_to_pt(pt_to_stroke(2)), 2, tolerance = 1e-9)
   # ggplot2's default stroke of 0.5 renders at about 0.71 pt.

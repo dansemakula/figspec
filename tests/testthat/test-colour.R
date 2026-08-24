@@ -1,3 +1,6 @@
+# Colour safety: which colours a plot actually maps data to, and whether they
+# stay distinguishable in print and under colour vision deficiency.
+
 scatter <- function(cols = NULL) {
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
     ggplot2::geom_point()

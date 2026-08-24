@@ -1,3 +1,6 @@
+# Chunk options for R Markdown and Quarto, including that a value figspec
+# substituted is announced rather than passed off as the journal's.
+
 test_that("chunk options carry the journal's own size and resolution", {
   o <- figspec_chunk_opts("plos_one", "single")
   expect_named(o, c("fig.width", "fig.height", "dpi", "dev"))

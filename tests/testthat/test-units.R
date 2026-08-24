@@ -1,3 +1,5 @@
+# Length conversion between millimetres, centimetres, inches and pixels.
+
 test_that("length conversion round-trips", {
   expect_equal(convert_length(25.4, "mm", "in"), 1)
   expect_equal(convert_length(1, "in", "mm"), 25.4)

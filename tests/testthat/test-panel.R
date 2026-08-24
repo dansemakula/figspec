@@ -1,3 +1,9 @@
+# Panel sizing: canvas = panel + decoration.
+#
+# Also the input validation around it, which matters more than usual because a
+# graphics device handed a non-positive or non-finite size ends the R session
+# rather than raising an error.
+
 skip_if_not_installed("ggplot2")
 
 p_plain <- function() {

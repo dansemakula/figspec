@@ -1,3 +1,6 @@
+# tag_panels(): labelling panels in the style a journal states, across plain
+# plots, facets and patchwork compositions.
+
 skip_if_not_installed("ggplot2")
 
 p1 <- function() ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()

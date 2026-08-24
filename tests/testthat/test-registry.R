@@ -1,3 +1,5 @@
+# Loading and validating the registry, and adding entries of your own.
+
 test_that("every registry entry carries its provenance", {
   reg <- load_registry()
   expect_gt(length(reg), 0)

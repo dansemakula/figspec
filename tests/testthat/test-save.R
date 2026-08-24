@@ -1,3 +1,6 @@
+# fig_save(): format selection, device choice, and the check performed on the
+# file after it is written.
+
 plot_for_save <- function(journal) {
   ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
     ggplot2::geom_point() +

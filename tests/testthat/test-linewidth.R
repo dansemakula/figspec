@@ -1,3 +1,9 @@
+# Line width and colour mode.
+#
+# ggplot2's linewidth is not points - one unit is 2.13 pt - so these check the
+# conversion in both directions and that a line drawn at a journal's stated
+# minimum measures at that minimum.
+
 test_that("points convert to ggplot2 linewidth and back", {
   # ggplot2 draws lwd = linewidth * .pt, and R's lwd unit is 1/96 inch, so
   # one linewidth unit renders at .pt / 96 * 72 points.

@@ -1,3 +1,6 @@
+# The shipped palettes: their contents, their sources, and that no journal
+# palette is invented where a publisher states none.
+
 pal_plot <- function(cols) {
   n <- length(cols)
   ggplot2::ggplot(data.frame(x = seq_len(n), y = seq_len(n), g = factor(seq_len(n))),
