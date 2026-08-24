@@ -34,12 +34,34 @@ vector_text_sizes <- function(path, format = NULL) {
   data.frame(element = "text", size_pt = sizes, stringsAsFactors = FALSE)
 }
 
+# Does this file begin with the PDF signature?
+#
+# Every PDF starts with the five bytes "%PDF-". Checking that before parsing
+# keeps a mislabelled or corrupt file out of a reader that would complain from
+# C, where the message cannot be caught or redirected.
+#
+# @param path Path to the file.
+# @return TRUE if the first five bytes are the PDF signature.
+is_pdf <- function(path) {
+  # Existence is checked first rather than caught: opening a missing file warns
+  # before it errors, and the warning would escape a tryCatch on the error.
+  if (!file.exists(path) || isTRUE(file.info(path)$isdir)) return(FALSE)
+  con <- file(path, "rb")
+  on.exit(close(con), add = TRUE)
+  sig <- readBin(con, "raw", 5L)
+  length(sig) == 5L && identical(rawToChar(sig), "%PDF-")
+}
+
 # poppler reads the text matrix and the font matrix together, which is what
 # actually determines the size on the page; a regex over the content stream
 # would have to compose those itself and would be wrong wherever a figure was
 # scaled. This is the one format where reaching for a library beats parsing.
 pdf_text_sizes <- function(path) {
   if (!has_package("pdftools")) return(NULL)
+  # poppler reports a malformed file by writing to stderr from C, which no R
+  # handler can catch and which then appears in the middle of unrelated output.
+  # A file that does not open with the PDF signature is not worth handing to it.
+  if (!is_pdf(path)) return(NULL)
   pages <- tryCatch(pdftools::pdf_data(path, font_info = TRUE),
                     error = function(e) NULL)
   if (is.null(pages) || !length(pages)) return(NULL)

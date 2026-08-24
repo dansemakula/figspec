@@ -129,3 +129,33 @@ test_that("a size of zero or a negative size is discarded", {
   s <- vector_text_sizes(f)
   expect_equal(s$size_pt, 8)
 })
+
+test_that("only a file with the PDF signature is handed to the PDF reader", {
+  # poppler reports a malformed file from C, which no R handler can catch, so
+  # the message lands in the middle of unrelated output. The signature check
+  # keeps such a file away from it.
+  good <- tempfile(fileext = ".pdf"); on.exit(unlink(good), add = TRUE)
+  grDevices::pdf(good, width = 3, height = 2); plot(1); grDevices::dev.off()
+  expect_true(is_pdf(good))
+
+  bad <- tempfile(fileext = ".pdf"); on.exit(unlink(bad), add = TRUE)
+  writeBin(charToRaw("not a pdf"), bad)
+  expect_false(is_pdf(bad))
+
+  empty <- tempfile(fileext = ".pdf"); on.exit(unlink(empty), add = TRUE)
+  file.create(empty)
+  expect_false(is_pdf(empty))
+
+  expect_false(is_pdf(tempfile(fileext = ".pdf")))
+})
+
+test_that("a valid PDF is still read after the signature check", {
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("pdftools")
+  f <- tempfile(fileext = ".pdf"); on.exit(unlink(f))
+  grDevices::pdf(f, width = 3.3, height = 2.4)
+  print(vec_plot()); grDevices::dev.off()
+  s <- vector_text_sizes(f)
+  expect_s3_class(s, "data.frame")
+  expect_true(all(s$size_pt > 0))
+})
