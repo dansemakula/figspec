@@ -187,3 +187,51 @@ test_that("a JPEG is judged against the format list, not assumed acceptable", {
   r <- fig_check(f, "plos_one", dpi = 300)
   expect_equal(r$status[r$check == "File format"], "fail")
 })
+
+# Resolution round-tripping ---------------------------------------------------
+
+test_that("a resolution meets a requirement it equals", {
+  expect_true(meets_dpi(300, 300))
+  expect_true(meets_dpi(600, 300))
+  expect_false(meets_dpi(299, 300))
+  expect_false(meets_dpi(150, 300))
+})
+
+test_that("a resolution is not failed by the file format's own rounding", {
+  # PNG stores pixels per metre as an integer. 300 dpi is 11811.02 of them,
+  # stored as 11811, which reads back as 299.9994 dpi.
+  expect_true(meets_dpi(299.9994, 300))
+  expect_true(meets_dpi(600 - 0.0006, 600))
+})
+
+test_that("a figure figspec saved at the requirement passes its own check", {
+  # The round trip that matters: fig_save() writes at the journal's minimum,
+  # fig_check() reads the file back, and the two must agree. They did not,
+  # because the stored resolution comes back a fraction short of what was
+  # asked for and the comparison was exact.
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("ragg")
+  out <- tempfile(fileext = ".png"); on.exit(unlink(out))
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  suppressWarnings(suppressMessages(
+    fig_save(out, p, journal = "cell_press", column = "single", check = FALSE)))
+
+  r <- fig_check(out, "cell_press", column = "single")
+  expect_equal(r$status[r$check == "Resolution"], "pass")
+  expect_equal(r$status[r$check == "Width"], "pass")
+})
+
+test_that("the reported resolution and the verdict agree", {
+  # The visible absurdity of the bug: the row read "300 dpi" and "fail" at the
+  # same time, because the number shown was rounded and the test was not.
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("ragg")
+  out <- tempfile(fileext = ".png"); on.exit(unlink(out))
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  suppressWarnings(suppressMessages(
+    fig_save(out, p, journal = "frontiers", column = "single", check = FALSE)))
+  r <- fig_check(out, "frontiers", column = "single")
+  row <- r[r$check == "Resolution", ]
+  shown <- as.numeric(sub(" dpi$", "", row$actual))
+  expect_equal(row$status == "pass", shown >= 300)
+})

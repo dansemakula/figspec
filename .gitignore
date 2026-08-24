@@ -2,8 +2,8 @@
 .Rhistory
 .RData
 docs/
-Rplots.pdf
 *.tar.gz
 *.Rcheck/
 aps_snap.html
 *.html
+Rplots*.pdf

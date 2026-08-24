@@ -5,8 +5,8 @@
 ^docs$
 ^cran-comments\.md$
 ^README\.Rmd$
-^Rplots\.pdf$
 ^LICENSE\.md$
 ^CONTRIBUTING\.md$
 ^pkgdown$
 ^[^/]*\.html$
+^Rplots[0-9]*\.pdf$

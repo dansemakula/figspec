@@ -351,6 +351,27 @@ inspect_file <- function(path) {
 
 # Report assembly --------------------------------------------------------
 
+# Does a measured resolution meet a stated minimum?
+#
+# Not a bare `>=`, because a resolution does not survive a round trip through a
+# file exactly. PNG records pixels per metre as an integer: 300 dpi is 11811.02
+# of them, stored as 11811, which reads back as 299.9994 dpi. A figure written
+# by fig_save() at precisely the journal's minimum would then be failed against
+# it, while the report displayed "300 dpi" beside the failure, because the
+# number shown is rounded and the comparison was not.
+#
+# Publishers state resolutions in whole dots per inch, and no two requirements
+# in the registry are within a dot of each other, so rounding to the nearest
+# whole dot before comparing costs nothing and makes the verdict agree with the
+# figure printed next to it.
+#
+# @param actual Measured dots per inch.
+# @param required Stated minimum.
+# @return TRUE if the figure meets the requirement.
+meets_dpi <- function(actual, required) {
+  round(as.numeric(actual)) >= round(as.numeric(required))
+}
+
 UNSTATED <- "not specified by publisher"
 UNHARVESTED <- "not yet harvested for this journal"
 # A third case, distinct from both. "Not specified by publisher" is a fact
@@ -613,7 +634,7 @@ fig_check <- function(x, journal = NULL, column = "single",
       "Resolution", req_dpi_txt,
       if (!is.null(actual_dpi)) paste0(fmt_num(actual_dpi, 0), " dpi") else NULL,
       !is.null(actual_dpi) && !is.null(required_dpi) &&
-        actual_dpi >= as.numeric(required_dpi),
+        meets_dpi(actual_dpi, required_dpi),
       spec, "dpi_min"
     )
   }
