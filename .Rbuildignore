@@ -10,3 +10,4 @@
 ^pkgdown$
 ^[^/]*\.html$
 ^Rplots[0-9]*\.pdf$
+^dev$
