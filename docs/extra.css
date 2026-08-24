@@ -1,0 +1,537 @@
+/* figspec — site styling.
+   Scoped to `main` rather than to pkgdown's template-* classes. Those classes
+   sit on a container div rather than on body and vary between page types, so
+   selectors built on them silently matched nothing on most pages. */
+
+:root {
+  --fs-teal:        #1a7391;
+  --fs-teal-deep:   #145d76;
+  --fs-teal-soft:   #eaf4f8;
+  --fs-teal-line:   #c4dfe9;
+  --fs-accent:      #d97528;
+  --fs-muted:       #5b6b72;
+  --fs-ink:         #1c2b33;
+  --fs-rule:        #e3e8eb;
+  --fs-code-bg:     #eef1f4;
+  --fs-nav-bg:      #ffffff;
+  --fs-blue:        #2f6fd0;
+  --fs-blue-soft:   #eef4fd;
+  --fs-green:       #1f9254;
+  --fs-green-soft:  #edf8f1;
+  --fs-amber:       #d98b12;
+  --fs-amber-soft:  #fdf5e7;
+}
+
+[data-bs-theme="dark"] {
+  --fs-teal:        #4fb3d1;
+  --fs-teal-deep:   #7cc9e0;
+  --fs-teal-soft:   #12333f;
+  --fs-teal-line:   #2c5666;
+  --fs-accent:      #e8934f;
+  --fs-muted:       #9fb2bb;
+  --fs-ink:         #e6eef2;
+  --fs-rule:        #2a3d47;
+  --fs-code-bg:     #1d2f38;
+  --fs-nav-bg:      #14242c;
+  --fs-blue:        #7fb0f0;
+  --fs-blue-soft:   #14263c;
+  --fs-green:       #6cc795;
+  --fs-green-soft:  #122b1e;
+  --fs-amber:       #e8b45a;
+  --fs-amber-soft:  #2e2416;
+}
+
+/* ---- Type scale -------------------------------------------------------
+   pkgdown rendered at an 18px base, which scales every heading, rule and
+   margin with it. 16px is what Bootstrap and Quarto both assume. */
+
+body { font-size: 1rem; line-height: 1.6; }
+
+main p, main li { font-size: 1rem; line-height: 1.65; }
+main p { margin-bottom: .75rem; }
+main ul, main ol { margin-bottom: .8rem; }
+
+/* Weight lives in the headings, colour lives in the accents. A heading that is
+   large and near-black reads as structure; a heading that is also coloured
+   competes with the callouts and tables that carry the real signal. */
+main h1 {
+  font-size: 2.1rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--fs-ink);
+  margin-bottom: .4rem;
+}
+main h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -.015em;
+  color: var(--fs-ink);
+  margin-top: 2.1rem;
+  margin-bottom: .7rem;
+  padding-bottom: .35rem;
+  border-bottom: 1px solid var(--fs-rule);
+}
+main h3 {
+  font-size: 1.2rem;
+  font-weight: 650;
+  letter-spacing: -.01em;
+  color: var(--fs-ink);
+  margin-top: 1.5rem;
+  margin-bottom: .45rem;
+}
+main h4 {
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--fs-muted);
+  margin-top: 1.1rem;
+}
+
+main pre, main code { font-size: .875rem; }
+main pre { padding: .75rem .9rem; line-height: 1.5; }
+main div.sourceCode { border-radius: .4rem; margin: .8rem 0; }
+
+/* ---- Tables ------------------------------------------------------------
+   Fixed layout with declared column widths, so every table on a page lines up
+   instead of shrink-wrapping to whatever text it happens to hold. */
+
+/* pkgdown sets display:block on tables so they can scroll sideways on narrow
+   screens. That also disables table-layout, so every table shrink-wraps to its
+   own content and no two line up. Back to display:table, with cells that wrap
+   rather than overflow. */
+/* Pandoc writes a <colgroup> whose percentages come from how wide the source
+   markdown happened to be. Under a fixed layout those are hard limits, and a
+   narrow column chops words in half - "unspecified" came out as "unspecifie/d".
+   Auto layout treats them as preferences and widens a column that needs it. */
+main table {
+  display: table;
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+  margin: .9rem 0 1.3rem;
+  font-size: .93rem;
+}
+
+/* Break a word only when it cannot fit at all, never mid-word out of choice. */
+main table td, main table th { overflow-wrap: break-word; }
+
+/* Bootstrap paints table cells through --bs-table-bg and an inset box-shadow,
+   which beats a plain background declaration. */
+main table thead tr th,
+main table.table thead tr th {
+  --bs-table-bg: var(--fs-teal);
+  background-color: var(--fs-teal) !important;
+  box-shadow: none !important;
+  color: #fff !important;
+  font-weight: 600;
+  text-align: left;
+  padding: .5rem .7rem;
+  border: none;
+}
+
+main table td, main table th { padding: .45rem .7rem; vertical-align: top; }
+main table tbody td { border-top: 1px solid var(--fs-teal-line); }
+main table tbody tr:nth-child(even) td,
+main table.table tbody tr:nth-child(even) td {
+  --bs-table-bg: var(--fs-teal-soft);
+  background-color: var(--fs-teal-soft) !important;
+  box-shadow: none !important;
+}
+main table code { white-space: nowrap; }
+
+/* Two-column option tables: a narrow name column and the rest for prose. */
+main table thead th:first-child:not(:last-child) { width: 26%; }
+
+/* ---- Collapsible sections ---------------------------------------------- */
+
+main details {
+  border: 1px solid var(--fs-teal-line);
+  border-radius: .45rem;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+
+main details > summary {
+  cursor: pointer;
+  padding: .55rem .9rem;
+  background: var(--fs-teal-soft);
+  color: var(--fs-teal-deep);
+  font-weight: 600;
+  list-style: none;
+}
+main details > summary::-webkit-details-marker { display: none; }
+main details > summary::before {
+  content: "\25B8";
+  display: inline-block;
+  margin-right: .5rem;
+  transition: transform .15s ease;
+}
+main details[open] > summary::before { transform: rotate(90deg); }
+main details[open] > summary { border-bottom: 1px solid var(--fs-teal-line); }
+main details > *:not(summary) { padding-left: .9rem; padding-right: .9rem; }
+main details > table { width: calc(100% - 1.8rem); margin: .9rem; }
+
+/* ---- Reference pages: Usage and Arguments read as a specification ------- */
+
+main #usage + div.sourceCode, main #usage ~ div.sourceCode:first-of-type {
+  border-left: 3px solid var(--fs-teal);
+}
+
+main dl dt {
+  color: var(--fs-teal-deep);
+  font-family: var(--bs-font-monospace, ui-monospace, monospace);
+  font-weight: 600;
+  padding-top: .3rem;
+}
+main dl dd {
+  margin-bottom: .5rem;
+  padding-bottom: .35rem;
+  border-bottom: 1px dashed var(--fs-teal-line);
+}
+main dl dd:last-child { border-bottom: none; }
+
+/* The reference index is a definition list too, but of function links rather
+   than arguments. Laid out as two columns it reads like the option tables and
+   fills the width instead of leaving half the page empty. */
+.template-reference-index main dl {
+  display: grid;
+  grid-template-columns: minmax(12rem, 20rem) 1fr;
+  margin: .4rem 0 0;
+  border-top: 1px solid var(--fs-rule);
+}
+.template-reference-index main dl:empty { border-top: none; margin: 0; }
+
+.template-reference-index main dl dt,
+.template-reference-index main dl dd {
+  padding: .45rem .7rem;
+  margin: 0;
+  border-bottom: 1px solid var(--fs-teal-line);
+  font-size: .93rem;
+  line-height: 1.5;
+}
+.template-reference-index main dl dt {
+  background: var(--fs-teal-soft);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.template-reference-index main dl dd { color: var(--fs-muted); }
+.template-reference-index main dl dt code { background: none; padding: 0; }
+.template-reference-index main dl dt a {
+  color: var(--fs-teal-deep);
+  text-decoration: none;
+  font-weight: 600;
+}
+.template-reference-index main dl dt a:hover {
+  color: var(--fs-accent);
+  text-decoration: underline;
+}
+.template-reference-index main h2 { margin-top: 1.9rem; }
+.template-reference-index main .section-desc p {
+  color: var(--fs-muted);
+  margin-bottom: .2rem;
+}
+
+@media (max-width: 700px) {
+  .template-reference-index main dl { grid-template-columns: 1fr; }
+  .template-reference-index main dl dt { border-bottom: none; }
+}
+
+/* ---- Sidebars and navigation ------------------------------------------- */
+
+.navbar-brand { color: var(--fs-teal-deep) !important; font-weight: 700; }
+
+main a { color: var(--fs-teal-deep); }
+main a:hover { color: var(--fs-accent); }
+
+/* ---- Code, and telling code apart from what it printed ------------------ */
+
+main div.sourceCode {
+  background: #f7fafc;
+  border: 1px solid var(--fs-teal-line);
+  border-left: 3px solid var(--fs-teal);
+}
+[data-bs-theme="dark"] main div.sourceCode { background: #10262e; }
+
+/* knitr folds a chunk's results back into the same block behind a `#>` prefix.
+   Holding them one step back from the code separates what you typed from what
+   R answered, without splitting the block in two. Symbols that cli coloured
+   carry inline styles of their own and keep them. */
+main .sourceCode .co {
+  color: var(--fs-muted);
+  font-style: normal;
+  opacity: .95;
+}
+
+/* Code named in a sentence should read as an object you could click, set on a
+   neutral ground so it does not compete with the accent colours. */
+main code:not(pre code) {
+  background: var(--fs-code-bg);
+  color: var(--fs-teal-deep);
+  font-size: .9em;
+  padding: .15em .42em;
+  border-radius: .28rem;
+  white-space: nowrap;
+}
+main a code:not(pre code) { color: var(--fs-teal-deep); }
+main a:hover code:not(pre code) { color: var(--fs-accent); }
+main h1 code, main h2 code, main h3 code, main h4 code {
+  font-size: .92em;
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+main table code:not(pre code) { white-space: normal; }
+
+/* ---- Callouts ---------------------------------------------------------- */
+
+main blockquote {
+  border-left: 4px solid var(--fs-blue);
+  background: var(--fs-blue-soft);
+  border-radius: 0 .35rem .35rem 0;
+  padding: .7rem 1rem;
+  margin: 1.1rem 0;
+  font-size: .96rem;
+}
+main blockquote > :last-child { margin-bottom: 0; }
+
+/* ---- Home page --------------------------------------------------------- */
+
+.template-home main h1 {
+  font-size: 2.6rem;
+  margin-bottom: .1rem;
+}
+.template-home main .page-header { border-bottom: none; margin-bottom: .2rem; }
+
+/* The opening paragraph was set larger and in the muted grey, as a lead. Grey
+   reads as de-emphasis, which is backwards for the sentence that has to carry
+   the page, so it takes the body's own colour and size. */
+
+/* pkgdown leaves an empty <span> line at the end of some rendered chunks, and
+   the <pre>'s own bottom margin falls inside the bordered box rather than
+   below it. Both show up as a blank line before the block's lower edge. */
+main pre code > span:last-child:empty { display: none; }
+main div.sourceCode > pre { margin-bottom: 0; }
+
+/* ---- Function reference pages ------------------------------------------ */
+
+.template-reference-topic main h2 {
+  font-size: 1.25rem;
+  border-bottom: 1px solid var(--fs-rule);
+  margin-top: 1.8rem;
+}
+
+/* ---- Sidebar ------------------------------------------------------------ */
+
+/* The current page is marked on the rail itself rather than by filling the row
+   behind it: the rail's segment thickens into teal and the label takes the
+   same colour. Nothing else on the page carries a filled pill, so nothing has
+   to compete with it. */
+#toc > .nav a.nav-link.active,
+#toc > .nav a.nav-link.active:hover,
+aside nav a.nav-link.active {
+  background: none;
+  background-color: transparent;
+  border-left-color: var(--fs-teal);
+  color: var(--fs-teal-deep);
+  font-weight: 600;
+  transform: none;
+}
+
+/* The nested list sits inside the parent's rail, indented rather than railed
+   again, so the two levels do not draw two parallel lines. */
+#toc > .nav .nav a.nav-link { margin-left: 0; padding-left: 1.6rem; }
+aside h2, .pkg-links h2 {
+  font-size: .95rem;
+  color: var(--fs-muted);
+  letter-spacing: .02em;
+  margin-bottom: .35rem;
+}
+
+/* ---- Top navigation ----------------------------------------------------- */
+
+.navbar {
+  background: var(--fs-nav-bg) !important;
+  border-bottom: 1px solid var(--fs-rule);
+  box-shadow: 0 1px 3px rgba(16, 40, 52, .04);
+  padding-top: .45rem;
+  padding-bottom: .45rem;
+  backdrop-filter: saturate(180%) blur(8px);
+}
+
+.navbar-brand {
+  font-size: 1.15rem;
+  letter-spacing: -.02em;
+  margin-right: 1.1rem;
+}
+
+/* pkgdown puts the version in a muted <small> next to the brand. As a pill it
+   reads as metadata rather than as part of the name. */
+.navbar .nav-text.text-muted {
+  background: var(--fs-teal-soft);
+  color: var(--fs-teal-deep) !important;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+  padding: .12rem .45rem;
+  border-radius: .8rem;
+  margin-left: -.6rem;
+}
+
+.navbar .nav-link {
+  color: var(--fs-muted) !important;
+  font-size: .95rem;
+  font-weight: 500;
+  padding: .35rem .7rem !important;
+  margin: 0 .1rem;
+  border-radius: .4rem;
+  transition: background-color .12s ease, color .12s ease;
+}
+.navbar .nav-link:hover {
+  background: var(--fs-teal-soft);
+  color: var(--fs-teal-deep) !important;
+}
+.navbar .nav-item.active > .nav-link,
+.navbar .nav-link.active {
+  background: var(--fs-teal-soft);
+  color: var(--fs-teal-deep) !important;
+  font-weight: 600;
+}
+.navbar .dropdown-menu {
+  border: 1px solid var(--fs-rule);
+  border-radius: .5rem;
+  box-shadow: 0 6px 24px rgba(16, 40, 52, .1);
+  padding: .3rem;
+}
+.navbar .dropdown-item {
+  border-radius: .35rem;
+  font-size: .93rem;
+  padding: .35rem .6rem;
+}
+.navbar .dropdown-item:hover {
+  background: var(--fs-teal-soft);
+  color: var(--fs-teal-deep);
+}
+
+.navbar form input[type="search"], .navbar .form-control {
+  border: 1px solid var(--fs-rule);
+  border-radius: .45rem;
+  font-size: .9rem;
+  padding: .3rem .65rem;
+  background: var(--fs-code-bg);
+}
+.navbar form input[type="search"]:focus, .navbar .form-control:focus {
+  border-color: var(--fs-teal);
+  box-shadow: 0 0 0 3px var(--fs-teal-soft);
+  background: var(--fs-nav-bg);
+}
+
+/* ---- Side navigation ---------------------------------------------------- */
+/* A hairline rail down the group with the current page marked on it, so the
+   eye can find where it is without reading every entry. */
+
+/* pkgdown's own rules are written as `#toc > .nav a.nav-link`, which outranks
+   anything shorter, so these have to match it selector for selector. */
+#toc > .nav { border-left: 1px solid var(--fs-rule); }
+
+#toc > .nav a.nav-link,
+aside nav a.nav-link {
+  color: var(--fs-muted);
+  background: none;
+  border-left: 2px solid transparent;
+  border-radius: 0;
+  margin-left: -1px;
+  margin-bottom: 0;
+  padding: .32rem 0 .32rem .8rem;
+  line-height: 1.45;
+  transition: color .14s ease, border-color .14s ease, transform .14s ease;
+}
+
+#toc > .nav a.nav-link:hover,
+#toc > .nav a.nav-link:focus,
+aside nav a.nav-link:hover {
+  background: none;
+  color: var(--fs-ink);
+  border-left-color: var(--fs-teal-line);
+  transform: translateX(2px);
+}
+
+/* ---- The four outcomes -------------------------------------------------- */
+/* A report says one of four things about each requirement, and the difference
+   between them is the whole point of the package. Each gets its own colour
+   where the concept is introduced. */
+
+main .fs-status {
+  display: inline-block;
+  font-family: var(--bs-font-monospace, ui-monospace, monospace);
+  font-size: .84rem;
+  font-weight: 600;
+  padding: .12em .5em;
+  border-radius: .9rem;
+  white-space: nowrap;
+}
+main .fs-pass        { background: var(--fs-green-soft); color: var(--fs-green); }
+main .fs-fail        { background: #fdeeee; color: #c0392b; }
+main .fs-unspecified { background: var(--fs-blue-soft); color: var(--fs-blue); }
+main .fs-unknown     { background: var(--fs-amber-soft); color: var(--fs-amber); }
+
+[data-bs-theme="dark"] main .fs-fail { background: #33191a; color: #e88b83; }
+
+/* ---- Collapsible sections, as callouts ---------------------------------- */
+
+main details {
+  border: 1px solid var(--fs-rule);
+  border-left: 4px solid var(--fs-teal);
+  border-radius: 0 .4rem .4rem 0;
+}
+main details > summary {
+  background: var(--fs-teal-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+main details > summary::after {
+  content: "\203A";
+  font-size: 1.3rem;
+  line-height: 1;
+  color: var(--fs-teal);
+  transform: rotate(90deg);
+  transition: transform .15s ease;
+}
+main details[open] > summary::after { transform: rotate(-90deg); }
+main details > summary::before { content: none; }
+
+/* ---- Page width and the gutter between the columns ---------------------- */
+/* pkgdown caps `main` at 50rem inside a 75% grid cell and, above 1400px, adds
+   a 5rem margin to the sidebar. The two columns therefore stop well short of
+   the container's right edge - about 110px of the page went unused, which is
+   why the search box in the navbar sat further right than the sidebar ended.
+   Treating the row as one centred flex unit closes the gutter and balances
+   what is left over across both margins instead of dumping it on the right. */
+
+/* Only the widest Bootstrap container needs narrowing. Capping `.container`
+   unconditionally would also flatten the stepped max-widths it uses lower
+   down, leaving the page flush against the edge of a 900px window. */
+@media (min-width: 1400px) {
+  .container { max-width: 1200px; }
+}
+
+/* From the breakpoint where pkgdown stops stacking the sidebar. Below 992px
+   Bootstrap's own grid left the two columns touching, with the sidebar too
+   narrow to read; the gutter and the sidebar both scale with the viewport
+   instead of stepping. */
+@media (min-width: 768px) {
+  .container > .row {
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: clamp(1.5rem, 4vw, 3rem);
+  }
+  .container > .row > main {
+    flex: 1 1 auto;
+    max-width: 52rem;
+    min-width: 0;
+  }
+  .container > .row > aside {
+    flex: 0 0 clamp(11rem, 22vw, 18rem);
+    max-width: 18rem;
+    margin-left: 0 !important;
+  }
+}

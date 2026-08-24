@@ -1,7 +1,6 @@
 .Rproj.user
 .Rhistory
 .RData
-docs/
 *.tar.gz
 *.Rcheck/
 aps_snap.html

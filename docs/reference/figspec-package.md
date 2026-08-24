@@ -1,0 +1,35 @@
+# figspec: Build, Check and Export Figures to a Specification
+
+Sets the size, resolution, typography and colour of a figure from a
+specification, then checks the result and reports where it falls short.
+Sizes by the plot panel as well as by the image, so a set of figures can
+share one plot area whatever their axis labels do. The main registry
+holds the published figure requirements of many journals, so a target
+journal can be named instead of a specification written, and house
+styles or internal formats can be registered alongside. Covers width,
+resolution, file format, type size and font, line and point weights,
+colour mode and colour safety, panel labelling and axis rules. Builds
+and exports 'ggplot2' figures at exactly the stated size and resolution.
+Every registry requirement records the publisher page it was taken from
+and the date it was read; a requirement that is not stated is reported
+as unspecified rather than assumed to pass.
+
+## See also
+
+Useful links:
+
+- <https://dansemakula.github.io/figspec/>
+
+- <https://github.com/dansemakula/figspec>
+
+- Report bugs at <https://github.com/dansemakula/figspec/issues>
+
+## Author
+
+**Maintainer**: Daniel Semakula <semakuladaniel@gmail.com> (MD, MPH,
+PhD) \[copyright holder\]
+
+Authors:
+
+- Daniel Semakula <semakuladaniel@gmail.com> (MD, MPH, PhD) \[copyright
+  holder\]

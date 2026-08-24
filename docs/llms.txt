@@ -1,0 +1,576 @@
+# figspec
+
+figspec builds a figure to a specification, exports it at exactly that
+size and resolution, and then checks the result and tells you where it
+falls short.
+
+It does two jobs.
+
+**Figures to a journal’s requirements.** Journals publish precise rules
+for the figures you submit: column widths to the millimetre, minimum
+resolution, which file formats they take, how small type is allowed to
+get. The rules are real, they differ between publishers, and they are
+scattered across author-guideline pages that are easy to skim past. Most
+people find out they got one wrong at the production stage, after
+acceptance. figspec brings the requirements of 27 publishers into your R
+session as data, and every requirement records the page it came from and
+the date it was read.
+
+`ggplot``(``mtcars``, ``aes``(``wt``, ``mpg``)``)`` ``+`` ``geom_point``(``)`` ``+`` `[`fit_journal`](https://dansemakula.github.io/figspec/reference/fit_journal.md)`(``"cell_press"``)`` `` `[`fig_save`](https://dansemakula.github.io/figspec/reference/fig_save.md)`(``"figure_1.tiff"``, journal ``=`` ``"cell_press"``)`
+
+**Figures at an exact panel size.** You can tell R how big the image
+file is. You cannot normally tell it how big the *plot area* is — so a
+figure with long axis labels ends up with a smaller plot area than one
+with short labels, even at the same width, and a set of them looks
+uneven on the page. figspec sizes by the panel and works the canvas out
+for you.
+
+[`fig_save`](https://dansemakula.github.io/figspec/reference/fig_save.md)`(``"figure_1.png"``, ``p``, panel_width ``=`` ``62``)`` ``# plot area is 62 mm, exactly`` `` ``pw`` ``<-`` `[`fig_panel_width`](https://dansemakula.github.io/figspec/reference/fig_panel_width.md)`(``figs``, journal ``=`` ``"cell_press"``)`` ``# the width a set can share`
+
+No journal is needed for the second job, and a journal is only one place
+a specification can come from — you can write your own, or register a
+house style. See
+[`vignette("panels")`](https://dansemakula.github.io/figspec/articles/panels.md)
+for panel sizing and
+[`vignette("journals")`](https://dansemakula.github.io/figspec/articles/journals.md)
+for the registry.
+
+## Installation
+
+`# install.packages("pak")`` ``pak``::`[`pak`](https://pak.r-lib.org/reference/pak.html)`(``"dansemakula/figspec"``)`
+
+figspec is **experimental**: the registry is roughly a fifth populated
+against the full field grid, and the API may still change.
+[`registry_status()`](https://dansemakula.github.io/figspec/reference/registry_status.md)
+reports exactly how much of each entry has been harvested.
+
+## Where this fits in your workflow
+
+Draw your plot the way you always do. Once you know where you are
+submitting, bring the journal into the plot and figspec takes care of
+the requirements, or hand it a figure you have already finished and it
+will tell you where that figure stands.
+
+### 1. Bring the journal in while you are plotting
+
+Add the journal the same way you would add a colour scale, and the
+figure comes out built to specification.
+
+[`library`](https://rdrr.io/r/base/library.html)`(`[`ggplot2`](https://ggplot2.tidyverse.org)`)`` `[`library`](https://rdrr.io/r/base/library.html)`(`[`figspec`](https://dansemakula.github.io/figspec/)`)`` `` `[`ggplot`](https://ggplot2.tidyverse.org/reference/ggplot.html)`(``mtcars``, `[`aes`](https://ggplot2.tidyverse.org/reference/aes.html)`(``wt``, ``mpg``, colour ``=`` `[`factor`](https://rdrr.io/r/base/factor.html)`(``cyl``)``, shape ``=`` `[`factor`](https://rdrr.io/r/base/factor.html)`(``cyl``)``)``)`` ``+`` `` `[`geom_point`](https://ggplot2.tidyverse.org/reference/geom_point.html)`(``)`` ``+`` `` `[`fit_journal`](https://dansemakula.github.io/figspec/reference/fit_journal.md)`(``"cell_press"``)`
+
+That one line carries the journal’s typography, its stated line weights,
+its structural rules such as axis lines and tick marks, and colours and
+shapes chosen to survive whatever that journal does to a figure in
+production. Where a publisher prints in black and white, the palette
+shifts to one that keeps its colours apart in greyscale.
+
+Add it last, and keep your own palette if you have already chosen one:
+
+` `[`scale_colour_viridis_d`](https://ggplot2.tidyverse.org/reference/scale_viridis.html)`(``)`` ``+`` `` `[`fit_journal`](https://dansemakula.github.io/figspec/reference/fit_journal.md)`(``"plos_one"``, colour ``=`` ``FALSE``)`
+
+Line widths inside a geom live on the layer, so pass those through
+directly:
+
+` `[`geom_line`](https://ggplot2.tidyverse.org/reference/geom_path.html)`(``linewidth ``=`` `[`figspec_linewidth`](https://dansemakula.github.io/figspec/reference/figspec_linewidth.md)`(``"cell_press"``)``)`
+
+### 2. Check whether a plot meets a journal’s requirements
+
+Pass the plot and the journal, and you get one row per requirement.
+
+`p`` ``<-`` `[`ggplot`](https://ggplot2.tidyverse.org/reference/ggplot.html)`(``mtcars``, `[`aes`](https://ggplot2.tidyverse.org/reference/aes.html)`(``wt``, ``mpg``, colour ``=`` `[`factor`](https://rdrr.io/r/base/factor.html)`(``cyl``)``)``)`` ``+`` `` `[`geom_point`](https://ggplot2.tidyverse.org/reference/geom_point.html)`(``)`` ``+`` `` `[`labs`](https://ggplot2.tidyverse.org/reference/labs.html)`(``title ``=`` ``"Fuel economy"``)`` `` `[`fig_check`](https://dansemakula.github.io/figspec/reference/fig_check.md)`(``p``, ``"cell_press"``, column ``=`` ``"single"``)`` ``#> ✔ Width 85 mm (requires: single 85 | double 174 mm)`` ``#> ✖ Type size smallest 8.8, largest 13.2 pt (requires: min 6 pt, max 8 pt)`` ``#> ✖ Colour pairs red and green both used (requires: not used together)`
+
+Two failures in an ordinary ggplot, both from defaults nobody thinks
+about. ggplot2 runs 8.8 to 13.2 pt where Cell Press allows 6 to 8, and
+its default palette pairs a red with a green.
+
+Check the plot object while you still have it. Type size, line width and
+colour all disappear into pixels once a figure is written to a TIFF.
+
+### 3. Export at exactly the stated size and resolution
+
+[`fig_save`](https://dansemakula.github.io/figspec/reference/fig_save.md)`(``"figure_1.tiff"``, ``p``, journal ``=`` ``"cell_press"``, column ``=`` ``"single"``)`
+
+This takes the width from the registry, defaults the resolution to the
+journal’s minimum, chooses a device that can render the required font,
+and re-checks the file it has just written.
+
+Saving at the journal’s real column width is what keeps a compliant
+figure compliant. Type size is absolute: an 8 pt label stays 8 pt, so a
+figure drawn at 180 mm and dropped into an 85 mm column takes that label
+down to 3.8 pt.
+
+### 4. Look up what a journal requires
+
+[`journals`](https://dansemakula.github.io/figspec/reference/journals.md)`(``discipline ``=`` ``"physics"``)`` ``# browse by field`` `[`journal_spec`](https://dansemakula.github.io/figspec/reference/journal_spec.md)`(``"cell_press"``)`` ``# the full specification, with its source`` `[`fig_columns`](https://dansemakula.github.io/figspec/reference/fig_columns.md)`(``"science"``)`` ``# single 57, double 121, triple 184`` `[`fig_width`](https://dansemakula.github.io/figspec/reference/fig_width.md)`(``"frontiers"``, ``"double"``)`` ``# 180`
+
+### 5. Check a whole submission
+
+[`check_submission`](https://dansemakula.github.io/figspec/reference/check_submission.md)`(``"figures/"``, ``"cell_press"``)`` ``#> ✔ Figure_1.tiff single all requirements met`` ``#> ✖ Figure_2.tiff double failed: Resolution, File format`
+
+### 6. Move a figure set to a different journal
+
+Rejected, and the next journal’s rules clash with the last one’s? Cell
+Press allows type between 6 and 8 pt; PLOS ONE wants 8 to 12.
+
+[`refit_journal`](https://dansemakula.github.io/figspec/reference/refit_journal.md)`(``my_plots``, journal ``=`` ``"plos_one"``, outdir ``=`` ``"figures_plos/"``)`
+
+This re-themes and re-exports the whole set. It works from plot objects,
+since type size cannot be recovered once a figure has been written to a
+file.
+
+### 7. Use it in Quarto or R Markdown
+
+Where figure size comes from chunk options:
+
+[`figspec_knitr_setup`](https://dansemakula.github.io/figspec/reference/figspec_knitr_setup.md)`(``"cell_press"``, column ``=`` ``"double"``)`
+
+### 8. Add your own style, or your own journal
+
+[`register_house_style`](https://dansemakula.github.io/figspec/reference/register_house_style.md)`(``"mylab"``, `[`theme_minimal`](https://ggplot2.tidyverse.org/reference/ggtheme.html)`(``)``)`` ``p`` ``+`` `[`fit_journal`](https://dansemakula.github.io/figspec/reference/fit_journal.md)`(``"frontiers"``, style ``=`` ``"mylab"``)`` `` `[`register_journal`](https://dansemakula.github.io/figspec/reference/register_journal.md)`(``"lab_report"``, ``"Our lab format"``,`` `` source_url ``=`` ``"internal handbook v3"``, verified_on ``=`` ``"2026-08-22"``,`` `` requirements ``=`` `[`list`](https://rdrr.io/r/base/list.html)`(``columns ``=`` `[`list`](https://rdrr.io/r/base/list.html)`(``single ``=`` ``100``, double ``=`` ``170``)``,`` `` font_min_pt ``=`` ``9``)``)`
+
+Your style is applied underneath the journal’s requirements, so it can
+shape how a figure looks while the journal keeps the final word on
+anything it has specified.
+
+### 9. Find out which resolution rule applies
+
+Publishers hold line art to three or four times the general minimum, and
+line art means monochrome.
+
+[`suggest_art_type`](https://dansemakula.github.io/figspec/reference/suggest_art_type.md)`(``p``, ``"bmj"``)`
+
+## Journals covered
+
+**27 entries**, 21 of them covering a publisher’s whole portfolio,
+across 20 disciplines.
+
+American Chemical Society journals · American Geophysical Union journals
+· American Physical Society journals · BMJ journals · Cambridge
+University Press journals · Cell Press journals · Copernicus
+Publications journals · Elsevier journals · Frontiers journals · IEEE
+journals · IEEE magazines · IOP Publishing journals · Journal of
+Statistical Software · MDPI journals · Nature · Oxford University Press
+journals · PLOS ONE · PNAS · Royal Society journals · Royal Society of
+Chemistry books · Royal Society of Chemistry journals · Sage journals ·
+Science · Springer journals · STAR Protocols · Taylor & Francis and
+Routledge journals · Wiley journals
+
+**Full table** — ids, coverage, and how much has been harvested
+
+| Journal or publisher | `id` | Covers | Fields |
+|----|----|----|----|
+| American Chemical Society journals | `acs` | all its journals | 7 |
+| American Geophysical Union journals | `agu` | all its journals | 2 |
+| American Physical Society journals | `aps` | all its journals | 2 |
+| BMJ journals | `bmj` | all its journals | 4 |
+| Cambridge University Press journals | `cambridge` | all its journals | 7 |
+| Cell Press journals | `cell_press` | all its journals | 15 |
+| Copernicus Publications journals | `copernicus` | all its journals | 4 |
+| Elsevier journals | `elsevier` | all its journals | 6 |
+| Frontiers journals | `frontiers` | all its journals | 6 |
+| IEEE journals | `ieee` | all its journals | 4 |
+| IEEE magazines | `ieee_magazines` | all its journals | 4 |
+| IOP Publishing journals | `iop` | all its journals | 5 |
+| Journal of Statistical Software | `jss` | this journal | 1 |
+| MDPI journals | `mdpi` | all its journals | 2 |
+| Nature | `nature` | this journal | 14 |
+| Oxford University Press journals | `oup` | all its journals | 7 |
+| PLOS ONE | `plos_one` | this journal | 11 |
+| PNAS | `pnas` | this journal | 10 |
+| Royal Society journals | `royal_society` | all its journals | 6 |
+| Royal Society of Chemistry books | `rsc_books` | all its journals | 5 |
+| Royal Society of Chemistry journals | `rsc` | all its journals | 4 |
+| Sage journals | `sage` | all its journals | 4 |
+| Science | `science` | this journal | 3 |
+| Springer journals | `springer` | all its journals | 11 |
+| STAR Protocols | `star_protocols` | this journal | 3 |
+| Taylor & Francis and Routledge journals | `taylor_francis` | all its journals | 8 |
+| Wiley journals | `wiley` | all its journals | 5 |
+
+`Fields` counts the requirements harvested so far for that entry.
+
+[The full table of widths, resolutions and type
+sizes](https://dansemakula.github.io/figspec/articles/journals.html) is
+generated from the registry, as is [the reference to every function and
+option](https://dansemakula.github.io/figspec/articles/options.html).
+Use `journal_spec(id)` for any entry’s full specification and its
+source.
+
+## Looking things up
+
+[`journals`](https://dansemakula.github.io/figspec/reference/journals.md)`(``)`` `[`journals`](https://dansemakula.github.io/figspec/reference/journals.md)`(``discipline ``=`` ``"physics"``)`` `[`journal_spec`](https://dansemakula.github.io/figspec/reference/journal_spec.md)`(``"cell_press"``)`` `[`fig_width`](https://dansemakula.github.io/figspec/reference/fig_width.md)`(``"frontiers"``, ``"double"``, units ``=`` ``"in"``)`
+
+## What the four outcomes mean
+
+| Outcome | Meaning |
+|----|----|
+| pass | Meets the requirement. |
+| fail | Breaches it. Fix this. |
+| unspecified | **The publisher does not state this requirement.** Nothing can be concluded. |
+| unknown | The requirement exists, but this input cannot answer it — type size in a raster file, for example. |
+
+When a publisher is silent on maximum height, figspec tells you so and
+leaves the judgement with you. Silence gets reported as silence.
+
+## Colour, line weight and the rest
+
+figspec covers every property a journal states and that can be read from
+your figure:
+
+| Property | From a plot object | From a saved file |
+|----|----|----|
+| Width, height | yes | yes |
+| Resolution | yes | yes (TIFF, PNG, JPEG, PDF) |
+| File format, file size | yes | yes |
+| Type size, font | **yes** | no — points do not survive into a raster |
+| Line width | **yes** | no |
+| Colour mode | yes | yes (TIFF, PNG) |
+| Red/green pairing, greyscale, colour vision | **yes** | no |
+| Panel labels, text case | **yes** | no |
+| Video format, frame size, file size | n/a | yes, via [`check_media()`](https://dansemakula.github.io/figspec/reference/check_media.md) |
+
+`p`` ``<-`` `[`ggplot`](https://ggplot2.tidyverse.org/reference/ggplot.html)`(``mtcars``, `[`aes`](https://ggplot2.tidyverse.org/reference/aes.html)`(``wt``, ``mpg``, colour ``=`` `[`factor`](https://rdrr.io/r/base/factor.html)`(``cyl``)``)``)`` ``+`` `[`geom_point`](https://ggplot2.tidyverse.org/reference/geom_point.html)`(``)`` `[`check_colour_safety`](https://dansemakula.github.io/figspec/reference/check_colour_safety.md)`(``p``, ``"cell_press"``)`` ``#> ✖ Colour pairs red and green both used (#F8766D, #00BA38)`` ``#> (requires: red and green not used together)`` ``#> ℹ Greyscale 3 pair(s) merge in greyscale`` ``#> ℹ Colour vision colours merge under deuteranopia (1), protanopia (1)`
+
+ggplot2’s default three-colour palette is red, green and blue — which is
+precisely what Cell Press states you should not do. Swap in a palette
+designed for it and all three clear:
+
+`p`` ``+`` `[`scale_colour_manual`](https://ggplot2.tidyverse.org/reference/scale_manual.html)`(``values ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``"#000000"``, ``"#0072B2"``, ``"#E69F00"``)``)`` ``#> ✔ Colour pairs no red/green pairing`` ``#> ✔ Greyscale all colours separable in greyscale`` ``#> ℹ Colour vision separable under deuteranopia, protanopia and tritanopia`
+
+Note the outcomes. Red/green is a **requirement** for Cell Press because
+Cell Press states it, so it can fail. Greyscale is a requirement for the
+Royal Society, which prints in black and white by default. Colour-vision
+safety is reported for every journal but is always `unspecified`,
+because it is good practice, so figspec shows you the finding and leaves
+it as advice.
+
+Line weights are checked too, against the range the publisher states:
+
+[`ggplot`](https://ggplot2.tidyverse.org/reference/ggplot.html)`(``economics``, `[`aes`](https://ggplot2.tidyverse.org/reference/aes.html)`(``date``, ``unemploy``)``)`` ``+`` `` `[`geom_line`](https://ggplot2.tidyverse.org/reference/geom_path.html)`(``linewidth ``=`` `[`figspec_linewidth`](https://dansemakula.github.io/figspec/reference/figspec_linewidth.md)`(``"frontiers"``)``)`` ``+`` ``# Frontiers states 2 pt`` `` `[`theme_journal`](https://dansemakula.github.io/figspec/reference/theme_journal.md)`(``"frontiers"``)`
+
+## Beyond the figure itself
+
+**Panel labels.** Cell Press states that panels are labelled with
+capital letters. figspec counts the panels in a patchwork composition
+and checks how they are tagged:
+
+[`fig_check`](https://dansemakula.github.io/figspec/reference/fig_check.md)`(``(``p1`` ``|`` ``p2``)`` ``/`` ``p3``, ``"cell_press"``)`` ``#> ✖ Panel labels 3 panels, none labelled (requires: panels labelled with uppercase letters)`
+
+Add `plot_annotation(tag_levels = "A")` and it passes;
+`tag_levels = "1"` still fails, because Cell Press asked for letters.
+
+**Text case.** Nature states that lettering should be lower-case with
+the first letter capitalised and no full stop:
+
+`p`` ``+`` `[`labs`](https://ggplot2.tidyverse.org/reference/labs.html)`(``title ``=`` ``"Fuel economy."``, y ``=`` ``"Miles Per Gallon"``)`` ``#> ✖ Text case ends with a full stop: 'Fuel economy.'; uses Title Case: 'Miles Per Gallon'`
+
+The Title Case test is deliberately conservative. It ignores acronyms
+and short words, so `"Body mass index (BMI)"` and
+`"CO2 emissions per capita"` pass while `"Miles Per Gallon"` does not.
+
+**Graphical abstracts and supplementary media.** Both have their own
+rules, separate from figures. A graphical abstract is usually a far
+smaller canvas than a figure, and often carries a character limit on its
+text:
+
+[`graphical_abstract_spec`](https://dansemakula.github.io/figspec/reference/graphical_abstract_spec.md)`(``"rsc"``)`` ``#> Maximum size: 80 x 40 mm Resolution: 600 dpi`` ``#> Formats: TIFF Text limit: 250 characters`` `` `[`media_spec`](https://dansemakula.github.io/figspec/reference/media_spec.md)`(``"science"``)`` ``#> Video formats: MP4, MOV Video codec: H.264`` ``#> Maximum frame size: 1920 x 1080`` ``#> Preferred frame sizes: 640 x 480 or 1280 x 720`` ``#> Maximum file size: 50 MB`` `` `[`check_media`](https://dansemakula.github.io/figspec/reference/check_media.md)`(``"movie_s1.mp4"``, ``"science"``)`
+
+Frame size is read from the MP4/MOV `tkhd` box or the GIF header. Codec
+and bit rate are recorded in the registry but reported as **not
+inspected** — reading them needs a media library, and a guess would be
+worse than nothing.
+
+## Bring your own style
+
+figspec deliberately has no aesthetic opinion. Register your own look
+and apply it to any journal:
+
+[`register_house_style`](https://dansemakula.github.io/figspec/reference/register_house_style.md)`(`` `` ``"mylab"``,`` `` `[`theme_minimal`](https://ggplot2.tidyverse.org/reference/ggtheme.html)`(``)`` ``+`` `[`theme`](https://ggplot2.tidyverse.org/reference/theme.html)`(``panel.grid.minor ``=`` `[`element_blank`](https://ggplot2.tidyverse.org/reference/element.html)`(``)``)``,`` `` description ``=`` ``"Our group's look"`` ``)`` `` ``p`` ``+`` `[`theme_journal`](https://dansemakula.github.io/figspec/reference/theme_journal.md)`(``"frontiers"``, style ``=`` ``"mylab"``)`
+
+Styles persist if you save them:
+
+[`save_house_styles`](https://dansemakula.github.io/figspec/reference/save_house_styles.md)`(``"~/.figspec-styles.rds"``)`` ``# once`` `[`load_house_styles`](https://dansemakula.github.io/figspec/reference/save_house_styles.md)`(``"~/.figspec-styles.rds"``)`` ``# from .Rprofile or a setup chunk`
+
+**A style can never make a figure non-compliant.** Styles are applied
+underneath the journal’s requirements, so if your style sets 5 pt type
+and the journal states a floor of 8 pt, the journal wins and figspec
+tells you which elements it had to override:
+
+    'PLOS ONE' requires type between 8 and 12 pt, so the journal's sizes
+    override your style for: axis.text.
+
+Everything in your style that does not conflict is kept.
+
+## Bring your own journal
+
+For a journal figspec does not ship yet, or an internal format of your
+own:
+
+[`register_journal`](https://dansemakula.github.io/figspec/reference/register_journal.md)`(`` `` id ``=`` ``"lab_report"``,`` `` name ``=`` ``"Our lab report format"``,`` `` source_url ``=`` ``"internal handbook v3"``,`` `` verified_on ``=`` ``"2026-08-22"``,`` `` requirements ``=`` `[`list`](https://rdrr.io/r/base/list.html)`(``columns ``=`` `[`list`](https://rdrr.io/r/base/list.html)`(``single ``=`` ``100``, double ``=`` ``170``)``,`` `` font_min_pt ``=`` ``9``, formats ``=`` `[`list`](https://rdrr.io/r/base/list.html)`(``"pdf"``)``)`` ``)`
+
+[`journals()`](https://dansemakula.github.io/figspec/reference/journals.md)
+marks these as `origin = "user"`, so it stays obvious which entries
+figspec stands behind. Keep a set under version control and load it with
+`load_journals("my-journals.yaml")`.
+
+## How the registry is sourced
+
+Every entry records the publisher page it came from and the date it was
+read:
+
+[`journal_spec`](https://dansemakula.github.io/figspec/reference/journal_spec.md)`(``"frontiers"``)``$``source_url`` ``#> "https://www.frontiersin.org/guidelines/author-guidelines"`
+
+### The three states of a field
+
+A blank field means one of two different things, and conflating them
+puts a claim in figspec’s mouth that nobody earned:
+
+| In the entry | Reported as | Means |
+|----|----|----|
+| Value in `requirements:` | graded `pass` / `fail` | The publisher states it |
+| Field listed in `not_stated:` | `not specified by publisher` | Somebody read the page and confirmed the rule is absent |
+| Field in neither | `not yet harvested for this journal` | **Nobody has looked yet** |
+
+### How hedged wording is recorded
+
+Publishers hedge constantly. What decides is the **main verb of the
+sentence stating the rule**:
+
+| Publisher’s wording | Recorded as |
+|----|----|
+| OUP: whole guide is *“tips rather than strict rules”*, then *“at least 300dpi”* | **Requirement** — the hedge is about achieving the target, and the target still applies |
+| Elsevier: *“a rule-of-thumb rather than a strict rule”*, then *“no smaller than 6 pt”* | **Requirement** |
+| MDPI: *“should be … preferably no less than 600 dpi”* | **Requirement** — the verb is *should* |
+| Sage: *“We recommend having no more than 7 series”* | **Advisory** — the verb is *recommend*. Reported, never graded |
+| ACS: *“Helvetica or Arial fonts work well”* | **Not recorded** — excludes nothing |
+| PLOS: *“Use only Arial, Times, or Symbol font”* | **Requirement** — a closed set |
+
+When in doubt, don’t grade. An unrecorded rule costs a user a check. A
+wrongly graded one tells them they broke a rule that does not exist.
+
+The first two are facts about the publisher. The third is a fact about
+this registry, and saying so is the difference between a registry you
+can trust and one that is confidently wrong. Listing a field in both
+places is a load-time error.
+
+Fields a publisher does not state are **omitted**, never filled in from
+a sibling journal or from a plausible guess. The registry lives in a
+single readable file,
+[`inst/extdata/journals.yaml`](https://dansemakula.github.io/figspec/inst/extdata/journals.yaml),
+and load-bearing numbers carry the publisher’s own wording alongside
+them so an entry can be audited without leaving the file.
+
+Each entry keeps two things strictly apart:
+
+| Block | What it holds | Checked? |
+|----|----|----|
+| `requirements:` | What the publisher **states** in its guidelines | Yes — this is the only thing `pass`/`fail` refers to |
+| `house_style:` | What a journal’s figures **look like**. A matter of taste | Never |
+
+Putting a requirement field inside `house_style` is a load-time error.
+That line is what makes a `pass` mean something.
+
+Where a journal is silent and figspec has to supply a working default,
+it says so, and marks the value as its own.
+
+Guidelines change. Check the `verified_on` date, and treat the
+publisher’s current page as the authority.
+
+## Maintaining the registry
+
+Author guidelines change, and an entry read two years ago reads exactly
+like one read yesterday unless something says so:
+
+[`registry_status`](https://dansemakula.github.io/figspec/reference/registry_status.md)`(``)`` ``#> id verified_on age_days stated confirmed_absent unharvested`` ``#> nature 2026-08-21 1 2 0 15`` ``#> cell_press 2026-08-21 1 13 0 4`` `` `[`stale_entries`](https://dansemakula.github.io/figspec/reference/stale_entries.md)`(``max_age_days ``=`` ``365``)`
+
+`stated` / `confirmed_absent` / `unharvested` are the three states
+below, and they always sum to the full field list, so a half-finished
+entry cannot pass as a complete one.
+
+## Contributing a journal
+
+[`new_journal_entry`](https://dansemakula.github.io/figspec/reference/new_journal_entry.md)`(``"plos_biology"``, ``"PLOS Biology"``,`` `` ``"https://journals.plos.org/plosbiology/s/figures"``)`
+
+prints a skeleton naming every field figspec understands. Fill in what
+the page states, list what you confirmed absent under `not_stated`, and
+leave the rest alone — an untouched field reports as not yet harvested,
+which is true.
+
+[`validate_registry_file`](https://dansemakula.github.io/figspec/reference/validate_registry_file.md)`(``"my-journals.yaml"``)`` ``# before you open a pull request`` `[`load_journals`](https://dansemakula.github.io/figspec/reference/load_journals.md)`(``"my-journals.yaml"``)`` ``# to use it in this session`
+
+The package refuses to load an entry with no provenance, one that puts a
+requirement in `house_style`, or one that claims a field is both stated
+and absent.
+
+`data-raw/harvest.R` holds a toolkit for collecting entries at scale:
+journal discovery through the DOAJ API, fetching, extraction of the
+publisher’s own specification sentences, and emission of reviewable
+candidates. It never writes to the registry — auto-populating it would
+destroy the one property that makes it worth trusting.
+
+## Licence
+
+The package code is released under the MIT licence. `LICENSE` carries
+the copyright line CRAN reads; `LICENSE.md` carries the full text.
+
+The registry needs a word of its own, because it is not code.
+
+What it records are **facts about published requirements** — that Cell
+Press asks for 85 mm, that BMJ asks 1200 dpi of line art. Facts are not
+anyone’s property, and figspec states them freely.
+
+Load-bearing numbers also carry a **short verbatim quotation** of the
+sentence the publisher wrote, in the `source_quote_*` fields, so an
+entry can be audited without leaving the file. Those sentences are the
+publishers’ own words, quoted for verification and attribution and kept
+to the length that job needs. Every one names the page it came from and
+the date it was read. Publishers retain whatever rights they hold in
+their own wording, and nothing here grants you a licence to reproduce
+their guidelines at length.
+
+If you need to rely on a requirement, cite the publisher’s page as well
+as figspec. `journal_spec(<id>)$source_url` gives you the page and
+`$verified_on` the date it was read.
+
+# Package index
+
+## Checking a figure
+
+What a specification requires, and whether this figure meets it.
+
+- [`fig_check()`](https://dansemakula.github.io/figspec/reference/fig_check.md)
+  : Check a figure against a journal's requirements
+- [`check_colour_safety()`](https://dansemakula.github.io/figspec/reference/check_colour_safety.md)
+  [`check_color_safety()`](https://dansemakula.github.io/figspec/reference/check_colour_safety.md)
+  : Check a figure's colours for safety in print and for colour-blind
+  readers
+- [`check_submission()`](https://dansemakula.github.io/figspec/reference/check_submission.md)
+  : Check a whole set of figures together
+- [`submission_detail()`](https://dansemakula.github.io/figspec/reference/submission_detail.md)
+  : The full report for one file in a submission check
+- [`suggest_art_type()`](https://dansemakula.github.io/figspec/reference/suggest_art_type.md)
+  : Which resolution rule applies to this figure
+
+## Sizing and exporting
+
+Set the plot panel as well as the image, and export at exactly that size
+and resolution.
+
+- [`fig_save()`](https://dansemakula.github.io/figspec/reference/fig_save.md)
+  : Save a figure at an exact size and resolution
+- [`fig_panel_size()`](https://dansemakula.github.io/figspec/reference/fig_panel_size.md)
+  : Set the size of a plot's panels
+- [`fig_panel_width()`](https://dansemakula.github.io/figspec/reference/fig_panel_width.md)
+  : The panel width a set of figures can share
+- [`fig_geometry()`](https://dansemakula.github.io/figspec/reference/fig_geometry.md)
+  [`plot(`*`<figspec_geometry>`*`)`](https://dansemakula.github.io/figspec/reference/fig_geometry.md)
+  : What size a figure actually is
+
+## Building a compliant figure
+
+- [`fit_journal()`](https://dansemakula.github.io/figspec/reference/fit_journal.md)
+  : Bring a journal's requirements into a plot as you build it
+- [`theme_journal()`](https://dansemakula.github.io/figspec/reference/theme_journal.md)
+  : A ggplot2 theme that satisfies a journal's typography rules
+- [`tag_panels()`](https://dansemakula.github.io/figspec/reference/tag_panels.md)
+  : Label the panels of a figure
+- [`figspec_preview()`](https://dansemakula.github.io/figspec/reference/figspec_preview.md)
+  : Preview a figure at the size it will actually be published
+- [`figspec_linewidth()`](https://dansemakula.github.io/figspec/reference/figspec_linewidth.md)
+  : Line width that satisfies a journal's minimum
+- [`figspec_shapes()`](https://dansemakula.github.io/figspec/reference/figspec_shapes.md)
+  : Point shapes that stay legible at journal size
+- [`figspec_linetypes()`](https://dansemakula.github.io/figspec/reference/figspec_linetypes.md)
+  : Line types that stay distinct in print
+
+## Colour
+
+- [`figspec_palettes()`](https://dansemakula.github.io/figspec/reference/figspec_palettes.md)
+  : Colour palettes that survive print and colour-blind readers
+- [`figspec_palette()`](https://dansemakula.github.io/figspec/reference/figspec_palette.md)
+  : The colours in a figspec palette
+- [`scale_colour_figspec()`](https://dansemakula.github.io/figspec/reference/scale_colour_figspec.md)
+  [`scale_color_figspec()`](https://dansemakula.github.io/figspec/reference/scale_colour_figspec.md)
+  [`scale_fill_figspec()`](https://dansemakula.github.io/figspec/reference/scale_colour_figspec.md)
+  : Discrete colour and fill scales using a figspec palette
+- [`scale_shape_figspec()`](https://dansemakula.github.io/figspec/reference/scale_shape_figspec.md)
+  : A discrete shape scale using shapes that stay legible at journal
+  size
+- [`journal_palette()`](https://dansemakula.github.io/figspec/reference/journal_palette.md)
+  : The palette recorded for a journal's house style
+
+## R Markdown and Quarto
+
+- [`figspec_chunk_opts()`](https://dansemakula.github.io/figspec/reference/figspec_chunk_opts.md)
+  : Chunk options that produce journal-compliant figures in R Markdown
+  or Quarto
+- [`figspec_knitr_setup()`](https://dansemakula.github.io/figspec/reference/figspec_knitr_setup.md)
+  : Set knitr chunk options for a journal
+
+## Looking things up
+
+- [`journals()`](https://dansemakula.github.io/figspec/reference/journals.md)
+  : List the journals in the registry
+- [`journal_spec()`](https://dansemakula.github.io/figspec/reference/journal_spec.md)
+  : Look up one journal's figure specification
+- [`fig_width()`](https://dansemakula.github.io/figspec/reference/fig_width.md)
+  : Figure width for a journal column
+- [`fig_columns()`](https://dansemakula.github.io/figspec/reference/fig_columns.md)
+  : The column widths a journal states
+- [`table_spec()`](https://dansemakula.github.io/figspec/reference/table_spec.md)
+  : Table requirements for a journal
+- [`media_spec()`](https://dansemakula.github.io/figspec/reference/media_spec.md)
+  : Supplementary media requirements for a journal
+- [`check_media()`](https://dansemakula.github.io/figspec/reference/check_media.md)
+  : Check a supplementary media file against a journal's requirements
+- [`graphical_abstract_spec()`](https://dansemakula.github.io/figspec/reference/graphical_abstract_spec.md)
+  : Graphical abstract requirements for a journal
+
+## Moving between journals
+
+- [`refit_journal()`](https://dansemakula.github.io/figspec/reference/refit_journal.md)
+  : Re-export a set of figures for a different journal
+
+## Your own styles and journals
+
+- [`register_house_style()`](https://dansemakula.github.io/figspec/reference/register_house_style.md)
+  : Register a house style of your own
+- [`house_styles()`](https://dansemakula.github.io/figspec/reference/house_styles.md)
+  : House styles registered in this session
+- [`remove_house_style()`](https://dansemakula.github.io/figspec/reference/remove_house_style.md)
+  : Remove a registered house style
+- [`save_house_styles()`](https://dansemakula.github.io/figspec/reference/save_house_styles.md)
+  [`load_house_styles()`](https://dansemakula.github.io/figspec/reference/save_house_styles.md)
+  : Save and reload your house styles
+- [`register_journal()`](https://dansemakula.github.io/figspec/reference/register_journal.md)
+  : Add your own journal to the registry
+- [`load_journals()`](https://dansemakula.github.io/figspec/reference/load_journals.md)
+  : Load journal entries from your own registry file
+
+## Maintaining the registry
+
+- [`registry_status()`](https://dansemakula.github.io/figspec/reference/registry_status.md)
+  : How current is each registry entry, and how complete
+- [`stale_entries()`](https://dansemakula.github.io/figspec/reference/stale_entries.md)
+  : Entries that need rechecking
+- [`check_sources()`](https://dansemakula.github.io/figspec/reference/check_sources.md)
+  : Are the pages the registry cites still there
+- [`new_journal_entry()`](https://dansemakula.github.io/figspec/reference/new_journal_entry.md)
+  : A skeleton for a new registry entry
+- [`validate_registry_file()`](https://dansemakula.github.io/figspec/reference/validate_registry_file.md)
+  : Validate a registry file before loading it
+
+# Articles
+
+### All vignettes
+
+- [Getting started with
+  figspec](https://dansemakula.github.io/figspec/articles/figspec.md):
+- [Which journal am I submitting
+  to?](https://dansemakula.github.io/figspec/articles/journals.md):
+- [Every function and what its options
+  do](https://dansemakula.github.io/figspec/articles/options.md):
+- [Sizing figures by panel, not by
+  canvas](https://dansemakula.github.io/figspec/articles/panels.md):
+- [The registry: provenance, and adding your
+  own](https://dansemakula.github.io/figspec/articles/registry.md):
