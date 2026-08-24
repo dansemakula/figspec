@@ -29,7 +29,8 @@ test_that("a PDF gives up its type sizes", {
 })
 
 test_that("an SVG gives up its type sizes, unrounded", {
-  skip_if_no("ggplot2"); skip_if_no("svglite")
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("svglite")
   f <- tempfile(fileext = ".svg"); on.exit(unlink(f))
   svglite::svglite(f, width = 3.3, height = 2.4)
   print(vec_plot()); grDevices::dev.off()

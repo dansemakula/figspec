@@ -39,7 +39,7 @@ vector_text_sizes <- function(path, format = NULL) {
 # would have to compose those itself and would be wrong wherever a figure was
 # scaled. This is the one format where reaching for a library beats parsing.
 pdf_text_sizes <- function(path) {
-  if (!requireNamespace("pdftools", quietly = TRUE)) return(NULL)
+  if (!has_package("pdftools")) return(NULL)
   pages <- tryCatch(pdftools::pdf_data(path, font_info = TRUE),
                     error = function(e) NULL)
   if (is.null(pages) || !length(pages)) return(NULL)

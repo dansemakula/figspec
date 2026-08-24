@@ -269,7 +269,7 @@ fetch_status <- function(url, timeout) {
 #' }
 #' @export
 check_sources <- function(ids = NULL, timeout = 10) {
-  if (!requireNamespace("curl", quietly = TRUE)) {
+  if (!has_package("curl")) {
     figspec_abort(
       c("{.fn check_sources} needs the curl package.",
         ">" = 'Install it with {.code install.packages("curl")}.'),

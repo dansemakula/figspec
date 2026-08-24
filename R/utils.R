@@ -32,6 +32,19 @@ figspec_abort <- function(msg, class, call = parent.frame(), ...,
   )
 }
 
+# Whether an optional package is installed.
+#
+# figspec works without any of its Suggests, degrading rather than failing:
+# without ragg a raster is written by the base device, without colorspace the
+# colour-vision check reports that it could not run, without pdftools a PDF's
+# type sizes cannot be read back. Every one of those paths has to be
+# exercisable, so the question goes through this binding in figspec's own
+# namespace where a test can replace it, rather than straight to base.
+#
+# @param pkg Package name.
+# @return TRUE if it can be loaded.
+has_package <- function(pkg) requireNamespace(pkg, quietly = TRUE)
+
 # Whether R is being driven by a person at a console.
 #
 # A thin wrapper on base::interactive() so that code depending on it can be

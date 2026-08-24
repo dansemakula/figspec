@@ -313,7 +313,7 @@ set_panels <- function(gt, w_mm, h_mm) {
 as_plot_gtable <- function(plot) {
   if (inherits(plot, "gtable")) return(plot)
   if (inherits(plot, "patchwork")) {
-    if (!requireNamespace("patchwork", quietly = TRUE)) {
+    if (!has_package("patchwork")) {
       figspec_abort(
         c("Sizing a patchwork composition needs the patchwork package.",
           ">" = 'Install it with {.code install.packages("patchwork")}.'),

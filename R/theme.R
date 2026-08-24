@@ -158,7 +158,7 @@ figspec_linewidth <- function(journal) {
 # when none is available, which means "leave the device default alone".
 resolve_family <- function(families) {
   if (!length(families)) return("")
-  if (!requireNamespace("systemfonts", quietly = TRUE)) return("")
+  if (!has_package("systemfonts")) return("")
   available <- tryCatch(systemfonts::system_fonts()$family,
                         error = function(e) character(0))
   hit <- unlist(families)[tolower(unlist(families)) %in% tolower(available)]

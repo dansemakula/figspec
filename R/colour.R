@@ -172,7 +172,7 @@ list_pairs <- function(pairs, max_shown = 4) {
 # @param cols Character vector of colours.
 # @return Character vector of greys, same length and order.
 to_greyscale <- function(cols) {
-  if (requireNamespace("colorspace", quietly = TRUE)) {
+  if (has_package("colorspace")) {
     return(colorspace::desaturate(cols))
   }
   # Relative luminance, the same weighting used for contrast ratios.
@@ -191,7 +191,7 @@ to_greyscale <- function(cols) {
 #   installed, in which case the check reports that it could not be run rather
 #   than reporting a pass.
 simulate_cvd <- function(cols, type) {
-  if (!requireNamespace("colorspace", quietly = TRUE)) return(NULL)
+  if (!has_package("colorspace")) return(NULL)
   switch(type,
     deuteranopia = colorspace::deutan(cols),
     protanopia = colorspace::protan(cols),
@@ -296,7 +296,7 @@ colour_rows <- function(cols, spec, threshold = 10, plot = NULL) {
   }
 
   # Colour vision deficiency ----------------------------------------------
-  if (!requireNamespace("colorspace", quietly = TRUE)) {
+  if (!has_package("colorspace")) {
     rows[[length(rows) + 1L]] <- new_row(
       "Colour vision", UNSTATED,
       "install colorspace to test", "unknown"

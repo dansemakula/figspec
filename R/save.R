@@ -391,13 +391,13 @@ default_format <- function(spec) {
 # @param ext Lower-case file extension.
 # @return A device function, or NULL to leave the choice to ggsave().
 select_device <- function(ext) {
-  if (ext %in% c("tiff", "tif") && requireNamespace("ragg", quietly = TRUE)) {
+  if (ext %in% c("tiff", "tif") && has_package("ragg")) {
     return(ragg::agg_tiff)
   }
-  if (ext == "png" && requireNamespace("ragg", quietly = TRUE)) {
+  if (ext == "png" && has_package("ragg")) {
     return(ragg::agg_png)
   }
-  if (ext == "svg" && requireNamespace("svglite", quietly = TRUE)) {
+  if (ext == "svg" && has_package("svglite")) {
     return(svglite::svglite)
   }
   # The base pdf/postscript devices only know their own font database, so a
@@ -441,8 +441,8 @@ theme_family <- function(plot) {
 # @param ext Lower-case file extension.
 # @return TRUE if system fonts will resolve.
 device_resolves_system_fonts <- function(ext) {
-  if (ext %in% c("png", "tiff", "tif")) return(requireNamespace("ragg", quietly = TRUE))
-  if (ext == "svg") return(requireNamespace("svglite", quietly = TRUE))
+  if (ext %in% c("png", "tiff", "tif")) return(has_package("ragg"))
+  if (ext == "svg") return(has_package("svglite"))
   if (ext %in% c("pdf", "eps", "ps")) return(cairo_ok())
   FALSE
 }

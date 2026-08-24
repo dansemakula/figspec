@@ -64,7 +64,7 @@ tag_panels <- function(plot, journal = NULL, level = NULL,
   level <- resolve_tag_level(journal, level)
 
   if (inherits(plot, "patchwork")) {
-    if (!requireNamespace("patchwork", quietly = TRUE)) {
+    if (!has_package("patchwork")) {
       figspec_abort(
         c("Labelling a composition needs the patchwork package.",
           ">" = 'Install it with {.code install.packages("patchwork")}.'),

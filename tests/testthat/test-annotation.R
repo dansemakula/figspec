@@ -237,6 +237,7 @@ test_that("Nature labels panels in lower case, like AGU and unlike Cell Press", 
 })
 
 test_that("a comma thousands separator fails the Royal Society's number rule", {
+  skip_if_not_installed("scales")
   d <- data.frame(x = c(1e3, 5e6, 1e7), y = c(1, 2, 3))
   base <- ggplot2::ggplot(d, ggplot2::aes(x, y)) + ggplot2::geom_point()
 
@@ -262,6 +263,7 @@ test_that("a decimal is not mistaken for a thousands separator", {
 })
 
 test_that("only journals stating a number rule are checked against one", {
+  skip_if_not_installed("scales")
   d <- data.frame(x = c(1e3, 5e6, 1e7), y = c(1, 2, 3))
   commas <- ggplot2::ggplot(d, ggplot2::aes(x, y)) + ggplot2::geom_point() +
     ggplot2::scale_x_continuous(labels = scales::comma)

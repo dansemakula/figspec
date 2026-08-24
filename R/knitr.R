@@ -71,7 +71,7 @@ figspec_chunk_opts <- function(journal, column = "single",
 #' @export
 figspec_knitr_setup <- function(journal, column = "single",
                                 height = NULL, units = c("mm", "cm", "in")) {
-  if (!requireNamespace("knitr", quietly = TRUE)) {
+  if (!has_package("knitr")) {
     figspec_abort(
       c("{.fn figspec_knitr_setup} needs the knitr package.",
         ">" = 'Install it with {.code install.packages("knitr")}.'),
@@ -84,12 +84,12 @@ figspec_knitr_setup <- function(journal, column = "single",
 # Map a file format to the knitr `dev` name that renders it best here.
 knitr_device <- function(fmt) {
   switch(fmt,
-    png = if (requireNamespace("ragg", quietly = TRUE)) "ragg_png" else "png",
+    png = if (has_package("ragg")) "ragg_png" else "png",
     tiff = ,
     tif = "tiff",
     jpeg = ,
     jpg = "jpeg",
-    svg = if (requireNamespace("svglite", quietly = TRUE)) "svglite" else "svg",
+    svg = if (has_package("svglite")) "svglite" else "svg",
     eps = ,
     ps = "postscript",
     pdf = if (cairo_ok()) "cairo_pdf" else "pdf",
