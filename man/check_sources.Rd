@@ -33,9 +33,11 @@ This reaches the network, so it is for maintainers rather than for use
 inside anything that has to run offline.
 }
 \examples{
-\dontshow{if (interactive() && requireNamespace("curl", quietly = TRUE)) withAutoprint(\{ # examplesIf}
+# Reaches the network, so it is not run here.
+\dontrun{
+check_sources()
 check_sources("plos_one")
-\dontshow{\}) # examplesIf}
+}
 }
 \seealso{
 \code{\link[=registry_status]{registry_status()}} for how old an entry is, \code{\link[=stale_entries]{stale_entries()}} for

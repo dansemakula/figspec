@@ -225,8 +225,12 @@ fetch_status <- function(url, timeout) {
 #'   redirect led somewhere else. Ordered worst first.
 #' @seealso [registry_status()] for how old an entry is, [stale_entries()] for
 #'   which are due a recheck.
-#' @examplesIf interactive() && requireNamespace("curl", quietly = TRUE)
+#' @examples
+#' # Reaches the network, so it is not run here.
+#' \dontrun{
+#' check_sources()
 #' check_sources("plos_one")
+#' }
 #' @export
 check_sources <- function(ids = NULL, timeout = 10) {
   if (!requireNamespace("curl", quietly = TRUE)) {

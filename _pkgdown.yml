@@ -67,4 +67,4 @@ reference:
 - title: Your own styles and journals
   contents: [register_house_style, house_styles, remove_house_style, save_house_styles, register_journal, load_journals]
 - title: Maintaining the registry
-  contents: [registry_status, stale_entries, new_journal_entry, validate_registry_file]
+  contents: [registry_status, stale_entries, check_sources, new_journal_entry, validate_registry_file]

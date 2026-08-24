@@ -108,15 +108,15 @@ Check a figure's colours for safety in print and for colour-blind readers
 
 ### `check_submission()`
 
-Check a whole set of figures against one journal
+Check a whole set of figures together
 
 | Option | What it does |
 |:--------------------------|:--------------------------------------------------------------------------|
-| `path` | A directory, or a character vector of file paths. |
-| `journal` | Registry id, for example "plos_one". |
-| `column` | Which column width the figures target. Either one value for all files, or a named character vector mapping file name to column. |
+| `x` | A list of plots; or a directory; or a character vector of file paths. |
+| `journal` | Registry id, for example "plos_one"; a specification from journal_spec(); or NULL to inspect the figures without judging them. |
+| `column` | Which column width the figures target. Either one value for all, or a named character vector mapping name to column. |
 | `dpi` | Resolution the files were written at. Useful for files that do not record it, such as those from base R's png() device. |
-| `pattern` | Regular expression selecting files when path is a directory. Defaults to common figure extensions. |
+| `pattern` | Regular expression selecting files when x is a directory. Defaults to common figure extensions. |
 | `recursive` | Whether to descend into subdirectories. |
 
 ### `suggest_art_type()`
@@ -141,18 +141,20 @@ Check a supplementary media file against a journal's requirements
 
 ### `fig_save()`
 
-Save a figure at a journal's required size and resolution
+Save a figure at an exact size and resolution
 
 | Option | What it does |
 |:--------------------------|:--------------------------------------------------------------------------|
-| `filename` | Output path. The extension selects the format. If it has no extension, the journal's first accepted format is used. |
-| `plot` | Plot to save. Defaults to the last plot displayed. |
-| `journal` | Registry id, for example "cell_press". |
-| `column` | Which column width to size to. |
-| `height` | Height. Defaults to three quarters of the width, which is a convenience, not a journal requirement. |
-| `units` | Units for height. |
-| `dpi` | Resolution. Defaults to the journal's stated minimum, or 300 when it states none. |
-| `check` | Whether to check the result and report failures as a warning. |
+| `filename` | Output path. The extension selects the format. With a journal and no extension, the journal's first accepted format is used. |
+| `plot` | Plot to save: a ggplot, a patchwork composition, or a gtable. Defaults to the last plot displayed. |
+| `journal` | Registry id, for example "cell_press". Optional. When given, it supplies the canvas width, resolution, format and font. |
+| `column` | Which of the journal's stated column widths to fit. Only meaningful with journal; defaults to "single" when one is given. |
+| `width` | Canvas width. Overrides the journal's column width. |
+| `height` | Canvas height. Defaults to three quarters of the canvas width, which is a convenience, not a journal requirement. |
+| `panel_width, panel_height` | Size of the plot area itself. A number, or "max" for the largest that fits the canvas. With facets or a patchwork composition this applies to each panel. |
+| `units` | Units for width, height, panel_width and panel_height. |
+| `dpi` | Resolution. Defaults to the journal's stated minimum, or 300. |
+| `check` | Whether to check the result and report failures as a warning. Only checks against a journal when one is given. |
 
 ### `refit_journal()`
 

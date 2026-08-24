@@ -11,6 +11,7 @@ Sets the size, resolution, typography and colour of a figure from a specificatio
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://dansemakula.github.io/figspec/}
   \item \url{https://github.com/dansemakula/figspec}
   \item Report bugs at \url{https://github.com/dansemakula/figspec/issues}
 }
