@@ -30,6 +30,7 @@ Imports:
     grDevices,
     grid,
     gtable,
+    rlang,
     tools,
     utils,
     viridisLite,

@@ -107,19 +107,32 @@ without \code{journal}. Sizing without a journal is what \code{width} is for.
 \examples{
 library(ggplot2)
 p <- ggplot(mtcars, aes(wt, mpg)) + geom_point()
-out <- file.path(tempdir(), "figure_1.png")
 
-# To a journal's requirements
+# To a journal's requirements, saved in a format that journal accepts
+out <- file.path(tempdir(), "figure_1.tiff")
 fig_save(out, p + theme_journal("frontiers"), journal = "frontiers")
+unlink(out)
 
 # To an exact panel size, no journal involved
-fig_save(out, p, panel_width = 62)
+panelled <- file.path(tempdir(), "figure_2.png")
+fig_save(panelled, p, panel_width = 62)
+unlink(panelled)
+
+# Working the canvas out from the panel means opening a device to measure
+# the decoration on, which is slow enough that the rest of the tour is kept
+# out of the timed examples rather than cut from the documentation.
+\donttest{
+widest <- file.path(tempdir(), "figure_3.tiff")
 
 # The widest panel that still fits the column
-fig_save(out, p, journal = "frontiers", panel_width = "max")
+fig_save(widest, p, journal = "frontiers", panel_width = "max")
+unlink(widest)
 
-fig_geometry(fig_save(out, p, panel_width = 62))
-unlink(out)
+# Where the space in a figure went
+measured <- file.path(tempdir(), "figure_4.png")
+fig_geometry(fig_save(measured, p, panel_width = 62))
+unlink(measured)
+}
 }
 \seealso{
 \code{\link[=fig_panel_size]{fig_panel_size()}} to set a panel size without saving,

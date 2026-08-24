@@ -9,3 +9,4 @@
 ^LICENSE\.md$
 ^CONTRIBUTING\.md$
 ^pkgdown$
+^[^/]*\.html$
