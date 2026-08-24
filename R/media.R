@@ -1,4 +1,14 @@
-# Supplementary media -----------------------------------------------------
+# Supplementary media --------------------------------------------------------
+#
+# Video and audio submitted alongside an article are governed by their own
+# rules - container, codec, frame size, duration, file size - which have
+# nothing to do with figure requirements and are never mixed into a figure
+# report.
+#
+# Frame sizes are the reason this needs code rather than a lookup. A publisher
+# states a maximum frame size and often a list of preferred ones, and a video
+# that exceeds the maximum has to be scaled to fit while keeping its aspect
+# ratio, since stretching it would be worse than shrinking it.
 
 #' Supplementary media requirements for a journal
 #'

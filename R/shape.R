@@ -1,4 +1,17 @@
-# Point shapes and line types ---------------------------------------------
+# Point shapes and line types ------------------------------------------------
+#
+# Choosing marks and dashes that survive being printed small, and converting
+# between the units ggplot2 uses and the points publishers state.
+#
+# Two reasons this matters beyond taste. A figure that distinguishes its series
+# by colour alone becomes unreadable in greyscale or to a colour-blind reader,
+# so shapes and line types are the redundant cue that keeps it readable - which
+# is why fig_check() reports whether any exists. And a point outline is a line:
+# it has a width, and journals that state a minimum line width state it for
+# every stroke on the page, including the ring around a marker.
+#
+# The stroke conversion below is the one that is easy to get wrong, so it is
+# derived rather than asserted.
 
 # ggplot2 draws a point outline with lwd = stroke * .stroke / 2, and R's lwd
 # unit is 1/96 inch, so a stroke renders at stroke * .stroke * 0.375 points.

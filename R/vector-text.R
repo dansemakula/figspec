@@ -7,7 +7,8 @@
 # was set, so the figure a publisher actually receives can be read back and
 # checked.
 #
-# That is worth doing for a reason beyond convenience. R's pdf() and
+# There is a second reason to read the file rather than trust the object. R's
+# pdf() and
 # postscript() devices round text to whole points, so a ggplot theme asking for
 # 8.8 pt writes 9 pt into the file, and one asking for 5.2 pt writes 5. The
 # object and the file genuinely disagree, and it is the file that gets

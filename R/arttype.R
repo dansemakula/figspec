@@ -1,4 +1,24 @@
-# Art type ----------------------------------------------------------------
+# Art type -------------------------------------------------------------------
+#
+# Publishers set different resolution minimums for different kinds of artwork,
+# and the difference is large: a journal asking 300 dpi of a photograph may ask
+# 1200 dpi of line art. So "what resolution does this figure need" cannot be
+# answered without first deciding what kind of artwork it is.
+#
+# The trap is that "line art" does not mean a plot with lines in it. In
+# prepress it means a purely monochrome image - one bit per pixel, no grey -
+# which is why it carries the highest bar: hard black-and-white edges alias
+# badly when sampled too coarsely. Five publishers in the registry define it
+# that way in their own words. A coloured line chart is colour art, and
+# ggplot2's default bar fill is a mid grey, which makes a default bar chart
+# greyscale art rather than line art.
+#
+# Getting this backwards in either direction costs something real: calling a
+# colour figure line art demands a file four times larger than necessary, and
+# calling line art a colour figure ships it below the resolution the journal
+# asked for. suggest_art_type() therefore reports what it found and says
+# plainly that it is a suggestion, and fig_check() never changes its own
+# verdict on the strength of it.
 
 # Layers that put continuous tone on the page rather than lines and flat fills.
 RASTER_GEOMS <- c("GeomRaster", "GeomTile", "GeomRasterAnn", "GeomBin2d", "GeomHex")

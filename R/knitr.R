@@ -1,3 +1,15 @@
+# R Markdown and Quarto ------------------------------------------------------
+#
+# A large share of academic figures never pass through a save call at all: they
+# come out of a knitr chunk at whatever fig.width happens to be, which means
+# the usual advice to save at the journal's width never reaches them.
+#
+# These translate a specification into the chunk options that make knitr emit
+# figures at the right size, resolution and format. knitr takes its dimensions
+# in inches, so millimetres are converted here; the device is chosen the same
+# way as in R/save.R, preferring ragg where it is installed because it renders
+# text more accurately and records the resolution in the file.
+
 #' Chunk options that produce journal-compliant figures in R Markdown or Quarto
 #'
 #' A large share of academic figures never pass through [ggplot2::ggsave()] at

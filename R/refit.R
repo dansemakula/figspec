@@ -1,3 +1,15 @@
+# Moving a set of figures between journals -----------------------------------
+#
+# Papers are rejected and resubmitted, and the requirements of the next journal
+# are not the requirements of the last. The conflicts are real rather than
+# cosmetic: Cell Press asks for type between 6 and 8 pt and PLOS ONE between 8
+# and 12, so a figure built for one is out of range for the other by
+# construction and cannot satisfy both.
+#
+# This re-exports plot objects against a new specification. It needs the plots,
+# not the files, because the properties that have to change - type size, line
+# weight, panel geometry - are the ones a saved raster no longer carries.
+
 #' Re-export a set of figures for a different journal
 #'
 #' Papers get rejected and resubmitted, and the new journal has different

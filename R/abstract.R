@@ -1,3 +1,11 @@
+# Graphical abstracts --------------------------------------------------------
+#
+# A graphical abstract, or table-of-contents image, is governed separately from
+# the figures in an article: a much smaller canvas, sometimes a character limit
+# on accompanying text, occasionally its own resolution. These are reported on
+# their own and never folded into a figure report, because a figure that meets
+# the article's requirements has not thereby met the abstract's.
+
 #' Graphical abstract requirements for a journal
 #'
 #' Many journals ask for a graphical abstract, or table-of-contents entry, and

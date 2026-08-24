@@ -1,3 +1,15 @@
+# Previewing at published size -----------------------------------------------
+#
+# The most common way a compliant figure becomes unreadable is being designed
+# at roughly 7 by 5 inches on a laptop and printed into an 85 mm column, which
+# reduces everything in it by more than half. Nothing in the usual workflow
+# shows an author that reduction until it is too late to matter.
+#
+# This opens a device at the real column width so the figure being iterated on
+# is the size a reader will see. It is deliberately interactive-only: in a
+# script or a knitted document there is no window to open, so it reports the
+# size it would have used and does nothing.
+
 #' Preview a figure at the size it will actually be published
 #'
 #' The most common way a compliant figure becomes non-compliant is being

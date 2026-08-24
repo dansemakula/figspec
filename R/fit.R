@@ -1,3 +1,20 @@
+# Building to a specification ------------------------------------------------
+#
+# fit_journal() is the entry point for the case where the journal is known
+# before the figure is drawn, which is the cheapest moment to satisfy it. It
+# returns a list of ggplot2 components, so it composes with `+` like any scale
+# or theme.
+#
+# Order matters and cannot be enforced from inside: a scale added after this
+# one replaces the journal's, so it is documented as something to add last.
+#
+# The palette is chosen from the specification rather than fixed. Where a
+# publisher reproduces figures in black and white, the default becomes cividis,
+# which stays separable once desaturated; elsewhere it is Okabe-Ito, which
+# stays separable under the common colour vision deficiencies. Neither is a
+# journal requirement - no publisher states which colours to use - so both can
+# be turned off without turning off anything the journal asked for.
+
 #' Bring a journal's requirements into a plot as you build it
 #'
 #' Adds a journal's requirements to a plot the same way you would add a colour
