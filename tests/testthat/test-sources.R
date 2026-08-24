@@ -1,8 +1,8 @@
-# check_sources() reaches the network, so what is tested here is the judgement
-# it applies to a response, not the fetching. The judgement is the part that
-# matters: seven of the registry's 27 publishers answer 403 to a scripted
-# request while their page is perfectly alive, so reading a refusal as a death
-# would produce seven false alarms for every true one.
+# Tests for check_sources() and its helpers.
+#
+# The fetching itself is not tested: it needs the network, which would make the
+# suite depend on publishers being up. What is tested is how a response is
+# classified, and how the result is reported.
 
 test_that("a refusal to serve a robot is not a dead link", {
   for (code in c(401L, 403L, 405L, 406L, 429L, 451L, 501L)) {
@@ -17,7 +17,6 @@ test_that("only gone means gone", {
 })
 
 test_that("a 403 is never reported as dead, whatever else changes", {
-  # The single assertion this whole function exists to satisfy.
   expect_false(source_verdict(403L) == "dead")
 })
 
@@ -34,8 +33,9 @@ test_that("an unknown id is a figspec_not_found error, not a fetch", {
   expect_error(check_sources("no_such_journal"), class = "figspec_not_found")
 })
 
-# A stand-in for what a live run returns, so the report can be tested without
-# asking seven publishers whether they are still there.
+# A stand-in for the data frame check_sources() returns, so the print method
+# can be tested without making any requests. One dead entry, two blocked, one
+# reachable.
 fake_sources <- function() {
   structure(
     data.frame(

@@ -22,12 +22,10 @@ without anything in the registry changing. This asks each source URL whether
 it still resolves.
 }
 \details{
-A publisher that blocks robots is not a broken link. Seven of the sources in
-the registry answer \code{403} to a scripted request while the page opens fine in
-a browser, so those are reported as \emph{blocked} and are not failures. Only
-\code{404} and \code{410} are read as dead. The distinction is the whole point: a
-checker that counted every refusal as a death would cry wolf seven times for
-each real one.
+A publisher that blocks robots is not a broken link. Most academic
+publishers sit behind bot protection and answer a scripted request with
+\code{403} while the page opens normally in a browser, so those are reported as
+\emph{blocked} and are not failures. Only \code{404} and \code{410} are read as dead.
 
 This reaches the network, so it is for maintainers rather than for use
 inside anything that has to run offline.

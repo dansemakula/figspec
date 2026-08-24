@@ -1,4 +1,23 @@
 # Registry maintenance ----------------------------------------------------
+#
+# Tools for keeping the journal registry honest, rather than for using it.
+# Everything here is aimed at a maintainer or a contributor; none of it is
+# needed to check or save a figure.
+#
+# The registry makes two promises, and each needs its own upkeep:
+#
+#   provenance  every entry names the page it was read from and the date.
+#               check_sources() asks whether those pages still resolve;
+#               registry_status() and stale_entries() report their age.
+#   completeness a field is either stated, confirmed absent, or never read,
+#               and those must not be conflated. registry_status() counts
+#               each separately; new_journal_entry() prints a skeleton with
+#               every field, so a contributor is told what to look for;
+#               validate_registry_file() refuses a file that breaks either
+#               promise.
+#
+# See the header of inst/extdata/journals.yaml for the recording rules those
+# promises come from.
 
 #' How current is each registry entry, and how complete
 #'
@@ -164,15 +183,26 @@ validate_registry_file <- function(path) {
 
 # Link checking -----------------------------------------------------------
 
-# A publisher that blocks robots refuses the request, not the page. Seven of
-# the registry's 27 sources answer 403 to a scripted request while the page
-# itself is perfectly alive, so a checker that reads 403 as a dead link reports
-# seven false alarms for every true one and stops being worth running. These
-# are the codes that mean "the server declined to serve *you*".
+# HTTP status codes, split by what they say about the *page* rather than about
+# the request. Most academic publishers sit behind bot protection and refuse a
+# scripted request outright, so these two groups must not be merged: a refusal
+# says nothing about whether the page is still there.
+#
+#   BLOCKED  the server declined to serve this client. The page is presumed
+#            fine; a browser usually opens it without trouble.
+#   DEAD     the server says the resource is gone. This is the only group
+#            that counts as a broken link.
+#
+# Codes outside both groups are reported under their own headings rather than
+# forced into one of these, so an unexpected response is visible as unexpected.
 BLOCKED_CODES <- c(401L, 403L, 405L, 406L, 429L, 451L, 501L)
 DEAD_CODES <- c(404L, 410L)
 
-# Classify one response. `code` is NA when nothing came back at all.
+# Reduce one HTTP status code to the verdict reported to the user.
+#
+# @param code Integer status code, or NA when no response arrived at all.
+# @return One of "ok", "dead", "blocked", "server error", "unreachable" or
+#   "unexpected".
 source_verdict <- function(code) {
   if (is.na(code)) return("unreachable")
   if (code >= 200 && code < 300) return("ok")
@@ -182,9 +212,17 @@ source_verdict <- function(code) {
   "unexpected"
 }
 
-# HEAD is cheap and enough for a status code, but some servers reject the
-# method itself rather than the request, so a refusal is retried as a GET
-# before it is believed.
+# Request one URL and report how it answered.
+#
+# HEAD is used first because a status code is all that is wanted and HEAD does
+# not transfer the body. Some servers reject the method itself rather than the
+# caller, which is indistinguishable from a block by status code alone, so a
+# refusal is retried as a GET before it is believed.
+#
+# @param url The address to request.
+# @param timeout Seconds to allow for connection and for the whole transfer.
+# @return A list of `code` (integer status, NA if nothing arrived) and `final`
+#   (the URL landed on after redirects, NA if nothing arrived).
 fetch_status <- function(url, timeout) {
   probe <- function(nobody) {
     h <- curl::new_handle(followlocation = TRUE, nobody = nobody,
@@ -208,12 +246,10 @@ fetch_status <- function(url, timeout) {
 #' without anything in the registry changing. This asks each source URL whether
 #' it still resolves.
 #'
-#' A publisher that blocks robots is not a broken link. Seven of the sources in
-#' the registry answer `403` to a scripted request while the page opens fine in
-#' a browser, so those are reported as *blocked* and are not failures. Only
-#' `404` and `410` are read as dead. The distinction is the whole point: a
-#' checker that counted every refusal as a death would cry wolf seven times for
-#' each real one.
+#' A publisher that blocks robots is not a broken link. Most academic
+#' publishers sit behind bot protection and answer a scripted request with
+#' `403` while the page opens normally in a browser, so those are reported as
+#' *blocked* and are not failures. Only `404` and `410` are read as dead.
 #'
 #' This reaches the network, so it is for maintainers rather than for use
 #' inside anything that has to run offline.
