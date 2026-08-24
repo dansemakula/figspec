@@ -32,7 +32,10 @@ is deliberate and figspec keeps it visible: one is a fact about the publisher,
 the other a fact about the registry, and neither is a pass.
 
 ```{r}
-reg <- figspec:::load_registry()
+# Built from the public interface rather than the package's internals, so
+# this page cannot drift from what a reader can reach themselves.
+ids <- journals()$id
+reg <- stats::setNames(lapply(ids, journal_spec), ids)
 rows <- do.call(rbind, lapply(reg, function(j) {
   cols <- if (!is.null(j$columns)) {
     paste(paste0(names(j$columns), " ", unlist(j$columns)), collapse = ", ")
