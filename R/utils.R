@@ -1,3 +1,8 @@
+# Shared helpers -------------------------------------------------------------
+#
+# Errors, unit conversion and the small utilities used throughout the package.
+# Nothing here is exported.
+
 # Errors ------------------------------------------------------------------
 
 # Every error figspec raises carries a class, so a caller can catch the kind of
@@ -27,8 +32,12 @@ figspec_abort <- function(msg, class, call = parent.frame(), ...,
   )
 }
 
+# Default operator: the left side unless it is NULL. Used constantly, because
+# an absent field in a specification is NULL rather than NA.
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
+# Millimetres per inch. Publishers state widths in millimetres and R's graphics
+# devices take inches, so nearly every size in the package passes through this.
 MM_PER_IN <- 25.4
 
 #' Convert a length between units

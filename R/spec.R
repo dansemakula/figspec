@@ -1,3 +1,21 @@
+# Looking a specification up -------------------------------------------------
+#
+# Reading values out of a specification, for callers who want the number rather
+# than a verdict: how wide a column is, which columns exist, what the tables or
+# the graphical abstract require.
+#
+# Two things recur here and are worth knowing before reading any of it.
+#
+# Column names are not universal. Most publishers name a single and a double
+# column, some add a one-and-a-half, and a few - PNAS among them - use their
+# own vocabulary entirely, "small", "medium" and "large". So a request for a
+# column that does not exist is answered by naming the ones that do, rather
+# than by falling back to a width the publisher never stated.
+#
+# Some publishers give a range instead of named columns. Those entries have no
+# `columns` at all, only a minimum and a maximum, and asking for a column from
+# one is a question it cannot answer.
+
 #' Figure width for a journal column
 #'
 #' Resolves the width a figure should be saved at. Column names come from the

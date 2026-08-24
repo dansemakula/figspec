@@ -1,3 +1,24 @@
+# Typography ----------------------------------------------------------------
+#
+# Building the ggplot2 theme that satisfies a specification's type rules, and
+# converting between the units the two worlds use.
+#
+# The unit conversions are the part worth reading twice, because ggplot2 does
+# not measure in the units publishers state:
+#
+#   type   ggplot2's `base_size` is a point size, but the elements derived from
+#          it are not all equal to it - axis text defaults to 0.8 of the base,
+#          titles to 1.2 - so a journal floor of 6 pt is not satisfied by
+#          setting base_size to 6.
+#   lines  a ggplot2 `linewidth` is not points. One linewidth unit is 0.75 mm,
+#          which is 2.13 pt, so a stated minimum in points has to be divided
+#          rather than assigned. Getting this backwards silently draws lines a
+#          quarter thinner than the journal asked for.
+#
+# A house style is applied underneath the journal's requirements and can never
+# override them; where the two disagree, the caller is told which of their own
+# settings the journal displaced.
+
 #' A ggplot2 theme that satisfies a journal's typography rules
 #'
 #' Journals set a floor on type size, and often name the fonts they accept.

@@ -1,4 +1,18 @@
-# House styles ------------------------------------------------------------
+# House styles ---------------------------------------------------------------
+#
+# A house style is the look a lab, a department or a publication wants its
+# figures to have: fonts, colours, grid treatment, whatever it is that makes
+# them recognisable. It is emphatically not a specification.
+#
+# The distinction is enforced rather than described. A house style may not
+# contain any key from requirement_keys(), because those are the fields that
+# fig_check() grades against, and a preference wearing the clothes of a
+# requirement would produce a pass or a fail that no publisher ever asked for.
+# Styles are applied underneath a journal's requirements for the same reason:
+# where they conflict, the journal wins and the caller is told what was
+# displaced.
+#
+# Styles live in the session, not on disk, unless save_house_styles() is called.
 
 #' Register a house style of your own
 #'

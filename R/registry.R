@@ -1,7 +1,27 @@
-# Registry loading -------------------------------------------------------
+# Registry loading -----------------------------------------------------------
+#
+# The registry is a YAML file, inst/extdata/journals.yaml, holding one entry per
+# publisher. This file reads it, checks it, and turns each entry into the flat
+# list the rest of the package works with.
+#
+# Two structural rules are enforced here rather than trusted to the file:
+#
+#   provenance   an entry without a source_url and a verified_on is refused at
+#                load time. A requirement whose origin cannot be produced is
+#                not a requirement figspec is willing to grade against.
+#   separation   requirements and house_style are different kinds of claim -
+#                "the journal requires this" against "this resembles the
+#                journal" - so a key from requirement_keys() appearing under
+#                house_style is an error, not a preference.
+#
+# A user's own entries, added with register_journal() or load_journals(), are
+# kept apart from the shipped ones in the cache and carry a different `origin`,
+# so a report can always say whether a requirement came from figspec's registry
+# or from the caller.
 
 .figspec_cache <- new.env(parent = emptyenv())
 
+# Path to the registry file inside the installed package.
 registry_path <- function() {
   system.file("extdata", "journals.yaml", package = "figspec", mustWork = TRUE)
 }
@@ -19,8 +39,18 @@ requirement_keys <- function() {
     "avoid_coloured_text", "thousands_separator", "no_background_grid")
 }
 
-# Flatten one registry entry: requirements are lifted to the top level for
-# convenience, while house_style is kept separate and clearly labelled.
+# Turn one YAML entry into the flat list the package uses.
+#
+# Requirements are lifted to the top level so that spec$dpi_min reads directly,
+# while house_style, tables, media and graphical_abstract stay nested because
+# they are separate kinds of claim and must not be mistaken for requirements.
+# `not_stated` is carried through unchanged: it is what lets graded() tell
+# "the publisher does not state this" apart from "nobody has looked yet".
+#
+# @param j One entry as read from YAML.
+# @param origin "figspec" for a shipped entry, or a label identifying where a
+#   user-supplied entry came from.
+# @return A flat named list, with NULL fields dropped.
 flatten_entry <- function(j, origin = "figspec") {
   req <- j$requirements %||% list()
   out <- c(
@@ -41,6 +71,15 @@ flatten_entry <- function(j, origin = "figspec") {
   out[!vapply(out, is.null, logical(1))]
 }
 
+# The whole registry: shipped entries plus any the user has added.
+#
+# Reading and validating the YAML is not free, so the shipped entries are
+# cached in .figspec_cache after the first call. User entries are held
+# separately and appended on every call, so registering a journal takes effect
+# immediately without re-reading the file.
+#
+# @param refresh TRUE to re-read and re-validate the file from disk.
+# @return A named list of entries, keyed by id.
 load_registry <- function(refresh = FALSE) {
   if (!refresh && !is.null(.figspec_cache$registry)) {
     return(c(.figspec_cache$registry, .figspec_cache$user_journals %||% list()))
