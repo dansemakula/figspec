@@ -32,6 +32,14 @@ figspec_abort <- function(msg, class, call = parent.frame(), ...,
   )
 }
 
+# Whether R is being driven by a person at a console.
+#
+# A thin wrapper on base::interactive() so that code depending on it can be
+# tested. Mocking base functions from inside a test frame does not reliably
+# reach the calling namespace, whereas this binding lives in figspec's own and
+# can be replaced with testthat::local_mocked_bindings().
+is_interactive <- function() interactive()
+
 # Default operator: the left side unless it is NULL. Used constantly, because
 # an absent field in a specification is NULL rather than NA.
 `%||%` <- function(x, y) if (is.null(x)) y else x

@@ -129,3 +129,75 @@ test_that("a specification stating no resolution gets a default that is announce
     type = "message")
   expect_match(paste(msg, collapse = " "), "not a requirement")
 })
+
+# Font-failure recovery -------------------------------------------------------
+#
+# Some vector devices can only use the fonts R itself knows about. Handed a
+# system font they cannot resolve, they raise "invalid font type" rather than
+# falling back. fig_save() catches that, writes the figure in the default face
+# and warns, because a figure that never arrives is worse than one whose
+# typeface is wrong - but a silent substitution is how a paper comes back from
+# production in the wrong font.
+#
+# Whether the error fires depends on the machine: where cairo is available the
+# device resolves system fonts and there is nothing to recover from. The tests
+# below assert the contract in both cases and note which one they took.
+
+unresolvable_font_plot <- function() {
+  ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+    ggplot2::geom_point() +
+    ggplot2::theme_grey(base_family = "NoSuchFontAtAll")
+}
+
+capture_warnings <- function(expr) {
+  w <- character()
+  withCallingHandlers(expr,
+    warning = function(x) { w <<- c(w, conditionMessage(x)); invokeRestart("muffleWarning") })
+  w
+}
+
+test_that("a font the device cannot resolve still produces a file", {
+  skip_if_not_installed("ggplot2")
+  out <- tempfile(fileext = ".pdf"); on.exit(unlink(out))
+  capture_warnings(fig_save(out, unresolvable_font_plot(),
+                            width = 85, height = 60, units = "mm", check = FALSE))
+  expect_true(file.exists(out))
+  expect_gt(file.size(out), 0)
+})
+
+test_that("the substitution is announced rather than made silently", {
+  skip_if_not_installed("ggplot2")
+  out <- tempfile(fileext = ".pdf"); on.exit(unlink(out))
+  w <- capture_warnings(fig_save(out, unresolvable_font_plot(),
+                                 width = 85, height = 60, units = "mm", check = FALSE))
+  own <- grep("cannot render the font|default font", w, value = TRUE)
+  skip_if(length(own) == 0,
+          "this device resolves system fonts, so there is nothing to recover from")
+  expect_match(own[1], "NoSuchFontAtAll")
+  expect_match(own[1], "default font")
+  # The warning has to be actionable, not just an apology.
+  expect_match(own[1], "TIFF|PNG|install")
+})
+
+test_that("the recovered file is still the size that was asked for", {
+  # The retry re-solves the geometry, so a figure saved through the recovery
+  # path must not come out at some other width.
+  skip_if_not_installed("ggplot2")
+  out <- tempfile(fileext = ".pdf"); on.exit(unlink(out))
+  capture_warnings(fig_save(out, unresolvable_font_plot(),
+                            width = 85, height = 60, units = "mm", check = FALSE))
+  info <- inspect_file(out)
+  expect_equal(info$width_mm, 85, tolerance = 0.5)
+  expect_equal(info$height_mm, 60, tolerance = 0.5)
+})
+
+test_that("an error that is not about fonts is not swallowed", {
+  # The recovery matches on the font messages only. Any other failure has to
+  # reach the caller rather than being retried and hidden.
+  skip_if_not_installed("ggplot2")
+  out <- file.path(tempfile(), "no", "such", "directory", "f.png")
+  expect_error(
+    suppressWarnings(fig_save(out, unresolvable_font_plot(),
+                              width = 85, height = 60, units = "mm", check = FALSE))
+  )
+})

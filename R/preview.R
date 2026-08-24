@@ -37,7 +37,7 @@ figspec_preview <- function(plot = ggplot2::last_plot(), journal,
   width_mm <- fig_width(journal, column, "mm")
   height_mm <- if (is.null(height)) width_mm * 0.75 else convert_length(height, units, "mm")
 
-  if (!interactive()) {
+  if (!is_interactive()) {
     msg_wrap(
       "figspec_preview() opens a graphics window and does nothing in a ",
       "non-interactive session. The figure would be ",
