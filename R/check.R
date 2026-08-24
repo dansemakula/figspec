@@ -1,3 +1,28 @@
+# Checking a figure against a specification --------------------------------
+#
+# fig_check() answers one question per requirement, and it can be handed two
+# very different things to answer it about:
+#
+#   a ggplot object  still has its typography and its colour mapping, so type
+#                    size, fonts and colour safety are all answerable. It has
+#                    no file, so resolution, format and file size are not.
+#   a saved file     has geometry, resolution, format and size. Its colour
+#                    mapping is gone, and its type sizes survive only in a
+#                    vector format (see R/vector-text.R).
+#
+# Neither input answers everything, which is why a requirement that cannot be
+# assessed is reported rather than skipped.
+#
+# Every row of a report is one of four outcomes, and keeping them apart is the
+# point of the whole file:
+#
+#   pass / fail   the specification states the rule and the figure was measured
+#   unspecified   nothing states the rule, so there is nothing to meet
+#   unknown       the rule exists, but this input cannot answer it
+#
+# new_row() enforces that, so a pass can never be reported against a rule
+# nobody stated. Its four wordings are defined under "Report assembly" below.
+
 # Text size introspection ------------------------------------------------
 
 # Walk a built plot and collect the point size of every text grob. Type size
@@ -48,7 +73,30 @@ collect_text_sizes <- function(plot) {
 }
 
 # File inspection --------------------------------------------------------
+#
+# Geometry and resolution are read out of the image files themselves, byte by
+# byte, rather than through an imaging package. figspec is a checking tool, so
+# a user should not have to install a reader for every format they might submit
+# just to be told how wide their figure is; each of these needs only the header,
+# which is a few dozen bytes at the front of the file.
+#
+# Each reader returns a named list of whatever it could establish, or NULL if
+# the file is not what its extension claims. Absent fields are simply absent:
+# nothing is guessed, because an invented resolution would be reported to the
+# user as a measurement.
 
+# Width, height and resolution from a PNG header.
+#
+# A PNG is a signature followed by typed chunks, each one a length, a
+# four-letter type, its data and a checksum. Only two chunks matter here: IHDR,
+# which is always first and carries the pixel dimensions, and pHYs, which is
+# optional and carries the physical resolution. pHYs stores pixels per unit
+# with a trailing byte naming the unit, and the only defined unit is 1, the
+# metre - hence the conversion to inches.
+#
+# @param path Path to the file.
+# @return List of `width_px`, `height_px` and `dpi` where present, or NULL if
+#   the signature does not match.
 read_png_info <- function(path) {
   con <- file(path, "rb")
   on.exit(close(con), add = TRUE)
@@ -75,6 +123,17 @@ read_png_info <- function(path) {
   info
 }
 
+# Page size from a PDF.
+#
+# A PDF has no resolution: it is drawn from instructions, not pixels, so the
+# only geometry to recover is the page box. /MediaBox gives it as four numbers,
+# the left, bottom, right and top edges in user-space units, which default to
+# 1/72 inch. Null bytes are replaced with spaces before the search so that the
+# binary streams in the file cannot terminate the text early.
+#
+# @param path Path to the file.
+# @return List of `width_mm`, `height_mm` and `vector = TRUE`, or NULL if no
+#   /MediaBox was found.
 read_pdf_info <- function(path) {
   n <- file.size(path)
   raw <- readBin(path, "raw", n)
@@ -97,6 +156,28 @@ read_pdf_info <- function(path) {
 }
 
 
+# Dimensions, resolution and colour mode from a TIFF header.
+#
+# TIFF is the most involved of these formats and the most important to read,
+# because it is what most publishers ask for. The file opens with a byte-order
+# mark, "II" for little-endian or "MM" for big, then the magic number 42, then
+# the offset of an image file directory. That directory is a count followed by
+# 12-byte entries, each a tag, a type, and either a value or an offset to one.
+#
+# The tags read here:
+#
+#   256  image width in pixels          282  horizontal resolution
+#   257  image height in pixels         296  unit that resolution is in
+#   262  photometric interpretation, which is what tells us whether the file
+#        is greyscale, RGB or CMYK - and CMYK matters, because journals that
+#        print in colour state which of the two they accept
+#
+# Resolution unit 3 is centimetres and 2 is inches; 2 is assumed when the tag
+# is absent, which is what the specification requires.
+#
+# @param path Path to the file.
+# @return List of `width_px`, `height_px`, `dpi` and `colour_mode`, omitting
+#   any that could not be read, or NULL if the file is not a TIFF.
 read_tiff_info <- function(path) {
   con <- file(path, "rb")
   on.exit(close(con), add = TRUE)
@@ -154,6 +235,21 @@ read_tiff_info <- function(path) {
   out[!vapply(out, function(v) is.null(v) || (length(v) == 1L && is.na(v)), logical(1))]
 }
 
+# Dimensions and resolution from a JPEG header.
+#
+# A JPEG is a chain of segments, each introduced by 0xFF and a marker byte.
+# This walks that chain looking for two things: APP0 (0xE0), the JFIF header,
+# which carries pixel density and a unit byte where 1 is per-inch and 2 is
+# per-centimetre; and any start-of-frame marker, which carries the dimensions
+# and ends the walk. The start-of-frame markers are 0xC0-0xC3, 0xC5-0xC7,
+# 0xC9-0xCB and 0xCD-0xCF - the gaps are other markers that share the range.
+#
+# Only the first megabyte is read, which is far past any header, so a large
+# photograph is not loaded into memory to be measured.
+#
+# @param path Path to the file.
+# @return List of `width_px`, `height_px` and `dpi` where present, or NULL if
+#   the file does not start with a JPEG marker.
 read_jpeg_info <- function(path) {
   n <- file.size(path)
   raw <- readBin(path, "raw", min(n, 1048576L))
@@ -181,6 +277,18 @@ read_jpeg_info <- function(path) {
   info
 }
 
+# Everything that can be established about a figure file without rendering it.
+#
+# Dispatches on the file extension to the reader for that format, then converts
+# pixels to millimetres wherever both a pixel size and a resolution were found.
+# A format with no reader still yields its extension and size on disk, and
+# vector formats are flagged so that resolution is reported as inapplicable
+# rather than missing.
+#
+# @param path Path to the file.
+# @return A list carrying `format` and `size_mb` always, and whichever of
+#   `width_px`, `height_px`, `width_mm`, `height_mm`, `dpi`, `colour_mode` and
+#   `vector` the format could supply.
 inspect_file <- function(path) {
   ext <- tolower(tools::file_ext(path))
   info <- list(format = ext, size_mb = file.size(path) / 1024^2)
@@ -639,6 +747,14 @@ fig_check <- function(x, journal = NULL, column = "single",
   )
 }
 
+# Subsetting a report yields a plain data frame.
+#
+# A report carries the journal, the source URL and the date it was read as
+# attributes, and its print method presents them as the provenance of the whole
+# report. A subset is no longer that report - `r[r$status == "fail", ]` is a
+# selection the user made - so the attributes and the class are dropped rather
+# than left to imply that the remaining rows are the complete finding.
+#
 #' @export
 `[.figspec_report` <- function(x, ...) {
   out <- NextMethod()
@@ -649,11 +765,19 @@ fig_check <- function(x, journal = NULL, column = "single",
   out
 }
 
-# One row of a report, laid out to the console width. A row that fits stays on
-# one line with its columns aligned; a row that does not carries its
-# requirement on wrapped continuation lines, indented to sit under `actual`.
-# cli's alerts do not wrap at all, which is what sent these lines off the side
-# of the page.
+# Lay out one row of a report to the console width.
+#
+# cli's alerts do not wrap, so a long requirement would run off the side of the
+# screen and off the side of a rendered vignette. A row that fits stays on one
+# line with its columns aligned; a row that does not carries its requirement on
+# wrapped continuation lines, indented to sit under `actual`.
+#
+# @param check,actual,requirement The three fields of the row.
+# @param width Console width to lay out to.
+# @param lab_w Width of the check-name column, sized to the widest name in the
+#   report so that every row in it lines up.
+# @return A list of `head`, the first line, and `rest`, zero or more
+#   continuation lines already indented.
 BULLET_W <- 2L
 
 report_row <- function(check, actual, requirement, width, lab_w = 12L) {
