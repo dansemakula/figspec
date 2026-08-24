@@ -1,3 +1,27 @@
+# Colour safety -------------------------------------------------------------
+#
+# Three things can go wrong with the colours in a figure, and only the first is
+# ever a stated requirement:
+#
+#   1. a red/green pair, which some publishers name explicitly
+#   2. colours that merge when the figure is printed in black and white
+#   3. colours that merge for a reader with colour vision deficiency
+#
+# All three reduce to the same question: after some transformation, are two of
+# these colours still far enough apart to tell apart? That distance is measured
+# as CIE Delta-E 2000, the standard perceptual difference metric, where roughly
+# 1.0 is the smallest difference a person can notice and figspec's default
+# threshold of 10 is a comfortable margin. Ordinary RGB distance will not do:
+# two colours can be far apart numerically and look identical.
+#
+# The transformations are: desaturation for print, and simulated deuteranopia,
+# protanopia and tritanopia for colour vision. Comparing the transformed
+# colours while reporting the original ones is why close_pairs() takes both.
+#
+# Only the colours a plot maps *data* to are examined. Theme furniture - grey
+# panels, black text, white backgrounds - would otherwise show up as merged
+# pairs in every figure.
+
 # Extracting what a plot actually draws -----------------------------------
 
 # The colours a plot maps data to, taken from the built plot rather than the
@@ -56,6 +80,10 @@ plot_linetypes <- function(plot) {
 
 # Colour analysis ---------------------------------------------------------
 
+# Hue, saturation and value for a vector of colours.
+#
+# @param cols Character vector of colours.
+# @return A list of `h` in degrees (0-360), and `s` and `v` in 0-1.
 #' @keywords internal
 #' @noRd
 hue_of <- function(cols) {
@@ -77,8 +105,16 @@ is_greenish <- function(cols) {
   x$h >= 75 & x$h <= 165 & x$s > 0.25 & x$v > 0.2
 }
 
-# Perceptual distance between every pair, in whatever space the colours have
-# already been transformed into.
+# Perceptual distance between every pair of colours.
+#
+# Uses CIE Delta-E 2000, which weights differences the way the eye does, so
+# that a threshold means the same thing across the spectrum. The caller passes
+# colours that have already been transformed, so this is unaware of whether it
+# is comparing originals, desaturated versions or a simulation.
+#
+# @param cols Character vector of colours.
+# @return A square matrix of distances, named on both margins, or NULL when
+#   there are fewer than two colours to compare.
 pairwise_delta_e <- function(cols) {
   if (length(cols) < 2) return(NULL)
   rgbm <- farver::decode_colour(cols)
@@ -87,7 +123,17 @@ pairwise_delta_e <- function(cols) {
   d
 }
 
-# Pairs that fall below the discrimination threshold once transformed.
+# Pairs that become too similar once transformed.
+#
+# Takes both vectors because the comparison and the reporting want different
+# things: the distance must be measured on the transformed colours, but the
+# user needs to be told which of *their* colours are the problem.
+#
+# @param original The colours as the plot uses them.
+# @param transformed The same colours after desaturation or CVD simulation,
+#   in the same order.
+# @param threshold Delta-E below which two colours count as merged.
+# @return A data frame of `a`, `b` and `delta_e`, empty if none merge.
 close_pairs <- function(original, transformed, threshold) {
   d <- pairwise_delta_e(transformed)
   if (is.null(d)) return(data.frame())
@@ -115,6 +161,16 @@ list_pairs <- function(pairs, max_shown = 4) {
          " and ", length(labels) - max_shown, " more")
 }
 
+# Convert colours to how they would print in black and white.
+#
+# Uses colorspace's desaturation where it is installed, which is more faithful.
+# The fallback is relative luminance under the WCAG definition - the same
+# weighting used for text contrast ratios - which linearises each channel,
+# weights them by how much the eye contributes to brightness, and re-encodes
+# the result as a grey.
+#
+# @param cols Character vector of colours.
+# @return Character vector of greys, same length and order.
 to_greyscale <- function(cols) {
   if (requireNamespace("colorspace", quietly = TRUE)) {
     return(colorspace::desaturate(cols))
@@ -127,6 +183,13 @@ to_greyscale <- function(cols) {
   grDevices::rgb(srgb, srgb, srgb)
 }
 
+# Colours as they appear to a reader with a colour vision deficiency.
+#
+# @param cols Character vector of colours.
+# @param type One of "deuteranopia", "protanopia" or "tritanopia".
+# @return Character vector of simulated colours, or NULL when colorspace is not
+#   installed, in which case the check reports that it could not be run rather
+#   than reporting a pass.
 simulate_cvd <- function(cols, type) {
   if (!requireNamespace("colorspace", quietly = TRUE)) return(NULL)
   switch(type,

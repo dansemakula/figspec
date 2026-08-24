@@ -1,3 +1,26 @@
+# Saving --------------------------------------------------------------------
+#
+# fig_save() is ggsave() with three things added, and most of the code below is
+# those three:
+#
+#   size      the caller may fix the canvas, the panel, or both. Panel sizing
+#             is solved in R/panel.R; this file receives the answer and writes
+#             it out.
+#   device    the format a journal wants decides which device can write it, and
+#             the devices differ in what they can do. Base pdf() and
+#             postscript() only know R's own font database, so a journal font
+#             such as Arial silently does not apply; cairo and ragg resolve
+#             system fonts. ragg also writes the resolution header back into a
+#             PNG or TIFF, which is what lets fig_check() read the dpi off the
+#             saved file afterwards.
+#   check     the file is inspected after it is written, so a figure that does
+#             not meet the specification says so at the point of saving rather
+#             than at submission.
+#
+# The device choices are made in select_device() and are all conditional on an
+# optional package being installed, so every path has to degrade rather than
+# fail.
+
 #' Save a figure at an exact size and resolution
 #'
 #' Saves a figure built to a specification. A journal is one way to supply one:
@@ -333,6 +356,15 @@ fig_save <- function(filename, plot = ggplot2::last_plot(),
 # a default has to be drawn from what a device exists for.
 WRITABLE_FORMATS <- c("pdf", "eps", "ps", "svg", "tiff", "tif", "png", "jpeg", "jpg")
 
+# The format to write when the caller did not name one.
+#
+# Takes the first format the specification lists that R can actually write. A
+# specification that lists only formats R cannot produce is an error rather
+# than a silent substitution, because writing a PDF when the journal asked for
+# Illustrator would look like compliance.
+#
+# @param spec A specification list.
+# @return A lower-case file extension.
 default_format <- function(spec) {
   fmts <- tolower(unlist(spec$formats %||% list()))
   writable <- intersect(fmts, WRITABLE_FORMATS)
@@ -348,8 +380,16 @@ default_format <- function(spec) {
   "pdf"
 }
 
-# Prefer ragg for raster output: it renders text more accurately and writes
-# the pHYs resolution header that fig_check() reads back.
+# The graphics device to write a given extension with.
+#
+# Prefers ragg for raster output: it renders text more accurately and writes
+# the pHYs resolution header that fig_check() reads back, which the base png()
+# and tiff() devices do not. Every branch is conditional on an optional package
+# or capability, so NULL is a normal answer meaning "use whatever ggsave would
+# have chosen".
+#
+# @param ext Lower-case file extension.
+# @return A device function, or NULL to leave the choice to ggsave().
 select_device <- function(ext) {
   if (ext %in% c("tiff", "tif") && requireNamespace("ragg", quietly = TRUE)) {
     return(ragg::agg_tiff)
@@ -372,17 +412,34 @@ select_device <- function(ext) {
 }
 
 
-# The font family a plot's theme actually asks for, if any.
+# The font family a plot's theme actually asks for, or "" if it asks for none.
+#
+# @param plot A ggplot object.
+# @return A single string, possibly empty.
 theme_family_raw <- function(plot) {
   fam <- tryCatch(plot$theme$text$family, error = function(e) NULL)
   if (is.null(fam)) "" else fam
 }
 
+# The same, phrased for a warning message. A theme that names no family still
+# needs something readable in "X cannot apply Y".
+#
+# @param plot A ggplot object.
+# @return A single non-empty string.
 theme_family <- function(plot) {
   fam <- theme_family_raw(plot)
   if (!nzchar(fam)) "the requested font" else fam
 }
 
+# Whether the device chosen for this extension can use a font installed on the
+# system, as opposed to only the fonts R itself knows about.
+#
+# This decides whether a journal's named font can be honoured at all. When it
+# is FALSE the font requirement cannot be met in that format, and fig_save()
+# says so rather than writing a figure in the wrong face.
+#
+# @param ext Lower-case file extension.
+# @return TRUE if system fonts will resolve.
 device_resolves_system_fonts <- function(ext) {
   if (ext %in% c("png", "tiff", "tif")) return(requireNamespace("ragg", quietly = TRUE))
   if (ext == "svg") return(requireNamespace("svglite", quietly = TRUE))
