@@ -1,3 +1,27 @@
+# Structural and typographic conventions ------------------------------------
+#
+# The rules in this file are the ones about how a figure is put together rather
+# than how large it is: how its panels are labelled, whether its axes are drawn,
+# how its tick labels are punctuated, what case its text is in, whether its
+# axes reach zero.
+#
+# Two things make these harder to check than a width in millimetres.
+#
+# First, publishers disagree, so there is no default to fall back on. Nature
+# wants panel labels upright and the Royal Society wants them italicised; Cell
+# Press wants capitals and AGU wants lower case. Every rule here is therefore
+# read from the specification and graded only where one is stated.
+#
+# Second, the evidence has to be dug out of the plot object, and a wrong guess
+# is worse than no answer. A text layer is only read as panel labels when there
+# is exactly one label per panel and those labels form a complete sequence,
+# because a looser test would read an ordinary annotation as a panel label and
+# report a pass nobody earned. Where figspec applied the labels itself,
+# tag_panels() leaves a marker so the work can be recognised rather than
+# inferred.
+#
+# The file ends with the rows fig_check() folds into its report.
+
 # Panel labels ------------------------------------------------------------
 
 # A patchwork nests: the object holds the plots composed into it plus itself,

@@ -1,3 +1,24 @@
+# Checking a set of figures together ----------------------------------------
+#
+# check_submission() runs fig_check() over several figures and reduces each
+# report to a single row, so a set can be read at a glance.
+#
+# It accepts three shapes of input, because people arrive with different ones:
+# a named list of plot objects, a directory to scan, or an explicit vector of
+# file paths. Plots are worth more than files, for the reason set out in
+# R/check.R - a saved raster has lost its type sizes and its colour mapping -
+# so the summary records which it was given.
+#
+# One thing here is not a compliance check at all. Given plot objects, the
+# panel width of each figure is measured and the spread across the set is
+# reported. No publisher states a rule about it, so it can never be a failure;
+# it is printed apart from the pass and fail lines because a set of figures
+# that each meet the width requirement can still look uneven on the page, and
+# that is usually what an author is actually trying to fix.
+#
+# The per-figure reports are kept whole in the "reports" attribute, so
+# submission_detail() can show the full finding for any one file.
+
 #' Check a whole set of figures together
 #'
 #' A submission is a set of figures that have to pass as a set. This runs
@@ -137,6 +158,10 @@ check_submission <- function(x, journal = NULL,
   )
 }
 
+# Subsetting a submission yields a plain data frame, for the same reason as
+# `[.figspec_report`: the attributes describe the whole check, and a selection
+# of rows is no longer that check.
+#
 #' @export
 `[.figspec_submission` <- function(x, ...) {
   out <- NextMethod()
