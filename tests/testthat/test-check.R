@@ -235,3 +235,40 @@ test_that("the reported resolution and the verdict agree", {
   shown <- as.numeric(sub(" dpi$", "", row$actual))
   expect_equal(row$status == "pass", shown >= 300)
 })
+
+# Unreadable files ------------------------------------------------------------
+
+test_that("a file that cannot be read says so", {
+  f <- tempfile(fileext = ".png"); on.exit(unlink(f))
+  set.seed(1); writeBin(as.raw(sample(0:255, 3000, TRUE)), f)
+  expect_warning(fig_check(f, "cell_press"), class = "figspec_unreadable_file")
+})
+
+test_that("a readable file is not accused of being unreadable", {
+  skip_if_not_installed("ggplot2")
+  f <- tempfile(fileext = ".png"); on.exit(unlink(f))
+  grDevices::png(f, width = 800, height = 600)
+  print(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point())
+  grDevices::dev.off()
+  expect_no_warning(fig_check(f, "cell_press"))
+})
+
+test_that("a vector format with no dimensions to read is left alone", {
+  # EPS and SVG carry no page box for figspec to find, so silence there is
+  # normal rather than a sign of corruption.
+  f <- tempfile(fileext = ".eps"); on.exit(unlink(f))
+  writeLines("%!PS-Adobe-3.0 EPSF-3.0", f)
+  expect_no_warning(fig_check(f, "cell_press"))
+})
+
+test_that("an unreadable file still reports what is knowable about it", {
+  f <- tempfile(fileext = ".png"); on.exit(unlink(f))
+  set.seed(1); writeBin(as.raw(sample(0:255, 3000, TRUE)), f)
+  r <- suppressWarnings(fig_check(f, "cell_press"))
+  # Format and size come from the file system, not from reading the image.
+  expect_equal(r$status[r$check == "File format"], "fail")
+  expect_equal(r$status[r$check == "File size"], "pass")
+  # Nothing that depends on reading the image may be graded.
+  expect_equal(r$status[r$check == "Width"], "unknown")
+  expect_equal(r$status[r$check == "Resolution"], "unknown")
+})

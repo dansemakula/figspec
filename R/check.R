@@ -349,6 +349,42 @@ inspect_file <- function(path) {
   info
 }
 
+# Say so when a file could not be read.
+#
+# A corrupt, truncated or mislabelled file produces the same report as a valid
+# one whose header simply omits an optional field: rows reading "could not
+# determine". Those mean different things, and the difference is the one this
+# package exists to keep - "your file does not record its resolution" is a fact
+# about the file, while "your file is not a PNG at all" is the most important
+# thing anyone could tell you about it.
+#
+# A readable raster always yields pixel dimensions, and a readable PDF always
+# yields a page box, so their absence is the signal. Vector formats other than
+# PDF carry no dimensions to begin with and are left alone.
+#
+# @param path The file being checked.
+# @param info What inspect_file() managed to establish.
+# @return Nothing; warns as a side effect.
+warn_if_unreadable <- function(path, info) {
+  fmt <- info$format %||% ""
+  unreadable <- if (fmt %in% c("png", "tiff", "tif", "jpeg", "jpg")) {
+    is.null(info$width_px)
+  } else if (fmt == "pdf") {
+    is.null(info$width_mm)
+  } else {
+    FALSE
+  }
+  if (!unreadable) return(invisible(NULL))
+  cli::cli_warn(
+    c("{.file {basename(path)}} could not be read as {toupper(fmt)}.",
+      "i" = "Its size and extension are still reported, but nothing that
+             depends on reading the image is.",
+      ">" = "Check the file opens, and that its contents match its extension."),
+    class = c("figspec_unreadable_file", "figspec_warning")
+  )
+  invisible(NULL)
+}
+
 # Report assembly --------------------------------------------------------
 
 # Does a measured resolution meet a stated minimum?
@@ -513,6 +549,7 @@ fig_check <- function(x, journal = NULL, column = "single",
   if (is_file) {
     if (!file.exists(x)) figspec_abort("File not found: {.file {x}}.", "not_found", path = x)
     info <- inspect_file(x)
+    warn_if_unreadable(x, info)
     actual_w <- info$width_mm
     actual_h <- info$height_mm
     actual_dpi <- info$dpi %||% dpi
