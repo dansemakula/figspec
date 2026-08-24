@@ -59,6 +59,14 @@ requirement, so nothing can be concluded. \code{unknown} means the requirement
 exists but this input cannot answer it, for example type size in a raster
 file. Only \code{fail} is a problem you must fix; \code{unspecified} and \code{unknown}
 are prompts to check by hand.
+
+Type size is read back from PDF, EPS and SVG files, which record the size
+each string was set at. This is worth doing rather than trusting the plot
+object, because R's \code{pdf()} and \code{postscript()} devices round text to whole
+points: a theme asking for 8.8 pt writes 9 pt into the file, and one asking
+for 5.2 pt writes 5. The file is what a publisher receives. Reading a PDF
+needs the pdftools package. A raster carries no type sizes at all, and is
+reported as \code{unknown} rather than estimated.
 }
 \examples{
 library(ggplot2)

@@ -296,6 +296,14 @@ graded <- function(check, requirement, actual, ok, spec = NULL, fields = NULL) {
 #' file. Only `fail` is a problem you must fix; `unspecified` and `unknown`
 #' are prompts to check by hand.
 #'
+#' Type size is read back from PDF, EPS and SVG files, which record the size
+#' each string was set at. This is worth doing rather than trusting the plot
+#' object, because R's `pdf()` and `postscript()` devices round text to whole
+#' points: a theme asking for 8.8 pt writes 9 pt into the file, and one asking
+#' for 5.2 pt writes 5. The file is what a publisher receives. Reading a PDF
+#' needs the pdftools package. A raster carries no type sizes at all, and is
+#' reported as `unknown` rather than estimated.
+#'
 #' @param x A ggplot object, or a path to a figure file.
 #' @param journal Registry id, for example `"frontiers"`.
 #' @param column Which column width the figure is intended for. One of
@@ -379,7 +387,9 @@ fig_check <- function(x, journal = NULL, column = "single",
     px_note <- if (is.null(actual_w) && !is.null(info$width_px)) {
       paste0(info$width_px, " px, resolution not recorded in file")
     } else NULL
-    text_sizes <- NULL
+    # A vector file still records the size each string was set at, so type
+    # size is answerable here even though a raster's text is only pixels.
+    text_sizes <- vector_text_sizes(x, actual_format)
   } else if (is_ggplot_object(x)) {
     if (is.null(width)) {
       width <- tryCatch(fig_width(journal, column, "mm"), error = function(e) NULL)
@@ -587,6 +597,8 @@ fig_check <- function(x, journal = NULL, column = "single",
   if (!is_file) {
     rows <- c(rows, colour_rows(plot_colours(x), spec, plot = x))
     rows <- c(rows, annotation_rows(x, spec))
+  } else {
+    rows <- c(rows, colour_rows_unmeasurable(spec))
   }
 
   # File size -------------------------------------------------------------
@@ -609,8 +621,9 @@ fig_check <- function(x, journal = NULL, column = "single",
   } else if (!from_registry) {
     # A hand-written or loaded specification. Silence about a field is the
     # author's own omission, not a gap in figspec's registry, so it must not be
-    # reported as one.
-    gap <- out$requirement == UNHARVESTED
+    # reported as one - and there is no publisher here either, so neither
+    # wording that names one can stand.
+    gap <- out$requirement %in% c(UNHARVESTED, UNSTATED)
     out$requirement[gap] <- UNSTATED_USER
     out$status[gap] <- "unspecified"
   }

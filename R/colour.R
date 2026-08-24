@@ -305,3 +305,33 @@ colour_rows <- function(cols, spec, threshold = 10, plot = NULL) {
   }
   rows
 }
+
+# The colour checks read the colours a plot assigns to its series. A saved file
+# has no series - a raster has anti-aliased pixels, and even a vector file
+# records paint without recording which layer asked for it - so none of these
+# questions can be answered from a file.
+#
+# They are still reported. A check that quietly disappears reads as a check
+# that passed, and the difference between "your colours are fine" and "nobody
+# looked at your colours" is the difference this package exists to keep. The
+# requirement still comes from the journal; only the answer is missing.
+colour_rows_unmeasurable <- function(spec) {
+  rows <- list()
+
+  rows[[1]] <- graded(
+    "Colour pairs",
+    if (!is.null(spec$avoid_colour_pairs)) "red and green not used together" else NULL,
+    NULL, NA, spec, "avoid_colour_pairs"
+  )
+  rows[[2]] <- graded(
+    "Greyscale",
+    if (isTRUE(spec$print_greyscale)) "must remain readable in black and white" else NULL,
+    NULL, NA, spec, "print_greyscale"
+  )
+  # Neither of these is stated by any publisher in the registry, so they are
+  # reported rather than graded whatever the input. What changes for a file is
+  # that there is nothing to report either.
+  rows[[3]] <- new_row("Colour vision", UNSTATED, "could not determine", "unspecified")
+  rows[[4]] <- new_row("Redundant coding", UNSTATED, "could not determine", "unspecified")
+  rows
+}

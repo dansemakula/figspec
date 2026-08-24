@@ -39,6 +39,7 @@ Suggests:
     curl,
     knitr,
     patchwork,
+    pdftools,
     ragg,
     rmarkdown,
     scales,

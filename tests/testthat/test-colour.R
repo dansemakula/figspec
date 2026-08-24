@@ -141,3 +141,43 @@ test_that("a short list of merged pairs is shown in full", {
     check_colour_safety(p, "royal_society")$check == "Greyscale", ]$actual
   expect_false(grepl("more$", msg))
 })
+
+test_that("a file reports the colour checks instead of dropping them", {
+  # A check that disappears reads as a check that passed. A file cannot answer
+  # any of these, and has to say so.
+  skip_if_not_installed("ggplot2")
+  f <- tempfile(fileext = ".png"); on.exit(unlink(f))
+  grDevices::png(f, width = 3.3, height = 2.4, units = "in", res = 300)
+  print(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
+          ggplot2::geom_point())
+  grDevices::dev.off()
+
+  r <- fig_check(f, "cell_press")
+  for (nm in c("Colour pairs", "Greyscale", "Colour vision", "Redundant coding")) {
+    expect_true(nm %in% r$check, info = nm)
+    expect_false(r$status[r$check == nm] %in% c("pass", "fail"), info = nm)
+  }
+})
+
+test_that("a file never passes a colour rule it cannot see", {
+  skip_if_not_installed("ggplot2")
+  f <- tempfile(fileext = ".png"); on.exit(unlink(f))
+  grDevices::png(f, width = 3.3, height = 2.4, units = "in", res = 300)
+  print(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point())
+  grDevices::dev.off()
+  # cell_press does state a red/green rule, so the row must exist and must not
+  # claim the figure met it.
+  r <- fig_check(f, "cell_press")
+  expect_equal(r$status[r$check == "Colour pairs"], "unknown")
+  expect_equal(r$actual[r$check == "Colour pairs"], "could not determine")
+})
+
+test_that("a user's own specification is never described as a publisher's", {
+  skip_if_not_installed("ggplot2")
+  f <- tempfile(fileext = ".png"); on.exit(unlink(f))
+  grDevices::png(f, width = 3.3, height = 2.4, units = "in", res = 300)
+  print(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point())
+  grDevices::dev.off()
+  r <- fig_check(f, list(name = "House style", dpi_min = 600))
+  expect_false(any(grepl("publisher", r$requirement)))
+})
