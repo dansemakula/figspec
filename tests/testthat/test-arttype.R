@@ -94,3 +94,41 @@ test_that("the line-art nudge fires only for genuinely bitonal plots", {
 test_that("suggest_art_type refuses a file, which cannot be inspected this way", {
   expect_error(suggest_art_type("figure.tiff"), "ggplot object")
 })
+
+test_that("a journal's own resolution figures are shown alongside the suggestion", {
+  # The suggestion is only useful next to what the journal actually asks for,
+  # since the whole point is that different art types carry different bars.
+  skip_if_not_installed("ggplot2")
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+    ggplot2::geom_point(colour = "black")
+  out <- capture.output(suggest_art_type(p, "bmj"), type = "message")
+  txt <- paste(out, collapse = " ")
+  expect_match(txt, "BMJ")
+  expect_match(txt, "300")
+  expect_match(txt, "1200")
+})
+
+test_that("the publisher's own wording is quoted where the registry has it", {
+  skip_if_not_installed("ggplot2")
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+    ggplot2::geom_point(colour = "black")
+  out <- capture.output(suggest_art_type(p, "bmj"), type = "message")
+  expect_match(paste(out, collapse = " "), "line art")
+})
+
+test_that("a journal stating only a general minimum lists just that", {
+  skip_if_not_installed("ggplot2")
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  out <- capture.output(suggest_art_type(p, "frontiers"), type = "message")
+  txt <- paste(out, collapse = " ")
+  expect_match(txt, "Frontiers")
+  expect_match(txt, "300")
+})
+
+test_that("the suggestion is returned invisibly for use in a call", {
+  skip_if_not_installed("ggplot2")
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+    ggplot2::geom_point(colour = "black")
+  got <- suppressMessages(suggest_art_type(p, "bmj"))
+  expect_equal(got, "line")
+})

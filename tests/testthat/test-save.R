@@ -103,3 +103,29 @@ test_that("a journal listing only unwritable formats fails with a usable message
     "none of which R can write"
   )
 })
+
+test_that("column and width cannot both set the canvas", {
+  # Both name the same dimension, so honouring one silently would mean
+  # ignoring an instruction the caller gave explicitly.
+  skip_if_not_installed("ggplot2")
+  out <- tempfile(fileext = ".png"); on.exit(unlink(out))
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  err <- tryCatch(
+    fig_save(out, p, journal = "frontiers", column = "single", width = 120),
+    error = function(e) e)
+  expect_s3_class(err, "figspec_error")
+  expect_match(conditionMessage(err), "120")
+})
+
+test_that("a specification stating no resolution gets a default that is announced", {
+  # A working number has to come from somewhere, but it must never be passed
+  # off as the journal's requirement.
+  skip_if_not_installed("ggplot2")
+  out <- tempfile(fileext = ".png"); on.exit(unlink(out))
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  msg <- capture.output(
+    suppressWarnings(fig_save(out, p, journal = list(name = "House", columns = list(single = 85)),
+                              check = FALSE)),
+    type = "message")
+  expect_match(paste(msg, collapse = " "), "not a requirement")
+})
