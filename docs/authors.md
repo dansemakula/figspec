@@ -2,8 +2,8 @@
 
 ## Authors
 
-- **[Daniel Semakula](https://github.com/dansemakula)**. Author,
-  maintainer, copyright holder.\
+- **[Daniel Semakula, MD, MPH, PhD](https://github.com/dansemakula)**.
+  Author, maintainer, copyright holder.\
   MD, MPH, PhD
 
 ## Citation
