@@ -7,7 +7,7 @@
 # this: regenerate the documentation, run the test suite, build a tarball and
 # check it the way CRAN will. Run it before every commit that touches R/.
 #
-#   ./dev/check.sh            documentation, tests, R CMD check
+#   ./dev/check.sh            documentation, tests, completeness audit, R CMD check
 #   ./dev/check.sh --fast     tests only, for a tight edit loop
 #   ./dev/check.sh --full     the above plus coverage and the pkgdown site
 #
@@ -37,6 +37,9 @@ Rscript -e '
 if [ "$MODE" = "--fast" ]; then
   printf '\n\033[32mFast check passed.\033[0m\n'; exit 0
 fi
+
+step "Completeness"
+Rscript dev/audit.R || fail "audit - something generated has drifted from its source"
 
 step "R CMD check"
 R CMD build . > /dev/null || fail "build"
@@ -69,7 +72,9 @@ if [ "$MODE" = "--full" ]; then
   step "Site"
   Rscript -e 'pkgdown::clean_site(quiet = TRUE); pkgdown::build_site(preview = FALSE, devel = FALSE)' \
     > /tmp/figspec-pkgdown.log 2>&1 || fail "pkgdown - see /tmp/figspec-pkgdown.log"
+  touch docs/.nojekyll
   echo "site rebuilt into docs/"
+  Rscript dev/audit.R --site || fail "site is stale after rebuilding, which should not happen"
 fi
 
 printf '\n\033[32mAll checks passed.\033[0m\n'
