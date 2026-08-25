@@ -39,6 +39,30 @@ Discrete colour and fill scales using a figspec palette
 |:----------|:-------------------------------------|
 | `palette` | Palette id, from figspec_palettes(). |
 
+### `scale_color_figspec()`
+
+Discrete colour and fill scales using a figspec palette
+
+The same function as
+[`scale_colour_figspec()`](https://dansemakula.github.io/figspec/reference/scale_colour_figspec.md),
+under the other spelling. Its options are identical.
+
+| Option    | What it does                         |
+|:----------|:-------------------------------------|
+| `palette` | Palette id, from figspec_palettes(). |
+
+### `scale_fill_figspec()`
+
+Discrete colour and fill scales using a figspec palette
+
+The same function as
+[`scale_colour_figspec()`](https://dansemakula.github.io/figspec/reference/scale_colour_figspec.md),
+under the other spelling. Its options are identical.
+
+| Option    | What it does                         |
+|:----------|:-------------------------------------|
+| `palette` | Palette id, from figspec_palettes(). |
+
 ### `scale_shape_figspec()`
 
 A discrete shape scale using shapes that stay legible at journal size
@@ -93,6 +117,21 @@ Check a figure against a journal’s requirements
 
 Check a figure’s colours for safety in print and for colour-blind
 readers
+
+| Option | What it does |
+|:---|:---|
+| `plot` | A ggplot object. |
+| `journal` | Registry id. |
+| `threshold` | Perceptual distance (CIE Delta-E 2000) below which two colours are treated as too close to tell apart. Defaults to 10, the point at which two colours read as clearly different rather than as shades of one another. This is a judgement of figspec’s, not a journal requirement, and you can raise it if you want a stricter figure. |
+
+### `check_color_safety()`
+
+Check a figure’s colours for safety in print and for colour-blind
+readers
+
+The same function as
+[`check_colour_safety()`](https://dansemakula.github.io/figspec/reference/check_colour_safety.md),
+under the other spelling. Its options are identical.
 
 | Option | What it does |
 |:---|:---|
@@ -365,6 +404,18 @@ Remove a registered house style
 ### `save_house_styles()`
 
 Save and reload your house styles
+
+| Option | What it does                   |
+|:-------|:-------------------------------|
+| `path` | File to write to or read from. |
+
+### `load_house_styles()`
+
+Save and reload your house styles
+
+The same function as
+[`save_house_styles()`](https://dansemakula.github.io/figspec/reference/save_house_styles.md),
+under the other spelling. Its options are identical.
 
 | Option | What it does                   |
 |:-------|:-------------------------------|

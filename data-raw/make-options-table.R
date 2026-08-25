@@ -24,14 +24,38 @@ rd_title <- function(path) {
   trimws(gsub("[[:space:]]+", " ", paste(unlist(rd[[i]]), collapse = "")))
 }
 
+# An exported name is not always the name of its help page: figspec documents
+# scale_colour_figspec() and scale_color_figspec() on one page, and the loop
+# below used to look for man/<name>.Rd and silently skip anything it could not
+# find. This maps every alias to the file that documents it.
+rd_for <- local({
+  files <- list.files("man", pattern = "[.]Rd$", full.names = TRUE)
+  map <- list()
+  for (f in files) {
+    al <- gsub("^\\\\alias\\{|\\}[[:space:]]*$", "",
+               grep("^\\\\alias\\{", readLines(f, warn = FALSE), value = TRUE))
+    for (a in al) map[[a]] <- f
+  }
+  function(fn) map[[fn]] %||% NA_character_
+})
+`%||%` <- function(x, y) if (is.null(x)) y else x
+
+# The canonical name a help page is filed under, so an alias can say which
+# function it is the same as.
+topic_name <- function(fn) {
+  f <- rd_for(fn)
+  if (is.na(f)) NA_character_ else sub("[.]Rd$", "", basename(f))
+}
+
 ns <- readLines("NAMESPACE")
 exported <- gsub("export\\(|\\)", "", grep("^export", ns, value = TRUE))
 
 groups <- list(
   "Fitting a plot to a journal" = c("fit_journal", "theme_journal", "scale_colour_figspec",
+                                    "scale_color_figspec", "scale_fill_figspec",
                                     "scale_shape_figspec", "figspec_linewidth",
                                     "figspec_shapes", "figspec_linetypes"),
-  "Checking"                    = c("fig_check", "check_colour_safety",
+  "Checking"                    = c("fig_check", "check_colour_safety", "check_color_safety",
                                     "check_submission", "submission_detail",
                                     "suggest_art_type", "check_media"),
   "Sizing and exporting"        = c("fig_save", "fig_panel_size", "fig_panel_width",
@@ -42,7 +66,7 @@ groups <- list(
                                     "figspec_palettes", "figspec_palette", "table_spec",
                                     "media_spec", "graphical_abstract_spec", "journal_palette"),
   "Your own styles and journals" = c("register_house_style", "house_styles",
-                                     "remove_house_style", "save_house_styles",
+                                     "remove_house_style", "save_house_styles", "load_house_styles",
                                      "register_journal", "load_journals"),
   "Maintaining the registry"     = c("registry_status", "stale_entries", "check_sources",
                                      "new_journal_entry", "validate_registry_file")
@@ -65,10 +89,19 @@ out <- c(
 for (g in names(groups)) {
   out <- c(out, paste("##", g), "")
   for (fn in groups[[g]]) {
-    path <- file.path("man", paste0(fn, ".Rd"))
-    if (!file.exists(path)) next
+    path <- rd_for(fn)
+    if (is.na(path) || !file.exists(path)) {
+      warning("no help page for ", fn, call. = FALSE)
+      next
+    }
     args <- rd_args(path)
+    canonical <- topic_name(fn)
     out <- c(out, paste0("### `", fn, "()`"), "", rd_title(path), "")
+    if (!identical(fn, canonical)) {
+      out <- c(out, paste0("The same function as `", canonical,
+                           "()`, under the other spelling. Its options are ",
+                           "identical."), "")
+    }
     if (is.null(args)) { out <- c(out, "_No options._", ""); next }
     args <- args[args$arg != "...", , drop = FALSE]
     # Pandoc sets a table's column widths from the widest cell it finds in the
@@ -80,23 +113,12 @@ for (g in names(groups)) {
              sprintf("| `%s` | %s |", args$arg, gsub("\\|", "\\\\|", args$desc)), "")
   }
 }
-# A hand-kept list goes stale silently: the panel-sizing functions were missing
-# from this page for a fortnight because nobody added them here. Say so instead.
-covered <- unlist(groups, use.names = FALSE)
-exported <- getNamespaceExports("figspec")
-alias_topics <- function(fn) {
-  for (f in list.files("man", pattern = "[.]Rd$", full.names = TRUE)) {
-    al <- gsub("^\\\\alias\\{|\\}\\s*$", "", grep("^\\\\alias\\{", readLines(f, warn = FALSE), value = TRUE))
-    if (fn %in% al) return(sub("[.]Rd$", "", basename(f)))
-  }
-  NA_character_
-}
-uncovered <- Filter(function(fn) {
-  t <- alias_topics(fn)
-  is.na(t) || !(t %in% covered)
-}, exported)
+# A hand-kept list goes stale silently: the panel-sizing functions were absent
+# from this page for a fortnight because nobody added them here. Every export
+# is now listed under its own name, aliases included, so the check is exact.
+uncovered <- setdiff(exported, unlist(groups, use.names = FALSE))
 if (length(uncovered)) {
-  warning("not on the options page: ", paste(uncovered, collapse = ", "), call. = FALSE)
+  stop("not on the options page: ", paste(uncovered, collapse = ", "), call. = FALSE)
 }
 
 writeLines(out, "vignettes/options.Rmd")
