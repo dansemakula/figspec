@@ -113,6 +113,15 @@ Check a whole set of figures together
 | `pattern` | Regular expression selecting files when x is a directory. Defaults to common figure extensions. |
 | `recursive` | Whether to descend into subdirectories. |
 
+### `submission_detail()`
+
+The full report for one file in a submission check
+
+| Option | What it does                                 |
+|:-------|:---------------------------------------------|
+| `x`    | A figspec_submission object.                 |
+| `file` | File name, as shown in the submission table. |
+
 ### `suggest_art_type()`
 
 Which resolution rule applies to this figure
@@ -131,7 +140,7 @@ Check a supplementary media file against a journal’s requirements
 | `path`    | Path to a media file. |
 | `journal` | Registry id.          |
 
-## Exporting
+## Sizing and exporting
 
 ### `fig_save()`
 
@@ -149,6 +158,37 @@ Save a figure at an exact size and resolution
 | `units` | Units for width, height, panel_width and panel_height. |
 | `dpi` | Resolution. Defaults to the journal’s stated minimum, or 300. |
 | `check` | Whether to check the result and report failures as a warning. Only checks against a journal when one is given. |
+
+### `fig_panel_size()`
+
+Set the size of a plot’s panels
+
+| Option          | What it does                                    |
+|:----------------|:------------------------------------------------|
+| `plot`          | A ggplot, a patchwork composition, or a gtable. |
+| `width, height` | Panel size. NULL leaves that dimension alone.   |
+| `units`         | Units for width and height.                     |
+
+### `fig_panel_width()`
+
+The panel width a set of figures can share
+
+| Option | What it does |
+|:---|:---|
+| `plots` | A list of plots, or one plot. |
+| `journal` | Registry id. Supplies the canvas width. |
+| `column` | Which of the journal’s stated column widths to fit. |
+| `width` | Canvas width, if you are not sizing to a journal. |
+| `units` | Units for width and for the returned value. |
+| `format` | File format the figures will be written in, for example “tiff”. Text is measured in the font the device resolves, so measuring on the device you will actually save with is what makes the answer exact. Defaults to the journal’s first accepted format. |
+
+### `fig_geometry()`
+
+What size a figure actually is
+
+| Option | What it does                                    |
+|:-------|:------------------------------------------------|
+| `x`    | A figspec_geometry object, from fig_geometry(). |
 
 ### `refit_journal()`
 
@@ -197,6 +237,21 @@ Set knitr chunk options for a journal
 | `column` | Which column width to size to. |
 | `height` | Figure height. Defaults to three quarters of the width, which is a convenience rather than a journal requirement. |
 | `units` | Units for height. |
+
+## Labelling panels
+
+### `tag_panels()`
+
+Label the panels of a figure
+
+| Option | What it does |
+|:---|:---|
+| `plot` | A ggplot, faceted or not, or a patchwork composition. |
+| `journal` | Registry id, or a specification. Supplies the label style. |
+| `level` | Label vocabulary: “A”, “a”, “1”, “I” or “i”. Overrides the journal, which is what you want when a co-author has asked for something the publisher does not mention. |
+| `open, close` | Characters around the label. Journals rarely state these; “(” and “)” are common in print. |
+| `strips` | Whether to keep facet strips. Ignored for a composition. |
+| `x, y, hjust, vjust` | Where the label sits inside its panel. |
 
 ## Looking things up
 
@@ -299,6 +354,14 @@ House styles registered in this session
 
 *No options.*
 
+### `remove_house_style()`
+
+Remove a registered house style
+
+| Option | What it does                 |
+|:-------|:-----------------------------|
+| `name` | Name of the style to remove. |
+
 ### `save_house_styles()`
 
 Save and reload your house styles
@@ -347,6 +410,15 @@ Entries that need rechecking
 |:---|:---|
 | `max_age_days` | Age beyond which an entry is flagged for rechecking. Defaults to 365. |
 | `as_of` | Date to measure against. Defaults to today. |
+
+### `check_sources()`
+
+Are the pages the registry cites still there
+
+| Option    | What it does                               |
+|:----------|:-------------------------------------------|
+| `ids`     | Entries to check. Defaults to all of them. |
+| `timeout` | Seconds to wait for each response.         |
 
 ### `new_journal_entry()`
 

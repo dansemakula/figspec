@@ -32,15 +32,19 @@ groups <- list(
                                     "scale_shape_figspec", "figspec_linewidth",
                                     "figspec_shapes", "figspec_linetypes"),
   "Checking"                    = c("fig_check", "check_colour_safety",
-                                    "check_submission", "suggest_art_type", "check_media"),
-  "Exporting"                   = c("fig_save", "refit_journal", "figspec_preview",
+                                    "check_submission", "submission_detail",
+                                    "suggest_art_type", "check_media"),
+  "Sizing and exporting"        = c("fig_save", "fig_panel_size", "fig_panel_width",
+                                    "fig_geometry", "refit_journal", "figspec_preview",
                                     "figspec_chunk_opts", "figspec_knitr_setup"),
+  "Labelling panels"            = c("tag_panels"),
   "Looking things up"           = c("journals", "journal_spec", "fig_width", "fig_columns",
                                     "figspec_palettes", "figspec_palette", "table_spec",
                                     "media_spec", "graphical_abstract_spec", "journal_palette"),
   "Your own styles and journals" = c("register_house_style", "house_styles",
-                                     "save_house_styles", "register_journal", "load_journals"),
-  "Maintaining the registry"     = c("registry_status", "stale_entries",
+                                     "remove_house_style", "save_house_styles",
+                                     "register_journal", "load_journals"),
+  "Maintaining the registry"     = c("registry_status", "stale_entries", "check_sources",
                                      "new_journal_entry", "validate_registry_file")
 )
 
@@ -76,5 +80,24 @@ for (g in names(groups)) {
              sprintf("| `%s` | %s |", args$arg, gsub("\\|", "\\\\|", args$desc)), "")
   }
 }
+# A hand-kept list goes stale silently: the panel-sizing functions were missing
+# from this page for a fortnight because nobody added them here. Say so instead.
+covered <- unlist(groups, use.names = FALSE)
+exported <- getNamespaceExports("figspec")
+alias_topics <- function(fn) {
+  for (f in list.files("man", pattern = "[.]Rd$", full.names = TRUE)) {
+    al <- gsub("^\\\\alias\\{|\\}\\s*$", "", grep("^\\\\alias\\{", readLines(f, warn = FALSE), value = TRUE))
+    if (fn %in% al) return(sub("[.]Rd$", "", basename(f)))
+  }
+  NA_character_
+}
+uncovered <- Filter(function(fn) {
+  t <- alias_topics(fn)
+  is.na(t) || !(t %in% covered)
+}, exported)
+if (length(uncovered)) {
+  warning("not on the options page: ", paste(uncovered, collapse = ", "), call. = FALSE)
+}
+
 writeLines(out, "vignettes/options.Rmd")
 cat("wrote vignettes/options.Rmd:", length(out), "lines\n")
