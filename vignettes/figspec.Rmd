@@ -16,40 +16,47 @@ library(ggplot2)
 library(figspec)
 ```
 
-## Two jobs
+## The figure has to meet a specification
 
-figspec builds a figure to a specification, exports it at exactly that size and
-resolution, then checks the result and says where it falls short.
+You have made a plot, and before it goes anywhere it has to meet a
+specification: how wide it may be, how much resolution it needs, which file
+format is accepted, how small the type may get, sometimes which colours are
+allowed.
 
-A specification can come from two places, and the package does two jobs
-accordingly.
+Where that specification comes from varies. It might be your own, or your
+lab's. It might be a format your employer or your field expects. Or it might be
+a journal's, published in its author guidelines. figspec works the same way in
+every case: it builds the figure to the specification, exports it at exactly
+that size and resolution, then checks the result and tells you where it falls
+short.
 
-**A journal's published requirements.** Name a target journal and the width,
-resolution, file format, typography and colour rules come from its author
-guidelines, as data, with the page they were read from and the date. This is
-what the rest of this article covers.
+**If you are submitting to a journal**, name it and the specification arrives
+ready-made. The width, resolution, file format, typography and colour rules
+come from that journal's author guidelines, held as data, along with the page
+they were read from and the date. That is what the rest of this article covers.
 
-**A size you choose yourself.** No journal need be involved. The most useful
-case is setting the *plot panel* rather than the image, so a set of figures
-shares one plot area whatever their axis labels do — something R cannot
-otherwise express. That has its own article: `vignette("panels")`.
+**If the specification is your own**, write it as a plain list, or register it
+once as a house style and reuse it. Everything below works the same way; where
+this article says "journal", your own specification takes its place.
 
-You can also write a specification by hand, or register a house style, and
-check against it exactly as though it were a journal. Wherever this article
-says "journal", a specification of your own works the same way.
+**If what you need is a particular size**, no specification is needed at all.
+The useful case here is setting the *plot panel* rather than the image, so a
+set of figures shares one plot area whatever their axis labels do — something R
+cannot otherwise express. That has its own article: `vignette("panels")`.
 
-## The problem journals create
+## Journals ask for different things
 
-Journals publish precise rules for the figures you submit, and the rules
-differ. Cell Press asks for 85, 114 or 174 mm wide with type between 6 and 8 pt.
+Every journal sets its own figure rules, and they do not agree with each other.
+Cell Press asks for 85, 114 or 174 mm wide with type between 6 and 8 pt.
 Science asks for 57, 121 or 184 mm with type no smaller than 5 pt. PNAS caps
 type at 12 pt and asks that numerical axes reach zero. Nature wants panel
 labels upright; the Royal Society wants them italicised.
 
-Nothing in an ordinary plotting workflow makes any of that visible, and most
-people find out at the production stage, after acceptance.
+None of that is unreasonable — each journal is designing its own pages. The
+difficulty is that nothing in an ordinary plotting workflow makes any of it
+visible, so most people find out at the production stage, after acceptance.
 
-## Bring the journal in as you plot
+## Building the figure to the journal from the start
 
 The simplest way to meet a journal's requirements is to build the figure to
 them from the start. Add the journal the way you would add a colour scale:
@@ -68,7 +75,7 @@ That one line carries the journal's typography, its stated line weights, its
 structural rules, and colours and shapes chosen to survive what the journal
 does to a figure in production.
 
-### What actually changes
+### What changes in the figure
 
 Both figures below are the same data and the same code, drawn at Cell Press's
 single-column width of 85 mm — the size a reader sees, not the size you draw
@@ -151,7 +158,7 @@ anyone, so it is *not yet harvested for this journal*. The first is a fact
 about Frontiers. The second is a fact about this registry, and saying so is the
 difference between a registry you can trust and one that is confidently wrong.
 
-## Fixing it
+## Fixing what failed
 
 `theme_journal()` applies every requirement a theme can express: the font
 family, the type floor and ceiling, stated line weights, and structural rules
@@ -171,7 +178,7 @@ knitr::kable(
 )
 ```
 
-## Colour, and why shape matters
+## Colour, and why shape matters as well
 
 Three colour findings are reported, and which of them can *fail* depends on
 what the publisher actually states.
@@ -286,10 +293,12 @@ figspec_chunk_opts("cell_press", "double")
 Put that in a setup chunk with `figspec_knitr_setup("cell_press", "double")`
 and every figure in the document is emitted at the journal's size.
 
-## When the paper is rejected
+## Moving a figure set to a different journal
 
-The next journal has different rules, and they can be incompatible: Cell Press
-wants type between 6 and 8 pt, PLOS ONE between 8 and 12.
+Papers get resubmitted, and the next journal's rules are not the last one's.
+They can be flatly incompatible: Cell Press wants type between 6 and 8 pt,
+PLOS ONE between 8 and 12, so one figure cannot satisfy both. Rather than
+redraw the set, re-export it against the new specification.
 
 ```{r, eval = FALSE}
 refit_journal(my_plots, journal = "plos_one", outdir = "figures_plos/")
@@ -299,9 +308,12 @@ refit_journal(my_plots, journal = "plos_one", outdir = "figures_plos/")
 and refuses saved files, because type size cannot be recovered from a finished
 TIFF and a re-fitted file could not be trusted.
 
-## Other display items
+## Tables, videos and graphical abstracts
 
-Journals set rules for other display items too.
+Figures are not the only thing a journal sets rules for. Tables, supplementary
+video and the graphical abstract each have their own, and they are reported
+separately rather than mixed into a figure's report — meeting one says nothing
+about the others.
 
 ```{r}
 graphical_abstract_spec("rsc")
@@ -310,7 +322,7 @@ graphical_abstract_spec("rsc")
 `table_spec()` and `media_spec()` do the same for tables and for supplementary
 video and audio.
 
-## Where figspec hands the judgement back to you
+## What figspec leaves for you to decide
 
 Where a publisher never said what compliance means, figspec reports the
 silence. It leaves a pixel size in pixels until a resolution arrives to convert
