@@ -316,7 +316,42 @@ main div.sourceCode > pre { margin-bottom: 0; }
 .template-reference-topic main h2 {
   font-size: 1.25rem;
   border-bottom: 1px solid var(--fs-rule);
-  margin-top: 1.8rem;
+  margin-top: 1.5rem;
+  margin-bottom: .5rem;
+}
+
+/* The Arguments block is a definition list of names against descriptions,
+   which is the same shape as the option tables on the Options page and the
+   function list on the reference index. Laying it out the same way keeps a
+   reader moving between those three pages at the same rhythm; as a plain
+   definition list it ran about twice as tall for the same content. */
+.template-reference-topic main dl {
+  display: grid;
+  grid-template-columns: minmax(9rem, 15rem) 1fr;
+  margin: .4rem 0 1.1rem;
+  border-top: 1px solid var(--fs-rule);
+}
+.template-reference-topic main dl dt,
+.template-reference-topic main dl dd {
+  margin: 0;
+  padding: .45rem .7rem;
+  border-bottom: 1px solid var(--fs-rule);
+  font-size: .95rem;
+  line-height: 1.55;
+}
+.template-reference-topic main dl dt {
+  background: var(--fs-teal-soft);
+  color: var(--fs-teal-deep);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  padding-top: .45rem;
+}
+.template-reference-topic main dl dd > p:first-child { margin-top: 0; }
+.template-reference-topic main dl dd > p:last-child { margin-bottom: 0; }
+
+@media (max-width: 700px) {
+  .template-reference-topic main dl { grid-template-columns: 1fr; }
+  .template-reference-topic main dl dt { border-bottom: none; }
 }
 
 /* ---- Sidebar ------------------------------------------------------------ */

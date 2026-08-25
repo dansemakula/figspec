@@ -68,6 +68,41 @@ That one line carries the journal's typography, its stated line weights, its
 structural rules, and colours and shapes chosen to survive what the journal
 does to a figure in production.
 
+### What actually changes
+
+Both figures below are the same data and the same code, drawn at Cell Press's
+single-column width of 85 mm — the size a reader sees, not the size you draw
+at on a laptop. That is the whole difficulty: at 85 mm a default ggplot is
+about half the width it was designed at, and everything in it shrinks with it.
+
+```{r before, fig.width = 85/25.4, fig.height = 62/25.4, dpi = 200, out.width = "322px", fig.alt = "A default ggplot at 85 mm wide, with type too large and a red-green palette."}
+plain <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
+  geom_point() +
+  labs(title = "Fuel economy", x = "Weight (1000 lbs)",
+       y = "Miles per gallon", colour = "Cylinders")
+
+plain
+```
+
+ggplot2's default base size is 11 pt, which puts this figure's text between
+8.8 and 13.2 pt against Cell Press's 6 to 8. Its default palette opens with a
+red and a green, which Cell Press states should not be used together. And the
+three series are told apart by colour alone.
+
+```{r after, fig.width = 85/25.4, fig.height = 62/25.4, dpi = 200, out.width = "322px", fig.alt = "The same figure with fit_journal applied: smaller type, Okabe-Ito colours, and a different shape per series."}
+plain +
+  aes(shape = factor(cyl)) +
+  # Give the shape the same label as the colour, so ggplot2 merges the two
+  # into one legend rather than drawing a second.
+  labs(shape = "Cylinders") +
+  fit_journal("cell_press")
+```
+
+Type is now inside the journal's range, the palette is Okabe-Ito, which has no
+red-green pair and stays separable under the common colour vision
+deficiencies, and each series carries its own shape, so the figure still reads
+if it is printed in black and white. Nothing about the data changed.
+
 ## Checking a figure you have already drawn
 
 Type size lives in the plot object. Once a figure becomes a TIFF it is pixels,

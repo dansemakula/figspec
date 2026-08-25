@@ -67,6 +67,36 @@ That one line carries the journal’s typography, its stated line weights,
 its structural rules, and colours and shapes chosen to survive what the
 journal does to a figure in production.
 
+### What actually changes
+
+Both figures below are the same data and the same code, drawn at Cell
+Press’s single-column width of 85 mm — the size a reader sees, not the
+size you draw at on a laptop. That is the whole difficulty: at 85 mm a
+default ggplot is about half the width it was designed at, and
+everything in it shrinks with it.
+
+`plain`` ``<-`` `[`ggplot`](https://ggplot2.tidyverse.org/reference/ggplot.html)`(``mtcars``, `[`aes`](https://ggplot2.tidyverse.org/reference/aes.html)`(``wt``, ``mpg``, colour ``=`` `[`factor`](https://rdrr.io/r/base/factor.html)`(``cyl``)``)``)`` ``+`` `` `[`geom_point`](https://ggplot2.tidyverse.org/reference/geom_point.html)`(``)`` ``+`` `` `[`labs`](https://ggplot2.tidyverse.org/reference/labs.html)`(``title ``=`` ``"Fuel economy"``, x ``=`` ``"Weight (1000 lbs)"``,`` `` y ``=`` ``"Miles per gallon"``, colour ``=`` ``"Cylinders"``)`` `` ``plain`
+
+![A default ggplot at 85 mm wide, with type too large and a red-green
+palette.](figspec_files/figure-html/before-1.png)
+
+ggplot2’s default base size is 11 pt, which puts this figure’s text
+between 8.8 and 13.2 pt against Cell Press’s 6 to 8. Its default palette
+opens with a red and a green, which Cell Press states should not be used
+together. And the three series are told apart by colour alone.
+
+`plain`` ``+`` `` `[`aes`](https://ggplot2.tidyverse.org/reference/aes.html)`(``shape ``=`` `[`factor`](https://rdrr.io/r/base/factor.html)`(``cyl``)``)`` ``+`` `` ``# Give the shape the same label as the colour, so ggplot2 merges the two`` `` ``# into one legend rather than drawing a second.`` `` `[`labs`](https://ggplot2.tidyverse.org/reference/labs.html)`(``shape ``=`` ``"Cylinders"``)`` ``+`` `` `[`fit_journal`](https://dansemakula.github.io/figspec/reference/fit_journal.md)`(``"cell_press"``)`
+
+![The same figure with fit_journal applied: smaller type, Okabe-Ito
+colours, and a different shape per
+series.](figspec_files/figure-html/after-1.png)
+
+Type is now inside the journal’s range, the palette is Okabe-Ito, which
+has no red-green pair and stays separable under the common colour vision
+deficiencies, and each series carries its own shape, so the figure still
+reads if it is printed in black and white. Nothing about the data
+changed.
+
 ## Checking a figure you have already drawn
 
 Type size lives in the plot object. Once a figure becomes a TIFF it is
