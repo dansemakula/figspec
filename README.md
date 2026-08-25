@@ -2,11 +2,9 @@
 
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-f59331?style=flat-square&labelColor=8fa3ac)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-<!-- The R-CMD-check badge points at a workflow that only exists once the
-     repository is on GitHub. Until then it renders as a broken image, so it
-     waits here:
-[![R-CMD-check](https://github.com/dansemakula/figspec/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/dansemakula/figspec/actions/workflows/R-CMD-check.yaml)
--->
+[![Coverage](https://img.shields.io/badge/coverage-91%25-1f9254?style=flat-square)](https://github.com/dansemakula/figspec)
+[![Journals](https://img.shields.io/badge/journals-27-2b7fd4?style=flat-square)](https://dansemakula.github.io/figspec/articles/journals.html)
+[![Licence](https://img.shields.io/badge/licence-MIT-7b8b93?style=flat-square)](https://github.com/dansemakula/figspec/blob/main/LICENSE.md)
 <!-- badges: end -->
 
 figspec builds a figure to a specification, exports it at exactly that size and
