@@ -1,6 +1,24 @@
 # figspec
 
 <!-- badges: start -->
+<!-- Slots waiting on something outside the package. Each is written out and
+     ready; uncomment the line when its condition is met, and keep this order,
+     which runs from build health through reach to terms.
+
+     Needs a GitHub Actions run:
+[![R-CMD-check](https://github.com/dansemakula/figspec/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/dansemakula/figspec/actions/workflows/R-CMD-check.yaml)
+
+     Needs the package to be on CRAN. Until then a version badge reads
+     "not available" and a downloads badge reads zero, which is worse than
+     showing nothing:
+[![CRAN](https://www.r-pkg.org/badges/version/figspec)](https://CRAN.R-project.org/package=figspec)
+[![CRAN checks](https://badges.cranchecks.info/worst/figspec.svg)](https://cran.r-project.org/web/checks/check_results_figspec.html)
+[![Downloads](https://cranlogs.r-pkg.org/badges/figspec)](https://CRAN.R-project.org/package=figspec)
+[![Total downloads](https://cranlogs.r-pkg.org/badges/grand-total/figspec)](https://CRAN.R-project.org/package=figspec)
+
+     Needs a Zenodo deposit of a tagged release:
+[![DOI](https://zenodo.org/badge/DOI/PLACEHOLDER.svg)](https://doi.org/PLACEHOLDER)
+-->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-f59331?style=flat-square&labelColor=8fa3ac)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![Coverage](https://img.shields.io/badge/coverage-91%25-1f9254?style=flat-square)](https://github.com/dansemakula/figspec)
 [![Journals](https://img.shields.io/badge/journals-27-2b7fd4?style=flat-square)](https://dansemakula.github.io/figspec/articles/journals.html)
