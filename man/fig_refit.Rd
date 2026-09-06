@@ -14,8 +14,10 @@ fig_refit(
 )
 }
 \arguments{
-\item{plots}{A non-empty named list of plot objects. Names become file stems
-and must therefore be unique and safe to use as file names.}
+\item{plots}{A non-empty named list of editable figures. Supported inputs
+include ggplot2 and patchwork objects, lattice and Plotly plots, grid
+grobs, and base-graphics code wrapped in functions or one-sided formulas.
+Names become file stems and must be unique and safe to use as file names.}
 
 \item{spec}{The new specification: a registry id, a \code{figspec_spec}, or a
 named list of requirements.}
@@ -25,8 +27,8 @@ named list of requirements.}
 \item{column}{Which column width to use, either one value for all plots or
 a uniquely named vector mapping every plot name to a width.}
 
-\item{retheme}{Whether to apply \code{\link[=theme_spec]{theme_spec()}} to each plot so its
-typography matches the new specification. Must be one \code{TRUE} or \code{FALSE}.}
+\item{retheme}{Whether to apply the requirements exposed by each plotting
+system before export. Must be one \code{TRUE} or \code{FALSE}.}
 
 \item{format}{File extension without a dot. Defaults to the first writable
 format accepted by the specification.}
@@ -36,11 +38,12 @@ A \code{\link[=submission_check]{submission_check()}} report for the files writt
 }
 \description{
 A figure set may need to move to a different journal, report template or
-organisational standard. This takes the editable plot objects you already
+organisational standard. This takes the editable figures you already
 have and exports the whole set against the new specification.
 }
 \details{
-It works from plot objects, not from saved files, and that is deliberate.
+It works from live figure objects, not from saved files, and that is
+deliberate.
 Type size cannot be recovered from a saved raster, and rescaling one only
 degrades it, so re-fitting a finished TIFF cannot produce a compliant
 figure. Keep your plots in a list and this stays a one-line operation.

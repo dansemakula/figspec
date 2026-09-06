@@ -36,7 +36,9 @@ audio.
 
 It addresses two common needs.
 
-**The need for figures that meet journal requirements.** Journals set detailed
+## The need for figures that meet journal requirements
+
+Journals set detailed
 rules for submitted figures, including column widths, minimum resolution,
 accepted formats, text sizes, line weights, colour use and panel labels. These
 rules differ between publishers and are often scattered across several pages
@@ -68,7 +70,9 @@ figure report. `media_check()` can then inspect an actual video or audio file
 for properties such as its format, frame size, file size, codec and audio bit
 rate, reporting anything it cannot determine rather than guessing.
 
-**The need for figures with consistent panel sizes.** R can set the overall
+## The need for figures with consistent panel sizes
+
+R can set the overall
 dimensions of an image, but it does not normally control the exact size of the
 plot area inside it. As a result, a figure with long axis labels or a large
 legend can have a smaller plotting area than a simpler figure saved at the same
@@ -84,6 +88,12 @@ need to be produced consistently.
 Together, these tools make figure preparation more deliberate, consistent and
 reproducible: define the result you need, build the figure to that
 specification, and verify the finished output before it leaves R.
+
+figspec accepts figures made with ggplot2, base R, lattice, grid and Plotly.
+It applies the requirements that each plotting system makes available, exports
+the result at the requested size and verifies the finished file. Exact panel
+sizing and the most detailed checks remain available for ggplot2-compatible
+figures because those objects expose their complete panel and layer structure.
 
 ## Installation
 
@@ -189,7 +199,7 @@ Here, the plot panel—not the complete image—is 62 mm wide. figspec measures 
 labels, legends and margins and calculates the canvas needed around it.
 `fig_panel_width()` can also determine a shared panel width for a collection
 of figures. See
-[Sizing figures by panel, not by canvas](https://dansemakula.github.io/figspec/articles/panels.html)
+[Control figure and panel dimensions](https://dansemakula.github.io/figspec/articles/panels.html)
 for worked examples.
 
 ## Understanding verification results
@@ -285,7 +295,7 @@ not stated.
 ## Learn more
 
 - [Getting started with figspec](https://dansemakula.github.io/figspec/articles/figspec.html)
-- [Sizing figures by panel, not by canvas](https://dansemakula.github.io/figspec/articles/panels.html)
+- [Control figure and panel dimensions](https://dansemakula.github.io/figspec/articles/panels.html)
 - [Journal and publisher profiles](https://dansemakula.github.io/figspec/articles/journals.html)
 - [Every function and its options](https://dansemakula.github.io/figspec/articles/options.html)
 - [Registry provenance and maintenance](https://dansemakula.github.io/figspec/articles/registry.html)

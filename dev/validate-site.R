@@ -108,6 +108,53 @@ migrated_old <- map$old_name[
 # just their filenames and search-index entries. Redirect pages are excluded
 # because their sole purpose is to preserve an approved alternate URL.
 canonical_html <- html_files[!is_redirect_page]
+
+# Every canonical page must retain the same global wayfinding after a rebuild.
+# Contextual guide/reference navigation is added by extra.js at runtime, so the
+# validator also confirms that those page types load the script responsible
+# for breadcrumbs, return links and previous/next links.
+for (page in canonical_html) {
+  doc <- xml2::read_html(page)
+  rel <- substring(page, nchar(site) + 2L)
+  site_nav <- xml2::xml_find_all(doc, ".//nav[@aria-label='Site navigation']")
+  if (length(site_nav) != 1L) {
+    fail("canonical page must contain one site navigation menu: ", rel)
+    next
+  }
+  nav_text <- trimws(xml2::xml_text(site_nav))
+  for (label in c("Home", "Get started", "Reference", "Guides", "Changelog")) {
+    if (!grepl(paste0("\\b", label, "\\b"), nav_text)) {
+      fail("site navigation is missing '", label, "' in ", rel)
+    }
+  }
+  guide_index_link <- xml2::xml_find_all(
+    site_nav,
+    ".//a[normalize-space(.)='All guides']"
+  )
+  if (length(guide_index_link) != 1L) {
+    fail("site navigation must contain one All guides link in ", rel)
+  }
+
+  classes <- strsplit(xml2::xml_attr(xml2::xml_find_first(doc, ".//body/div[contains(@class, 'template-')]"), "class"), "[[:space:]]+")[[1]]
+  needs_context <- any(classes %in% c("template-article", "template-reference-topic"))
+  if (needs_context) {
+    scripts <- xml2::xml_attr(xml2::xml_find_all(doc, ".//script[@src]"), "src")
+    if (!any(endsWith(scripts, "extra.js"))) {
+      fail("contextual navigation script is missing from ", rel)
+    }
+  }
+}
+
+navigation_source <- paste(readLines("pkgdown/extra.js", warn = FALSE), collapse = "\n")
+for (probe in c(
+  "addGuideNavigation", "addReferenceTopicNavigation", "addIndexBreadcrumbs",
+  "All guides", "All functions", "Previous: ", "Next: "
+)) {
+  if (!grepl(probe, navigation_source, fixed = TRUE)) {
+    fail("contextual navigation implementation is missing: ", probe)
+  }
+}
+
 for (old in migrated_old) {
   patterns <- if (identical(old, "journals")) {
     c(

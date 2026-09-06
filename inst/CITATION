@@ -2,23 +2,24 @@ citHeader("To cite figspec in publications, please use:")
 
 bibentry(
   bibtype  = "Manual",
-  title    = "{figspec}: Check and Export Figures Against Journal Submission Requirements",
+  key      = "semakula2026figspec",
+  title    = "{figspec}: Build, Export and Verify Figures Against a Specification",
   author   = person("Daniel", "Semakula"),
   year     = "2026",
-  note     = "R package version 0.1.0",
-  url      = "https://github.com/dansemakula/figspec",
+  note     = paste("R package version", meta$Version),
+  url      = "https://dansemakula.github.io/figspec/",
   textVersion = paste(
     "Semakula, D. (2026).",
-    "figspec: Check and Export Figures Against Journal Submission Requirements.",
-    "R package version 0.1.0.",
-    "https://github.com/dansemakula/figspec"
+    "figspec: Build, Export and Verify Figures Against a Specification.",
+    paste0("R package version ", meta$Version, "."),
+    "https://dansemakula.github.io/figspec/"
   )
 )
 
 citFooter(
-  "figspec's registry records figure requirements taken from journal author",
-  "guidelines, each entry naming the page it was read from and the date. If a",
-  "requirement matters to your argument, cite the publisher's guidelines as",
-  "well: spec_get(<id>)$source_url gives the page, and $verified_on the",
-  "date it was read."
+  "figspec's bundled registry records requirements from publisher and journal",
+  "guidance. Each entry names its source and the date it was last checked. When",
+  "you use a bundled publication requirement, cite the original guidance where",
+  "appropriate: spec_get(<id>)$source_url gives the source, and $verified_on",
+  "gives the review date."
 )

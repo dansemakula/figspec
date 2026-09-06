@@ -30,7 +30,7 @@ figspec_final_api_contract <- list(
     fig_save = alist(
       filename = , plot = ggplot2::last_plot(), spec = NULL, column = NULL,
       width = NULL, height = NULL, panel_width = NULL, panel_height = NULL,
-      units = c("mm", "cm", "in"), dpi = NULL, check = TRUE,
+      units = c("mm", "cm", "in"), dpi = NULL, transform = TRUE, check = TRUE,
       art_type = c("auto", "colour", "bw", "line", "combination"), ... =
     ),
     fig_width = alist(

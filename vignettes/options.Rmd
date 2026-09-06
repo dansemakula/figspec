@@ -55,7 +55,7 @@ report_spec &lt;- list(
   height = 60,
   check = FALSE
 )</code></pre><p class="fs-example-result"><strong>Result:</strong> A real 85 × 60 mm PNG is written in R's temporary directory.</p></div></details></td></tr>
-<tr><td><code>plot</code></td><td>Plot to save: a ggplot, a patchwork composition, or a gtable. Defaults to the last plot displayed.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Pass the ggplot object you want to export. Naming plot explicitly is useful in scripts that create several figures.</p><pre><code class="language-r">fig_save(
+<tr><td><code>plot</code></td><td>Figure to save. This can be a ggplot2 or patchwork object, a gtable or grid grob, a lattice plot, a Plotly or other HTML widget, a recorded base plot, or base-graphics code wrapped in a function or one-sided formula. Defaults to the last ggplot2 plot displayed.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Pass the ggplot object you want to export. Naming plot explicitly is useful in scripts that create several figures.</p><pre><code class="language-r">fig_save(
   file.path(tempdir(), &quot;explicit-plot.png&quot;),
   plot = p,
   width = 85,
@@ -117,6 +117,25 @@ report_spec &lt;- list(
   dpi = 600,
   check = FALSE
 )</code></pre><p class="fs-example-result"><strong>Result:</strong> The PNG is written at 600 dpi while keeping the requested physical size.</p></div></details></td></tr>
+<tr><td><code>transform</code></td><td>Whether to apply the specification's reachable visual requirements before export. For ggplot2 and lattice this includes typography and line rules together with accessible colour and shape defaults; Plotly receives the corresponding layout and trace settings; base graphics functions and grid grobs receive specification-aware defaults. A completed recorded plot cannot be restyled and is reported as such. Set to FALSE to preserve the plot exactly as supplied.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Keep transformation on to apply the parts of the specification that the plotting system exposes. Set it to FALSE when you need to preserve the supplied appearance and use figspec only for export and checking.</p><pre><code class="language-r">preserved &lt;- fig_save(
+  file.path(tempdir(), &quot;preserved-figure.png&quot;),
+  p,
+  spec = report_spec,
+  column = &quot;full&quot;,
+  transform = FALSE,
+  check = FALSE
+)
+
+transformed &lt;- fig_save(
+  file.path(tempdir(), &quot;transformed-figure.png&quot;),
+  p,
+  spec = report_spec,
+  column = &quot;full&quot;,
+  transform = TRUE,
+  check = FALSE
+)
+
+transformed</code></pre><p class="fs-example-result"><strong>Result:</strong> The transformed file applies the project specification; the preserved file retains the supplied plot styling.</p></div></details></td></tr>
 <tr><td><code>check</code></td><td>Whether to check the result and report failures as a warning. Only checks against a journal when one is given.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Leave checking on to verify the saved file against the specification. The report is attached to the returned path for later inspection.</p><pre><code class="language-r">checked &lt;- fig_save(
   file.path(tempdir(), &quot;checked-pnas-figure.tiff&quot;),
   p,
@@ -135,7 +154,7 @@ attr(checked, &quot;figspec_report&quot;)</code></pre><p class="fs-example-resul
   art_type = &quot;line&quot;,
   check = FALSE
 )</code></pre><p class="fs-example-result"><strong>Result:</strong> The 1000 dpi line-art rule recorded for PNAS is used.</p></div></details></td></tr>
-<tr><td><code>...</code></td><td>Passed to ggplot2::ggsave().<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Pass additional graphics-device settings through to ggplot2::ggsave(). Here bg sets the exported image's background colour.</p><pre><code class="language-r">fig_save(
+<tr><td><code>...</code></td><td>Named arguments passed to the renderer selected for the figure: ggplot2::ggsave() for ggplot2-compatible figures, the graphics device for base, lattice and grid figures, webshot2::webshot() for browser raster export, or plotly::save_image() for Plotly vector export.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Pass additional graphics-device settings through to ggplot2::ggsave(). Here bg sets the exported image's background colour.</p><pre><code class="language-r">fig_save(
   file.path(tempdir(), &quot;blue-background.png&quot;),
   p,
   width = 85,
@@ -232,7 +251,7 @@ report_spec &lt;- list(
   format = &quot;tiff&quot;,
   art_type = &quot;colour&quot;
 )</code></pre><p class="fs-example-result"><strong>Result:</strong> figspec converts 9 × 6 cm to 90 × 60 mm before applying the checks.</p></div></details></td></tr>
-<tr><td><code>dpi</code></td><td>Resolution. For a ggplot object, the resolution you intend to save at. For a file, the resolution it was written at, which lets figspec judge physical size for files that do not record it themselves - base R's png() and tiff() devices do not, whereas ragg does.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Give the intended resolution when checking an editable plot. For a saved raster, figspec normally reads the resolution from the file.</p><pre><code class="language-r">fig_check(
+<tr><td><code>dpi</code></td><td>Resolution. For a live figure, the resolution you intend to save at. For a file, the resolution it was written at, which lets figspec judge physical size for files that do not record it themselves - base R's png() and tiff() devices do not, whereas ragg does.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Give the intended resolution when checking an editable plot. For a saved raster, figspec normally reads the resolution from the file.</p><pre><code class="language-r">fig_check(
   p,
   spec = &quot;pnas&quot;,
   column = &quot;small&quot;,
@@ -240,7 +259,7 @@ report_spec &lt;- list(
   format = &quot;tiff&quot;,
   art_type = &quot;colour&quot;
 )</code></pre><p class="fs-example-result"><strong>Result:</strong> The 300 dpi value meets the PNAS minimum for a colour figure.</p></div></details></td></tr>
-<tr><td><code>format</code></td><td>Output format, for example &quot;tiff&quot;. Only used when x is a ggplot object.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>State the format you intend to export when checking a live plot. This example deliberately proposes JPEG so the report can identify a format PNAS does not list.</p><pre><code class="language-r">fig_check(
+<tr><td><code>format</code></td><td>Output format, for example &quot;tiff&quot;. Only used when x is a live figure.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>State the format you intend to export when checking a live plot. This example deliberately proposes JPEG so the report can identify a format PNAS does not list.</p><pre><code class="language-r">fig_check(
   p,
   spec = &quot;pnas&quot;,
   column = &quot;small&quot;,
@@ -248,7 +267,7 @@ report_spec &lt;- list(
   format = &quot;jpeg&quot;,
   art_type = &quot;colour&quot;
 )</code></pre><p class="fs-example-result"><strong>Result:</strong> The file-format row fails and lists the formats accepted by PNAS.</p></div></details></td></tr>
-<tr><td><code>colour_mode</code></td><td>Intended output colour model for a ggplot object. Defaults to &quot;RGB&quot;; fig_save() supplies &quot;CMYK&quot; when it selects a CMYK-capable vector device.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>State the colour model planned for an editable figure. This example uses RGB, which matches the Cell Press requirement.</p><pre><code class="language-r">fig_check(
+<tr><td><code>colour_mode</code></td><td>Intended output colour model for a live figure. Defaults to &quot;RGB&quot;; fig_save() supplies &quot;CMYK&quot; when it selects a CMYK-capable vector device.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>State the colour model planned for an editable figure. This example uses RGB, which matches the Cell Press requirement.</p><pre><code class="language-r">fig_check(
   p,
   spec = &quot;cell_press&quot;,
   column = &quot;single&quot;,
@@ -456,7 +475,7 @@ report_spec &lt;- list(
 <colgroup><col style="width:26%"><col style="width:74%"></colgroup>
 <thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
 <tbody>
-<tr><td><code>plot</code></td><td>Plot to preview. Defaults to the last plot displayed.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Pass the plot you are currently refining. Naming it explicitly avoids previewing a different plot that happened to be displayed most recently.</p><pre><code class="language-r">fig_preview(
+<tr><td><code>plot</code></td><td>Figure to preview. Accepts the same live figure inputs as fig_save() and defaults to the last ggplot2 plot displayed.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Pass the plot you are currently refining. Naming it explicitly avoids previewing a different plot that happened to be displayed most recently.</p><pre><code class="language-r">fig_preview(
   plot = p,
   spec = &quot;pnas&quot;,
   column = &quot;small&quot;
@@ -2489,7 +2508,7 @@ save_figure_set &lt;- function(directory) {
 <colgroup><col style="width:26%"><col style="width:74%"></colgroup>
 <thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
 <tbody>
-<tr><td><code>x</code></td><td>A non-empty list containing only plots, a directory path, or a character vector of figure-file paths. Plot names and file basenames are used in the summary.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a named list of live plots, one directory, or a character vector of saved-file paths. The example checks three plots containing 234, 574 and 53,940 observations, exports them at their assigned widths and then checks the written files as a second, complementary review.</p><pre><code class="language-r">plot_review &lt;- submission_check(
+<tr><td><code>x</code></td><td>A non-empty list of supported live figures, a directory path, or a character vector of figure-file paths. A live figure may be a ggplot2 or patchwork object, a lattice or Plotly plot, a grid object, or base-graphics code wrapped in a function or one-sided formula. Figure names and file basenames are used in the summary.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a named list of live plots, one directory, or a character vector of saved-file paths. The example checks three plots containing 234, 574 and 53,940 observations, exports them at their assigned widths and then checks the written files as a second, complementary review.</p><pre><code class="language-r">plot_review &lt;- submission_check(
   figures,
   spec = submission_spec,
   column = column_map,
@@ -2881,7 +2900,7 @@ dir.create(refit_root)
 <colgroup><col style="width:26%"><col style="width:74%"></colgroup>
 <thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
 <tbody>
-<tr><td><code>plots</code></td><td>A non-empty named list of plot objects. Names become file stems and must therefore be unique and safe to use as file names.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a named list of live plots. The names become file names, while keeping the plots editable allows figspec to adjust typography before creating new files.</p><pre><code class="language-r">plot_set_review &lt;- fig_refit(
+<tr><td><code>plots</code></td><td>A non-empty named list of editable figures. Supported inputs include ggplot2 and patchwork objects, lattice and Plotly plots, grid grobs, and base-graphics code wrapped in functions or one-sided formulas. Names become file stems and must be unique and safe to use as file names.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a named list of live plots. The names become file names, while keeping the plots editable allows figspec to adjust typography before creating new files.</p><pre><code class="language-r">plot_set_review &lt;- fig_refit(
   plots = refit_plots,
   spec = handoff_spec,
   output_dir = file.path(refit_root, &quot;plot-set&quot;),
@@ -2930,7 +2949,7 @@ list(
 )
 
 mapped_review[, c(&quot;file&quot;, &quot;column&quot;, &quot;result&quot;)]</code></pre><p class="fs-example-result"><strong>Result:</strong> vehicles.png is exported at the 85 mm compact width and economy.png at the 170 mm full width; the returned rows preserve that mapping.</p></div></details></td></tr>
-<tr><td><code>retheme</code></td><td>Whether to apply theme_spec() to each plot so its typography matches the new specification. Must be one TRUE or FALSE.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Leave this TRUE to apply the new specification's typography before export. Set it to FALSE only when the plots have already been styled correctly and you want figspec to preserve that styling unchanged.</p><pre><code class="language-r">themed_review &lt;- fig_refit(
+<tr><td><code>retheme</code></td><td>Whether to apply the requirements exposed by each plotting system before export. Must be one TRUE or FALSE.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Leave this TRUE to apply the new specification's typography before export. Set it to FALSE only when the plots have already been styled correctly and you want figspec to preserve that styling unchanged.</p><pre><code class="language-r">themed_review &lt;- fig_refit(
   list(vehicles = vehicle_plot),
   handoff_spec,
   output_dir = file.path(refit_root, &quot;with-retheming&quot;),

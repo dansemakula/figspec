@@ -61,6 +61,123 @@
     return item;
   }
 
+  function addBreadcrumb(main, items) {
+    if (!main || main.querySelector(".fs-breadcrumb")) return null;
+    var header = main.querySelector(".page-header");
+    if (!header) return null;
+
+    var breadcrumb = element("nav", "fs-breadcrumb");
+    breadcrumb.setAttribute("aria-label", "Breadcrumb");
+    var crumbs = element("ol", "fs-breadcrumb-list");
+    items.forEach(function (item) {
+      addCrumb(crumbs, item.href, item.text, Boolean(item.current));
+    });
+    breadcrumb.appendChild(crumbs);
+    header.insertAdjacentElement("beforebegin", breadcrumb);
+    return { breadcrumb: breadcrumb, crumbs: crumbs, header: header };
+  }
+
+  function addReturnLink(header, href, text) {
+    if (!header || header.parentElement.querySelector(".fs-page-return")) return;
+    header.insertAdjacentElement(
+      "beforebegin",
+      link(href, "\u2190 " + text, "fs-page-return")
+    );
+  }
+
+  function addTopicRail(main, label, allHref, allText) {
+    var rail = element("nav", "fs-topic-nav");
+    rail.setAttribute("aria-label", label);
+    var all = link(allHref, allText, "fs-topic-nav-all");
+    rail.appendChild(all);
+    main.appendChild(rail);
+    return { rail: rail, all: all };
+  }
+
+  function addRailLink(rail, item, position) {
+    if (!item) return;
+    var label = position === "previous" ? "Previous: " : "Next: ";
+    var node = link(
+      item.href,
+      label + item.text,
+      "fs-topic-nav-" + position
+    );
+    node.rel = position === "previous" ? "prev" : "next";
+    if (position === "previous") {
+      rail.insertBefore(node, rail.firstChild);
+    } else {
+      rail.appendChild(node);
+    }
+  }
+
+  function guideLinks() {
+    var nodes = document.querySelectorAll(
+      "#dropdown-guides + .dropdown-menu a[href*='articles/'], " +
+      "#dropdown-guides + .dropdown-menu a[href^='../articles/']"
+    );
+    return uniqueLinks(nodes).filter(function (node) {
+      return !topicPath(node.href).endsWith("/articles/index.html");
+    }).map(function (node) {
+      return {
+        href: node.href,
+        path: topicPath(node.href),
+        text: node.textContent.trim()
+      };
+    });
+  }
+
+  function addGuideNavigation() {
+    var page = document.querySelector(".template-article");
+    var main = page && page.querySelector("main#main");
+    var header = main && main.querySelector(".page-header");
+    if (!header || main.querySelector(".fs-guide-navigation")) return;
+
+    var heading = header.querySelector("h1");
+    var title = heading ? heading.textContent.trim() : document.title.split("\u2022")[0].trim();
+    var context = addBreadcrumb(main, [
+      { href: "../index.html", text: "Home" },
+      { href: "index.html", text: "Guides" },
+      { text: title, current: true }
+    ]);
+    addReturnLink(context && context.header, "index.html", "All guides");
+
+    var navigation = addTopicRail(
+      main,
+      "Guide navigation",
+      "index.html",
+      "All guides"
+    );
+    navigation.rail.classList.add("fs-guide-navigation");
+
+    var guides = guideLinks();
+    var currentPath = window.location.pathname;
+    var currentIndex = guides.findIndex(function (item) {
+      return item.path === currentPath;
+    });
+    if (currentIndex < 0) return;
+    addRailLink(navigation.rail, guides[currentIndex - 1], "previous");
+    addRailLink(navigation.rail, guides[currentIndex + 1], "next");
+  }
+
+  function addIndexBreadcrumbs() {
+    var reference = document.querySelector(".template-reference-index main#main");
+    addBreadcrumb(reference, [
+      { href: "../index.html", text: "Home" },
+      { text: "Reference", current: true }
+    ]);
+
+    var articles = document.querySelector(".template-article-index main#main");
+    var articlesHeading = articles && articles.querySelector(".page-header h1");
+    if (articlesHeading && articlesHeading.textContent.trim() === "Articles") {
+      articlesHeading.textContent = "Guides";
+      document.title = document.title.replace(/^Articles\b/, "Guides");
+    }
+    addBreadcrumb(articles, [
+      { href: "../index.html", text: "Home" },
+      { text: "Guides", current: true }
+    ]);
+  }
+
   async function addReferenceTopicNavigation() {
     var page = document.querySelector(".template-reference-topic");
     var main = page && page.querySelector("main#main");
@@ -72,20 +189,23 @@
       ? sourceName.textContent.trim().replace(/\.Rd$/, "()")
       : header.querySelector("h1").textContent.trim();
 
-    var breadcrumb = element("nav", "fs-breadcrumb");
-    breadcrumb.setAttribute("aria-label", "Breadcrumb");
-    var crumbs = element("ol", "fs-breadcrumb-list");
-    addCrumb(crumbs, "../index.html", "Home", false);
-    addCrumb(crumbs, "index.html", "Reference", false);
-    var currentCrumb = addCrumb(crumbs, null, topic, true);
-    breadcrumb.appendChild(crumbs);
-    header.insertAdjacentElement("beforebegin", breadcrumb);
+    var context = addBreadcrumb(main, [
+      { href: "../index.html", text: "Home" },
+      { href: "index.html", text: "Reference" },
+      { text: topic, current: true }
+    ]);
+    var crumbs = context.crumbs;
+    var currentCrumb = crumbs.lastElementChild;
+    addReturnLink(context.header, "index.html", "All functions");
 
-    var topicNav = element("nav", "fs-topic-nav");
-    topicNav.setAttribute("aria-label", "Function reference navigation");
-    var allFunctions = link("index.html", "All functions", "fs-topic-nav-all");
-    topicNav.appendChild(allFunctions);
-    main.appendChild(topicNav);
+    var navigation = addTopicRail(
+      main,
+      "Function reference navigation",
+      "index.html",
+      "All functions"
+    );
+    var topicNav = navigation.rail;
+    var allFunctions = navigation.all;
 
     try {
       var response = await fetch("index.html", { credentials: "same-origin" });
@@ -117,35 +237,24 @@
           link("index.html#" + groupHeading.id, groupHeading.textContent.trim())
         );
         crumbs.insertBefore(groupItem, currentCrumb);
-        allFunctions.href = "index.html#" + groupHeading.id;
-        allFunctions.textContent = "Back to " + groupHeading.textContent.trim();
       }
 
-      var groupList = currentLink.closest("dl");
-      var groupLinks = uniqueLinks(groupList.querySelectorAll("dt a[href]"));
-      var currentIndex = groupLinks.findIndex(function (node) {
+      var referenceLinks = uniqueLinks(index.querySelectorAll("main#main dl dt a[href]"));
+      var currentIndex = referenceLinks.findIndex(function (node) {
         return topicPath(node.getAttribute("href")) === currentPath;
       });
 
       if (currentIndex > 0) {
-        var previous = groupLinks[currentIndex - 1];
-        var previousLink = link(
-          previous.getAttribute("href"),
-          "Previous: " + previous.textContent.trim(),
-          "fs-topic-nav-previous"
-        );
-        previousLink.rel = "prev";
-        topicNav.insertBefore(previousLink, allFunctions);
+        addRailLink(topicNav, {
+          href: referenceLinks[currentIndex - 1].getAttribute("href"),
+          text: referenceLinks[currentIndex - 1].textContent.trim()
+        }, "previous");
       }
-      if (currentIndex >= 0 && currentIndex < groupLinks.length - 1) {
-        var next = groupLinks[currentIndex + 1];
-        var nextLink = link(
-          next.getAttribute("href"),
-          "Next: " + next.textContent.trim(),
-          "fs-topic-nav-next"
-        );
-        nextLink.rel = "next";
-        topicNav.appendChild(nextLink);
+      if (currentIndex >= 0 && currentIndex < referenceLinks.length - 1) {
+        addRailLink(topicNav, {
+          href: referenceLinks[currentIndex + 1].getAttribute("href"),
+          text: referenceLinks[currentIndex + 1].textContent.trim()
+        }, "next");
       }
     } catch (error) {
       // The Home, Reference and All functions links remain usable when the
@@ -155,6 +264,8 @@
 
   function initialise() {
     addReferenceIndexIntroduction();
+    addIndexBreadcrumbs();
+    addGuideNavigation();
     addReferenceTopicNavigation();
   }
 

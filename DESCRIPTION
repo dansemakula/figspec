@@ -1,11 +1,11 @@
 Package: figspec
-Title: Build, Check and Export Figures to a Specification
+Title: Build, Export and Verify Figures Against a Specification
 Version: 0.1.0
 Authors@R: 
     person("Daniel", "Semakula",
            email = "semakuladaniel@gmail.com",
            role = c("aut", "cre", "cph"),
-           comment = "MD, MPH, PhD")
+           comment = c(ORCID = "0000-0002-0806-213X"))
 Description: Sets the size, resolution, typography and colour of a figure
     from a specification, then checks the result and reports where it falls
     short. Sizes by the plot panel as well as by the image, so a set of
@@ -14,11 +14,12 @@ Description: Sets the size, resolution, typography and colour of a figure
     target journal can be named instead of a specification written, and house
     styles or internal formats can be registered alongside. Covers width,
     resolution, file format, type size and font, line and point weights,
-    colour mode and colour safety, panel labelling and axis rules. Builds and
-    exports 'ggplot2' figures at exactly the stated size and resolution. Every
-    registry requirement records the publisher page it was taken from and the
-    date it was read; a requirement that is not stated is reported as
-    unspecified rather than assumed to pass.
+    colour mode and colour safety, panel labelling and axis rules. Applies
+    available visual requirements to figures made with 'ggplot2', 'lattice',
+    'plotly', base graphics and 'grid', then exports them at the stated size
+    and resolution. Every registry requirement records the publisher page it
+    was taken from and the date it was read; a requirement that is not stated
+    is reported as unspecified rather than assumed to pass.
 License: GPL (>= 3)
 Encoding: UTF-8
 Depends: 
@@ -38,18 +39,24 @@ Imports:
 Suggests: 
     colorspace,
     curl,
+    htmlwidgets,
     knitr,
+    lattice,
+    magick,
     patchwork,
     pdftools,
+    plotly,
     ragg,
     rmarkdown,
     scales,
     svglite,
     systemfonts,
     testthat (>= 3.0.0),
+    webshot2,
     withr
 SystemRequirements: FFmpeg (optional, for inspecting supplementary media
-    codecs and bit rates)
+    codecs and bit rates); Chrome or Chromium (optional, for exporting Plotly
+    and other HTML-widget figures)
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
 VignetteBuilder: knitr

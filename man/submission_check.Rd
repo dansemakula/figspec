@@ -15,9 +15,11 @@ submission_check(
 )
 }
 \arguments{
-\item{x}{A non-empty list containing only plots, a directory path, or a
-character vector of figure-file paths. Plot names and file basenames are
-used in the summary.}
+\item{x}{A non-empty list of supported live figures, a directory path, or a
+character vector of figure-file paths. A live figure may be a ggplot2 or
+patchwork object, a lattice or Plotly plot, a grid object, or base-graphics
+code wrapped in a function or one-sided formula. Figure names and file
+basenames are used in the summary.}
 
 \item{spec}{The specification to use: a registry id, a \code{figspec_spec}, a
 named list of requirements, or \code{NULL} to inspect without assigning pass or
@@ -53,14 +55,15 @@ presentation or other project in one place, while retaining the full check
 report for each item.
 }
 \details{
-Check plot objects before export and the written files afterwards when you
-can. The plot objects preserve typography, colour mappings and panel
-geometry. The files provide the actual dimensions, resolution, format,
+Check live figure objects before export and the written files afterwards
+when you can. A live object may preserve styling information that a finished
+file does not. The files provide the actual dimensions, resolution, format,
 validity and file size. Raster files cannot preserve editable type-size
 information, so the two checks answer complementary questions.
 }
 \section{Panel consistency}{
-Given plot objects, this also reports the plot area of each figure. Figures
+For ggplot2-compatible objects, this also reports the plot area of each
+figure. Figures
 that meet the same width requirement still have different plot areas when
 their axis labels differ in length, and on the page that is what makes a set
 look uneven. No publisher states a rule about it, so it is never reported as

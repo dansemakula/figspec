@@ -31,35 +31,35 @@ A data frame with one row per entry, ordered oldest first.
 ``` r
 registry_status()
 #>                id verified_on age_days stale stated confirmed_absent
-#> 13            aps  2026-04-04      154 FALSE      2                0
-#> 1        plos_one  2026-08-21       15 FALSE     15                0
-#> 3      cell_press  2026-08-21       15 FALSE     15                0
-#> 4  star_protocols  2026-08-21       15 FALSE      3                0
-#> 5       frontiers  2026-08-21       15 FALSE      8                1
-#> 6             iop  2026-08-21       15 FALSE      5                3
-#> 7       cambridge  2026-08-21       15 FALSE      7                2
-#> 9      copernicus  2026-08-21       15 FALSE      4                2
-#> 10          wiley  2026-08-21       15 FALSE      5                2
-#> 11            jss  2026-08-21       15 FALSE      1                2
-#> 8   royal_society  2026-08-22       14 FALSE      6                2
-#> 12        science  2026-08-22       14 FALSE      3                0
-#> 14       elsevier  2026-08-22       14 FALSE      6                0
-#> 15 taylor_francis  2026-08-22       14 FALSE      8                1
-#> 16            agu  2026-08-22       14 FALSE      2                2
-#> 17           mdpi  2026-08-22       14 FALSE      2                1
-#> 18           sage  2026-08-22       14 FALSE      4                1
-#> 19           pnas  2026-08-22       14 FALSE     10                0
-#> 20            acs  2026-08-22       14 FALSE      7                0
-#> 21            bmj  2026-08-22       14 FALSE      4                0
-#> 23 ieee_magazines  2026-08-22       14 FALSE      5                0
-#> 24      rsc_books  2026-08-22       14 FALSE      5                0
-#> 25           ieee  2026-08-22       14 FALSE      5                0
-#> 26       springer  2026-08-22       14 FALSE     11                0
-#> 27            rsc  2026-08-22       14 FALSE      4                0
-#> 22            oup  2026-08-23       13 FALSE      7                1
-#> 2          nature  2026-09-03        2 FALSE     16                0
-#> 28            bmc  2026-09-03        2 FALSE      7                0
-#> 29            jid  2026-09-03        2 FALSE      5                0
+#> 13            aps  2026-04-04      155 FALSE      2                0
+#> 1        plos_one  2026-08-21       16 FALSE     15                0
+#> 3      cell_press  2026-08-21       16 FALSE     15                0
+#> 4  star_protocols  2026-08-21       16 FALSE      3                0
+#> 5       frontiers  2026-08-21       16 FALSE      8                1
+#> 6             iop  2026-08-21       16 FALSE      5                3
+#> 7       cambridge  2026-08-21       16 FALSE      7                2
+#> 9      copernicus  2026-08-21       16 FALSE      4                2
+#> 10          wiley  2026-08-21       16 FALSE      5                2
+#> 11            jss  2026-08-21       16 FALSE      1                2
+#> 8   royal_society  2026-08-22       15 FALSE      6                2
+#> 12        science  2026-08-22       15 FALSE      3                0
+#> 14       elsevier  2026-08-22       15 FALSE      6                0
+#> 15 taylor_francis  2026-08-22       15 FALSE      8                1
+#> 16            agu  2026-08-22       15 FALSE      2                2
+#> 17           mdpi  2026-08-22       15 FALSE      2                1
+#> 18           sage  2026-08-22       15 FALSE      4                1
+#> 19           pnas  2026-08-22       15 FALSE     10                0
+#> 20            acs  2026-08-22       15 FALSE      7                0
+#> 21            bmj  2026-08-22       15 FALSE      4                0
+#> 23 ieee_magazines  2026-08-22       15 FALSE      5                0
+#> 24      rsc_books  2026-08-22       15 FALSE      5                0
+#> 25           ieee  2026-08-22       15 FALSE      5                0
+#> 26       springer  2026-08-22       15 FALSE     11                0
+#> 27            rsc  2026-08-22       15 FALSE      4                0
+#> 22            oup  2026-08-23       14 FALSE      7                1
+#> 2          nature  2026-09-03        3 FALSE     16                0
+#> 28            bmc  2026-09-03        3 FALSE      7                0
+#> 29            jid  2026-09-03        3 FALSE      5                0
 #>    unharvested  origin
 #> 13          33 figspec
 #> 1           20 figspec
@@ -92,35 +92,35 @@ registry_status()
 #> 29          30 figspec
 registry_status(max_age_days = 30)
 #>                id verified_on age_days stale stated confirmed_absent
-#> 13            aps  2026-04-04      154  TRUE      2                0
-#> 1        plos_one  2026-08-21       15 FALSE     15                0
-#> 3      cell_press  2026-08-21       15 FALSE     15                0
-#> 4  star_protocols  2026-08-21       15 FALSE      3                0
-#> 5       frontiers  2026-08-21       15 FALSE      8                1
-#> 6             iop  2026-08-21       15 FALSE      5                3
-#> 7       cambridge  2026-08-21       15 FALSE      7                2
-#> 9      copernicus  2026-08-21       15 FALSE      4                2
-#> 10          wiley  2026-08-21       15 FALSE      5                2
-#> 11            jss  2026-08-21       15 FALSE      1                2
-#> 8   royal_society  2026-08-22       14 FALSE      6                2
-#> 12        science  2026-08-22       14 FALSE      3                0
-#> 14       elsevier  2026-08-22       14 FALSE      6                0
-#> 15 taylor_francis  2026-08-22       14 FALSE      8                1
-#> 16            agu  2026-08-22       14 FALSE      2                2
-#> 17           mdpi  2026-08-22       14 FALSE      2                1
-#> 18           sage  2026-08-22       14 FALSE      4                1
-#> 19           pnas  2026-08-22       14 FALSE     10                0
-#> 20            acs  2026-08-22       14 FALSE      7                0
-#> 21            bmj  2026-08-22       14 FALSE      4                0
-#> 23 ieee_magazines  2026-08-22       14 FALSE      5                0
-#> 24      rsc_books  2026-08-22       14 FALSE      5                0
-#> 25           ieee  2026-08-22       14 FALSE      5                0
-#> 26       springer  2026-08-22       14 FALSE     11                0
-#> 27            rsc  2026-08-22       14 FALSE      4                0
-#> 22            oup  2026-08-23       13 FALSE      7                1
-#> 2          nature  2026-09-03        2 FALSE     16                0
-#> 28            bmc  2026-09-03        2 FALSE      7                0
-#> 29            jid  2026-09-03        2 FALSE      5                0
+#> 13            aps  2026-04-04      155  TRUE      2                0
+#> 1        plos_one  2026-08-21       16 FALSE     15                0
+#> 3      cell_press  2026-08-21       16 FALSE     15                0
+#> 4  star_protocols  2026-08-21       16 FALSE      3                0
+#> 5       frontiers  2026-08-21       16 FALSE      8                1
+#> 6             iop  2026-08-21       16 FALSE      5                3
+#> 7       cambridge  2026-08-21       16 FALSE      7                2
+#> 9      copernicus  2026-08-21       16 FALSE      4                2
+#> 10          wiley  2026-08-21       16 FALSE      5                2
+#> 11            jss  2026-08-21       16 FALSE      1                2
+#> 8   royal_society  2026-08-22       15 FALSE      6                2
+#> 12        science  2026-08-22       15 FALSE      3                0
+#> 14       elsevier  2026-08-22       15 FALSE      6                0
+#> 15 taylor_francis  2026-08-22       15 FALSE      8                1
+#> 16            agu  2026-08-22       15 FALSE      2                2
+#> 17           mdpi  2026-08-22       15 FALSE      2                1
+#> 18           sage  2026-08-22       15 FALSE      4                1
+#> 19           pnas  2026-08-22       15 FALSE     10                0
+#> 20            acs  2026-08-22       15 FALSE      7                0
+#> 21            bmj  2026-08-22       15 FALSE      4                0
+#> 23 ieee_magazines  2026-08-22       15 FALSE      5                0
+#> 24      rsc_books  2026-08-22       15 FALSE      5                0
+#> 25           ieee  2026-08-22       15 FALSE      5                0
+#> 26       springer  2026-08-22       15 FALSE     11                0
+#> 27            rsc  2026-08-22       15 FALSE      4                0
+#> 22            oup  2026-08-23       14 FALSE      7                1
+#> 2          nature  2026-09-03        3 FALSE     16                0
+#> 28            bmc  2026-09-03        3 FALSE      7                0
+#> 29            jid  2026-09-03        3 FALSE      5                0
 #>    unharvested  origin
 #> 13          33 figspec
 #> 1           20 figspec

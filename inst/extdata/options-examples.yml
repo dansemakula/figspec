@@ -149,6 +149,32 @@ fig_save:
           check = FALSE
         )
       result: The PNG is written at 600 dpi while keeping the requested physical size.
+    transform:
+      prose: >-
+        Keep transformation on to apply the parts of the specification that
+        the plotting system exposes. Set it to FALSE when you need to preserve
+        the supplied appearance and use figspec only for export and checking.
+      code: |-
+        preserved <- fig_save(
+          file.path(tempdir(), "preserved-figure.png"),
+          p,
+          spec = report_spec,
+          column = "full",
+          transform = FALSE,
+          check = FALSE
+        )
+
+        transformed <- fig_save(
+          file.path(tempdir(), "transformed-figure.png"),
+          p,
+          spec = report_spec,
+          column = "full",
+          transform = TRUE,
+          check = FALSE
+        )
+
+        transformed
+      result: The transformed file applies the project specification; the preserved file retains the supplied plot styling.
     check:
       prose: >-
         Leave checking on to verify the saved file against the specification.

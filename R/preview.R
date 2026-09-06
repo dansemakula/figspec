@@ -18,7 +18,8 @@
 #' device at the journal's real column width, so what you are looking at while
 #' you iterate is the size a reader will see.
 #'
-#' @param plot Plot to preview. Defaults to the last plot displayed.
+#' @param plot Figure to preview. Accepts the same live figure inputs as
+#'   [fig_save()] and defaults to the last ggplot2 plot displayed.
 #' @param spec A registry id, a `figspec_spec`, or a named list containing
 #'   the available output widths.
 #' @param column Which column width to preview at.
@@ -37,6 +38,7 @@ fig_preview <- function(plot = ggplot2::last_plot(), spec,
                             column = "single",
                             height = NULL, units = c("mm", "cm", "in")) {
   units <- match.arg(units)
+  system <- figure_system(plot)
 
   width_mm <- fig_width(spec, column, "mm")
   height_mm <- if (is.null(height)) width_mm * 0.75 else convert_length(height, units, "mm")
@@ -50,12 +52,25 @@ fig_preview <- function(plot = ggplot2::last_plot(), spec,
     return(invisible(plot))
   }
 
+  if (html_figure_system(system)) {
+    warning(
+      "An HTML-widget preview preserves the intended aspect ratio, but its physical size depends on browser zoom and display scaling. Use fig_save() to produce and verify the exact output dimensions.",
+      call. = FALSE
+    )
+    print(plot)
+    return(invisible(plot))
+  }
+
   grDevices::dev.new(
     width = convert_length(width_mm, "mm", "in"),
     height = convert_length(height_mm, "mm", "in"),
     unit = "in", noRStudioGD = TRUE
   )
-  print(plot)
+  if (system %in% c("base", "recordedplot", "lattice", "grid")) {
+    draw_r_figure(plot, system)
+  } else {
+    print(plot)
+  }
   msg_wrap(
     "Previewing at ", fmt_num(width_mm), " x ", fmt_num(height_mm),
     " mm, the ", column, "-column size for '", spec_get(spec)$name,

@@ -494,6 +494,26 @@ main div.sourceCode > pre { margin-bottom: 0; }
   font-weight: 600;
 }
 
+.fs-page-return {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin: -.3rem 0 .8rem;
+  padding: .35rem .65rem;
+  border: 1px solid var(--fs-teal-line);
+  border-radius: 999px;
+  color: var(--fs-teal-deep);
+  font-size: .9rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+}
+.fs-page-return:hover,
+.fs-page-return:focus-visible {
+  background: var(--fs-teal-soft);
+  border-color: var(--fs-teal);
+}
+
 .fs-topic-nav {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);

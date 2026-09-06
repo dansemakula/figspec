@@ -1,4 +1,4 @@
-# Choose, Verify and Add Specifications
+# Choose, verify and add specifications
 
 [`library`](https://rdrr.io/r/base/library.html)`(`[`figspec`](https://dansemakula.github.io/figspec/)`)`
 
@@ -138,7 +138,7 @@ stored with the project or shared by an organisation.
 prints a template containing the information that figspec can record.
 This example runs the function and shows the beginning of that template:
 
-`template`` ``<-`` `[`capture.output`](https://rdrr.io/r/utils/capture.output.html)`(`[`registry_entry_template`](https://dansemakula.github.io/figspec/reference/registry_entry_template.md)`(`` `` ``"plos_biology"``,`` `` ``"PLOS Biology"``,`` `` ``"https://journals.plos.org/plosbiology/s/figures"`` ``)``)`` `[`writeLines`](https://rdrr.io/r/base/writeLines.html)`(`[`c`](https://rdrr.io/r/base/c.html)`(``template``[``1``:``12``]``, ``" ..."``)``)`` ``#> - id: plos_biology`` ``#> name: 'PLOS Biology'`` ``#> publisher: `` ``#> disciplines: [ ]`` ``#> source_url: 'https://journals.plos.org/plosbiology/s/figures'`` ``#> verified_on: '2026-09-05'`` ``#> requirements:`` ``#> # Fill in ONLY what the page states. Quote the wording for any number.`` ``#> # columns: {single: , onehalf: , double: }`` ``#> # width_min_mm: `` ``#> # width_max_mm: `` ``#> # height_max_mm: `` ``#> ...`
+`template`` ``<-`` `[`capture.output`](https://rdrr.io/r/utils/capture.output.html)`(`[`registry_entry_template`](https://dansemakula.github.io/figspec/reference/registry_entry_template.md)`(`` `` ``"plos_biology"``,`` `` ``"PLOS Biology"``,`` `` ``"https://journals.plos.org/plosbiology/s/figures"`` ``)``)`` `[`writeLines`](https://rdrr.io/r/base/writeLines.html)`(`[`c`](https://rdrr.io/r/base/c.html)`(``template``[``1``:``12``]``, ``" ..."``)``)`` ``#> - id: plos_biology`` ``#> name: 'PLOS Biology'`` ``#> publisher: `` ``#> disciplines: [ ]`` ``#> source_url: 'https://journals.plos.org/plosbiology/s/figures'`` ``#> verified_on: '2026-09-06'`` ``#> requirements:`` ``#> # Fill in ONLY what the page states. Quote the wording for any number.`` ``#> # columns: {single: , onehalf: , double: }`` ``#> # width_min_mm: `` ``#> # width_max_mm: `` ``#> # height_max_mm: `` ``#> ...`
 
 Add a requirement only when it is supported by the source. List it under
 `not_stated:` only when the relevant guidance has been checked and does

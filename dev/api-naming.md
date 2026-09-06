@@ -39,6 +39,12 @@ first public release retains 47 canonical exports, including the two intentional
 American-spelling aliases. S3 print, plot and ggplot-add methods are registered
 separately and are not called directly by users.
 
+After the naming migration was completed, `fig_save()` gained the
+`transform` argument as part of the pre-release plotting-system expansion. It
+does not add another exported name: it controls whether a specification is
+applied to the editable features exposed by ggplot2, patchwork, lattice,
+Plotly, grid or base graphics before the figure is written.
+
 | # | Former export | Canonical name | Family | Decision |
 |---:|---|---|---|---|
 | 1 | `check_color_safety()` | `color_safety_check()` | Colour | Rename; American spelling alias |

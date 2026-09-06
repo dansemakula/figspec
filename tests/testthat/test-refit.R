@@ -18,7 +18,7 @@ test_that("refitting saved files is refused rather than faked", {
   dir <- withr::local_tempdir()
   expect_error(
     fig_refit(list(a = "some/file.tiff"), "frontiers", dir),
-    "plot objects, not saved files"
+    "editable live figures"
   )
 })
 

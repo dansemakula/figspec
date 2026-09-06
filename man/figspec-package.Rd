@@ -4,9 +4,9 @@
 \name{figspec-package}
 \alias{figspec}
 \alias{figspec-package}
-\title{figspec: Build, Check and Export Figures to a Specification}
+\title{figspec: Build, Export and Verify Figures Against a Specification}
 \description{
-Sets the size, resolution, typography and colour of a figure from a specification, then checks the result and reports where it falls short. Sizes by the plot panel as well as by the image, so a set of figures can share one plot area whatever their axis labels do. The main registry holds the published figure requirements of many journals, so a target journal can be named instead of a specification written, and house styles or internal formats can be registered alongside. Covers width, resolution, file format, type size and font, line and point weights, colour mode and colour safety, panel labelling and axis rules. Builds and exports 'ggplot2' figures at exactly the stated size and resolution. Every registry requirement records the publisher page it was taken from and the date it was read; a requirement that is not stated is reported as unspecified rather than assumed to pass.
+Sets the size, resolution, typography and colour of a figure from a specification, then checks the result and reports where it falls short. Sizes by the plot panel as well as by the image, so a set of figures can share one plot area whatever their axis labels do. The main registry holds the published figure requirements of many journals, so a target journal can be named instead of a specification written, and house styles or internal formats can be registered alongside. Covers width, resolution, file format, type size and font, line and point weights, colour mode and colour safety, panel labelling and axis rules. Applies available visual requirements to figures made with 'ggplot2', 'lattice', 'plotly', base graphics and 'grid', then exports them at the stated size and resolution. Every registry requirement records the publisher page it was taken from and the date it was read; a requirement that is not stated is reported as unspecified rather than assumed to pass.
 }
 \seealso{
 Useful links:
@@ -18,11 +18,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Daniel Semakula \email{semakuladaniel@gmail.com} (MD, MPH, PhD) [copyright holder]
+\strong{Maintainer}: Daniel Semakula \email{semakuladaniel@gmail.com} (\href{https://orcid.org/0000-0002-0806-213X}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
-  \item Daniel Semakula \email{semakuladaniel@gmail.com} (MD, MPH, PhD) [copyright holder]
+  \item Daniel Semakula \email{semakuladaniel@gmail.com} (\href{https://orcid.org/0000-0002-0806-213X}{ORCID}) [copyright holder]
 }
 
 }

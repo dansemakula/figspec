@@ -15,6 +15,7 @@ fig_save(
   panel_height = NULL,
   units = c("mm", "cm", "in"),
   dpi = NULL,
+  transform = TRUE,
   check = TRUE,
   art_type = c("auto", "colour", "bw", "line", "combination"),
   ...
@@ -24,8 +25,10 @@ fig_save(
 \item{filename}{Output path. The extension selects the format. With a
 journal and no extension, the journal's first accepted format is used.}
 
-\item{plot}{Plot to save: a ggplot, a patchwork composition, or a \code{gtable}.
-Defaults to the last plot displayed.}
+\item{plot}{Figure to save. This can be a ggplot2 or patchwork object, a
+\code{gtable} or grid grob, a lattice plot, a Plotly or other HTML widget, a
+recorded base plot, or base-graphics code wrapped in a function or
+one-sided formula. Defaults to the last ggplot2 plot displayed.}
 
 \item{spec}{Optional specification: a registry id such as \code{"cell_press"},
 a \code{figspec_spec}, or a named list of requirements. When given, it supplies
@@ -47,13 +50,24 @@ composition this applies to each panel.}
 
 \item{dpi}{Resolution. Defaults to the journal's stated minimum, or 300.}
 
+\item{transform}{Whether to apply the specification's reachable visual
+requirements before export. For ggplot2 and lattice this includes
+typography and line rules together with accessible colour and shape
+defaults; Plotly receives the corresponding layout and trace settings;
+base graphics functions and grid grobs receive specification-aware
+defaults. A completed recorded plot cannot be restyled and is reported as
+such. Set to \code{FALSE} to preserve the plot exactly as supplied.}
+
 \item{check}{Whether to check the result and report failures as a warning.
 Only checks against a journal when one is given.}
 
 \item{art_type}{Resolution category. \code{"auto"} classifies the live plot;
 explicit choices are \code{"colour"}, \code{"bw"}, \code{"line"}, and \code{"combination"}.}
 
-\item{...}{Passed to \code{\link[ggplot2:ggsave]{ggplot2::ggsave()}}.}
+\item{...}{Named arguments passed to the renderer selected for the figure:
+\code{\link[ggplot2:ggsave]{ggplot2::ggsave()}} for ggplot2-compatible figures, the graphics device
+for base, lattice and grid figures, \code{\link[webshot2:webshot]{webshot2::webshot()}} for browser
+raster export, or \code{\link[plotly:save_image]{plotly::save_image()}} for Plotly vector export.}
 }
 \value{
 The path to the written file, invisibly, with the achieved geometry
@@ -63,9 +77,8 @@ attached as the \code{"figspec_geometry"} attribute. See \code{\link[=fig_geomet
 Saves a figure built to a specification. A journal is one way to supply one:
 name a journal and the size, resolution, file format and font come from its
 published requirements. Give a panel size instead, or as well, and the plot
-area is set to that size exactly. Give neither and this behaves like
-\code{\link[ggplot2:ggsave]{ggplot2::ggsave()}} with millimetres as the default unit and the written
-file checked afterwards.
+area is set to that size exactly. Give neither and the figure is written
+with millimetres as the default unit and checked afterwards.
 }
 \section{Canvas and panel}{
 A figure has two widths:

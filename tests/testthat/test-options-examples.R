@@ -8,7 +8,8 @@ test_that("every fig_save argument has an executable documentation example", {
 
   expected_arguments <- c(
     "filename", "plot", "spec", "column", "width", "height",
-    "panel_width, panel_height", "units", "dpi", "check", "art_type", "..."
+    "panel_width, panel_height", "units", "dpi", "transform", "check",
+    "art_type", "..."
   )
   expect_setequal(names(examples$arguments), expected_arguments)
 

@@ -654,13 +654,13 @@ graded <- function(check, requirement, actual, ok, spec = NULL, fields = NULL) {
 #' @param width,height Intended output size. Defaults to the journal's width
 #'   for `column`. Ignored when `x` is a file, whose real size is measured.
 #' @param units Units for `width` and `height`.
-#' @param dpi Resolution. For a ggplot object, the resolution you intend to
+#' @param dpi Resolution. For a live figure, the resolution you intend to
 #'   save at. For a file, the resolution it was written at, which lets figspec
 #'   judge physical size for files that do not record it themselves - base R's
 #'   `png()` and `tiff()` devices do not, whereas ragg does.
 #' @param format Output format, for example `"tiff"`. Only used when `x` is a
-#'   ggplot object.
-#' @param colour_mode Intended output colour model for a ggplot object. Defaults
+#'   live figure.
+#' @param colour_mode Intended output colour model for a live figure. Defaults
 #'   to `"RGB"`; [fig_save()] supplies `"CMYK"` when it selects a CMYK-capable
 #'   vector device.
 #' @param color_mode American spelling of `colour_mode`. Takes precedence when
@@ -711,6 +711,39 @@ fig_check <- function(x, spec = NULL, column = NULL,
   art_type <- british_spelling(art_type)
   art_type <- match.arg(art_type)
   art_type_was_auto <- identical(art_type, "auto")
+
+  # Plotting systems without ggplot2's inspectable layer/theme model are
+  # checked through a real temporary export. This still verifies the finished
+  # dimensions, resolution, format, file validity and format-specific
+  # properties. Requirements that cannot be recovered from the rendered file
+  # remain `unknown`, never an assumed pass.
+  supplied_file <- is.character(x) && length(x) == 1L
+  live_system <- if (supplied_file) NULL else {
+    tryCatch(figure_system(x), error = function(e) NULL)
+  }
+  generic_gtable <- inherits(x, "gtable") &&
+    is.null(attr(x, "figspec_plot", exact = TRUE))
+  if (!is.null(live_system) &&
+      (!semantic_check_system(live_system, x) || generic_gtable)) {
+    rendered_format <- tolower(format %||% "png")
+    if (identical(rendered_format, "jpg")) rendered_format <- "jpeg"
+    rendered <- tempfile(fileext = paste0(".", rendered_format))
+    on.exit(if (file.exists(rendered)) unlink(rendered), add = TRUE)
+    fig_save(
+      rendered, x, spec = spec, column = column,
+      width = width, height = height, units = units, dpi = dpi,
+      transform = FALSE, check = FALSE, art_type = art_type
+    )
+    report <- fig_check(
+      rendered, spec = spec, column = column, dpi = dpi,
+      colour_mode = colour_mode, art_type = art_type
+    )
+    attr(report, "input") <- paste0(
+      figure_system_label(live_system), " rendered for inspection"
+    )
+    return(report)
+  }
+
   # With no specification there is nothing to judge against, so the report
   # becomes an inspection: it says what the figure is and states plainly that
   # no requirement was supplied. An empty spec produces exactly that, because

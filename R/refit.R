@@ -6,30 +6,33 @@
 # and 12, so a figure built for one is out of range for the other by
 # construction and cannot satisfy both.
 #
-# This re-exports plot objects against a new specification. It needs the plots,
-# not the files, because the properties that have to change - type size, line
-# weight, panel geometry - are the ones a saved raster no longer carries.
+# This re-exports editable figure objects against a new specification. It needs
+# the live figures, not finished files, because type, colour and line settings
+# have already been flattened in a saved raster.
 
 #' Re-export a figure set for a new specification
 #'
 #' A figure set may need to move to a different journal, report template or
-#' organisational standard. This takes the editable plot objects you already
+#' organisational standard. This takes the editable figures you already
 #' have and exports the whole set against the new specification.
 #'
-#' It works from plot objects, not from saved files, and that is deliberate.
+#' It works from live figure objects, not from saved files, and that is
+#' deliberate.
 #' Type size cannot be recovered from a saved raster, and rescaling one only
 #' degrades it, so re-fitting a finished TIFF cannot produce a compliant
 #' figure. Keep your plots in a list and this stays a one-line operation.
 #'
-#' @param plots A non-empty named list of plot objects. Names become file stems
-#'   and must therefore be unique and safe to use as file names.
+#' @param plots A non-empty named list of editable figures. Supported inputs
+#'   include ggplot2 and patchwork objects, lattice and Plotly plots, grid
+#'   grobs, and base-graphics code wrapped in functions or one-sided formulas.
+#'   Names become file stems and must be unique and safe to use as file names.
 #' @param spec The new specification: a registry id, a `figspec_spec`, or a
 #'   named list of requirements.
 #' @param output_dir One directory to write into. It is created if necessary.
 #' @param column Which column width to use, either one value for all plots or
 #'   a uniquely named vector mapping every plot name to a width.
-#' @param retheme Whether to apply [theme_spec()] to each plot so its
-#'   typography matches the new specification. Must be one `TRUE` or `FALSE`.
+#' @param retheme Whether to apply the requirements exposed by each plotting
+#'   system before export. Must be one `TRUE` or `FALSE`.
 #' @param format File extension without a dot. Defaults to the first writable
 #'   format accepted by the specification.
 #' @return A [submission_check()] report for the files written.
@@ -53,12 +56,19 @@ fig_refit <- function(plots, spec, output_dir,
         "i" = "The names become the file names, so every element needs one."),
       "bad_input")
   }
-  if (!all(vapply(plots, is_ggplot_object, logical(1)))) {
+  systems <- vapply(
+    plots,
+    function(x) figure_system_or_null(x) %||% "",
+    character(1)
+  )
+  if (any(!nzchar(systems)) || any(!vapply(systems, transform_capable_system, logical(1)))) {
+    bad <- names(plots)[!nzchar(systems) |
+      !vapply(systems, transform_capable_system, logical(1))]
     figspec_abort(
-      c("{.fn fig_refit} works on plot objects, not saved files.",
-        "i" = "Type size cannot be recovered from a saved figure, so a
-               re-fitted file could not be trusted."),
-      "bad_input")
+      c("{.fn fig_refit} needs editable live figures, not completed files or drawings.",
+        "x" = "Not editable through figspec: {.val {bad}}.",
+        "i" = "Use ggplot2, patchwork, lattice, Plotly, a grid grob, or base-graphics code wrapped in a function or one-sided formula."),
+      "bad_input", names = bad)
   }
   stems <- names(plots)
   unsafe <- !grepl("^[A-Za-z0-9][A-Za-z0-9_.-]*$", stems) |
@@ -138,12 +148,14 @@ fig_refit <- function(plots, spec, output_dir,
   merged_reports <- list()
   for (nm in names(plots)) {
     p <- plots[[nm]]
-    if (isTRUE(retheme)) p <- p + theme_spec(spec)
     dest <- file.path(output_dir, paste0(nm, ".", fmt))
     tmp <- tempfile(pattern = paste0(".", nm, "-"), tmpdir = output_dir,
                     fileext = paste0(".", fmt))
     on.exit(unlink(tmp), add = TRUE)
-    saved <- fig_save(tmp, p, spec = spec, column = col_for(nm), check = TRUE)
+    saved <- fig_save(
+      tmp, p, spec = spec, column = col_for(nm),
+      transform = retheme, check = TRUE
+    )
     if (!file.rename(tmp, dest)) {
       figspec_abort("Could not atomically place {.file {dest}}.", "bad_input")
     }

@@ -19,27 +19,63 @@ home:
 
 navbar:
   structure:
-    left: [intro, reference, guides, news]
+    left: [home, intro, reference, guides, news]
     right: [search, github]
   components:
+    home:
+      text: Home
+      href: index.html
     guides:
       text: Guides
       menu:
+      - text: All guides
+        href: articles/index.html
+      - text: -------
       - text: Getting started with figspec
         href: articles/figspec.html
-      - text: Sizing figures by panel, not by canvas
+      - text: Control figure and panel dimensions
         href: articles/panels.html
       - text: Find and use publication specifications
         href: articles/journals.html
-      - text: Choose, Verify and Add Specifications
+      - text: Choose, verify and add specifications
         href: articles/registry.html
       - text: -------
       - text: All function arguments
         href: articles/options.html
 
+articles:
+- title: Guides
+  desc: >
+    Begin with the complete workflow, or open the guide for the task you are
+    working on. Each guide uses real data and runnable examples.
+  contents:
+  - figspec
+  - panels
+  - journals
+  - registry
+  - options
+
 authors:
+  after: |
+    ### About the author and maintainer
+
+    Daniel Semakula earned his medical degree from Makerere University in
+    Uganda and has spent most of his career as a physician-researcher. He
+    earned a Master of Public Health from the University of Manchester in the
+    United Kingdom and completed a PhD at the University of Oslo in Norway. He
+    worked at Johns Hopkins University, first as a postdoctoral fellow and
+    later as a Senior Research Data Analyst in the School of Medicine's
+    Divisions of Hematology and General Internal Medicine. He has more than 15
+    years of experience analysing data and advising on data analysis for
+    student- and staff-led research projects. He also serves as an academic
+    editor for two international journals.
+
+    **Profiles:** [ORCID](https://orcid.org/0000-0002-0806-213X) ·
+    [Google Scholar](https://scholar.google.com/citations?user=rGFrKbcAAAAJ) ·
+    [GitHub](https://github.com/dansemakula/figspec)
+
   Daniel Semakula:
-    href: https://github.com/dansemakula
+    href: https://github.com/dansemakula/figspec
     html: "Daniel Semakula, MD, MPH, PhD"
 
 footer:
@@ -47,7 +83,7 @@ footer:
     left: developed_and_maintained_by
     right: built_with
   components:
-    developed_and_maintained_by: Developed and maintained by [Daniel Semakula, MD, MPH, PhD](https://github.com/dansemakula).
+    developed_and_maintained_by: Developed and maintained by [Daniel Semakula, MD, MPH, PhD](https://github.com/dansemakula/figspec).
 
 reference:
 - title: Building, checking and exporting a figure

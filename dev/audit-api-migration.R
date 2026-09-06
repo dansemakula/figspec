@@ -78,7 +78,7 @@ contract_files <- file.path(
 )
 approved_contract_md5 <- c(
   "40d0b4fc43482ccd852138ece8d56157",
-  "ece34b372c1895230e6d9bcc0aa0d0ba"
+  "2a5c91312ff0625620fe22f0a1100914"
 )
 check(
   identical(unname(tools::md5sum(contract_files)), approved_contract_md5),

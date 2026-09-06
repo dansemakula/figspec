@@ -4,7 +4,7 @@
 # report to a single row, so a set can be read at a glance.
 #
 # It accepts three shapes of input, because people arrive with different ones:
-# a named list of plot objects, a directory to scan, or an explicit vector of
+# a named list of live figures, a directory to scan, or an explicit vector of
 # file paths. Plots are worth more than files, for the reason set out in
 # R/check.R - a saved raster has lost its type sizes and its colour mapping -
 # so the summary records which it was given.
@@ -26,24 +26,27 @@
 #' presentation or other project in one place, while retaining the full check
 #' report for each item.
 #'
-#' Check plot objects before export and the written files afterwards when you
-#' can. The plot objects preserve typography, colour mappings and panel
-#' geometry. The files provide the actual dimensions, resolution, format,
+#' Check live figure objects before export and the written files afterwards
+#' when you can. A live object may preserve styling information that a finished
+#' file does not. The files provide the actual dimensions, resolution, format,
 #' validity and file size. Raster files cannot preserve editable type-size
 #' information, so the two checks answer complementary questions.
 #'
 #' # Panel consistency
 #'
-#' Given plot objects, this also reports the plot area of each figure. Figures
+#' For ggplot2-compatible objects, this also reports the plot area of each
+#' figure. Figures
 #' that meet the same width requirement still have different plot areas when
 #' their axis labels differ in length, and on the page that is what makes a set
 #' look uneven. No publisher states a rule about it, so it is never reported as
 #' a failure — it is an observation about your own figures, and [fig_save()]
 #' with a shared `panel_width` from [fig_panel_width()] is the fix.
 #'
-#' @param x A non-empty list containing only plots, a directory path, or a
-#'   character vector of figure-file paths. Plot names and file basenames are
-#'   used in the summary.
+#' @param x A non-empty list of supported live figures, a directory path, or a
+#'   character vector of figure-file paths. A live figure may be a ggplot2 or
+#'   patchwork object, a lattice or Plotly plot, a grid object, or base-graphics
+#'   code wrapped in a function or one-sided formula. Figure names and file
+#'   basenames are used in the summary.
 #' @param spec The specification to use: a registry id, a `figspec_spec`, a
 #'   named list of requirements, or `NULL` to inspect without assigning pass or
 #'   fail results.
@@ -96,11 +99,10 @@ submission_check <- function(x, spec = NULL,
   check_dpi(dpi)
   art_type <- british_spelling(art_type)
   art_type <- match.arg(art_type)
-  is_plots <- is.list(x) && !is.data.frame(x) &&
-    all(vapply(x, function(e) is_ggplot_object(e) || inherits(e, "gtable"),
-               logical(1)))
+  is_figures <- is.list(x) && !is.data.frame(x) &&
+    all(vapply(x, function(e) !is.null(figure_system_or_null(e)), logical(1)))
 
-  if (is_plots) {
+  if (is_figures) {
     if (!length(x)) figspec_abort("{.arg x} is empty: there are no figures to check.", "bad_input")
     items <- x
     labels <- names(x) %||% paste0("figure_", seq_along(x))
@@ -111,7 +113,7 @@ submission_check <- function(x, spec = NULL,
     if (is.list(x) && !is.data.frame(x)) {
       figspec_abort(
         c(
-          "When {.arg x} is a list, every item must be a plot or supported gtable.",
+          "When {.arg x} is a list, every item must be a supported live figure.",
           "i" = "Pass file paths as a character vector instead of a list."
         ),
         "bad_input"
@@ -216,8 +218,10 @@ submission_check <- function(x, spec = NULL,
 
   # Panel geometry is only recoverable from a plot object. Reporting NA from
   # files is honest; guessing from pixel dimensions would not be.
-  panels <- if (is_plots) {
+  panels <- if (is_figures) {
     vapply(seq_along(items), function(i) {
+      system <- figure_system_or_null(items[[i]])
+      if (is.null(system) || !panel_capable_system(system)) return(NA_real_)
       tryCatch({
         g <- fig_geometry(items[[i]])
         # A plot already sized by fig_panel_size() reports its own panel. One
@@ -262,7 +266,7 @@ submission_check <- function(x, spec = NULL,
     spec_name = if (is.null(resolved)) NULL else resolved$name,
     source_url = if (is.null(resolved)) NULL else resolved$source_url,
     verified_on = if (is.null(resolved)) NULL else resolved$verified_on,
-    from_plots = is_plots,
+    from_plots = is_figures,
     class = c("figspec_submission", "data.frame")
   )
 }

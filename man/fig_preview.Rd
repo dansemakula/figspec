@@ -13,7 +13,8 @@ fig_preview(
 )
 }
 \arguments{
-\item{plot}{Plot to preview. Defaults to the last plot displayed.}
+\item{plot}{Figure to preview. Accepts the same live figure inputs as
+\code{\link[=fig_save]{fig_save()}} and defaults to the last ggplot2 plot displayed.}
 
 \item{spec}{A registry id, a \code{figspec_spec}, or a named list containing
 the available output widths.}

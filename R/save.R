@@ -1,7 +1,7 @@
 # Saving --------------------------------------------------------------------
 #
-# fig_save() is ggsave() with three things added, and most of the code below is
-# those three:
+# fig_save() gives several R plotting systems one export contract. Most of the
+# code below handles three responsibilities:
 #
 #   size      the caller may fix the canvas, the panel, or both. Panel sizing
 #             is solved in R/panel.R; this file receives the answer and writes
@@ -26,9 +26,8 @@
 #' Saves a figure built to a specification. A journal is one way to supply one:
 #' name a journal and the size, resolution, file format and font come from its
 #' published requirements. Give a panel size instead, or as well, and the plot
-#' area is set to that size exactly. Give neither and this behaves like
-#' [ggplot2::ggsave()] with millimetres as the default unit and the written
-#' file checked afterwards.
+#' area is set to that size exactly. Give neither and the figure is written
+#' with millimetres as the default unit and checked afterwards.
 #'
 #' # Canvas and panel
 #'
@@ -73,8 +72,10 @@
 #'
 #' @param filename Output path. The extension selects the format. With a
 #'   journal and no extension, the journal's first accepted format is used.
-#' @param plot Plot to save: a ggplot, a patchwork composition, or a `gtable`.
-#'   Defaults to the last plot displayed.
+#' @param plot Figure to save. This can be a ggplot2 or patchwork object, a
+#'   `gtable` or grid grob, a lattice plot, a Plotly or other HTML widget, a
+#'   recorded base plot, or base-graphics code wrapped in a function or
+#'   one-sided formula. Defaults to the last ggplot2 plot displayed.
 #' @param spec Optional specification: a registry id such as `"cell_press"`,
 #'   a `figspec_spec`, or a named list of requirements. When given, it supplies
 #'   the canvas width, resolution, format and font.
@@ -88,11 +89,21 @@
 #'   composition this applies to each panel.
 #' @param units Units for `width`, `height`, `panel_width` and `panel_height`.
 #' @param dpi Resolution. Defaults to the journal's stated minimum, or 300.
+#' @param transform Whether to apply the specification's reachable visual
+#'   requirements before export. For ggplot2 and lattice this includes
+#'   typography and line rules together with accessible colour and shape
+#'   defaults; Plotly receives the corresponding layout and trace settings;
+#'   base graphics functions and grid grobs receive specification-aware
+#'   defaults. A completed recorded plot cannot be restyled and is reported as
+#'   such. Set to `FALSE` to preserve the plot exactly as supplied.
 #' @param check Whether to check the result and report failures as a warning.
 #'   Only checks against a journal when one is given.
 #' @param art_type Resolution category. `"auto"` classifies the live plot;
 #'   explicit choices are `"colour"`, `"bw"`, `"line"`, and `"combination"`.
-#' @param ... Passed to [ggplot2::ggsave()].
+#' @param ... Named arguments passed to the renderer selected for the figure:
+#'   [ggplot2::ggsave()] for ggplot2-compatible figures, the graphics device
+#'   for base, lattice and grid figures, [webshot2::webshot()] for browser
+#'   raster export, or [plotly::save_image()] for Plotly vector export.
 #' @return The path to the written file, invisibly, with the achieved geometry
 #'   attached as the `"figspec_geometry"` attribute. See [fig_geometry()].
 #' @seealso [fig_panel_size()] to set a panel size without saving,
@@ -151,12 +162,17 @@ fig_save <- function(filename, plot = ggplot2::last_plot(),
                      width = NULL, height = NULL,
                      panel_width = NULL, panel_height = NULL,
                      units = c("mm", "cm", "in"),
-                     dpi = NULL, check = TRUE,
+                     dpi = NULL, transform = TRUE, check = TRUE,
                      art_type = c("auto", "colour", "bw", "line", "combination"),
                      ...) {
   units <- match.arg(units)
   art_type <- british_spelling(art_type)
   art_type <- match.arg(art_type)
+  if (!is.logical(transform) || length(transform) != 1L || is.na(transform)) {
+    figspec_abort("{.arg transform} must be {.code TRUE} or {.code FALSE}.",
+                  "bad_input")
+  }
+  system <- figure_system(plot)
   dots <- list(...)
   if ("scale" %in% names(dots)) {
     figspec_abort(
@@ -209,7 +225,15 @@ fig_save <- function(filename, plot = ggplot2::last_plot(),
   }
   spec <- if (is.null(spec)) NULL else spec_get(spec)
   if (!is.null(spec) && is.null(column)) column <- default_column(spec)
-  chosen_art_type <- if (identical(art_type, "auto")) infer_art_type(plot) else art_type
+  chosen_art_type <- if (!identical(art_type, "auto")) {
+    art_type
+  } else if (system %in% c("ggplot2", "patchwork")) {
+    infer_art_type(plot)
+  } else if (!is.null(spec)) {
+    strictest_art_type(spec)
+  } else {
+    "colour"
+  }
 
   # ---- format ------------------------------------------------------------
   ext <- tolower(tools::file_ext(filename))
@@ -263,7 +287,13 @@ fig_save <- function(filename, plot = ggplot2::last_plot(),
   # Type is measured in the font it will be drawn in, so the font has to be on
   # the plot before the panel arithmetic runs, or the decoration comes out the
   # width of the wrong typeface.
-  if (!is.null(spec) && !is.null(spec$font_families) && inherits(plot, "ggplot")) {
+  fam <- ""
+  font_transformable <- system %in% c(
+    "ggplot2", "patchwork", "lattice", "plotly", "grid", "base"
+  )
+  if (!is.null(spec) && !is.null(spec$font_families) &&
+      (system %in% c("ggplot2", "patchwork") ||
+       (isTRUE(transform) && font_transformable))) {
     base_font_device <- ext %in% c("pdf", "eps", "ps") &&
       (isTRUE(cmyk_output) || !cairo_ok())
     fam <- if (base_font_device) {
@@ -274,11 +304,14 @@ fig_save <- function(filename, plot = ggplot2::last_plot(),
     font_device_ok <- if (base_font_device) nzchar(fam) else device_resolves_system_fonts(ext)
     if (font_device_ok && nzchar(fam)) {
       current <- theme_family_raw(plot)
-      if (nzchar(current) && !tolower(current) %in% tolower(unlist(spec$font_families))) {
+      if (system %in% c("ggplot2", "patchwork") && nzchar(current) &&
+          !tolower(current) %in% tolower(unlist(spec$font_families))) {
         warning("Replacing disallowed font '", current, "' with '", fam,
                 "' for '", spec$name, "'.", call. = FALSE)
       }
-      plot <- plot + ggplot2::theme(text = ggplot2::element_text(family = fam))
+      if (!isTRUE(transform) && system %in% c("ggplot2", "patchwork")) {
+        plot <- plot + ggplot2::theme(text = ggplot2::element_text(family = fam))
+      }
     } else {
       figspec_abort(
         c("{spec$name} requires {paste(unlist(spec$font_families), collapse = ' or ')}, which this {toupper(ext)} device cannot apply.",
@@ -287,6 +320,10 @@ fig_save <- function(filename, plot = ggplot2::last_plot(),
         "unsupported", font_families = spec$font_families
       )
     }
+  }
+
+  if (isTRUE(transform) && !is.null(spec)) {
+    plot <- transform_figure(plot, spec, system, family = fam)
   }
 
   # ---- geometry ----------------------------------------------------------
@@ -317,12 +354,34 @@ fig_save <- function(filename, plot = ggplot2::last_plot(),
     width_mm <- 7 * MM_PER_IN
   }
 
-  geom <- solve_geometry(
-    plot, ext,
-    width_mm = width_mm, height_mm = height_mm,
-    panel_width = pw, panel_height = ph,
-    spec_width_mm = spec_w
-  )
+  if (panel_capable_system(system)) {
+    geom <- solve_geometry(
+      plot, ext,
+      width_mm = width_mm, height_mm = height_mm,
+      panel_width = pw, panel_height = ph,
+      spec_width_mm = spec_w
+    )
+  } else {
+    if (!is.null(pw) || !is.null(ph)) {
+      figspec_abort(
+        c(
+          "Exact panel sizing is not available for this {figure_system_label(system)}.",
+          "i" = "Its plotting system does not expose panel layout as a measurable gtable.",
+          ">" = "Set the complete image with {.arg width} and {.arg height}; figspec will still export and verify those dimensions."
+        ),
+        "unsupported", system = system
+      )
+    }
+    geom <- list(
+      plot = plot,
+      width_mm = width_mm,
+      height_mm = height_mm,
+      panel_width_mm = NA_real_, panel_height_mm = NA_real_,
+      decoration_width_mm = NA_real_, decoration_height_mm = NA_real_,
+      panels_across = NA_integer_, panels_down = NA_integer_,
+      panel_set = FALSE
+    )
+  }
 
   final_w <- geom$width_mm
   final_h <- if (!is.null(geom$height_mm)) geom$height_mm else final_w * 0.75
@@ -362,8 +421,26 @@ fig_save <- function(filename, plot = ggplot2::last_plot(),
       }
     })
   }
-  saved <- tryCatch(with_r_fontconfig(quiet_font(do.call(ggplot2::ggsave, args))),
-                    error = function(e) e)
+  saved <- if (html_figure_system(system)) {
+    tryCatch(
+      write_html_figure(
+        geom$plot, system, filename, ext, final_w, final_h, dpi,
+        spec = spec, dots = dots
+      ),
+      error = function(e) e
+    )
+  } else if (system %in% c("base", "recordedplot", "lattice", "grid")) {
+    tryCatch(
+      with_r_fontconfig(quiet_font(write_r_figure(
+        geom$plot, system, filename, ext, final_w, final_h, dpi,
+        spec = spec, family = fam, dots = dots
+      ))),
+      error = function(e) e
+    )
+  } else {
+    tryCatch(with_r_fontconfig(quiet_font(do.call(ggplot2::ggsave, args))),
+             error = function(e) e)
+  }
   if (inherits(saved, "error")) {
     if (grepl("invalid font type|font family|font database",
               conditionMessage(saved))) {
@@ -394,7 +471,11 @@ fig_save <- function(filename, plot = ggplot2::last_plot(),
           spec_width_mm = spec_w
         )$plot
       }
-      with_r_fontconfig(quiet_font(do.call(ggplot2::ggsave, args)))
+      if (system %in% c("ggplot2", "patchwork", "gtable")) {
+        with_r_fontconfig(quiet_font(do.call(ggplot2::ggsave, args)))
+      } else {
+        stop(saved)
+      }
     } else {
       stop(saved)
     }
@@ -407,17 +488,25 @@ fig_save <- function(filename, plot = ggplot2::last_plot(),
       "device_failed", format = ext)
   }
   if (ext %in% c("jpeg", "jpg")) ensure_jpeg_density(filename, dpi)
+  if (ext == "png") ensure_png_density(filename, dpi)
 
   # ---- report ------------------------------------------------------------
   if (isTRUE(check) && !is.null(spec)) {
-    plot_report <- fig_check(plot, spec, column = column,
-                             width = final_w, height = final_h, units = "mm",
-                             dpi = dpi, format = ext,
-                             colour_mode = if (isTRUE(cmyk_output)) "CMYK" else "RGB",
-                             art_type = chosen_art_type)
     file_report <- fig_check(filename, spec, column = column,
                              dpi = dpi, art_type = chosen_art_type)
-    report <- merge_figspec_reports(plot_report, file_report)
+    report <- if (semantic_check_system(system, plot)) {
+      plot_report <- fig_check(plot, spec, column = column,
+                               width = final_w, height = final_h, units = "mm",
+                               dpi = dpi, format = ext,
+                               colour_mode = if (isTRUE(cmyk_output)) "CMYK" else "RGB",
+                               art_type = chosen_art_type)
+      merge_figspec_reports(plot_report, file_report)
+    } else {
+      attr(file_report, "input") <- paste0(
+        figure_system_label(system), " rendered to ", toupper(ext)
+      )
+      file_report
+    }
     problems <- report[report$status %in% c("fail", "invalid"), , drop = FALSE]
     open <- report[report$status == "unknown", , drop = FALSE]
     if (nrow(problems) > 0) {
@@ -439,9 +528,13 @@ fig_save <- function(filename, plot = ggplot2::last_plot(),
       canvas_width_mm  = round(final_w, 2),
       canvas_height_mm = round(final_h, 2),
       panel_width_mm   = round(geom$panel_width_mm, 2),
-      panel_height_mm  = round(
-        if (is.null(ph)) (final_h - geom$decoration_height_mm) /
-          max(geom$panels_down, 1) else geom$panel_height_mm, 2),
+      panel_height_mm  = round(if (!panel_capable_system(system)) {
+        NA_real_
+      } else if (is.null(ph)) {
+        (final_h - geom$decoration_height_mm) / max(geom$panels_down, 1)
+      } else {
+        geom$panel_height_mm
+      }, 2),
       decoration_width_mm  = round(geom$decoration_width_mm, 2),
       decoration_height_mm = round(geom$decoration_height_mm, 2),
       panels_across = geom$panels_across,
@@ -450,6 +543,10 @@ fig_save <- function(filename, plot = ggplot2::last_plot(),
     ),
     class = c("figspec_geometry", "data.frame")
   )
+  attr(filename, "figspec_system") <- system
+  attr(filename, "figspec_transformation") <-
+    attr(plot, "figspec_transformation", exact = TRUE) %||%
+    if (isTRUE(transform) && !is.null(spec)) "none" else "not requested"
   if (exists("report", inherits = FALSE)) attr(filename, "figspec_report") <- report
   invisible(filename)
 }
@@ -660,6 +757,91 @@ ensure_jpeg_density <- function(path, dpi) {
   close(input); close(output)
   if (!file.copy(tmp, path, overwrite = TRUE, copy.mode = TRUE)) {
     figspec_abort("Could not attach JPEG resolution metadata to {.file {path}}.", "bad_input")
+  }
+  invisible(TRUE)
+}
+
+# Add or replace PNG's physical-pixel-density chunk. Browser renderers produce
+# the requested number of pixels but commonly omit pHYs, which would leave the
+# file's physical size unknowable when it reaches a publisher. The chunk is
+# inserted immediately after IHDR and carries a valid CRC so third-party image
+# software can verify it independently.
+png_u32 <- function(x) {
+  x <- as.double(x)
+  as.raw(c(
+    floor(x / 16777216) %% 256,
+    floor(x / 65536) %% 256,
+    floor(x / 256) %% 256,
+    floor(x) %% 256
+  ))
+}
+
+png_crc32 <- function(bytes) {
+  crc <- -1L
+  polynomial <- -306674912L # unsigned 0xEDB88320
+  for (byte in as.integer(bytes)) {
+    crc <- bitwXor(crc, byte)
+    for (i in seq_len(8L)) {
+      mask <- -bitwAnd(crc, 1L)
+      crc <- bitwXor(bitwShiftR(crc, 1L), bitwAnd(polynomial, mask))
+    }
+  }
+  bitwNot(crc)
+}
+
+png_crc_bytes <- function(bytes) {
+  crc <- png_crc32(bytes)
+  as.raw(c(
+    bitwAnd(bitwShiftR(crc, 24L), 255L),
+    bitwAnd(bitwShiftR(crc, 16L), 255L),
+    bitwAnd(bitwShiftR(crc, 8L), 255L),
+    bitwAnd(crc, 255L)
+  ))
+}
+
+ensure_png_density <- function(path, dpi) {
+  ppm <- as.integer(round(as.numeric(dpi) / 0.0254))
+  if (!is.finite(ppm) || ppm < 1L) return(invisible(FALSE))
+  size <- file.size(path)
+  if (!is.finite(size) || size < 33L || size > 1024^3) return(invisible(FALSE))
+  bytes <- readBin(path, "raw", size)
+  signature <- as.raw(c(137L, 80L, 78L, 71L, 13L, 10L, 26L, 10L))
+  if (!identical(bytes[seq_len(8L)], signature)) return(invisible(FALSE))
+
+  chunks <- list()
+  position <- 9L
+  saw_ihdr <- FALSE
+  saw_iend <- FALSE
+  while (position + 11L <= length(bytes)) {
+    len <- sum(as.integer(bytes[position:(position + 3L)]) *
+                 c(16777216, 65536, 256, 1))
+    end <- position + 11L + len
+    if (!is.finite(len) || len < 0 || end > length(bytes)) return(invisible(FALSE))
+    type <- rawToChar(bytes[(position + 4L):(position + 7L)])
+    chunk <- bytes[position:end]
+    if (!identical(type, "pHYs")) chunks[[length(chunks) + 1L]] <- chunk
+    if (identical(type, "IHDR")) saw_ihdr <- TRUE
+    if (identical(type, "IEND")) {
+      saw_iend <- TRUE
+      break
+    }
+    position <- end + 1L
+  }
+  if (!saw_ihdr || !saw_iend) return(invisible(FALSE))
+
+  type <- charToRaw("pHYs")
+  data <- c(png_u32(ppm), png_u32(ppm), as.raw(1L))
+  phys <- c(png_u32(length(data)), type, data, png_crc_bytes(c(type, data)))
+  ihdr <- chunks[[1L]]
+  rest <- if (length(chunks) > 1L) chunks[-1L] else list()
+  output <- c(signature, ihdr, phys, unlist(rest, use.names = FALSE))
+
+  tmp <- tempfile(".figspec-phys-", tmpdir = dirname(path), fileext = ".png")
+  on.exit(if (file.exists(tmp)) unlink(tmp), add = TRUE)
+  writeBin(output, tmp)
+  if (!file.copy(tmp, path, overwrite = TRUE, copy.mode = TRUE)) {
+    figspec_abort("Could not attach PNG resolution metadata to {.file {path}}.",
+                  "bad_input")
   }
   invisible(TRUE)
 }

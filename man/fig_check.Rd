@@ -32,15 +32,15 @@ for \code{column}. Ignored when \code{x} is a file, whose real size is measured.
 
 \item{units}{Units for \code{width} and \code{height}.}
 
-\item{dpi}{Resolution. For a ggplot object, the resolution you intend to
+\item{dpi}{Resolution. For a live figure, the resolution you intend to
 save at. For a file, the resolution it was written at, which lets figspec
 judge physical size for files that do not record it themselves - base R's
 \code{png()} and \code{tiff()} devices do not, whereas ragg does.}
 
 \item{format}{Output format, for example \code{"tiff"}. Only used when \code{x} is a
-ggplot object.}
+live figure.}
 
-\item{colour_mode}{Intended output colour model for a ggplot object. Defaults
+\item{colour_mode}{Intended output colour model for a live figure. Defaults
 to \code{"RGB"}; \code{\link[=fig_save]{fig_save()}} supplies \code{"CMYK"} when it selects a CMYK-capable
 vector device.}
 

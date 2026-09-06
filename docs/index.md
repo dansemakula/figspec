@@ -11,13 +11,14 @@ abstracts and supplementary video or audio.
 
 It addresses two common needs.
 
-**The need for figures that meet journal requirements.** Journals set
-detailed rules for submitted figures, including column widths, minimum
-resolution, accepted formats, text sizes, line weights, colour use and
-panel labels. These rules differ between publishers and are often
-scattered across several pages of author guidance. A figure prepared for
-one journal may therefore need substantial changes when a paper is
-submitted elsewhere, or resubmitted after rejection.
+## The need for figures that meet journal requirements
+
+Journals set detailed rules for submitted figures, including column
+widths, minimum resolution, accepted formats, text sizes, line weights,
+colour use and panel labels. These rules differ between publishers and
+are often scattered across several pages of author guidance. A figure
+prepared for one journal may therefore need substantial changes when a
+paper is submitted elsewhere, or resubmitted after rejection.
 
 figspec brings these requirements into R, where they can be applied
 while the figure is still editable. Its registry currently contains 29
@@ -51,13 +52,14 @@ can then inspect an actual video or audio file for properties such as
 its format, frame size, file size, codec and audio bit rate, reporting
 anything it cannot determine rather than guessing.
 
-**The need for figures with consistent panel sizes.** R can set the
-overall dimensions of an image, but it does not normally control the
-exact size of the plot area inside it. As a result, a figure with long
-axis labels or a large legend can have a smaller plotting area than a
-simpler figure saved at the same width. Place those figures together in
-a paper, report or presentation, and their axes and data panels may no
-longer align.
+## The need for figures with consistent panel sizes
+
+R can set the overall dimensions of an image, but it does not normally
+control the exact size of the plot area inside it. As a result, a figure
+with long axis labels or a large legend can have a smaller plotting area
+than a simpler figure saved at the same width. Place those figures
+together in a paper, report or presentation, and their axes and data
+panels may no longer align.
 
 figspec can size the plot panel directly and calculate the canvas needed
 around it. A set of figures can therefore share the same plotting area
@@ -140,9 +142,9 @@ measures the labels, legends and margins and calculates the canvas
 needed around it.
 [`fig_panel_width()`](https://dansemakula.github.io/figspec/reference/fig_panel_width.md)
 can also determine a shared panel width for a collection of figures. See
-[Sizing figures by panel, not by
-canvas](https://dansemakula.github.io/figspec/articles/panels.html) for
-worked examples.
+[Control figure and panel
+dimensions](https://dansemakula.github.io/figspec/articles/panels.html)
+for worked examples.
 
 ## Understanding verification results
 
@@ -234,8 +236,8 @@ publisher has not stated.
 
 - [Getting started with
   figspec](https://dansemakula.github.io/figspec/articles/figspec.html)
-- [Sizing figures by panel, not by
-  canvas](https://dansemakula.github.io/figspec/articles/panels.html)
+- [Control figure and panel
+  dimensions](https://dansemakula.github.io/figspec/articles/panels.html)
 - [Journal and publisher
   profiles](https://dansemakula.github.io/figspec/articles/journals.html)
 - [Every function and its

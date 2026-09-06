@@ -193,8 +193,18 @@ print.figspec_geometry <- function(x, ...) {
   cli::cli_h1("Figure geometry")
   n <- x$panels_across * x$panels_down
   free <- is.na(x$panel_width_mm) && is.na(x$panel_height_mm)
+  canvas_only <- is.na(x$panels_across) || is.na(x$panels_down)
 
-  if (free) {
+  if (canvas_only) {
+    cli::cli_verbatim(paste0(
+      "  canvas  ", fmt_pair(x$canvas_width_mm, x$canvas_height_mm)
+    ))
+    cli::cli_alert_info(
+      "This plotting system does not expose its panel boundaries, so figspec
+       can verify the complete image but cannot report a separate panel size."
+    )
+    return(invisible(x))
+  } else if (free) {
     cli::cli_alert_info(
       "The panels have no size of their own yet, so they will take whatever the
        canvas leaves over. The decoration below is fixed by the labels and the
@@ -753,6 +763,34 @@ plot.figspec_geometry <- function(x, ...) {
                figure."),
       "bad_input"
     )
+  }
+
+  if (is.na(x$panels_across) || is.na(x$panels_down) ||
+      is.na(x$panel_width_mm) || is.na(x$panel_height_mm)) {
+    diagram <- ggplot2::ggplot() +
+      ggplot2::annotate(
+        "rect", xmin = 0, xmax = x$canvas_width_mm,
+        ymin = 0, ymax = x$canvas_height_mm,
+        fill = "#E8F3F7", colour = "#1A7391", linewidth = 0.7
+      ) +
+      ggplot2::annotate(
+        "text", x = x$canvas_width_mm / 2, y = x$canvas_height_mm / 2,
+        label = paste0(
+          "canvas  ", mm(x$canvas_width_mm), " x ",
+          mm(x$canvas_height_mm), " mm\n",
+          "panel boundary not exposed"
+        ),
+        colour = "#16313B", size = 4
+      ) +
+      ggplot2::coord_fixed(
+        xlim = c(0, x$canvas_width_mm),
+        ylim = c(0, x$canvas_height_mm),
+        expand = FALSE,
+        clip = "off"
+      ) +
+      ggplot2::theme_void() +
+      ggplot2::theme(plot.margin = ggplot2::margin(18, 18, 18, 18))
+    return(diagram)
   }
 
   cw <- x$canvas_width_mm; ch <- x$canvas_height_mm
