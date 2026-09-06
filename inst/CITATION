@@ -3,14 +3,14 @@ citHeader("To cite figspec in publications, please use:")
 bibentry(
   bibtype  = "Manual",
   key      = "semakula2026figspec",
-  title    = "{figspec}: Build, Export and Verify Figures Against a Specification",
+  title    = "{figspec}: Build, Export and Verify Figures and Tables Against a Specification",
   author   = person("Daniel", "Semakula"),
   year     = "2026",
   note     = paste("R package version", meta$Version),
   url      = "https://dansemakula.github.io/figspec/",
   textVersion = paste(
     "Semakula, D. (2026).",
-    "figspec: Build, Export and Verify Figures Against a Specification.",
+    "figspec: Build, Export and Verify Figures and Tables Against a Specification.",
     paste0("R package version ", meta$Version, "."),
     "https://dansemakula.github.io/figspec/"
   )

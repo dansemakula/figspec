@@ -1,10 +1,13 @@
 # Inspect a figure and verify it against a specification
 
-Accepts either a ggplot object, checked before it is saved, or the path
-to a figure file that has already been written. With no specification it
-reports what can be measured without issuing pass or fail claims. A
+Accepts a live figure made with ggplot2, lattice, Plotly, base graphics
+or grid, or the path to an exported figure file. With no specification
+it reports what can be measured without issuing pass or fail claims. A
 specification may come from the included registry, your own registry, or
-a named list supplied directly in R.
+a named list supplied directly in R. Plotting systems that do not expose
+the same layer and theme details as ggplot2 are rendered to a temporary
+file; file properties are then verified and unavailable properties
+remain `unknown`.
 
 ## Usage
 
@@ -28,7 +31,10 @@ fig_check(
 
 - x:
 
-  A ggplot object, or a path to a figure file.
+  A supported live figure, or a path to a figure file. Live figures
+  include ggplot2 and patchwork objects, lattice plots, Plotly and other
+  HTML widgets, grid grobs, recorded base plots, and base-graphics code
+  wrapped in a function or one-sided formula.
 
 - spec:
 
@@ -51,7 +57,7 @@ fig_check(
 
 - dpi:
 
-  Resolution. For a ggplot object, the resolution you intend to save at.
+  Resolution. For a live figure, the resolution you intend to save at.
   For a file, the resolution it was written at, which lets figspec judge
   physical size for files that do not record it themselves - base R's
   [`png()`](https://rdrr.io/r/grDevices/png.html) and
@@ -60,12 +66,12 @@ fig_check(
 
 - format:
 
-  Output format, for example `"tiff"`. Only used when `x` is a ggplot
-  object.
+  Output format, for example `"tiff"`. Only used when `x` is a live
+  figure.
 
 - colour_mode:
 
-  Intended output colour model for a ggplot object. Defaults to `"RGB"`;
+  Intended output colour model for a live figure. Defaults to `"RGB"`;
   [`fig_save()`](https://dansemakula.github.io/figspec/reference/fig_save.md)
   supplies `"CMYK"` when it selects a CMYK-capable vector device.
 
@@ -115,9 +121,11 @@ estimated.
 [`fig_save()`](https://dansemakula.github.io/figspec/reference/fig_save.md)
 to export and check in one step,
 [`submission_check()`](https://dansemakula.github.io/figspec/reference/submission_check.md)
-to review several figures together, and
+to review several figures together,
 [`spec_get()`](https://dansemakula.github.io/figspec/reference/spec_get.md)
-for registry and project specifications.
+for registry and project specifications, and
+[`vignette("figure-systems")`](https://dansemakula.github.io/figspec/articles/figure-systems.md)
+for worked examples with different R plotting systems.
 
 ## Examples
 
@@ -131,7 +139,7 @@ p
 fig_check(p)
 #>
 #> ── Figure inspection ───────────────────────────────────────────────────────────
-#> checked: ggplot object
+#> checked: ggplot2 plot
 #>
 #> ℹ Width            -                           requires: no specification given
 #> ℹ Height           -                           requires: no specification given
@@ -171,7 +179,7 @@ fig_check(p, report_spec, column = "full", height = 95,
           dpi = 300, format = "png")
 #>
 #> ── Quarterly research report ───────────────────────────────────────────────────
-#> checked: ggplot object
+#> checked: ggplot2 plot
 #>
 #> ✔ Width                160 mm                  requires: full 160 mm
 #> ℹ Height                95 mm                  requires: not specified

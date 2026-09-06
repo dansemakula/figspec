@@ -1,5 +1,14 @@
 # Registry schema validation -------------------------------------------------
 
+table_requirement_keys <- function() {
+  c(
+    "formats", "editable", "orientation", "width_max_mm", "font_families",
+    "font_min_pt", "font_max_pt", "title_style", "title_position",
+    "header_bold", "vertical_rules", "horizontal_rules", "decimal_alignment",
+    "footnotes", "abbreviations", "repeat_header", "split_rows"
+  )
+}
+
 registry_problems <- function(entries) {
   problems <- character()
   add <- function(...) problems <<- c(problems, paste0(...))
@@ -27,7 +36,8 @@ registry_problems <- function(entries) {
   top_allowed <- c(
     "id", "name", "publisher", "disciplines", "source_url", "verified_on",
     "source_archive_url", "source_content_md5", "publication_stage",
-    "requirements", "not_stated", "sources", "house_style", "tables", "media",
+    "requirements", "not_stated", "sources", "house_style", "tables",
+    "tables_not_stated", "media",
     "graphical_abstract", "notes"
   )
 
@@ -229,6 +239,119 @@ registry_problems <- function(entries) {
           }
         }
       }
+    }
+
+    tables <- j$tables
+    if (!is.null(tables)) {
+      table_allowed <- c(
+        table_requirement_keys(), "format", "notes",
+        "source_quote", "source_quote_format", "source_quote_orientation",
+        "source_quote_typography", "source_quote_rules",
+        "source_quote_notes"
+      )
+      if (!is.list(tables) || is.null(names(tables)) ||
+          any(!nzchar(names(tables))) || anyDuplicated(names(tables))) {
+        add(id, ": `tables` must be a named list with unique fields")
+      } else {
+        unknown_tables <- setdiff(names(tables), table_allowed)
+        if (length(unknown_tables)) {
+          add(id, ": unrecognised table field(s): ",
+              paste(unknown_tables, collapse = ", "))
+        }
+        legacy_format <- tables[["format", exact = TRUE]]
+        if (!is.null(tables$formats) && !is.null(legacy_format)) {
+          add(id, ": use `tables.formats`, not both `formats` and legacy `format`")
+        }
+        table_formats <- tables$formats %||% legacy_format
+        if (!is.null(table_formats)) {
+          values <- unlist(table_formats, use.names = FALSE)
+          if (!is.character(values) || !length(values) || anyNA(values) ||
+              any(!grepl("^[A-Za-z0-9]+$", values)) ||
+              anyDuplicated(tolower(values))) {
+            add(id, ": `tables.formats` must contain file extensions or `editable`")
+          }
+        }
+        for (field in intersect(
+          c("editable", "header_bold", "vertical_rules", "decimal_alignment",
+            "footnotes", "abbreviations", "repeat_header", "split_rows"),
+          names(tables)
+        )) {
+          value <- tables[[field]]
+          if (!is.logical(value) || length(value) != 1L || is.na(value)) {
+            add(id, ": `tables.", field, "` must be TRUE or FALSE")
+          }
+        }
+        for (field in intersect(c("width_max_mm", "font_min_pt", "font_max_pt"),
+                                names(tables))) {
+          value <- tables[[field]]
+          if (!is.numeric(value) || length(value) != 1L ||
+              !is.finite(value) || value <= 0) {
+            add(id, ": `tables.", field, "` must be one positive finite number")
+          }
+        }
+        if (!is.null(tables$font_min_pt) && !is.null(tables$font_max_pt) &&
+            tables$font_min_pt > tables$font_max_pt) {
+          add(id, ": table font minimum exceeds maximum")
+        }
+        if (!is.null(tables$orientation) &&
+            (!is.character(tables$orientation) || length(tables$orientation) != 1L ||
+             !tolower(tables$orientation) %in% c("portrait", "landscape"))) {
+          add(id, ": `tables.orientation` must be portrait or landscape")
+        }
+        if (!is.null(tables$title_position) &&
+            (!is.character(tables$title_position) || length(tables$title_position) != 1L ||
+             !tolower(tables$title_position) %in% c("above", "below"))) {
+          add(id, ": `tables.title_position` must be above or below")
+        }
+        if (!is.null(tables$horizontal_rules) &&
+            (!is.character(tables$horizontal_rules) || length(tables$horizontal_rules) != 1L ||
+             !tolower(tables$horizontal_rules) %in% c("none", "minimal", "all"))) {
+          add(id, ": `tables.horizontal_rules` must be none, minimal, or all")
+        }
+        if (!is.null(tables$font_families)) {
+          fonts <- unlist(tables$font_families, use.names = FALSE)
+          if (!is.character(fonts) || !length(fonts) || anyNA(fonts) ||
+              any(!nzchar(trimws(fonts))) || anyDuplicated(tolower(fonts))) {
+            add(id, ": `tables.font_families` must contain non-empty names")
+          }
+        }
+        for (field in intersect(c("title_style", "notes"), names(tables))) {
+          value <- tables[[field]]
+          if (!is.character(value) || length(value) != 1L ||
+              is.na(value) || !nzchar(trimws(value))) {
+            add(id, ": `tables.", field, "` must be one non-empty string")
+          }
+        }
+        quote_fields <- grep("^source_quote", names(tables), value = TRUE)
+        for (field in quote_fields) {
+          value <- tables[[field]]
+          if (!is.character(value) || length(value) != 1L ||
+              is.na(value) || !nzchar(trimws(value))) {
+            add(id, ": `tables.", field, "` must be one non-empty source excerpt")
+          }
+        }
+      }
+    }
+    tables_not_stated <- unlist(j$tables_not_stated %||% list())
+    if (length(tables_not_stated) &&
+        (!is.character(tables_not_stated) || anyNA(tables_not_stated) ||
+         any(!nzchar(tables_not_stated)) || anyDuplicated(tables_not_stated))) {
+      add(id, ": tables_not_stated must contain unique table requirement fields")
+    }
+    unknown_table_absent <- setdiff(tables_not_stated, table_requirement_keys())
+    if (length(unknown_table_absent)) {
+      add(id, ": unrecognised tables_not_stated field(s): ",
+          paste(unknown_table_absent, collapse = ", "))
+    }
+    stated_table_fields <- intersect(
+      names(tables %||% list()),
+      c(table_requirement_keys(), "format")
+    )
+    stated_table_fields[stated_table_fields == "format"] <- "formats"
+    table_clash <- intersect(tables_not_stated, stated_table_fields)
+    if (length(table_clash)) {
+      add(id, ": table field(s) cannot be both stated and absent: ",
+          paste(table_clash, collapse = ", "))
     }
 
     media <- j$media

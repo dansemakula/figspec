@@ -14,6 +14,155 @@
 #
 # Styles live in the session, not on disk, unless style_save() is called.
 
+STYLE_FILE_LIMIT <- 10 * 1024^2
+
+style_file_path <- function(path, must_exist = TRUE) {
+  if (!is.character(path) || length(path) != 1L || is.na(path) ||
+      !nzchar(trimws(path)) || grepl("[\r\n]", path)) {
+    figspec_abort("{.arg path} must be one non-empty RDS file path.", "bad_input")
+  }
+  if (!identical(tolower(tools::file_ext(path)), "rds")) {
+    figspec_abort("{.arg path} must end in {.file .rds}.", "bad_input", path = path)
+  }
+  expanded <- path.expand(path)
+  parent <- dirname(expanded)
+  if (!dir.exists(parent)) {
+    figspec_abort(
+      "The style-file directory does not exist: {.file {parent}}.",
+      "not_found",
+      path = path
+    )
+  }
+  if (dir.exists(expanded)) {
+    figspec_abort("{.file {path}} is a directory, not an RDS file.", "bad_input")
+  }
+  if (file.exists(expanded)) {
+    link <- Sys.readlink(expanded)
+    if (length(link) == 1L && !is.na(link) && nzchar(link)) {
+      figspec_abort(
+        "Refusing to use the symbolic link {.file {path}} as a style file.",
+        "bad_input",
+        path = path
+      )
+    }
+  } else if (isTRUE(must_exist)) {
+    figspec_abort("Style file not found: {.file {path}}.", "not_found", path = path)
+  }
+  file.path(
+    normalizePath(parent, winslash = "/", mustWork = TRUE),
+    basename(expanded)
+  )
+}
+
+validate_style_file_contents <- function(styles, allow_functions = FALSE,
+                                         resolve_functions = TRUE) {
+  if (!is.list(styles)) {
+    figspec_abort("House-style file must contain a list.", "bad_input")
+  }
+  if (!length(styles)) return(invisible(TRUE))
+  style_names <- names(styles)
+  if (is.null(style_names) || anyNA(style_names) || any(!nzchar(style_names)) ||
+      anyDuplicated(style_names) ||
+      any(!grepl("^[A-Za-z][A-Za-z0-9_.-]*$", style_names))) {
+    figspec_abort(
+      "House-style file must use unique, safe names for every style.",
+      "bad_input"
+    )
+  }
+  for (nm in style_names) {
+    entry <- styles[[nm]]
+    if (!is.list(entry) || is.object(entry) ||
+        !identical(entry$name, nm) || is.null(entry$theme) ||
+        !is.character(entry$description) ||
+        length(entry$description) != 1L || is.na(entry$description) ||
+        grepl("[\r\n]", entry$description)) {
+      figspec_abort("House-style entry {.val {nm}} is malformed.", "bad_input")
+    }
+    if (is.function(entry$theme) && !isTRUE(allow_functions)) {
+      figspec_abort(
+        c("House-style entry {.val {nm}} contains executable R code.",
+          ">" = "Load only a file you trust, then set {.code allow_functions = TRUE}."),
+        "bad_input"
+      )
+    }
+    resolved <- if (is.function(entry$theme) && isTRUE(resolve_functions)) {
+      tryCatch(entry$theme(), error = function(e) e)
+    } else {
+      entry$theme
+    }
+    if ((!is.function(resolved) || isTRUE(resolve_functions)) &&
+        (inherits(resolved, "error") || !inherits(resolved, "theme"))) {
+      figspec_abort(
+        "House-style entry {.val {nm}} does not resolve to a ggplot2 theme.",
+        "bad_input"
+      )
+    }
+  }
+  invisible(TRUE)
+}
+
+read_style_file <- function(path, allow_functions = FALSE,
+                            resolve_functions = TRUE) {
+  resolved_path <- style_file_path(path, must_exist = TRUE)
+  info <- file.info(resolved_path)
+  if (!is.finite(info$size) || info$size < 1L) {
+    figspec_abort("Style file is empty: {.file {path}}.", "bad_input", path = path)
+  }
+  if (info$size > STYLE_FILE_LIMIT) {
+    figspec_abort(
+      "Style file is larger than 10 MB: {.file {path}}.",
+      "bad_input",
+      path = path
+    )
+  }
+  styles <- tryCatch(readRDS(resolved_path), error = function(e) e)
+  if (inherits(styles, "error")) {
+    figspec_abort(
+      c("Could not read styles from {.file {path}}.",
+        "x" = conditionMessage(styles)),
+      "bad_input",
+      path = path
+    )
+  }
+  validate_style_file_contents(styles, allow_functions, resolve_functions)
+  styles
+}
+
+promote_style_file <- function(candidate, destination) {
+  backup <- NULL
+  if (file.exists(destination)) {
+    backup <- tempfile(
+      ".figspec-style-backup-",
+      tmpdir = dirname(destination),
+      fileext = ".rds"
+    )
+    if (!file.rename(destination, backup)) {
+      figspec_abort(
+        "Could not protect the existing style file before replacement.",
+        "bad_input",
+        path = destination
+      )
+    }
+  }
+  placed <- file.rename(candidate, destination)
+  restored <- TRUE
+  if (!placed && !is.null(backup)) restored <- file.rename(backup, destination)
+  if (!restored) {
+    figspec_abort(
+      c("Could not save the style file or restore its previous version.",
+        "i" = "The recoverable previous file remains at {.file {backup}}."),
+      "bad_input",
+      path = destination,
+      backup = backup
+    )
+  }
+  if (!placed) {
+    figspec_abort("Could not atomically place the style file.", "bad_input")
+  }
+  if (!is.null(backup)) unlink(backup)
+  invisible(destination)
+}
+
 #' Register a reusable visual style
 #'
 #' A house style records the visual choices a project, team or organisation
@@ -143,6 +292,11 @@ style_remove <- function(name) {
 #' Save them to an RDS file when you want to use them in a later session or
 #' share them across projects you control.
 #'
+#' The complete style collection is written to a temporary file, reopened and
+#' validated before the requested path is replaced. Existing directories and
+#' symbolic links are refused. If writing or validation fails, an existing
+#' style file is left unchanged.
+#'
 #' @param path The RDS file to create.
 #' @return `path` invisibly.
 #' @examples
@@ -154,7 +308,39 @@ style_remove <- function(name) {
 #' unlink(f)
 #' @export
 style_save <- function(path) {
-  saveRDS(.figspec_cache$styles %||% list(), path)
+  destination <- style_file_path(path, must_exist = FALSE)
+  styles <- .figspec_cache$styles %||% list()
+  validate_style_file_contents(
+    styles,
+    allow_functions = TRUE,
+    resolve_functions = FALSE
+  )
+  candidate <- tempfile(
+    ".figspec-style-",
+    tmpdir = dirname(destination),
+    fileext = ".rds"
+  )
+  on.exit(if (file.exists(candidate)) unlink(candidate), add = TRUE)
+  write_error <- tryCatch({
+    saveRDS(styles, candidate)
+    NULL
+  }, error = identity)
+  if (inherits(write_error, "error")) {
+    figspec_abort(
+      c("Could not write the style file.", "x" = conditionMessage(write_error)),
+      "bad_input",
+      path = path
+    )
+  }
+  written <- read_style_file(
+    candidate,
+    allow_functions = TRUE,
+    resolve_functions = FALSE
+  )
+  if (!identical(names(written), names(styles))) {
+    figspec_abort("The written style file did not preserve its style names.", "bad_input")
+  }
+  promote_style_file(candidate, destination)
   invisible(path)
 }
 
@@ -183,32 +369,14 @@ style_save <- function(path) {
 #' unlink(f)
 #' @export
 style_load <- function(path, allow_functions = FALSE) {
-  styles <- readRDS(path)
-  if (!is.list(styles) || is.null(names(styles)) || any(!nzchar(names(styles)))) {
-    figspec_abort("House-style file must contain a named list.", "bad_input")
+  if (!is.logical(allow_functions) || length(allow_functions) != 1L ||
+      is.na(allow_functions)) {
+    figspec_abort("{.arg allow_functions} must be TRUE or FALSE.", "bad_input")
   }
-  for (nm in names(styles)) {
-    entry <- styles[[nm]]
-    if (!is.list(entry) || !identical(entry$name, nm) || is.null(entry$theme)) {
-      figspec_abort("House-style entry {.val {nm}} is malformed.", "bad_input")
-    }
-    if (is.function(entry$theme) && !isTRUE(allow_functions)) {
-      figspec_abort(
-        c("House-style entry {.val {nm}} contains executable R code.",
-          ">" = "Load only a file you trust, then set {.code allow_functions = TRUE}."),
-        "bad_input")
-    }
-    resolved <- if (is.function(entry$theme)) {
-      tryCatch(entry$theme(), error = function(e) e)
-    } else entry$theme
-    if (inherits(resolved, "error") || !inherits(resolved, "theme")) {
-      figspec_abort("House-style entry {.val {nm}} does not resolve to a ggplot2 theme.",
-                    "bad_input")
-    }
-  }
+  styles <- read_style_file(path, allow_functions, resolve_functions = TRUE)
   existing <- .figspec_cache$styles %||% list()
   .figspec_cache$styles <- utils::modifyList(existing, styles)
-  invisible(names(styles))
+  invisible(names(styles) %||% character())
 }
 
 # Resolve whatever the user passed to `style` into a theme, or NULL.

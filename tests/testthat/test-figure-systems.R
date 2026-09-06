@@ -11,6 +11,16 @@ project_figure_spec <- function(formats = c("png", "pdf", "tiff"), dpi = 180) {
   )
 }
 
+skip_if_no_working_chrome <- function() {
+  skip_if_not_installed("chromote")
+  chrome <- tryCatch(chromote::find_chrome(), error = function(e) "")
+  skip_if(!nzchar(chrome), "Chrome or Chromium is not available")
+  browser <- tryCatch(chromote::Chromote$new(), error = function(e) NULL)
+  skip_if(is.null(browser), "Chrome or Chromium cannot start in this environment")
+  browser$close()
+  invisible(TRUE)
+}
+
 test_that("plotting systems are identified without guessing from output files", {
   expect_identical(figspec:::figure_system(function() plot(1:3)), "base")
   expect_identical(figspec:::figure_system(~plot(1:3)), "base")
@@ -288,9 +298,7 @@ test_that("Plotly exports a real exact-size PNG through the local renderer", {
   skip_if_not_installed("plotly")
   skip_if_not_installed("htmlwidgets")
   skip_if_not_installed("webshot2")
-  skip_if_not_installed("chromote")
-  chrome <- tryCatch(chromote::find_chrome(), error = function(e) "")
-  skip_if(!nzchar(chrome), "Chrome or Chromium is not available")
+  skip_if_no_working_chrome()
 
   plot <- plotly::plot_ly(
     data = ggplot2::mpg,
@@ -314,10 +322,8 @@ test_that("Plotly exports TIFF with exact density and compression", {
   skip_if_not_installed("plotly")
   skip_if_not_installed("htmlwidgets")
   skip_if_not_installed("webshot2")
-  skip_if_not_installed("chromote")
   skip_if_not_installed("magick")
-  chrome <- tryCatch(chromote::find_chrome(), error = function(e) "")
-  skip_if(!nzchar(chrome), "Chrome or Chromium is not available")
+  skip_if_no_working_chrome()
 
   spec <- project_figure_spec("tiff", 120)
   spec$tiff_compression <- "lzw"

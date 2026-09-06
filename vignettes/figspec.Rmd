@@ -16,28 +16,30 @@ library(ggplot2)
 library(figspec)
 ```
 
-## Choose the requirements for your figure
+## Choose the requirements for your figure or table
 
-A clear and accurate figure may still need changes before it can be submitted,
-published or placed in a report. It may be too wide for the page, have too few
-pixels for print, use an unsupported file format, or contain text that will be
-unreadable at its final size. Figures saved at the same width can also look
-uneven when their plotting areas do not line up.
+A clear and accurate figure or table may still need changes before it can be
+submitted, published or placed in a report. A figure may be too wide, have too
+few pixels for print or contain text that will be unreadable at its final size.
+A table may need to remain editable, use a particular page orientation or
+follow rules for type and borders. Figures saved at the same width can also
+look uneven when their plotting areas do not line up.
 
-Start by giving figspec the requirements for the finished figure. You can do
-this in three ways:
+Start by providing figspec with the requirements or specifications for the
+finished work. You can do this in three ways:
 
-* **Use a publication profile.** Name a journal or publisher in the registry.
-  figspec loads its recorded requirements and shows where they came from and
-  when they were last verified.
-* **Write your own requirements.** Describe the needs of a report,
-  presentation, thesis, organisation or production workflow in a named R
-  list.
-* **Set the dimensions directly.** Give the exact image or plotting-panel size
-  when size is the only constraint.
+* **Use an existing publication profile.** Select your intended journal or
+  publisher from figspec's registry. figspec loads the recorded requirements
+  and shows where they came from and when they were last verified.
+* **Write and use your own requirements.** Create a specification for a
+  report, presentation, thesis, organisation or production workflow in a named
+  R list. You can use it immediately or save it for reuse.
+* **Set the required dimensions directly.** Give the exact image or
+  plotting-panel size when size is the only constraint.
 
-Whichever route you take, the workflow is the same: define the requirements,
-build the plot, export it and check the finished file.
+Whichever route you take, the workflow is the same: define the requirements →
+build the figure or table to meet them → export it correctly → verify the
+finished file → repeat when the work or its requirements change.
 
 ### Using your own requirements
 
@@ -56,16 +58,165 @@ report_spec <- list(
 )
 ```
 
-Use `report_spec` wherever a function asks for a journal or specification,
+Use `report_spec` wherever a function asks for a specification,
 including `fig_apply_spec()`, `theme_spec()`, `fig_check()` and `fig_save()`.
 Those functions accept either a registry name or your own list, so no journal
 is required.
 
-A **specification** lists the requirements the finished figure must meet. A
+To use the same requirements in a later R session, save them in a project YAML
+file and load that file when the project starts:
+
+```{r save-project-specification}
+project_spec_file <- file.path(tempdir(), "project-specifications.yml")
+
+spec_save(
+  report_spec,
+  project_spec_file,
+  id = "quarterly_outcomes_report"
+)
+spec_load(project_spec_file)
+
+saved_report_spec <- spec_get("quarterly_outcomes_report")
+fig_width(saved_report_spec, "full")
+```
+
+In a real project, use a path such as `"project-specifications.yml"` and keep
+the file with the analysis. `spec_save()` creates or updates the file safely;
+`spec_load()` makes its entries available in the current session. Users do not
+need to change figspec or add files to the installed package.
+
+A **specification** lists the requirements the finished work must meet. A
 **house style** sets visual choices, such as a reusable ggplot2 theme. They can
 be used together, but they are kept separate so a preferred appearance is not
-mistaken for a requirement. Use `style_register()` to save and reuse
-that appearance.
+mistaken for a requirement. Use `style_register()` to name that appearance for
+the current session and `style_save()` to keep it for later sessions.
+
+### Reusing your own requirements and visual styles
+
+The two kinds of reusable addition serve different purposes:
+
+| If you want to reuse... | It should contain... | Save and restore it with... |
+|---|---|---|
+| A specification | Requirements that a finished figure or table must meet | `spec_save()` and `spec_load()` |
+| A house style | Preferred ggplot2 appearance, such as the theme, grid and legend position | `style_save()` and `style_load()` |
+
+Specifications are saved as readable YAML. House styles are saved as RDS
+because they contain R theme objects. For example, the report specification
+above has already been saved and loaded. A visual style can be preserved in a
+separate file:
+
+```{r save-project-style}
+style_register(
+  "quarterly_report",
+  theme_minimal() +
+    theme(
+      panel.grid.minor = element_blank(),
+      legend.position = "bottom"
+    ),
+  description = "Quarterly report figures"
+)
+
+project_style_file <- file.path(tempdir(), "project-figure-styles.rds")
+style_save(project_style_file)
+style_remove("quarterly_report")
+style_load(project_style_file)
+style_list()[style_list()$name == "quarterly_report", ]
+```
+
+Once both files have been loaded, their names can be combined whenever a plot
+is built:
+
+```{r apply-saved-spec-and-style}
+ggplot(ggplot2::mpg, aes(displ, hwy, colour = factor(cyl))) +
+  geom_point(size = 2, alpha = 0.8) +
+  labs(
+    x = "Engine displacement (litres)",
+    y = "Highway miles per gallon",
+    colour = "Cylinders"
+  ) +
+  fig_apply_spec(
+    "quarterly_outcomes_report",
+    style = "quarterly_report"
+  )
+```
+
+For a project or research team, a simple layout is:
+
+```text
+project/
+├── config/
+│   └── figspec/
+│       ├── specifications.yml
+│       └── styles.rds
+└── analysis.R
+```
+
+Load the files at the beginning of an analysis, in a project setup script or
+in the first code chunk of an R Markdown or Quarto document:
+
+```{r project-setup-example, eval = FALSE}
+library(figspec)
+
+spec_load(file.path("config", "figspec", "specifications.yml"))
+style_load(file.path("config", "figspec", "styles.rds"))
+```
+
+These paths are relative to the project directory, so they work on every team
+member's computer even when the project is stored in a different location.
+
+Each team member has a separate R installation and a separate local copy of the
+project. Git records changes to the project files, while GitHub or another Git
+hosting service stores the shared repository. The team shares the figspec setup
+in the same way that it shares analysis code:
+
+1. Add `.Rprofile`, `config/figspec/specifications.yml` and
+   `config/figspec/styles.rds` to the project repository.
+2. Commit the files and push the commit to GitHub.
+3. Each team member clones the repository to their computer the first time they
+   join the project.
+4. When someone updates a specification or style, they commit and push the
+   change. Other team members pull it into their own project copy.
+5. When a team member opens the project, their own R installation reads the
+   local `.Rprofile` and loads the local copies of the specification and style
+   files.
+6. If a team member pulls an update while R is already running, they restart R
+   or run `spec_load()` and `style_load()` again.
+
+The team is not sharing one running copy of R, and `.Rprofile` is not sent
+directly from one computer to another. GitHub holds the shared project files;
+Git places a copy on each team member's computer. Every computer must have
+figspec installed. A project that uses `renv` can also record the package
+version so that the team uses the same release.
+
+An explicit setup script is usually easiest to see and debug. If every R
+session in the project should load the files automatically, put the following
+in the project's `.Rprofile`:
+
+```{r rprofile-example, eval = FALSE}
+if (requireNamespace("figspec", quietly = TRUE)) {
+  specification_file <- file.path(
+    "config", "figspec", "specifications.yml"
+  )
+  style_file <- file.path("config", "figspec", "styles.rds")
+
+  if (file.exists(specification_file)) {
+    figspec::spec_load(specification_file)
+  }
+  if (file.exists(style_file)) {
+    figspec::style_load(style_file)
+  }
+}
+```
+
+Because `.Rprofile` contains R code that runs when the project starts, review
+changes to it before accepting them and never store passwords, access tokens or
+other secrets in it. Load an RDS style file only from a repository controlled
+by people you trust. Stored theme functions are blocked by default and require
+the explicit `allow_functions = TRUE` option.
+
+An organisation with many specifications, styles and helper functions can put
+them in a small internal R package that imports figspec. That is the most
+maintainable way to provide a larger shared extension across many projects.
 
 For exact panel sizing without any specification, see the
 [panel-sizing guide](panels.html). It demonstrates why equal image widths do
@@ -92,7 +243,7 @@ publication profile much like a ggplot2 scale:
 ```{r}
 fitted <- ggplot(ggplot2::mpg,
                  aes(displ, hwy, colour = factor(cyl), shape = factor(cyl))) +
-  geom_point() +
+  geom_point(size = 2.1, alpha = 0.8, stroke = 0.6) +
   labs(title = "Engine size and highway fuel economy",
        x = "Engine displacement (litres)", y = "Highway miles per gallon",
        colour = "Cylinders", shape = "Cylinders") +
@@ -408,17 +559,53 @@ risk approving a file with too little resolution.
 
 ## Checking a whole submission
 
-One call can review a named collection of live plots. Because the plots are
-still editable R objects, figspec can inspect their text sizes, colours and
-structure as well as their dimensions:
+One call can review a named collection of live plots. Here, both plots are
+prepared for the quarterly report specification created earlier. Because the
+plots are still editable R objects, figspec can inspect their text sizes,
+colours and structure as well as their dimensions:
 
-```{r submission-plots, fig.show = "hold", out.width = "75%", fig.alt = c("A fitted scatter plot of engine displacement and highway fuel economy.", "A fitted box plot comparing highway fuel economy across vehicle classes.")}
+* The first plot shows how highway fuel economy changes with engine size.
+  Colour and shape identify the number of cylinders.
+* The second compares the distribution of highway fuel economy across vehicle
+  classes. It is drawn horizontally so all seven class names remain readable.
+
+They answer different questions and use different types of chart, just as the
+figures in a real report often do. They are checked together because both must
+follow the same report requirements—not because they are intended to be one
+combined figure.
+
+```{r submission-plots, fig.show = "hold", out.width = "100%", fig.alt = c("A fitted scatter plot of engine displacement and highway fuel economy. Colour and shape identify the number of cylinders.", "A horizontal box plot comparing highway fuel economy across vehicle classes, with each class shown in a different accessible colour.")}
 submission_figures <- list(
-  engine_size = fitted,
-  vehicle_class = ggplot(ggplot2::mpg, aes(class, hwy, fill = class)) +
-    geom_boxplot(show.legend = FALSE) +
-    labs(x = "Vehicle class", y = "Highway miles per gallon") +
-    fig_apply_spec("cell_press")
+  engine_size = ggplot(
+    ggplot2::mpg,
+    aes(displ, hwy, colour = factor(cyl), shape = factor(cyl))
+  ) +
+    geom_point(size = 2.5, alpha = 0.8, stroke = 0.7) +
+    labs(
+      title = "Engine size and highway fuel economy",
+      x = "Engine displacement (litres)",
+      y = "Highway miles per gallon",
+      colour = "Cylinders",
+      shape = "Cylinders"
+    ) +
+    fig_apply_spec(report_spec, base_size = 12),
+  vehicle_class = ggplot(
+    ggplot2::mpg,
+    aes(hwy, reorder(class, hwy, median), fill = class)
+  ) +
+    geom_boxplot(
+      width = 0.65,
+      alpha = 0.9,
+      outlier.shape = 21,
+      outlier.size = 1.8,
+      show.legend = FALSE
+    ) +
+    labs(
+      title = "Highway fuel economy by vehicle class",
+      x = "Highway miles per gallon",
+      y = "Vehicle class"
+    ) +
+    fig_apply_spec(report_spec, base_size = 12)
 )
 
 submission_figures$engine_size
@@ -426,8 +613,14 @@ submission_figures$vehicle_class
 ```
 
 ```{r}
-submission_check(submission_figures, "cell_press")
+submission_check(submission_figures, report_spec, column = "full")
 ```
+
+This first report checks everything that can be inspected while the plots are
+still editable. Properties that belong to the finished files, such as the
+saved format, resolution and file size, cannot be confirmed yet and remain
+incomplete. After export, run `submission_check()` on the saved files to
+verify those properties as well.
 
 The same function accepts a directory or a vector of saved file paths. It can
 check those files for dimensions, format, resolution and file size, but it can
@@ -470,7 +663,7 @@ accepts a project specification instead of a registry name. The function needs
 the original plot objects because a finished TIFF no longer contains reliable
 information about settings such as the original text sizes.
 
-## Tables, graphical abstracts, video and audio
+## Preparing tables and other publication files
 
 A publication may also include tables, graphical abstracts, video or audio,
 each with requirements of its own. A publisher may specify how tables are
@@ -478,7 +671,45 @@ formatted, the dimensions of a graphical abstract, or the file types and
 technical limits accepted for video and audio. figspec reports each kind of
 requirement separately so it is clear which rules apply to which file.
 
-```{r}
+```{r table-workflow}
+table_report_spec <- list(
+  name = "Quarterly outcomes report",
+  tables = list(
+    formats = c("html", "docx"),
+    font_min_pt = 9,
+    header_bold = TRUE,
+    vertical_rules = FALSE
+  )
+)
+
+summary_table <- table_apply_spec(
+  mpg[1:10, c("manufacturer", "model", "displ", "hwy")],
+  table_report_spec
+)
+table_check(summary_table, table_report_spec)
+```
+
+The same table can be exported and checked in one call:
+
+```{r table-export}
+table_path <- file.path(tempdir(), "vehicle-summary.html")
+saved_table <- table_save(
+  table_path,
+  summary_table,
+  table_report_spec,
+  transform = FALSE
+)
+attr(saved_table, "figspec_table_report")
+```
+
+`table_apply_spec()` also accepts existing gt, flextable, kableExtra and grid
+tables. Read [Build and check tables from R](tables.html) for worked examples
+and the limits of each table system.
+
+The lookup functions remain useful for publication assets with their own
+requirements:
+
+```{r other-assets}
 graphical_abstract_spec("rsc")
 table_spec("nature")
 media_spec("science")
@@ -497,7 +728,8 @@ dimensions in pixels rather than guessing a physical size. If the guidance
 does not state a rule, the report says that it is unspecified. To check text
 size, provide the original plot because a saved raster image no longer records
 the text's point size. The report lists each item that still needs manual
-review.
+review. For tables, instructions about whether a title is concise, a footnote
+is clear or every abbreviation is defined also remain for a person to assess.
 
 figspec also measures differences between plotting-panel sizes without calling
 them a failure. No publisher profile in the registry currently requires every
@@ -507,8 +739,12 @@ design preference as a publisher requirement.
 
 ## Where to go next
 
+* [Use figspec with different R plotting systems](figure-systems.html) for
+  worked ggplot2, base R, lattice, grid and Plotly examples.
 * [Learn about panel sizing](panels.html) to align the plotting areas across a
   set of figures.
+* [Build and check tables from R](tables.html) to apply table requirements and
+  verify exported files.
 * [Browse the publication profiles](journals.html) and see how complete each
   registry entry is.
 * [Review every function argument](options.html).

@@ -1,11 +1,10 @@
-# Open the full report for one figure
+# Open the full report for one submission item
 
 [`submission_check()`](https://dansemakula.github.io/figspec/reference/submission_check.md)
-gives one summary row for each figure. This function retrieves the
-underlying
-[`fig_check()`](https://dansemakula.github.io/figspec/reference/fig_check.md)
-report for the figure you select, so you can see every requirement, the
-measured value and the reason for any failure or unresolved result.
+gives one summary row for each figure or table. This function retrieves
+the underlying report for the item you select, so you can see every
+requirement, measured value and reason for any failure or unresolved
+result.
 
 ## Usage
 
@@ -22,8 +21,8 @@ submission_detail(x, file)
 
 - file:
 
-  Exactly one figure name from the `file` column of `x`. For live plots
-  this is the list name; for saved figures it is the file name shown in
+  Exactly one item name from the `file` column of `x`. For live objects
+  this is the list name; for saved assets it is the file name shown in
   the submission summary.
 
 ## Value
@@ -42,7 +41,7 @@ review <- submission_check(figures, "frontiers")
 submission_detail(review, "vehicles")
 #>
 #> ── Frontiers journals ──────────────────────────────────────────────────────────
-#> checked: ggplot object
+#> checked: ggplot2 plot
 #>
 #> ✔ Width              85 mm                  requires: single 85 mm
 #> ! Height        -

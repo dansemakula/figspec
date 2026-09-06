@@ -125,36 +125,66 @@ spec_list()
 #> 27                      chemistry, materials-science      83.0     171.0
 #> 28               biomedical, life-sciences, medicine      85.0     170.0
 #> 29                     infectious-diseases, medicine        NA        NA
-#>    dpi_min font_min_pt max_file_mb publication_stage verified_on  origin
-#> 1      300         8.0          10              <NA>  2026-08-21 figspec
-#> 2      300         5.0          NA             final  2026-09-03 figspec
-#> 3      300         6.0          20              <NA>  2026-08-21 figspec
-#> 4       NA          NA          20              <NA>  2026-08-21 figspec
-#> 5      300         8.0          NA              <NA>  2026-08-21 figspec
-#> 6       NA         8.0          NA              <NA>  2026-08-21 figspec
-#> 7      300         9.0          NA              <NA>  2026-08-21 figspec
-#> 8       NA         7.5          NA              <NA>  2026-08-22 figspec
-#> 9      300          NA           5              <NA>  2026-08-21 figspec
-#> 10     300          NA          10              <NA>  2026-08-21 figspec
-#> 11      NA          NA          NA              <NA>  2026-08-21 figspec
-#> 12     300         5.0          NA           initial  2026-08-22 figspec
-#> 13      NA          NA          NA              <NA>  2026-04-04 figspec
-#> 14     300         6.0          NA              <NA>  2026-08-22 figspec
-#> 15     300          NA          NA              <NA>  2026-08-22 figspec
-#> 16      NA          NA          NA              <NA>  2026-08-22 figspec
-#> 17     600          NA          NA              <NA>  2026-08-22 figspec
-#> 18     300          NA          NA              <NA>  2026-08-22 figspec
-#> 19     300         6.0          NA              <NA>  2026-08-22 figspec
-#> 20     300         4.5          NA              <NA>  2026-08-22 figspec
-#> 21     300          NA          NA              <NA>  2026-08-22 figspec
-#> 22     300         7.0          NA              <NA>  2026-08-23 figspec
-#> 23     300          NA          NA              <NA>  2026-08-22 figspec
-#> 24     600          NA          NA              <NA>  2026-08-22 figspec
-#> 25     300          NA          NA              <NA>  2026-08-22 figspec
-#> 26     300         8.0          NA              <NA>  2026-08-22 figspec
-#> 27     600          NA          NA              <NA>  2026-08-22 figspec
-#> 28     300          NA          10             final  2026-09-03 figspec
-#> 29     300          NA          NA             final  2026-09-03 figspec
+#>    dpi_min font_min_pt max_file_mb table_requirements publication_stage
+#> 1      300         8.0          10              FALSE              <NA>
+#> 2      300         5.0          NA               TRUE             final
+#> 3      300         6.0          20              FALSE              <NA>
+#> 4       NA          NA          20              FALSE              <NA>
+#> 5      300         8.0          NA              FALSE              <NA>
+#> 6       NA         8.0          NA              FALSE              <NA>
+#> 7      300         9.0          NA              FALSE              <NA>
+#> 8       NA         7.5          NA               TRUE              <NA>
+#> 9      300          NA           5              FALSE              <NA>
+#> 10     300          NA          10              FALSE              <NA>
+#> 11      NA          NA          NA              FALSE              <NA>
+#> 12     300         5.0          NA              FALSE           initial
+#> 13      NA          NA          NA              FALSE              <NA>
+#> 14     300         6.0          NA              FALSE              <NA>
+#> 15     300          NA          NA              FALSE              <NA>
+#> 16      NA          NA          NA              FALSE              <NA>
+#> 17     600          NA          NA              FALSE              <NA>
+#> 18     300          NA          NA              FALSE              <NA>
+#> 19     300         6.0          NA              FALSE              <NA>
+#> 20     300         4.5          NA              FALSE              <NA>
+#> 21     300          NA          NA              FALSE              <NA>
+#> 22     300         7.0          NA              FALSE              <NA>
+#> 23     300          NA          NA              FALSE              <NA>
+#> 24     600          NA          NA              FALSE              <NA>
+#> 25     300          NA          NA              FALSE              <NA>
+#> 26     300         8.0          NA              FALSE              <NA>
+#> 27     600          NA          NA              FALSE              <NA>
+#> 28     300          NA          10              FALSE             final
+#> 29     300          NA          NA              FALSE             final
+#>    verified_on  origin
+#> 1   2026-08-21 figspec
+#> 2   2026-09-03 figspec
+#> 3   2026-08-21 figspec
+#> 4   2026-08-21 figspec
+#> 5   2026-08-21 figspec
+#> 6   2026-08-21 figspec
+#> 7   2026-08-21 figspec
+#> 8   2026-08-22 figspec
+#> 9   2026-08-21 figspec
+#> 10  2026-08-21 figspec
+#> 11  2026-08-21 figspec
+#> 12  2026-08-22 figspec
+#> 13  2026-04-04 figspec
+#> 14  2026-08-22 figspec
+#> 15  2026-08-22 figspec
+#> 16  2026-08-22 figspec
+#> 17  2026-08-22 figspec
+#> 18  2026-08-22 figspec
+#> 19  2026-08-22 figspec
+#> 20  2026-08-22 figspec
+#> 21  2026-08-22 figspec
+#> 22  2026-08-23 figspec
+#> 23  2026-08-22 figspec
+#> 24  2026-08-22 figspec
+#> 25  2026-08-22 figspec
+#> 26  2026-08-22 figspec
+#> 27  2026-08-22 figspec
+#> 28  2026-09-03 figspec
+#> 29  2026-09-03 figspec
 spec_list(discipline = "physics")
 #>    id                               name                 publisher
 #> 1 iop            IOP Publishing journals            IOP Publishing
@@ -162,7 +192,7 @@ spec_list(discipline = "physics")
 #>            disciplines single_mm double_mm dpi_min font_min_pt max_file_mb
 #> 1 physics, engineering        85       150      NA           8          NA
 #> 2              physics        85        NA      NA          NA          NA
-#>   publication_stage verified_on  origin
-#> 1              <NA>  2026-08-21 figspec
-#> 2              <NA>  2026-04-04 figspec
+#>   table_requirements publication_stage verified_on  origin
+#> 1              FALSE              <NA>  2026-08-21 figspec
+#> 2              FALSE              <NA>  2026-04-04 figspec
 ```

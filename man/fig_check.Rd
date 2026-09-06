@@ -19,7 +19,10 @@ fig_check(
 )
 }
 \arguments{
-\item{x}{A ggplot object, or a path to a figure file.}
+\item{x}{A supported live figure, or a path to a figure file. Live figures
+include ggplot2 and patchwork objects, lattice plots, Plotly and other HTML
+widgets, grid grobs, recorded base plots, and base-graphics code wrapped
+in a function or one-sided formula.}
 
 \item{spec}{Optional specification: a registry id such as \code{"frontiers"},
 a \code{figspec_spec}, or a named list of requirements.}
@@ -60,11 +63,14 @@ An object of class \code{figspec_report}, a data frame of one row per
 requirement.
 }
 \description{
-Accepts either a ggplot object, checked before it is saved, or the path to
-a figure file that has already been written. With no specification it
+Accepts a live figure made with ggplot2, lattice, Plotly, base graphics or
+grid, or the path to an exported figure file. With no specification it
 reports what can be measured without issuing pass or fail claims. A
 specification may come from the included registry, your own registry, or a
-named list supplied directly in R.
+named list supplied directly in R. Plotting systems that do not expose the
+same layer and theme details as ggplot2 are rendered to a temporary file;
+file properties are then verified and unavailable properties remain
+\code{unknown}.
 }
 \details{
 Each requirement is reported with one of five outcomes. \code{pass} and \code{fail}
@@ -104,6 +110,8 @@ fig_check(p, report_spec, column = "full", height = 95,
 }
 \seealso{
 \code{\link[=fig_save]{fig_save()}} to export and check in one step,
-\code{\link[=submission_check]{submission_check()}} to review several figures together, and
-\code{\link[=spec_get]{spec_get()}} for registry and project specifications.
+\code{\link[=submission_check]{submission_check()}} to review several figures together,
+\code{\link[=spec_get]{spec_get()}} for registry and project specifications, and
+\code{vignette("figure-systems")} for worked examples with different R
+plotting systems.
 }

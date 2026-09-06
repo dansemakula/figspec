@@ -84,7 +84,26 @@ registry_entry_template("plos_biology", "PLOS Biology",
 #>     # Fields you READ the page for and confirmed are absent. Do not list a
 #>     # field you simply did not check: leave it out and it reports as
 #>     # "not yet harvested", which is true.
+#>   # tables:
+#>     # formats: [html, docx]
+#>     # editable:
+#>     # orientation: portrait
+#>     # width_max_mm:
+#>     # font_families: [ ]
+#>     # font_min_pt:
+#>     # font_max_pt:
+#>     # title_style:
+#>     # title_position: above
+#>     # header_bold:
+#>     # vertical_rules:
+#>     # horizontal_rules: minimal
+#>     # decimal_alignment:
+#>     # footnotes:
+#>     # abbreviations:
+#>     # repeat_header:
+#>     # split_rows:
+#>   tables_not_stated:
+#>     # Table fields you checked and confirmed are absent.
 #>   # media: {video_formats: [ ], frame_max: {width: , height: }, max_file_mb: }
-#>   # tables: {orientation: , title_style: }
 #>   # notes: >
 ```

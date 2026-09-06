@@ -64,6 +64,7 @@ flatten_entry <- function(j, origin = "figspec") {
       sources = j$sources,
       house_style = j$house_style,
       tables = j$tables,
+      tables_not_stated = j$tables_not_stated,
       media = j$media,
       graphical_abstract = j$graphical_abstract,
       not_stated = j$not_stated,
@@ -138,8 +139,9 @@ validate_registry <- function(entries) {
 #'   `publication_stage`, `notes`, `tables`, `media` or
 #'   `graphical_abstract`.
 #' @return The registered specification, invisibly.
-#' @seealso [spec_load()] to load reusable entries from YAML and
-#'   [registry_entry_template()] to create a registry template.
+#' @seealso [spec_save()] to write a reusable YAML registry, [spec_load()] to
+#'   load reusable entries and [registry_entry_template()] to create a registry
+#'   template.
 #' @examples
 #' spec_register(
 #'   id = "lab_report",
@@ -229,7 +231,303 @@ read_registry_entries <- function(path) {
       path = path
     )
   }
-  raw$journals %||% raw
+  if (!is.null(raw$specifications) && !is.null(raw$journals)) {
+    figspec_abort(
+      "Registry YAML must use either {.field specifications} or the legacy {.field journals} collection, not both.",
+      "bad_registry",
+      path = path
+    )
+  }
+  raw$specifications %||% raw$journals %||% raw
+}
+
+# Convert the flat specification used by the public API back into the nested
+# representation stored in a registry file. Keeping this conversion here gives
+# spec_save() one reviewed route for inline, registered and bundled profiles.
+specification_registry_entry <- function(spec, id, source_url, verified_on) {
+  resolved <- spec_get(spec)
+  id <- id %||% resolved$id
+  if (is.null(id)) {
+    figspec_abort(
+      c(
+        "{.arg id} is required when the specification does not already have one.",
+        "i" = "Use a short name such as {.val research_unit_report}."
+      ),
+      "bad_input"
+    )
+  }
+
+  source_url <- source_url %||% resolved$source_url %||% paste0("internal:", id)
+  verified_on <- verified_on %||% resolved$verified_on %||% Sys.Date()
+
+  nested_requirements <- resolved$requirements %||% list()
+  if (!is.list(nested_requirements)) {
+    figspec_abort("{.field requirements} must be a named list.", "bad_input")
+  }
+  flat_requirement_names <- intersect(
+    names(resolved),
+    c(requirement_keys(), "max_series_recommended")
+  )
+  flat_requirement_names <- unique(c(
+    flat_requirement_names,
+    grep("^source_quote", names(resolved), value = TRUE)
+  ))
+  overlap <- intersect(names(nested_requirements), flat_requirement_names)
+  if (length(overlap)) {
+    figspec_abort(
+      c(
+        "The specification records the same requirement twice.",
+        "x" = "Duplicated field{?s}: {.field {overlap}}.",
+        "i" = "Keep each field either inside {.field requirements} or at the top level."
+      ),
+      "bad_input",
+      fields = overlap
+    )
+  }
+  requirements <- c(nested_requirements, resolved[flat_requirement_names])
+
+  entry <- c(
+    list(id = id, name = resolved$name),
+    resolved[intersect(
+      c(
+        "publisher", "disciplines", "source_archive_url",
+        "source_content_md5", "publication_stage"
+      ),
+      names(resolved)
+    )],
+    list(
+      source_url = source_url,
+      verified_on = as.character(verified_on),
+      requirements = requirements
+    ),
+    resolved[intersect(
+      c(
+        "not_stated", "sources", "house_style", "tables",
+        "tables_not_stated", "media", "graphical_abstract", "notes"
+      ),
+      names(resolved)
+    )]
+  )
+  entry[!vapply(entry, is.null, logical(1))]
+}
+
+spec_save_destination <- function(path) {
+  if (!is.character(path) || length(path) != 1L || is.na(path) ||
+      !nzchar(trimws(path)) || grepl("[\r\n]", path)) {
+    figspec_abort("{.arg path} must be one non-empty YAML file path.", "bad_input")
+  }
+  if (!tolower(tools::file_ext(path)) %in% c("yaml", "yml")) {
+    figspec_abort(
+      "{.arg path} must end in {.file .yaml} or {.file .yml}.",
+      "bad_input",
+      path = path
+    )
+  }
+  expanded <- path.expand(path)
+  parent <- dirname(expanded)
+  if (!dir.exists(parent)) {
+    figspec_abort(
+      "The destination directory does not exist: {.file {parent}}.",
+      "not_found",
+      path = path
+    )
+  }
+  if (file.exists(expanded) && isTRUE(file.info(expanded)$isdir)) {
+    figspec_abort("{.file {path}} is a directory, not a YAML file.", "bad_input")
+  }
+  if (file.exists(expanded)) {
+    link <- Sys.readlink(expanded)
+    if (length(link) == 1L && !is.na(link) && nzchar(link)) {
+      figspec_abort(
+        "Refusing to replace the symbolic link {.file {path}}.",
+        "bad_input",
+        path = path
+      )
+    }
+  }
+  file.path(
+    normalizePath(parent, winslash = "/", mustWork = TRUE),
+    basename(expanded)
+  )
+}
+
+promote_spec_file <- function(candidate, destination) {
+  backup <- NULL
+  if (file.exists(destination)) {
+    backup <- tempfile(
+      ".figspec-spec-backup-",
+      tmpdir = dirname(destination),
+      fileext = paste0(".", tools::file_ext(destination))
+    )
+    if (!file.rename(destination, backup)) {
+      figspec_abort(
+        "Could not protect the existing {.file {destination}} before replacement.",
+        "bad_input",
+        path = destination
+      )
+    }
+  }
+
+  placed <- file.rename(candidate, destination)
+  restored <- TRUE
+  if (!placed && !is.null(backup)) restored <- file.rename(backup, destination)
+  if (!restored) {
+    figspec_abort(
+      c(
+        "Could not save the specification or restore the previous file.",
+        "i" = "The recoverable previous file remains at {.file {backup}}."
+      ),
+      "bad_input",
+      path = destination,
+      backup = backup
+    )
+  }
+  if (!placed) {
+    figspec_abort(
+      "Could not atomically place {.file {destination}}.",
+      "bad_input",
+      path = destination
+    )
+  }
+  if (!is.null(backup)) unlink(backup)
+  invisible(destination)
+}
+
+#' Save a specification for reuse
+#'
+#' Writes a publication, project or organisational specification to a safe,
+#' reusable YAML registry file. A new specification is appended when the file
+#' already contains other entries. Replacing an entry with the same `id`
+#' requires `overwrite = TRUE`.
+#'
+#' The complete registry is validated in a temporary file before the requested
+#' path is changed. If writing or validation fails, an existing file is left
+#' unchanged. The resulting file can be kept with a project, shared under
+#' version control and loaded in any R session with [spec_load()].
+#'
+#' A specification created directly in R may not contain provenance fields. In
+#' that case figspec records `internal:<id>` as its source and today's date as
+#' the date the internal requirements were recorded. Supply `source_url` and
+#' `verified_on` when the requirements came from a published or separately
+#' maintained source.
+#'
+#' @param spec A registry id, a `figspec_spec`, or a named list containing at
+#'   least a non-empty `name` and any figure, table, media or graphical-abstract
+#'   requirements to save.
+#' @param path Destination `.yaml` or `.yml` file. If it already contains a
+#'   valid figspec registry, a new `id` is appended without removing the other
+#'   entries.
+#' @param id A short identifier beginning with a lower-case letter and
+#'   containing only lower-case letters, numbers and underscores. It may be
+#'   omitted when `spec` already contains an `id`.
+#' @param source_url Where the requirements came from: an HTTP(S) page, a
+#'   `file:` URI or an `internal:` identifier. When omitted, an existing value
+#'   in `spec` is kept; otherwise `internal:<id>` is recorded.
+#' @param verified_on Date the source or internal requirements were last
+#'   checked, as `"YYYY-MM-DD"` or a `Date`. When omitted, an existing value in
+#'   `spec` is kept; otherwise today's date is recorded.
+#' @param overwrite Whether an entry with the same `id` may be replaced.
+#'   Other entries in the file are always preserved.
+#' @return `path`, invisibly.
+#' @examples
+#' report_spec <- list(
+#'   name = "Research unit report",
+#'   columns = list(full = 160),
+#'   dpi_min = 300,
+#'   formats = c("png", "pdf")
+#' )
+#' registry_file <- tempfile(fileext = ".yml")
+#' spec_save(report_spec, registry_file, id = "research_unit_report")
+#' spec_load(registry_file)
+#' fig_width("research_unit_report", "full")
+#' unlink(registry_file)
+#' @seealso [spec_load()], [spec_register()], [registry_validate_file()]
+#' @export
+spec_save <- function(spec, path, id = NULL, source_url = NULL,
+                      verified_on = NULL, overwrite = FALSE) {
+  if (!is.logical(overwrite) || length(overwrite) != 1L || is.na(overwrite)) {
+    figspec_abort("{.arg overwrite} must be TRUE or FALSE.", "bad_input")
+  }
+  destination <- spec_save_destination(path)
+  entry <- specification_registry_entry(spec, id, source_url, verified_on)
+
+  load_registry()
+  if (entry$id %in% names(.figspec_cache$registry %||% list())) {
+    figspec_abort(
+      c(
+        "A bundled specification already uses the id {.val {entry$id}}.",
+        "i" = "Choose a different id for the saved copy."
+      ),
+      "conflict",
+      id = entry$id
+    )
+  }
+
+  entries <- list()
+  if (file.exists(destination)) {
+    entries <- read_registry_entries(destination)
+    validate_registry(entries)
+  }
+  ids <- if (length(entries)) {
+    vapply(entries, function(item) item$id, character(1))
+  } else {
+    character()
+  }
+  existing <- match(entry$id, ids)
+  if (!is.na(existing) && !overwrite) {
+    figspec_abort(
+      c(
+        "The registry already contains {.val {entry$id}}.",
+        "i" = "Set {.code overwrite = TRUE} to replace that entry while preserving the others."
+      ),
+      "conflict",
+      id = entry$id,
+      path = path
+    )
+  }
+  if (is.na(existing)) {
+    entries[[length(entries) + 1L]] <- entry
+  } else {
+    entries[[existing]] <- entry
+  }
+  validate_registry(entries)
+
+  candidate <- tempfile(
+    ".figspec-spec-",
+    tmpdir = dirname(destination),
+    fileext = paste0(".", tools::file_ext(destination))
+  )
+  on.exit(if (file.exists(candidate)) unlink(candidate), add = TRUE)
+  write_error <- tryCatch({
+    yaml::write_yaml(
+      list(schema_version = 2L, specifications = unname(entries)),
+      candidate
+    )
+    NULL
+  }, error = identity)
+  if (inherits(write_error, "error")) {
+    figspec_abort(
+      c(
+        "Could not write the specification registry.",
+        "x" = conditionMessage(write_error)
+      ),
+      "bad_input",
+      path = path
+    )
+  }
+
+  written_entries <- read_registry_entries(candidate)
+  validate_registry(written_entries)
+  written_ids <- vapply(written_entries, function(item) item$id, character(1))
+  if (!identical(written_ids, vapply(entries, function(item) item$id, character(1)))) {
+    figspec_abort(
+      "The written registry did not preserve its specification ids.",
+      "bad_registry",
+      path = path
+    )
+  }
+  promote_spec_file(candidate, destination)
+  invisible(path)
 }
 
 #' Load specifications from a YAML registry
@@ -251,11 +549,13 @@ read_registry_entries <- function(path) {
 #' partly updated session.
 #'
 #' @param path Path to a non-empty YAML registry file. The file may contain a
-#'   top-level `journals:` list, like figspec's bundled registry, or be the list
-#'   of entries itself.
+#'   top-level `specifications:` list written by [spec_save()], the legacy
+#'   `journals:` list used by figspec's bundled registry, or be the list of
+#'   entries itself.
 #' @return A character vector containing the loaded ids, invisibly.
-#' @seealso [spec_register()] to add one entry directly in R and
-#'   [registry_validate_file()] to check a file without loading it.
+#' @seealso [spec_save()] to write reusable entries, [spec_register()] to add
+#'   one entry directly in R and [registry_validate_file()] to check a file
+#'   without loading it.
 #' @examples
 #' # spec_load("my-journals.yaml")
 #' @export
@@ -341,6 +641,7 @@ spec_list <- function(discipline = NULL) {
       dpi_min = as.numeric(j$dpi_min %||% NA_real_),
       font_min_pt = as.numeric(j$font_min_pt %||% NA_real_),
       max_file_mb = as.numeric(j$max_file_mb %||% NA_real_),
+      table_requirements = !is.null(j$tables),
       publication_stage = j$publication_stage %||% NA_character_,
       verified_on = as.character(j$verified_on),
       origin = j$origin %||% "figspec",

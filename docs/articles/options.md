@@ -1185,6 +1185,39 @@ registered_spec <- spec_register(
 
 [TABLE]
 
+### `spec_save()`
+
+Save a specification for reuse
+
+Save a publication, project or organisational specification in a YAML
+file that figspec can load in later R sessions. figspec validates the
+complete file before replacing anything, so a failed update leaves the
+previous registry intact.
+
+Run the example setup
+
+``` r
+
+reusable_spec <- list(
+  name = "Research unit report",
+  columns = list(full = 160),
+  dpi_min = 300,
+  formats = c("png", "pdf"),
+  font_min_pt = 9,
+  tables = list(
+    formats = c("html", "docx"),
+    font_min_pt = 9,
+    header_bold = TRUE,
+    vertical_rules = FALSE
+  )
+)
+
+spec_output_dir <- tempfile("figspec-spec-save-")
+dir.create(spec_output_dir)
+```
+
+[TABLE]
+
 ### `spec_load()`
 
 Load specifications from a YAML registry
@@ -1206,7 +1239,7 @@ registry_file <- file.path(
 
 yaml::write_yaml(
   list(
-    journals = list(
+    specifications = list(
       list(
         id = "research_unit_report",
         name = "Research Unit Report",
@@ -1244,11 +1277,12 @@ yaml::write_yaml(
 
 ### `submission_check()`
 
-Review a set of figures together
+Review figures and tables together
 
-Review a collection of figures in one operation. A concise summary shows
-which figures pass, fail or still need information, while the complete
-report for every figure remains available for closer inspection.
+Review figures and tables in one operation. A concise summary identifies
+each item and shows whether it passes, fails, needs more information or
+was inspected without a specification. The complete report for every
+item remains available for closer inspection.
 
 Run the example setup
 
@@ -1355,14 +1389,14 @@ save_figure_set <- function(directory) {
 
 ### `submission_detail()`
 
-Open the full report for one figure
+Open the full report for one submission item
 
-A collection review is intentionally brief. Open one figure’s full
-report when you need to see why it failed, which values were measured or
-which requirements could not be assessed. This example checks two plots
-made from all 234 rows of ggplot2’s mpg data. The second plot
-deliberately uses text below the project’s minimum so there is a real
-problem to diagnose.
+A collection review is intentionally brief. Open one figure or table’s
+full report when you need to see why it failed, which values were
+measured or which requirements could not be assessed. This example
+checks two plots made from all 234 rows of ggplot2’s mpg data. The
+second plot deliberately uses text below the project’s minimum so there
+is a real problem to diagnose.
 
 Run the example setup
 
@@ -1526,33 +1560,6 @@ dir.create(refit_root)
 
 [TABLE]
 
-### `table_spec()`
-
-Look up table requirements
-
-Table instructions are usually editorial rather than measurements that
-can be verified automatically. This lookup keeps them beside the figure
-requirements so the same source and review date remain visible while a
-manuscript, report or presentation is being prepared.
-
-Run the example setup
-
-``` r
-
-custom_table_spec <- list(
-  name = "Annual research report",
-  source_url = "internal:report-style-guide",
-  verified_on = as.character(Sys.Date()),
-  tables = list(
-    orientation = "portrait",
-    title_style = "Short title above the table",
-    notes = "Define abbreviations below the table"
-  )
-)
-```
-
-[TABLE]
-
 ### `media_spec()`
 
 Look up supplementary media requirements
@@ -1657,6 +1664,132 @@ project_abstract_spec <- list(
     max_characters = 180
   )
 )
+```
+
+[TABLE]
+
+## Build, export and check tables
+
+### `table_spec()`
+
+Look up table requirements
+
+Retrieve the table requirements recorded for a publication, project or
+organisation. Measurable fields can be passed directly to the table
+build, export and check workflow; editorial instructions remain visible
+for review with the same source and review date.
+
+Run the example setup
+
+``` r
+
+custom_table_spec <- list(
+  name = "Annual research report",
+  source_url = "internal:report-style-guide",
+  verified_on = as.character(Sys.Date()),
+  tables = list(
+    orientation = "portrait",
+    title_style = "Short title above the table",
+    notes = "Define abbreviations below the table"
+  )
+)
+```
+
+[TABLE]
+
+### `table_apply_spec()`
+
+Apply a specification to a table
+
+Apply measurable table requirements while the table is still editable.
+Data frames and matrices become gt tables; gt, flextable, kableExtra and
+grid tables remain in their own table systems.
+
+Run the example setup
+
+``` r
+
+table_project_spec <- list(
+  name = "Research report",
+  source_url = "internal:report-table-guide",
+  verified_on = as.character(Sys.Date()),
+  tables = list(
+    formats = c("html", "docx"),
+    orientation = "portrait",
+    font_families = "Arial",
+    font_min_pt = 9,
+    header_bold = TRUE,
+    vertical_rules = FALSE,
+    horizontal_rules = "minimal",
+    repeat_header = TRUE
+  )
+)
+vehicle_table <- ggplot2::mpg[1:12, c(
+  "manufacturer", "model", "displ", "year", "hwy"
+)]
+```
+
+[TABLE]
+
+### `table_save()`
+
+Export and verify a table
+
+Export a table through its own table system, reopen the completed file
+and keep the live-object and file checks together. A temporary file is
+promoted only after the renderer succeeds and, when checking is enabled,
+the file is confirmed to be structurally valid.
+
+Run the example setup
+
+``` r
+
+table_save_spec <- list(
+  name = "Research report",
+  source_url = "internal:report-table-guide",
+  verified_on = as.character(Sys.Date()),
+  tables = list(
+    formats = "html",
+    font_min_pt = 9,
+    header_bold = TRUE,
+    vertical_rules = FALSE
+  )
+)
+table_for_export <- ggplot2::mpg[1:20, c(
+  "manufacturer", "model", "displ", "hwy"
+)]
+table_output_dir <- tempfile("figspec-table-options-")
+dir.create(table_output_dir)
+```
+
+[TABLE]
+
+### `table_check()`
+
+Verify a table against a specification
+
+Check an editable R table or a completed table file. The two inputs
+retain different evidence, so table_save combines them when both are
+available.
+
+Run the example setup
+
+``` r
+
+table_check_spec <- list(
+  name = "Research report",
+  source_url = "internal:report-table-guide",
+  verified_on = as.character(Sys.Date()),
+  tables = list(
+    formats = "html",
+    font_min_pt = 9,
+    header_bold = TRUE,
+    vertical_rules = FALSE
+  )
+)
+table_check_data <- ggplot2::mpg[1:10, c(
+  "manufacturer", "model", "displ", "hwy"
+)]
 ```
 
 [TABLE]

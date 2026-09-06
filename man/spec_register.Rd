@@ -67,6 +67,7 @@ spec_register(
 fig_width("lab_report", "double")
 }
 \seealso{
-\code{\link[=spec_load]{spec_load()}} to load reusable entries from YAML and
-\code{\link[=registry_entry_template]{registry_entry_template()}} to create a registry template.
+\code{\link[=spec_save]{spec_save()}} to write a reusable YAML registry, \code{\link[=spec_load]{spec_load()}} to
+load reusable entries and \code{\link[=registry_entry_template]{registry_entry_template()}} to create a registry
+template.
 }

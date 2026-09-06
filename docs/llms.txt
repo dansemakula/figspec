@@ -1,15 +1,30 @@
 # figspec
 
 **figspec enables researchers and other R users to build, export and
-verify figures against the specifications their work must meet.** It
-brings those requirements into R, reducing the time spent searching
-through guidance, interpreting rules and applying them by hand. The
-specification can come from a journal, a house style or the needs of a
-particular project. figspec can work with one figure or a complete set,
-and it can also retrieve recorded requirements for tables, graphical
-abstracts and supplementary video or audio.
+verify figures and tables against the specifications their work must
+meet.** It brings those requirements into R, reducing the time spent
+searching through guidance, interpreting rules and applying them by
+hand. The specification can come from a publication, an organisation or
+the needs of a particular project. figspec can work with one item or
+review figures and tables together.
 
-It addresses two common needs.
+## From requirements to finished files
+
+figspec provides one repeatable workflow:
+
+**Define the required result → apply what can be applied → export it
+correctly → verify the finished files.**
+
+That workflow is especially valuable when preparing many figures and
+tables, changing journals, maintaining an organisational style or
+producing the same kind of report repeatedly.
+
+Individuals and teams can extend figspec without modifying the package.
+Their own requirements and visual styles can be named, saved with a
+project and loaded in later R sessions, giving repeated work the same
+rules and appearance.
+
+It addresses three common needs.
 
 ## The need for figures that meet journal requirements
 
@@ -36,21 +51,38 @@ includes the date it was verified. figspec does not fill gaps with
 guesses: when a publisher does not state a requirement, or a field has
 not yet been reviewed, the package says so.
 
-Figure preparation rarely stops at one plot.
+Preparation rarely stops at one plot.
 [`submission_check()`](https://dansemakula.github.io/figspec/reference/submission_check.md)
-can review a directory of finished files or a named collection of plots
-together, give each figure a concise result and retain the detailed
-report for every item. For related publication assets,
-[`table_spec()`](https://dansemakula.github.io/figspec/reference/table_spec.md),
+can review a directory of finished files or a named collection of
+figures and tables, give each item a concise result and retain its
+detailed report.
 [`graphical_abstract_spec()`](https://dansemakula.github.io/figspec/reference/graphical_abstract_spec.md)
 and
 [`media_spec()`](https://dansemakula.github.io/figspec/reference/media_spec.md)
-surface their separate requirements without mixing them into a figure
-report.
+surface requirements for other publication assets.
 [`media_check()`](https://dansemakula.github.io/figspec/reference/media_check.md)
-can then inspect an actual video or audio file for properties such as
-its format, frame size, file size, codec and audio bit rate, reporting
-anything it cannot determine rather than guessing.
+can inspect an actual video or audio file for properties such as its
+format, frame size, file size, codec and bit rate.
+
+## The need for tables that meet their specifications
+
+Tables often have separate requirements for file format, editability,
+page orientation, width, type size, headings and rules. A publication
+may ask for an editable Word table in portrait orientation, while a
+report or organisation may have its own typography and layout. These
+requirements need to be applied to the table itself; treating the table
+as an image would discard the structure that makes it editable.
+
+figspec accepts data frames, matrices and tables made with gt,
+flextable, kableExtra and grid. It applies the measurable requirements
+that each table system supports, exports through that system and reopens
+the completed file for verification. HTML, DOCX, RTF, TeX, PDF and image
+outputs are available where the selected table system supports them.
+Requirements that need someone to read the table—such as whether its
+title is concise or every abbreviation is defined—remain clearly marked
+for review. Bundled publication profiles can be used when their table
+guidance has been reviewed, and project or organisational table
+specifications can be supplied directly in R.
 
 ## The need for figures with consistent panel sizes
 
@@ -67,10 +99,18 @@ even when their titles, labels, legends and margins differ. This is
 useful for journal submissions, but also for reports, presentations and
 any project where figures need to be produced consistently.
 
-Together, these tools make figure preparation more deliberate,
-consistent and reproducible: define the result you need, build the
-figure to that specification, and verify the finished output before it
-leaves R.
+Together, these tools make figure and table preparation more deliberate,
+consistent and reproducible: define the result you need, build to that
+specification, and verify the finished output before it leaves R.
+
+figspec accepts figures made with ggplot2, base R, lattice, grid and
+Plotly. It applies the requirements that each plotting system makes
+available, exports the result at the requested size and verifies the
+finished file. Exact panel sizing and the most detailed checks remain
+available for ggplot2-compatible figures because those objects expose
+their complete panel and layer structure. The [cross-system
+guide](https://dansemakula.github.io/figspec/articles/figure-systems.html)
+shows the calling pattern, completed output and limits for each system.
 
 ## Installation
 
@@ -129,6 +169,20 @@ appropriate graphics device and checks the file it writes. Exporting at
 the intended publication size matters because resizing later also
 changes the apparent size of text and lines.
 
+### Build and check a table
+
+A table specification can come from your project or from a publication
+profile where table requirements have been reviewed:
+
+`report_spec`` ``<-`` `[`list`](https://rdrr.io/r/base/list.html)`(`` `` name ``=`` ``"Research report"``,`` `` tables ``=`` `[`list`](https://rdrr.io/r/base/list.html)`(`` `` formats ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``"html"``, ``"docx"``)``,`` `` font_min_pt ``=`` ``9``,`` `` header_bold ``=`` ``TRUE``,`` `` vertical_rules ``=`` ``FALSE`` `` ``)`` ``)`` `` ``summary_table`` ``<-`` `[`table_apply_spec`](https://dansemakula.github.io/figspec/reference/table_apply_spec.md)`(`[`head`](https://rdrr.io/r/utils/head.html)`(``mtcars``)``, ``report_spec``)`` `[`table_check`](https://dansemakula.github.io/figspec/reference/table_check.md)`(``summary_table``, ``report_spec``)`` `[`table_save`](https://dansemakula.github.io/figspec/reference/table_save.md)`(``"summary-table.html"``, ``summary_table``, ``report_spec``)`
+
+The first call keeps the table editable and applies the requirements its
+table system can express. The final call writes a real file, reopens it,
+and combines what can be verified from the file with what remains known
+from the editable table. See [Build and check tables from
+R](https://dansemakula.github.io/figspec/articles/tables.html) for
+complete examples.
+
 ## Size the panel, not just the image
 
 Two image files can have the same width while leaving different amounts
@@ -153,8 +207,8 @@ for compliance:
 
 | Outcome | Meaning |
 |----|----|
-| pass | The figure meets the stated requirement. |
-| fail | The figure does not meet the requirement and needs attention. |
+| pass | The figure or table meets the stated requirement. |
+| fail | The figure or table does not meet the requirement and needs attention. |
 | unspecified | The specification does not state a requirement for this property. |
 | unknown | figspec cannot determine the answer from this input. |
 | invalid | The file is corrupt or does not match its stated format. |
@@ -163,8 +217,10 @@ From a plot object, figspec can examine typography, line and point
 weights, colour relationships, panel labels, axis rules and other visual
 properties. From an exported file, it can verify properties such as
 dimensions, resolution, format, file size and selected format-specific
-requirements. Where a property cannot be recovered reliably, the result
-is `unknown` rather than an unsupported conclusion.
+requirements. For tables, it combines properties retained by the
+editable object with the format and structure of the completed file.
+Where a property cannot be recovered reliably, the result is `unknown`
+rather than an unsupported conclusion.
 
 ## Journal and publisher profiles
 
@@ -183,6 +239,14 @@ been verified, requirements that a publisher explicitly does not state
 and fields that have not yet been reviewed. This prevents incomplete
 information from being presented as a pass.
 
+Table guidance is reviewed separately from figure guidance. At present,
+the bundled registry contains table requirements only for profiles whose
+table instructions have been recorded;
+[`registry_status()`](https://dansemakula.github.io/figspec/reference/registry_status.md)
+shows this coverage in the `table_stated`, `table_confirmed_absent` and
+`table_unreviewed` columns. You can use the full table workflow
+immediately with a project or organisational specification.
+
 Browse the [complete profile
 table](https://dansemakula.github.io/figspec/articles/journals.html) or
 read [how the registry is reviewed and
@@ -194,6 +258,18 @@ figspec is not limited to its built-in journal profiles. You can supply
 your own requirements, register an internal publication format or reuse
 a house style across projects.
 
+These are two different kinds of reusable extension:
+
+| What you want to reuse | What it contains | Save and restore it with |
+|----|----|----|
+| A specification | Requirements that a finished figure or table must meet | [`spec_save()`](https://dansemakula.github.io/figspec/reference/spec_save.md) and [`spec_load()`](https://dansemakula.github.io/figspec/reference/spec_load.md) |
+| A house style | The preferred appearance of ggplot2 figures | [`style_save()`](https://dansemakula.github.io/figspec/reference/style_save.md) and [`style_load()`](https://dansemakula.github.io/figspec/reference/style_load.md) |
+
+A specification can be checked. A house style cannot: it records visual
+choices such as the theme, grid and legend position. When both are used,
+figspec applies the style where it can and lets stated requirements take
+precedence.
+
 [`style_register`](https://dansemakula.github.io/figspec/reference/style_register.md)`(`` `` ``"mylab"``,`` `` `[`theme_minimal`](https://ggplot2.tidyverse.org/reference/ggtheme.html)`(``)`` ``+`` `[`theme`](https://ggplot2.tidyverse.org/reference/theme.html)`(``panel.grid.minor ``=`` `[`element_blank`](https://ggplot2.tidyverse.org/reference/element.html)`(``)``)``,`` `` description ``=`` ``"Our group's figure style"`` ``)`` `` ``p`` ``+`` `[`fig_apply_spec`](https://dansemakula.github.io/figspec/reference/fig_apply_spec.md)`(``"frontiers"``, style ``=`` ``"mylab"``)`
 
 Your house style controls the appearance of the figure wherever the
@@ -202,16 +278,81 @@ requirement—for example, 6 pt text when the minimum is 8 pt—figspec
 applies the required value and leaves the rest of the design unchanged.
 
 Custom specifications can be kept under version control and loaded when
-a project starts. User-defined profiles are clearly marked so they
-cannot be confused with the registry maintained by figspec.
+a project starts.
+[`spec_save()`](https://dansemakula.github.io/figspec/reference/spec_save.md)
+writes or safely updates the project YAML file, and
+[`spec_load()`](https://dansemakula.github.io/figspec/reference/spec_load.md)
+makes its entries available in a later R session:
+
+`report_spec`` ``<-`` `[`list`](https://rdrr.io/r/base/list.html)`(`` `` name ``=`` ``"Research unit report"``,`` `` columns ``=`` `[`list`](https://rdrr.io/r/base/list.html)`(``full ``=`` ``160``)``,`` `` dpi_min ``=`` ``300``,`` `` formats ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``"png"``, ``"pdf"``)`` ``)`` `` `[`spec_save`](https://dansemakula.github.io/figspec/reference/spec_save.md)`(`` `` ``report_spec``,`` `` ``"project-specifications.yml"``,`` `` id ``=`` ``"research_unit_report"`` ``)`` `[`spec_load`](https://dansemakula.github.io/figspec/reference/spec_load.md)`(``"project-specifications.yml"``)`
+
+User-defined profiles are clearly marked so they cannot be confused with
+the registry maintained by figspec. No change to the package itself is
+required.
+
+For a project or research team, keep the files in a predictable folder:
+
+```
+project/
+├── config/
+│   └── figspec/
+│       ├── specifications.yml
+│       └── styles.rds
+└── analysis.R
+```
+
+Save registered house styles with:
+
+[`dir.create`](https://rdrr.io/r/base/files2.html)`(`[`file.path`](https://rdrr.io/r/base/file.path.html)`(``"config"``, ``"figspec"``)``, recursive ``=`` ``TRUE``,`` `` showWarnings ``=`` ``FALSE``)`` `` `[`style_save`](https://dansemakula.github.io/figspec/reference/style_save.md)`(`[`file.path`](https://rdrr.io/r/base/file.path.html)`(``"config"``, ``"figspec"``, ``"styles.rds"``)``)`
+
+Then load both files at the beginning of an analysis, in a project setup
+script or in the first code chunk of an R Markdown or Quarto document:
+
+[`library`](https://rdrr.io/r/base/library.html)`(`[`figspec`](https://dansemakula.github.io/figspec/)`)`` `` `[`spec_load`](https://dansemakula.github.io/figspec/reference/spec_load.md)`(`[`file.path`](https://rdrr.io/r/base/file.path.html)`(``"config"``, ``"figspec"``, ``"specifications.yml"``)``)`` `[`style_load`](https://dansemakula.github.io/figspec/reference/style_load.md)`(`[`file.path`](https://rdrr.io/r/base/file.path.html)`(``"config"``, ``"figspec"``, ``"styles.rds"``)``)`
+
+The paths are relative to the project directory, so the same code works
+even when team members keep the project in different locations on their
+computers.
+
+Each team member has a separate R installation and a separate local copy
+of the project. Git records changes, while GitHub or another Git hosting
+service stores the shared repository. Add `.Rprofile` and the two files
+under `config/figspec/` to that repository, commit them and push the
+commit. A new team member clones the repository once. After that, one
+person can update a specification or style, commit and push the change,
+and everyone else receives it by pulling the latest changes into their
+own project copy.
+
+When someone opens the project, their own R installation reads the local
+`.Rprofile` and loads the local copies of the figspec files. If they
+pull an update while R is already running, they should restart R or run
+[`spec_load()`](https://dansemakula.github.io/figspec/reference/spec_load.md)
+and
+[`style_load()`](https://dansemakula.github.io/figspec/reference/style_load.md)
+again. The team is not sharing one running R session: GitHub holds the
+shared files, and Git places a copy on each computer. Every computer
+must have figspec installed. A project using `renv` can record the
+package version so everyone uses the same release.
+
+Teams that want these files loaded automatically can place the two load
+calls in the project’s `.Rprofile`. A setup script is often easier to
+see and debug, whereas `.Rprofile` is useful when every R session in the
+project must have the same names available. Because `.Rprofile` is
+executable R code, review changes to it and never store passwords,
+access tokens or other secrets in it. Load an RDS style file only from a
+repository controlled by people you trust; stored theme functions remain
+blocked unless `allow_functions = TRUE` is explicitly requested.
+
+An organisation with many specifications, styles and helper functions
+can put them in a small internal R package that imports figspec.
 
 ## More publication workflows
 
 The same specification can be used throughout a project:
 
 - [`submission_check()`](https://dansemakula.github.io/figspec/reference/submission_check.md)
-  reviews a directory or named collection of figure files and summarizes
-  what needs attention.
+  reviews a directory or named collection of figures and tables and
+  summarizes what needs attention.
 - [`fig_refit()`](https://dansemakula.github.io/figspec/reference/fig_refit.md)
   adapts and re-exports saved plot objects when a manuscript moves to a
   journal with different requirements.
@@ -224,6 +365,12 @@ The same specification can be used throughout a project:
   [`media_check()`](https://dansemakula.github.io/figspec/reference/media_check.md)
   surface separate requirements for graphical abstracts, video and
   audio.
+- [`table_apply_spec()`](https://dansemakula.github.io/figspec/reference/table_apply_spec.md),
+  [`table_save()`](https://dansemakula.github.io/figspec/reference/table_save.md)
+  and
+  [`table_check()`](https://dansemakula.github.io/figspec/reference/table_check.md)
+  provide the corresponding build, export and verification workflow for
+  tables.
 - [`fig_suggest_art_type()`](https://dansemakula.github.io/figspec/reference/fig_suggest_art_type.md)
   helps identify which resolution rule is relevant when a publisher
   distinguishes colour, grayscale, line and combination artwork.
@@ -236,8 +383,12 @@ publisher has not stated.
 
 - [Getting started with
   figspec](https://dansemakula.github.io/figspec/articles/figspec.html)
+- [Use figspec with different R plotting
+  systems](https://dansemakula.github.io/figspec/articles/figure-systems.html)
 - [Control figure and panel
   dimensions](https://dansemakula.github.io/figspec/articles/panels.html)
+- [Build and check tables from
+  R](https://dansemakula.github.io/figspec/articles/tables.html)
 - [Journal and publisher
   profiles](https://dansemakula.github.io/figspec/articles/journals.html)
 - [Every function and its
@@ -344,9 +495,9 @@ the choices in a real plot.
 ## Find and use specifications
 
 Browse the included publisher and journal profiles, inspect their
-recorded requirements, retrieve stated widths, or load requirements
-maintained by your own team. A specification can be a registry profile
-or a named set of requirements supplied directly in R.
+recorded requirements, retrieve stated widths, or save and load
+requirements maintained by your own team. A specification can be a
+registry profile or a named set of requirements supplied directly in R.
 
 - [`spec_list()`](https://dansemakula.github.io/figspec/reference/spec_list.md)
   : Browse available specification profiles
@@ -358,31 +509,46 @@ or a named set of requirements supplied directly in R.
   : List the available figure widths
 - [`spec_register()`](https://dansemakula.github.io/figspec/reference/spec_register.md)
   : Register a publication specification for this session
+- [`spec_save()`](https://dansemakula.github.io/figspec/reference/spec_save.md)
+  : Save a specification for reuse
 - [`spec_load()`](https://dansemakula.github.io/figspec/reference/spec_load.md)
   : Load specifications from a YAML registry
 
 ## Check collections and publication assets
 
-Review several figures together, choose the appropriate resolution rule,
-adapt a figure set to another destination, and inspect requirements for
-tables, supplementary media and graphical abstracts.
+Review figures and tables together, choose the appropriate resolution
+rule, adapt a figure set to another destination, and inspect
+requirements for supplementary media and graphical abstracts.
 
 - [`submission_check()`](https://dansemakula.github.io/figspec/reference/submission_check.md)
-  : Review a set of figures together
+  : Review figures and tables together
 - [`submission_detail()`](https://dansemakula.github.io/figspec/reference/submission_detail.md)
-  : Open the full report for one figure
+  : Open the full report for one submission item
 - [`fig_suggest_art_type()`](https://dansemakula.github.io/figspec/reference/fig_suggest_art_type.md)
   : Choose a resolution category for a figure
 - [`fig_refit()`](https://dansemakula.github.io/figspec/reference/fig_refit.md)
   : Re-export a figure set for a new specification
-- [`table_spec()`](https://dansemakula.github.io/figspec/reference/table_spec.md)
-  : Look up table requirements
 - [`media_spec()`](https://dansemakula.github.io/figspec/reference/media_spec.md)
   : Look up supplementary media requirements
 - [`media_check()`](https://dansemakula.github.io/figspec/reference/media_check.md)
   : Verify a supplementary media file
 - [`graphical_abstract_spec()`](https://dansemakula.github.io/figspec/reference/graphical_abstract_spec.md)
   : Look up graphical abstract requirements
+
+## Build, export and check tables
+
+Apply table requirements to data frames and tables made with gt,
+flextable, kableExtra or grid; export through the table’s own system;
+and verify the editable object together with the completed file.
+
+- [`table_spec()`](https://dansemakula.github.io/figspec/reference/table_spec.md)
+  : Look up table requirements
+- [`table_apply_spec()`](https://dansemakula.github.io/figspec/reference/table_apply_spec.md)
+  : Apply a specification to a table
+- [`table_save()`](https://dansemakula.github.io/figspec/reference/table_save.md)
+  : Export and verify a table
+- [`table_check()`](https://dansemakula.github.io/figspec/reference/table_check.md)
+  : Verify a table against a specification
 
 ## R Markdown and Quarto
 
@@ -421,8 +587,12 @@ working on. Each guide uses real data and runnable examples.
 
 - [Getting started with
   figspec](https://dansemakula.github.io/figspec/articles/figspec.md):
+- [Use figspec with different R plotting
+  systems](https://dansemakula.github.io/figspec/articles/figure-systems.md):
 - [Control figure and panel
   dimensions](https://dansemakula.github.io/figspec/articles/panels.md):
+- [Build and check tables from
+  R](https://dansemakula.github.io/figspec/articles/tables.md):
 - [Find and use publication
   specifications](https://dansemakula.github.io/figspec/articles/journals.md):
 - [Choose, verify and add

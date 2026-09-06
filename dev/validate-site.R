@@ -116,6 +116,14 @@ canonical_html <- html_files[!is_redirect_page]
 for (page in canonical_html) {
   doc <- xml2::read_html(page)
   rel <- substring(page, nchar(site) + 2L)
+  page_source <- paste(
+    readLines(page, warn = FALSE, encoding = "UTF-8"),
+    collapse = "\n"
+  )
+  if (grepl("~{r", page_source, fixed = TRUE) ||
+      grepl("```{r", page_source, fixed = TRUE)) {
+    fail("page contains an R chunk that was displayed instead of executed: ", rel)
+  }
   site_nav <- xml2::xml_find_all(doc, ".//nav[@aria-label='Site navigation']")
   if (length(site_nav) != 1L) {
     fail("canonical page must contain one site navigation menu: ", rel)

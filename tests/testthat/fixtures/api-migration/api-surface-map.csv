@@ -4,6 +4,14 @@ report_attributes,migrated
 merged_report_attributes,migrated
 colour_report_attributes,migrated
 submission_attributes,migrated
+submission_columns,keep
+table_report_attributes,keep
+spec_list_columns,keep
+registry_status_columns,keep
+table_report_columns,keep
+table_status_values,keep
+submission_result_values,keep
+table_registry_fields,keep
 asset_spec_name_field,migrated
 table_spec_fields,migrated
 media_spec_fields,migrated

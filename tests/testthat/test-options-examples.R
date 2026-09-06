@@ -1658,7 +1658,7 @@ test_that("spec_list example browses and filters the real bundled registry", {
     c(
       "id", "name", "publisher", "disciplines", "single_mm",
       "double_mm", "dpi_min", "font_min_pt", "max_file_mb",
-      "publication_stage", "verified_on", "origin"
+      "table_requirements", "publication_stage", "verified_on", "origin"
     )
   )
   expect_setequal(
@@ -1887,6 +1887,50 @@ test_that("spec_register example registers, applies and verifies a specification
   expect_identical(profile_row$publication_stage, "all")
 })
 
+test_that("spec_save examples create, update and reload validated registries", {
+  skip_if_not_installed("yaml")
+
+  examples <- yaml::read_yaml(options_examples_path())$spec_save
+  expected_arguments <- c(
+    "spec", "path", "id", "source_url", "verified_on", "overwrite"
+  )
+  expect_setequal(names(examples$arguments), expected_arguments)
+
+  old_user_specs <- .figspec_cache$user_specs
+  withr::defer(.figspec_cache$user_specs <- old_user_specs)
+  .figspec_cache$user_specs <- NULL
+
+  example_env <- new.env(parent = globalenv())
+  eval(parse(text = examples$setup), envir = example_env)
+  withr::defer(unlink(example_env$spec_output_dir, recursive = TRUE))
+
+  values <- lapply(expected_arguments, function(argument) {
+    example <- examples$arguments[[argument]]
+    expect_true(nzchar(example$prose), info = argument)
+    expect_true(nzchar(example$code), info = argument)
+    expect_true(nzchar(example$result), info = argument)
+    suppressMessages(eval(parse(text = example$code), envir = example_env))
+  })
+  names(values) <- expected_arguments
+
+  expect_identical(
+    unname(values$spec),
+    c("Research unit report", "160", "9")
+  )
+  expect_identical(unname(values$path[["exists"]]), "TRUE")
+  expect_identical(unname(values$path[["valid"]]), "TRUE")
+  expect_identical(
+    values$id,
+    c(id = "quarterly_report", name = "Research unit report")
+  )
+  expect_identical(values$source_url, "internal:methods-handbook-v3")
+  expect_identical(
+    values$verified_on,
+    as.character(Sys.Date() - 30)
+  )
+  expect_identical(values$overwrite, c("annual_report", "conference_poster"))
+})
+
 test_that("spec_load example loads YAML and verifies a real export", {
   skip_if_not_installed("yaml")
   skip_if_not_installed("ggplot2")
@@ -1943,7 +1987,8 @@ test_that("submission_check examples review real plots, files and directories", 
   examples_file <- options_examples_path()
   examples <- yaml::read_yaml(examples_file)$submission_check
   expected_arguments <- c(
-    "x", "spec", "column", "dpi", "pattern", "recursive", "art_type"
+    "x", "spec", "column", "dpi", "pattern", "recursive", "art_type",
+    "asset_type"
   )
   expect_setequal(names(examples$arguments), expected_arguments)
 
@@ -2185,6 +2230,36 @@ test_that("media_check examples inspect a real encoded video", {
   expect_identical(report$status[report$check == "Video codec"], "pass")
   expect_identical(report$actual[report$check == "Frame size"], "640 x 360")
   expect_s3_class(values$spec$publication, "figspec_report")
+})
+
+test_that("table workflow examples execute with real data and files", {
+  skip_if_not_installed("yaml")
+  skip_if_not_installed("gt")
+
+  all_examples <- yaml::read_yaml(options_examples_path())
+  expected <- list(
+    table_apply_spec = c("table", "spec"),
+    table_save = c("filename", "table", "spec", "transform", "check", "..."),
+    table_check = c("x", "spec")
+  )
+
+  for (topic in names(expected)) {
+    examples <- all_examples[[topic]]
+    expect_setequal(names(examples$arguments), expected[[topic]])
+    example_env <- new.env(parent = globalenv())
+    eval(parse(text = examples$setup), envir = example_env)
+    for (argument in expected[[topic]]) {
+      example <- examples$arguments[[argument]]
+      expect_true(nzchar(example$prose), info = paste(topic, argument))
+      expect_true(nzchar(example$result), info = paste(topic, argument))
+      expect_silent(suppressMessages(
+        eval(parse(text = example$code), envir = example_env)
+      ))
+    }
+    if (identical(topic, "table_save")) {
+      unlink(example_env$table_output_dir, recursive = TRUE)
+    }
+  }
 })
 
 test_that("R Markdown and Quarto option examples execute every argument", {

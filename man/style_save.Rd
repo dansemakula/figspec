@@ -17,6 +17,12 @@ Styles registered with \code{\link[=style_register]{style_register()}} last only
 Save them to an RDS file when you want to use them in a later session or
 share them across projects you control.
 }
+\details{
+The complete style collection is written to a temporary file, reopened and
+validated before the requested path is replaced. Existing directories and
+symbolic links are refused. If writing or validation fails, an existing
+style file is left unchanged.
+}
 \examples{
 library(ggplot2)
 style_register("mylab", theme_minimal())

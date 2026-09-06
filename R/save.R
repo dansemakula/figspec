@@ -58,17 +58,14 @@
 #'
 #' # What `column` means
 #'
-#' Journals lay their pages out in columns, and state a figure width for each
-#' one a figure may span. `column` selects between the widths that journal
-#' publishes: `"single"` fits one text column, `"double"` spans the page, and
-#' some publishers also state `"half"`, `"onehalf"` or `"triple"`. The names
-#' and the millimetres both come from the journal, so they differ between
-#' publishers — Science's single column is 57 mm where Cell Press's is 85 mm.
-#' Call [fig_columns()] to see what a journal offers, and [fig_width()] for one
-#' value.
+#' Specifications can name the widths available for a figure. `column` selects
+#' between them: `"single"` often fits one text column and `"double"` often
+#' spans the page, while a project can use names of its own. Both the names and
+#' measurements come from the selected specification. Call [fig_columns()] to
+#' see the available widths, and [fig_width()] for one value.
 #'
-#' `column` is a lookup into a journal's own layout, so it means nothing
-#' without `spec`. Sizing without a specification is what `width` is for.
+#' `column` is a lookup into the specification, so it requires `spec`. Use
+#' `width` when no specification is needed.
 #'
 #' @param filename Output path. The extension selects the format. With a
 #'   journal and no extension, the journal's first accepted format is used.
@@ -97,7 +94,7 @@
 #'   defaults. A completed recorded plot cannot be restyled and is reported as
 #'   such. Set to `FALSE` to preserve the plot exactly as supplied.
 #' @param check Whether to check the result and report failures as a warning.
-#'   Only checks against a journal when one is given.
+#'   Compliance is judged only when `spec` is supplied.
 #' @param art_type Resolution category. `"auto"` classifies the live plot;
 #'   explicit choices are `"colour"`, `"bw"`, `"line"`, and `"combination"`.
 #' @param ... Named arguments passed to the renderer selected for the figure:
@@ -107,7 +104,9 @@
 #' @return The path to the written file, invisibly, with the achieved geometry
 #'   attached as the `"figspec_geometry"` attribute. See [fig_geometry()].
 #' @seealso [fig_panel_size()] to set a panel size without saving,
-#'   [fig_columns()] for a journal's stated widths.
+#'   [fig_columns()] for a journal's stated widths, and
+#'   `vignette("figure-systems")` for worked examples with ggplot2, base R,
+#'   lattice, grid and Plotly.
 #' @examples
 #' library(ggplot2)
 #' p <- ggplot(ggplot2::mpg, aes(displ, hwy, colour = class)) + geom_point()

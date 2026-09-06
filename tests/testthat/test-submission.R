@@ -94,8 +94,20 @@ test_that("plot labels are made complete and unique", {
   plots <- list(p, p, p)
   names(plots) <- c("figure", "figure", NA_character_)
   res <- suppressMessages(submission_check(plots))
-  expect_identical(res$file, c("figure", "figure__1", "figure_3"))
+  expect_identical(res$file, c("figure", "figure__1", "item_3"))
   expect_identical(names(attr(res, "reports")), res$file)
+})
+
+test_that("figure-only arguments are rejected for table-only collections", {
+  tables <- list(summary = head(mtcars))
+  expect_error(
+    submission_check(tables, column = "single"),
+    class = "figspec_bad_input"
+  )
+  expect_error(
+    submission_check(tables, dpi = 300),
+    class = "figspec_bad_input"
+  )
 })
 
 test_that("per-figure column mappings must match every figure exactly", {
@@ -183,6 +195,7 @@ test_that("a set can be inspected with no specification at all", {
   skip_if_not_installed("ggplot2")
   res <- suppressMessages(submission_check(plot_set()))
   expect_equal(nrow(res), 2)
+  expect_identical(res$result, c("inspection", "inspection"))
   for (r in attr(res, "reports")) {
     expect_false(any(r$status %in% c("pass", "fail")))
   }
@@ -211,7 +224,10 @@ test_that("a report printed without a specification uses a neutral heading", {
   skip_if_not_installed("ggplot2")
   res <- suppressMessages(submission_check(plot_set()))
   out <- capture.output(print(res), type = "message")
-  expect_match(paste(out, collapse = " "), "Submission check")
+  text <- paste(out, collapse = " ")
+  expect_match(text, "Submission check")
+  expect_match(text, "Inspection only")
+  expect_false(grepl("all requirements met", text, fixed = TRUE))
 })
 
 test_that("a failing figure is named in the printed report", {

@@ -5,6 +5,11 @@ main <- function() {
   root <- normalizePath(".", winslash = "/", mustWork = TRUE)
   destination <- file.path(root, "docs")
 
+  # Browser-dependent Plotly examples are unsuitable for CRAN's vignette
+  # builder, where Chrome is not guaranteed. The controlled website build has
+  # a real browser gate, so enable those examples here and nowhere else.
+  Sys.setenv(FIGSPEC_BUILD_BROWSER_EXAMPLES = "true")
+
   # Build outside the package tree so an interrupted build can never leak into
   # an R source tarball. Copy the validated result to an ignored candidate in
   # the repository before using same-filesystem renames for rollback safety.

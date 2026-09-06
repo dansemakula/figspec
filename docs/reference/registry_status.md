@@ -60,36 +60,36 @@ registry_status()
 #> 2          nature  2026-09-03        3 FALSE     16                0
 #> 28            bmc  2026-09-03        3 FALSE      7                0
 #> 29            jid  2026-09-03        3 FALSE      5                0
-#>    unharvested  origin
-#> 13          33 figspec
-#> 1           20 figspec
-#> 3           20 figspec
-#> 4           32 figspec
-#> 5           26 figspec
-#> 6           27 figspec
-#> 7           26 figspec
-#> 9           29 figspec
-#> 10          28 figspec
-#> 11          32 figspec
-#> 8           27 figspec
-#> 12          32 figspec
-#> 14          29 figspec
-#> 15          26 figspec
-#> 16          31 figspec
-#> 17          32 figspec
-#> 18          30 figspec
-#> 19          25 figspec
-#> 20          28 figspec
-#> 21          31 figspec
-#> 23          30 figspec
-#> 24          30 figspec
-#> 25          30 figspec
-#> 26          24 figspec
-#> 27          31 figspec
-#> 22          27 figspec
-#> 2           19 figspec
-#> 28          28 figspec
-#> 29          30 figspec
+#>    unharvested table_stated table_confirmed_absent table_unreviewed  origin
+#> 13          33            0                      0               17 figspec
+#> 1           20            0                      0               17 figspec
+#> 3           20            0                      0               17 figspec
+#> 4           32            0                      0               17 figspec
+#> 5           26            0                      0               17 figspec
+#> 6           27            0                      0               17 figspec
+#> 7           26            0                      0               17 figspec
+#> 9           29            0                      0               17 figspec
+#> 10          28            0                      0               17 figspec
+#> 11          32            0                      0               17 figspec
+#> 8           27            1                      0               16 figspec
+#> 12          32            0                      0               17 figspec
+#> 14          29            0                      0               17 figspec
+#> 15          26            0                      0               17 figspec
+#> 16          31            0                      0               17 figspec
+#> 17          32            0                      0               17 figspec
+#> 18          30            0                      0               17 figspec
+#> 19          25            0                      0               17 figspec
+#> 20          28            0                      0               17 figspec
+#> 21          31            0                      0               17 figspec
+#> 23          30            0                      0               17 figspec
+#> 24          30            0                      0               17 figspec
+#> 25          30            0                      0               17 figspec
+#> 26          24            0                      0               17 figspec
+#> 27          31            0                      0               17 figspec
+#> 22          27            0                      0               17 figspec
+#> 2           19            2                      0               15 figspec
+#> 28          28            0                      0               17 figspec
+#> 29          30            0                      0               17 figspec
 registry_status(max_age_days = 30)
 #>                id verified_on age_days stale stated confirmed_absent
 #> 13            aps  2026-04-04      155  TRUE      2                0
@@ -121,34 +121,34 @@ registry_status(max_age_days = 30)
 #> 2          nature  2026-09-03        3 FALSE     16                0
 #> 28            bmc  2026-09-03        3 FALSE      7                0
 #> 29            jid  2026-09-03        3 FALSE      5                0
-#>    unharvested  origin
-#> 13          33 figspec
-#> 1           20 figspec
-#> 3           20 figspec
-#> 4           32 figspec
-#> 5           26 figspec
-#> 6           27 figspec
-#> 7           26 figspec
-#> 9           29 figspec
-#> 10          28 figspec
-#> 11          32 figspec
-#> 8           27 figspec
-#> 12          32 figspec
-#> 14          29 figspec
-#> 15          26 figspec
-#> 16          31 figspec
-#> 17          32 figspec
-#> 18          30 figspec
-#> 19          25 figspec
-#> 20          28 figspec
-#> 21          31 figspec
-#> 23          30 figspec
-#> 24          30 figspec
-#> 25          30 figspec
-#> 26          24 figspec
-#> 27          31 figspec
-#> 22          27 figspec
-#> 2           19 figspec
-#> 28          28 figspec
-#> 29          30 figspec
+#>    unharvested table_stated table_confirmed_absent table_unreviewed  origin
+#> 13          33            0                      0               17 figspec
+#> 1           20            0                      0               17 figspec
+#> 3           20            0                      0               17 figspec
+#> 4           32            0                      0               17 figspec
+#> 5           26            0                      0               17 figspec
+#> 6           27            0                      0               17 figspec
+#> 7           26            0                      0               17 figspec
+#> 9           29            0                      0               17 figspec
+#> 10          28            0                      0               17 figspec
+#> 11          32            0                      0               17 figspec
+#> 8           27            1                      0               16 figspec
+#> 12          32            0                      0               17 figspec
+#> 14          29            0                      0               17 figspec
+#> 15          26            0                      0               17 figspec
+#> 16          31            0                      0               17 figspec
+#> 17          32            0                      0               17 figspec
+#> 18          30            0                      0               17 figspec
+#> 19          25            0                      0               17 figspec
+#> 20          28            0                      0               17 figspec
+#> 21          31            0                      0               17 figspec
+#> 23          30            0                      0               17 figspec
+#> 24          30            0                      0               17 figspec
+#> 25          30            0                      0               17 figspec
+#> 26          24            0                      0               17 figspec
+#> 27          31            0                      0               17 figspec
+#> 22          27            0                      0               17 figspec
+#> 2           19            2                      0               15 figspec
+#> 28          28            0                      0               17 figspec
+#> 29          30            0                      0               17 figspec
 ```

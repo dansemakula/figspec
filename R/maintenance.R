@@ -45,9 +45,18 @@ registry_status <- function(max_age_days = 365, as_of = Sys.Date()) {
   }
   reg <- load_registry()
   fields <- requirement_keys()
+  table_fields <- table_requirement_keys()
   out <- do.call(rbind, lapply(reg, function(j) {
     stated <- sum(vapply(fields, function(f) !is.null(j[[f]]), logical(1)))
     absent <- length(intersect(unlist(j$not_stated %||% list()), fields))
+    stated_table_names <- intersect(
+      names(j$tables %||% list()), c(table_fields, "format")
+    )
+    stated_table_names[stated_table_names == "format"] <- "formats"
+    table_stated <- length(unique(stated_table_names))
+    table_absent <- length(intersect(
+      unlist(j$tables_not_stated %||% list()), table_fields
+    ))
     age <- as.integer(as.Date(as_of) - as.Date(j$verified_on))
     data.frame(
       id = j$id,
@@ -57,6 +66,9 @@ registry_status <- function(max_age_days = 365, as_of = Sys.Date()) {
       stated = stated,
       confirmed_absent = absent,
       unharvested = length(fields) - stated - absent,
+      table_stated = table_stated,
+      table_confirmed_absent = table_absent,
+      table_unreviewed = length(table_fields) - table_stated - table_absent,
       origin = j$origin %||% "figspec",
       stringsAsFactors = FALSE
     )
@@ -159,8 +171,18 @@ registry_entry_template <- function(id, name, source_url) {
     "    # Fields you READ the page for and confirmed are absent. Do not list a\n",
     "    # field you simply did not check: leave it out and it reports as\n",
     "    # \"not yet harvested\", which is true.\n",
+    "  # tables:\n",
+    "    # formats: [html, docx]\n    # editable: \n",
+    "    # orientation: portrait\n    # width_max_mm: \n",
+    "    # font_families: [ ]\n    # font_min_pt: \n    # font_max_pt: \n",
+    "    # title_style: \n    # title_position: above\n",
+    "    # header_bold: \n    # vertical_rules: \n",
+    "    # horizontal_rules: minimal\n    # decimal_alignment: \n",
+    "    # footnotes: \n    # abbreviations: \n",
+    "    # repeat_header: \n    # split_rows: \n",
+    "  tables_not_stated:\n",
+    "    # Table fields you checked and confirmed are absent.\n",
     "  # media: {video_formats: [ ], frame_max: {width: , height: }, max_file_mb: }\n",
-    "  # tables: {orientation: , title_style: }\n",
     "  # notes: >\n"
   )
   cat(tmpl)

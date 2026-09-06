@@ -59,6 +59,12 @@ test_that("registry_status reports age and how much is harvested", {
   # Every field is accounted for in exactly one of the three states.
   expect_true(all(st$stated + st$confirmed_absent + st$unharvested ==
                     length(requirement_keys())))
+  expect_true(all(
+    st$table_stated + st$table_confirmed_absent + st$table_unreviewed ==
+      length(figspec:::table_requirement_keys())
+  ))
+  expect_true(st$table_stated[st$id == "nature"] > 0)
+  expect_identical(st$table_stated[st$id == "jss"], 0L)
 })
 
 test_that("registry maintenance dates and age limits are validated", {

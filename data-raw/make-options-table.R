@@ -117,12 +117,15 @@ groups <- list(
   ),
   "Find and use specifications" = c(
     "spec_list", "spec_get", "fig_width", "fig_columns",
-    "spec_register", "spec_load"
+    "spec_register", "spec_save", "spec_load"
   ),
   "Check collections and publication assets" = c(
     "submission_check", "submission_detail", "fig_suggest_art_type",
-    "fig_refit", "table_spec", "media_spec", "media_check",
+    "fig_refit", "media_spec", "media_check",
     "graphical_abstract_spec"
+  ),
+  "Build, export and check tables" = c(
+    "table_spec", "table_apply_spec", "table_save", "table_check"
   ),
   "R Markdown and Quarto" = c("figspec_knitr_options", "figspec_knitr_setup"),
   "Maintain trusted registry data" = c(

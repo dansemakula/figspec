@@ -37,6 +37,12 @@ project or organisation, or load a registry file maintained by your team. A
 house style is different: it controls visual choices, while a specification
 defines requirements that can be checked.
 
+Figure and table guidance is reviewed separately. Some bundled profiles
+already contain table requirements, while others have not yet had their table
+guidance reviewed. `registry_status()` shows both kinds of coverage. The full
+table workflow can also use requirements supplied by a project or organisation;
+see [Build and check tables from R](tables.html).
+
 ## Find a relevant profile
 
 `spec_list()` lists the available publisher and journal profiles. Use the

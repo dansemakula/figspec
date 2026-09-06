@@ -21,6 +21,13 @@ style_save(path)
 
 `path` invisibly.
 
+## Details
+
+The complete style collection is written to a temporary file, reopened
+and validated before the requested path is replaced. Existing
+directories and symbolic links are refused. If writing or validation
+fails, an existing style file is left unchanged.
+
 ## Examples
 
 ``` r

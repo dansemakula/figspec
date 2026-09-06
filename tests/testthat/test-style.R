@@ -89,6 +89,124 @@ test_that("styles round-trip through a file", {
   expect_true("persisted" %in% style_list()$name)
 })
 
+test_that("an empty style collection round-trips cleanly", {
+  old_styles <- .figspec_cache$styles
+  withr::defer(.figspec_cache$styles <- old_styles)
+  .figspec_cache$styles <- NULL
+  path <- file.path(withr::local_tempdir(), "empty-styles.rds")
+
+  expect_identical(style_save(path), path)
+  expect_true(file.size(path) > 0)
+  expect_identical(style_load(path), character())
+  expect_equal(nrow(style_list()), 0L)
+})
+
+test_that("style files enforce safe paths and bounded inputs", {
+  root <- withr::local_tempdir()
+  expect_error(style_save(character()), class = "figspec_bad_input")
+  expect_error(style_save(NA_character_), class = "figspec_bad_input")
+  expect_error(
+    style_save(file.path(root, "styles.txt")),
+    "must end in.*rds",
+    class = "figspec_bad_input"
+  )
+  expect_error(
+    style_save(file.path(root, "missing", "styles.rds")),
+    class = "figspec_not_found"
+  )
+  directory <- file.path(root, "directory.rds")
+  dir.create(directory)
+  expect_error(style_save(directory), "directory", class = "figspec_bad_input")
+
+  empty <- file.path(root, "empty.rds")
+  file.create(empty)
+  expect_error(style_load(empty), "empty", class = "figspec_bad_input")
+
+  corrupt <- file.path(root, "corrupt.rds")
+  writeLines("not an RDS file", corrupt)
+  expect_error(
+    style_load(corrupt),
+    "Could not read styles",
+    class = "figspec_bad_input"
+  )
+
+  oversized <- file.path(root, "oversized.rds")
+  writeBin(raw(figspec:::STYLE_FILE_LIMIT + 1L), oversized)
+  expect_error(
+    style_load(oversized),
+    "larger than 10 MB",
+    class = "figspec_bad_input"
+  )
+})
+
+test_that("style files refuse symbolic links without changing their targets", {
+  root <- withr::local_tempdir()
+  target <- file.path(root, "target.rds")
+  saveRDS(list(), target)
+  original <- readBin(target, "raw", n = file.size(target))
+  link <- file.path(root, "linked-styles.rds")
+  made <- file.symlink(target, link)
+  skip_if_not(made, "symbolic links are unavailable on this platform")
+
+  expect_error(style_load(link), "symbolic link", class = "figspec_bad_input")
+  expect_error(style_save(link), "symbolic link", class = "figspec_bad_input")
+  expect_identical(readBin(target, "raw", n = file.size(target)), original)
+})
+
+test_that("malformed style files cannot partly change the session", {
+  old_styles <- .figspec_cache$styles
+  withr::defer(.figspec_cache$styles <- old_styles)
+  .figspec_cache$styles <- NULL
+  style_register("already_present", ggplot2::theme_void())
+  before <- .figspec_cache$styles
+  path <- file.path(withr::local_tempdir(), "malformed-styles.rds")
+  saveRDS(
+    list(
+      valid_first = list(
+        name = "valid_first",
+        theme = ggplot2::theme_minimal(),
+        description = "valid"
+      ),
+      invalid_second = list(
+        name = "wrong_name",
+        theme = ggplot2::theme_void(),
+        description = "invalid"
+      )
+    ),
+    path
+  )
+
+  expect_error(style_load(path), class = "figspec_bad_input")
+  expect_identical(.figspec_cache$styles, before)
+  expect_false("valid_first" %in% style_list()$name)
+
+  duplicate <- list(
+    same = list(name = "same", theme = ggplot2::theme_void(), description = "a"),
+    same = list(name = "same", theme = ggplot2::theme_void(), description = "b")
+  )
+  saveRDS(duplicate, path)
+  expect_error(style_load(path), "unique", class = "figspec_bad_input")
+  expect_identical(.figspec_cache$styles, before)
+})
+
+test_that("style loading requires an explicit logical code permission", {
+  path <- file.path(withr::local_tempdir(), "ordinary-style.rds")
+  saveRDS(
+    list(ordinary = list(
+      name = "ordinary",
+      theme = ggplot2::theme_void(),
+      description = "ordinary theme"
+    )),
+    path
+  )
+  for (value in list(NA, 1, "yes", logical())) {
+    expect_error(
+      style_load(path, allow_functions = value),
+      class = "figspec_bad_input"
+    )
+  }
+})
+
 test_that("saved theme functions require explicit permission to load", {
   style_register("stored_function", function() ggplot2::theme_minimal())
   f <- withr::local_tempfile(fileext = ".rds")

@@ -17,9 +17,9 @@ when the selected specification records none.
 \description{
 Publications, organisations and projects may set separate requirements for
 tables, including orientation, titles, notes and permitted file types.
-\code{table_spec()} returns the recorded instructions so they can be consulted
-while the table is still being prepared. It does not claim to verify rules
-that require editorial judgement.
+\code{table_spec()} returns the recorded instructions used by
+\code{\link[=table_apply_spec]{table_apply_spec()}}, \code{\link[=table_save]{table_save()}} and \code{\link[=table_check]{table_check()}}. Rules that require
+editorial judgement remain visible but are not claimed as verified.
 }
 \examples{
 table_spec("nature")

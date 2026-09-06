@@ -102,10 +102,10 @@ it can review figures, tables or a mixed submission without creating a second
 collection API. `submission_detail()` can continue to retrieve one full
 report.
 
-This proposal changes the reviewed API from 47 to 50 exports and changes the
-formal contract of `submission_check()`. Freeze those decisions in the API
-manifest before implementation, update the options-example manifest in the
-same change and run the strict contract gate after every step.
+This proposal changed the reviewed API from 47 to 50 exports and changed the
+formal contract of `submission_check()`. The subsequent addition of
+`spec_save()` raised the pre-release API to 51 exports. These decisions are
+recorded in the API manifest and checked by the strict contract gate.
 
 ### Keep system-specific helpers explicit
 

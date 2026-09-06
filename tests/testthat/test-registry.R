@@ -151,6 +151,29 @@ test_that("spec_load validates paths and malformed YAML", {
   expect_error(spec_load(malformed), class = "figspec_bad_registry")
 })
 
+test_that("spec_load accepts the specifications key and rejects ambiguous collections", {
+  path <- withr::local_tempfile(fileext = ".yml")
+  entry <- list(
+    id = "project_report",
+    name = "Project report",
+    source_url = "internal:project-report",
+    verified_on = as.character(Sys.Date()),
+    requirements = list(columns = list(full = 160))
+  )
+  yaml::write_yaml(list(specifications = list(entry)), path)
+  expect_identical(read_registry_entries(path)[[1]]$id, "project_report")
+
+  yaml::write_yaml(
+    list(specifications = list(entry), journals = list(entry)),
+    path
+  )
+  expect_error(
+    read_registry_entries(path),
+    "not both",
+    class = "figspec_bad_registry"
+  )
+})
+
 test_that("spec_load is atomic and cannot replace bundled profiles", {
   old_user_specs <- .figspec_cache$user_specs
   withr::defer(.figspec_cache$user_specs <- old_user_specs)
@@ -186,6 +209,214 @@ test_that("spec_load is atomic and cannot replace bundled profiles", {
   expect_identical(spec_get("cell_press")$origin, "figspec")
 })
 
+test_that("spec_save creates a reusable specification registry", {
+  old_user_specs <- .figspec_cache$user_specs
+  withr::defer(.figspec_cache$user_specs <- old_user_specs)
+  .figspec_cache$user_specs <- NULL
+
+  registry_file <- file.path(withr::local_tempdir(), "project-specifications.yml")
+  report_spec <- list(
+    name = "Research unit report",
+    columns = list(full = 160),
+    dpi_min = 300,
+    formats = c("png", "pdf"),
+    tables = list(
+      formats = c("html", "docx"),
+      font_min_pt = 9,
+      header_bold = TRUE
+    )
+  )
+
+  saved <- spec_save(
+    report_spec,
+    registry_file,
+    id = "research_unit_report"
+  )
+  expect_identical(saved, registry_file)
+  expect_true(file.exists(registry_file))
+  expect_true(suppressMessages(registry_validate_file(registry_file)))
+
+  raw <- yaml::read_yaml(registry_file, eval.expr = FALSE)
+  expect_identical(raw$schema_version, 2L)
+  expect_named(raw, c("schema_version", "specifications"))
+  expect_length(raw$specifications, 1L)
+  expect_identical(raw$specifications[[1]]$id, "research_unit_report")
+  expect_identical(
+    raw$specifications[[1]]$source_url,
+    "internal:research_unit_report"
+  )
+  expect_identical(
+    raw$specifications[[1]]$verified_on,
+    as.character(Sys.Date())
+  )
+  expect_null(raw$specifications[[1]]$origin)
+  expect_identical(raw$specifications[[1]]$requirements$dpi_min, 300)
+  expect_identical(raw$specifications[[1]]$tables$font_min_pt, 9)
+
+  loaded <- spec_load(registry_file)
+  expect_identical(loaded, "research_unit_report")
+  expect_equal(fig_width("research_unit_report", "full"), 160)
+  expect_identical(table_spec("research_unit_report")$font_min_pt, 9)
+})
+
+test_that("spec_save appends safely and requires permission to replace an id", {
+  registry_file <- file.path(withr::local_tempdir(), "team-specifications.yaml")
+  spec_save(
+    list(name = "First report", columns = list(full = 150)),
+    registry_file,
+    id = "first_report",
+    source_url = "internal:first-report-v1",
+    verified_on = "2026-09-01"
+  )
+  original_hash <- unname(tools::md5sum(registry_file))
+
+  expect_error(
+    spec_save(
+      list(name = "Unapproved replacement", columns = list(full = 999)),
+      registry_file,
+      id = "first_report"
+    ),
+    "overwrite = TRUE",
+    class = "figspec_conflict"
+  )
+  expect_identical(unname(tools::md5sum(registry_file)), original_hash)
+
+  spec_save(
+    list(name = "Second report", columns = list(full = 170)),
+    registry_file,
+    id = "second_report"
+  )
+  after_append <- read_registry_entries(registry_file)
+  expect_identical(
+    vapply(after_append, function(entry) entry$id, character(1)),
+    c("first_report", "second_report")
+  )
+
+  spec_save(
+    list(name = "First report, revised", columns = list(full = 155)),
+    registry_file,
+    id = "first_report",
+    source_url = "internal:first-report-v2",
+    overwrite = TRUE
+  )
+  after_replace <- read_registry_entries(registry_file)
+  expect_length(after_replace, 2L)
+  expect_identical(after_replace[[1]]$name, "First report, revised")
+  expect_identical(after_replace[[1]]$requirements$columns$full, 155)
+  expect_identical(after_replace[[2]]$name, "Second report")
+})
+
+test_that("spec_save refuses invalid inputs without damaging a file", {
+  destination <- file.path(withr::local_tempdir(), "protected.yml")
+  writeLines("this is not a registry", destination)
+  original <- readBin(destination, "raw", n = file.info(destination)$size)
+
+  expect_error(
+    spec_save(
+      list(name = "Report", columns = list(full = 160)),
+      destination,
+      id = "report"
+    ),
+    class = "figspec_bad_registry"
+  )
+  expect_identical(
+    readBin(destination, "raw", n = file.info(destination)$size),
+    original
+  )
+
+  invalid_destination <- file.path(withr::local_tempdir(), "invalid.yml")
+  expect_error(
+    spec_save(
+      list(name = "Invalid", dpi_min = -300),
+      invalid_destination,
+      id = "invalid"
+    ),
+    "positive finite",
+    class = "figspec_bad_registry"
+  )
+  expect_false(file.exists(invalid_destination))
+  expect_error(
+    spec_save(list(name = "Report"), tempfile(fileext = ".txt"), id = "report"),
+    "yaml.*yml",
+    class = "figspec_bad_input"
+  )
+  expect_error(
+    spec_save(list(name = "Report"), tempfile(fileext = ".yml")),
+    "id.*required",
+    class = "figspec_bad_input"
+  )
+  expect_error(
+    spec_save(
+      list(name = "Report"), tempfile(fileext = ".yml"),
+      id = "cell_press"
+    ),
+    "bundled specification",
+    class = "figspec_conflict"
+  )
+})
+
+test_that("spec_save and spec_load support a real figure and table workflow", {
+  skip_if_not_installed("ragg")
+  skip_if_not_installed("gt")
+
+  old_user_specs <- .figspec_cache$user_specs
+  withr::defer(.figspec_cache$user_specs <- old_user_specs)
+  .figspec_cache$user_specs <- NULL
+
+  work <- withr::local_tempdir()
+  registry_file <- file.path(work, "analysis-specifications.yml")
+  reusable_spec <- list(
+    name = "Analysis report",
+    columns = list(full = 160),
+    dpi_min = 96,
+    formats = "png",
+    font_min_pt = 9,
+    tables = list(
+      formats = "html",
+      font_min_pt = 9,
+      header_bold = TRUE,
+      vertical_rules = FALSE
+    )
+  )
+  spec_save(reusable_spec, registry_file, id = "analysis_report")
+  spec_load(registry_file)
+
+  plot <- ggplot2::ggplot(
+    ggplot2::mpg,
+    ggplot2::aes(displ, hwy, colour = drv, shape = drv)
+  ) +
+    ggplot2::geom_point() +
+    fig_apply_spec("analysis_report")
+  figure_file <- file.path(work, "analysis-figure.png")
+  saved_figure <- suppressWarnings(fig_save(
+    figure_file,
+    plot,
+    spec = "analysis_report",
+    column = "full",
+    height = 90,
+    dpi = 96
+  ))
+  figure_report <- attr(saved_figure, "figspec_report")
+
+  table_file <- file.path(work, "analysis-table.html")
+  saved_table <- suppressWarnings(table_save(
+    table_file,
+    ggplot2::mpg[1:30, c("manufacturer", "model", "displ", "hwy")],
+    spec = "analysis_report"
+  ))
+  table_report <- attr(saved_table, "figspec_table_report")
+
+  expect_true(file.size(figure_file) > 10000)
+  expect_true(file.size(table_file) > 1000)
+  expect_s3_class(figure_report, "figspec_report")
+  expect_identical(
+    figure_report$status[figure_report$check == "Width"],
+    "pass"
+  )
+  expect_s3_class(table_report, "figspec_table_report")
+  expect_false(any(table_report$status %in% c("fail", "invalid")))
+})
+
 test_that("registry YAML expressions are never evaluated", {
   old_option <- getOption("yaml.eval.expr")
   withr::defer(options(yaml.eval.expr = old_option))
@@ -203,6 +434,46 @@ test_that("registry YAML expressions are never evaluated", {
 
   expect_error(spec_load(registry_file), class = "figspec_bad_registry")
   expect_false(file.exists(marker))
+})
+
+test_that("a team project can reload shared files from relative paths", {
+  skip_if_not_installed("ggplot2")
+  old_user_specs <- .figspec_cache$user_specs
+  old_styles <- .figspec_cache$styles
+  withr::defer({
+    .figspec_cache$user_specs <- old_user_specs
+    .figspec_cache$styles <- old_styles
+  })
+  .figspec_cache$user_specs <- NULL
+  .figspec_cache$styles <- NULL
+
+  project <- withr::local_tempdir()
+  config <- file.path(project, "config", "figspec")
+  dir.create(config, recursive = TRUE)
+  spec_path <- file.path(config, "specifications.yml")
+  style_path <- file.path(config, "styles.rds")
+
+  spec_save(
+    list(name = "Team report", columns = list(full = 160)),
+    spec_path,
+    id = "team_report"
+  )
+  style_register("team_style", ggplot2::theme_minimal(), "Team theme")
+  style_save(style_path)
+
+  .figspec_cache$user_specs <- NULL
+  .figspec_cache$styles <- NULL
+  withr::local_dir(project)
+  expect_identical(
+    spec_load(file.path("config", "figspec", "specifications.yml")),
+    "team_report"
+  )
+  expect_identical(
+    style_load(file.path("config", "figspec", "styles.rds")),
+    "team_style"
+  )
+  expect_equal(fig_width("team_report", "full"), 160)
+  expect_s3_class(figspec:::resolve_style("team_style"), "theme")
 })
 
 test_that("shipped entries are marked as figspec's own", {

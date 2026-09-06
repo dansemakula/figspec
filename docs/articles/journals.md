@@ -17,6 +17,15 @@ your project or organisation, or load a registry file maintained by your
 team. A house style is different: it controls visual choices, while a
 specification defines requirements that can be checked.
 
+Figure and table guidance is reviewed separately. Some bundled profiles
+already contain table requirements, while others have not yet had their
+table guidance reviewed.
+[`registry_status()`](https://dansemakula.github.io/figspec/reference/registry_status.md)
+shows both kinds of coverage. The full table workflow can also use
+requirements supplied by a project or organisation; see [Build and check
+tables from
+R](https://dansemakula.github.io/figspec/articles/tables.md).
+
 ## Find a relevant profile
 
 [`spec_list()`](https://dansemakula.github.io/figspec/reference/spec_list.md)
@@ -222,7 +231,7 @@ specification.](journals_files/figure-html/custom-specification-1.png)
 The example below writes an actual 300 dpi PNG, reopens it and checks
 its saved properties against the project specification:
 
-`project_file`` ``<-`` `[`tempfile`](https://rdrr.io/r/base/tempfile.html)`(``fileext ``=`` ``".png"``)`` `[`fig_save`](https://dansemakula.github.io/figspec/reference/fig_save.md)`(`` `` ``project_file``,`` `` ``project_plot``,`` `` spec ``=`` ``project_spec``,`` `` column ``=`` ``"full"``,`` `` dpi ``=`` ``300``,`` `` check ``=`` ``FALSE`` ``)`` `` ``project_result`` ``<-`` `[`fig_check`](https://dansemakula.github.io/figspec/reference/fig_check.md)`(``project_file``, ``project_spec``)`` ``knitr``::`[`kable`](https://rdrr.io/pkg/knitr/man/kable.html)`(`` `` ``project_result``[`` `` ``project_result``$``check`` `[`%in%`](https://rdrr.io/r/base/match.html)` `[`c`](https://rdrr.io/r/base/c.html)`(`` `` ``"File validity"``, ``"Width"``, ``"Resolution"``, ``"File format"`` `` ``)``,`` `` `[`c`](https://rdrr.io/r/base/c.html)`(``"check"``, ``"requirement"``, ``"actual"``, ``"status"``)`` `` ``]``,`` `` row.names ``=`` ``FALSE`` ``)`
+`project_file`` ``<-`` `[`tempfile`](https://rdrr.io/r/base/tempfile.html)`(``fileext ``=`` ``".png"``)`` `[`fig_save`](https://dansemakula.github.io/figspec/reference/fig_save.md)`(`` `` ``project_file``,`` `` ``project_plot``,`` `` spec ``=`` ``project_spec``,`` `` column ``=`` ``"full"``,`` `` dpi ``=`` ``300``,`` `` check ``=`` ``FALSE`` ``)`` ``#> Scale for ``colour`` is already present.`` ``#> Adding another scale for ``colour``, which will replace the existing scale.`` ``#> Scale for ``shape`` is already present.`` ``#> Adding another scale for ``shape``, which will replace the existing scale.`` `` ``project_result`` ``<-`` `[`fig_check`](https://dansemakula.github.io/figspec/reference/fig_check.md)`(``project_file``, ``project_spec``)`` ``knitr``::`[`kable`](https://rdrr.io/pkg/knitr/man/kable.html)`(`` `` ``project_result``[`` `` ``project_result``$``check`` `[`%in%`](https://rdrr.io/r/base/match.html)` `[`c`](https://rdrr.io/r/base/c.html)`(`` `` ``"File validity"``, ``"Width"``, ``"Resolution"``, ``"File format"`` `` ``)``,`` `` `[`c`](https://rdrr.io/r/base/c.html)`(``"check"``, ``"requirement"``, ``"actual"``, ``"status"``)`` `` ``]``,`` `` row.names ``=`` ``FALSE`` ``)`
 
 | check         | requirement            | actual   | status |
 |:--------------|:-----------------------|:---------|:-------|

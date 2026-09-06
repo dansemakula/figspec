@@ -4,17 +4,16 @@
 
 ## Why figspec keeps a specification registry
 
-Requirements for figures may come from a publisher, an individual
-journal, an organisation or a project. These requirements might change
-from time to time. As such they may need to be updated. Additionally,
-the number of journals grows and more need to be added.
+Requirements for figures and tables may come from a publisher, an
+individual journal, an organisation or a project. These requirements
+might change from time to time. As such they may need to be updated.
+Additionally, the number of journals grows and more need to be added.
 
 figspec keeps these requirements in a registry to make it easy to reuse
-a specification without needing to look up changes to every specific
-requirement everytime you build figures in R. The registry also keeps
-the source and review date with the specification, making it possible to
-see what figspec is applying and to update the record when the guidance
-changes.
+a specification without needing to look up every requirement each time
+you build figures or tables in R. The registry also keeps the source and
+review date with the specification, making it possible to see what
+figspec is applying and to update the record when the guidance changes.
 
 ## Choose the right specification
 
@@ -90,13 +89,14 @@ figspec keeps these situations separate and reports them as follows:
 shows how many requirements fall into each group for every profile. This
 example compares two profiles in the registry:
 
-`status`` ``<-`` `[`registry_status`](https://dansemakula.github.io/figspec/reference/registry_status.md)`(``)`` ``status``[`` `` ``status``$``id`` `[`%in%`](https://rdrr.io/r/base/match.html)` `[`c`](https://rdrr.io/r/base/c.html)`(``"cell_press"``, ``"aps"``)``,`` `` `[`c`](https://rdrr.io/r/base/c.html)`(``"id"``, ``"stated"``, ``"confirmed_absent"``, ``"unharvested"``)`` ``]`` ``#> id stated confirmed_absent unharvested`` ``#> 13 aps 2 0 33`` ``#> 3 cell_press 15 0 20`
+`status`` ``<-`` `[`registry_status`](https://dansemakula.github.io/figspec/reference/registry_status.md)`(``)`` ``status``[`` `` ``status``$``id`` `[`%in%`](https://rdrr.io/r/base/match.html)` `[`c`](https://rdrr.io/r/base/c.html)`(``"cell_press"``, ``"aps"``)``,`` `` `[`c`](https://rdrr.io/r/base/c.html)`(`` `` ``"id"``, ``"stated"``, ``"confirmed_absent"``, ``"unharvested"``,`` `` ``"table_stated"``, ``"table_confirmed_absent"``, ``"table_unreviewed"`` `` ``)`` ``]`` ``#> id stated confirmed_absent unharvested table_stated`` ``#> 13 aps 2 0 33 0`` ``#> 3 cell_press 15 0 20 0`` ``#> table_confirmed_absent table_unreviewed`` ``#> 13 0 17`` ``#> 3 0 17`
 
-These counts describe how much of each profile has been reviewed. They
-do not describe how many requirements a publisher ought to have.
-*Confirmed absent* means only that the sources checked for that
-specification did not state the requirement. Another page or a later
-version of the guidance may still contain it.
+Figure and table coverage is shown separately. These counts describe how
+much of each profile has been reviewed. They do not describe how many
+requirements a publisher ought to have. *Confirmed absent* means only
+that the sources checked for that specification did not state the
+requirement. Another page or a later version of the guidance may still
+contain it.
 
 ## Add your own specification
 
@@ -108,13 +108,12 @@ propose it for inclusion with figspec.
 | What you want to do | Function | How long the specification remains available |
 |----|----|----|
 | Use a specification in the current R session | [`spec_register()`](https://dansemakula.github.io/figspec/reference/spec_register.md) | Until the R session ends |
-| Keep a specification for a project or organisation | [`spec_load()`](https://dansemakula.github.io/figspec/reference/spec_load.md) | Whenever its YAML file is loaded |
+| Save a specification for a project or organisation | [`spec_save()`](https://dansemakula.github.io/figspec/reference/spec_save.md) | In a reusable YAML file |
+| Use specifications saved in a YAML file | [`spec_load()`](https://dansemakula.github.io/figspec/reference/spec_load.md) | Whenever that file is loaded |
 | Propose a specification for a future figspec release | [`registry_entry_template()`](https://dansemakula.github.io/figspec/reference/registry_entry_template.md) | After it has been reviewed and accepted into the package |
 
-The function names still use *journal* because they were introduced when
-the registry focused on journal requirements. The specifications
-themselves are not limited to journals. They can describe a publisher,
-report, thesis, presentation or another type of project.
+Specifications are not limited to journals. They can describe a
+publisher, report, thesis, presentation or another type of project.
 
 ### Add a specification for the current session
 
@@ -132,11 +131,32 @@ where the entry came from; it is not a rating of its quality.
 
 ### Save a specification for reuse
 
-To reuse a specification, keep it in a YAML registry file that can be
-stored with the project or shared by an organisation.
+To reuse a specification, save it in a YAML registry file that can be
+stored with the project or shared by an organisation. The following
+example creates a real file containing figure and table requirements,
+validates it, loads it and retrieves the saved figure width:
+
+`registry_file`` ``<-`` `[`tempfile`](https://rdrr.io/r/base/tempfile.html)`(``fileext ``=`` ``".yaml"``)`` `` ``team_report`` ``<-`` `[`list`](https://rdrr.io/r/base/list.html)`(`` `` name ``=`` ``"Research team report"``,`` `` publisher ``=`` ``"Internal"``,`` `` disciplines ``=`` ``"research"``,`` `` columns ``=`` `[`list`](https://rdrr.io/r/base/list.html)`(``full ``=`` ``160``)``,`` `` dpi_min ``=`` ``300``,`` `` formats ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``"png"``, ``"pdf"``)``,`` `` font_min_pt ``=`` ``9``,`` `` tables ``=`` `[`list`](https://rdrr.io/r/base/list.html)`(`` `` formats ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``"html"``, ``"docx"``)``,`` `` font_min_pt ``=`` ``9``,`` `` header_bold ``=`` ``TRUE`` `` ``)``,`` `` not_stated ``=`` ``"height_max_mm"`` ``)`` `` `[`spec_save`](https://dansemakula.github.io/figspec/reference/spec_save.md)`(`` `` ``team_report``,`` `` ``registry_file``,`` `` id ``=`` ``"team_report"``,`` `` source_url ``=`` ``"internal:report-handbook-v4"``,`` `` verified_on ``=`` ``"2026-09-04"`` ``)`` `` `[`registry_validate_file`](https://dansemakula.github.io/figspec/reference/registry_validate_file.md)`(``registry_file``)`` ``#> ``✔`` 1 entry, no problems found.`` ``loaded_ids`` ``<-`` `[`spec_load`](https://dansemakula.github.io/figspec/reference/spec_load.md)`(``registry_file``)`` ``loaded_ids`` ``#> [1] "team_report"`` `[`fig_width`](https://dansemakula.github.io/figspec/reference/fig_width.md)`(``"team_report"``, ``"full"``)`` ``#> [1] 160`` `[`spec_list`](https://dansemakula.github.io/figspec/reference/spec_list.md)`(``)``[`` `` `[`spec_list`](https://dansemakula.github.io/figspec/reference/spec_list.md)`(``)``$``id`` ``==`` ``"team_report"``,`` `` `[`c`](https://rdrr.io/r/base/c.html)`(``"id"``, ``"name"``, ``"dpi_min"``, ``"origin"``)`` ``]`` ``#> id name dpi_min origin`` ``#> 31 team_report Research team report 300 user`
+
+When the same file already contains other specifications,
+[`spec_save()`](https://dansemakula.github.io/figspec/reference/spec_save.md)
+adds the new one without removing them. It refuses to replace an
+existing id unless `overwrite = TRUE` is supplied. The complete updated
+file is validated before it replaces the previous version.
+
+For a recommended team folder layout, the separate house-style file and
+an optional `.Rprofile` that loads both automatically, see [Reusing your
+own requirements and visual
+styles](https://dansemakula.github.io/figspec/articles/figspec.html#reusing-your-own-requirements-and-visual-styles).
+
+Validation checks that the file can be read and that its entries use the
+expected structure and values. It cannot confirm that the source was
+interpreted correctly. That still needs to be reviewed by a person.
+
 [`registry_entry_template()`](https://dansemakula.github.io/figspec/reference/registry_entry_template.md)
-prints a template containing the information that figspec can record.
-This example runs the function and shows the beginning of that template:
+remains useful when documenting a publication for possible inclusion in
+figspec. It prints every field that can be reviewed, including places
+for source excerpts and requirements confirmed absent:
 
 `template`` ``<-`` `[`capture.output`](https://rdrr.io/r/utils/capture.output.html)`(`[`registry_entry_template`](https://dansemakula.github.io/figspec/reference/registry_entry_template.md)`(`` `` ``"plos_biology"``,`` `` ``"PLOS Biology"``,`` `` ``"https://journals.plos.org/plosbiology/s/figures"`` ``)``)`` `[`writeLines`](https://rdrr.io/r/base/writeLines.html)`(`[`c`](https://rdrr.io/r/base/c.html)`(``template``[``1``:``12``]``, ``" ..."``)``)`` ``#> - id: plos_biology`` ``#> name: 'PLOS Biology'`` ``#> publisher: `` ``#> disciplines: [ ]`` ``#> source_url: 'https://journals.plos.org/plosbiology/s/figures'`` ``#> verified_on: '2026-09-06'`` ``#> requirements:`` ``#> # Fill in ONLY what the page states. Quote the wording for any number.`` ``#> # columns: {single: , onehalf: , double: }`` ``#> # width_min_mm: `` ``#> # width_max_mm: `` ``#> # height_max_mm: `` ``#> ...`
 
@@ -144,15 +164,6 @@ Add a requirement only when it is supported by the source. List it under
 `not_stated:` only when the relevant guidance has been checked and does
 not state that requirement. Leave it out of both places when it has not
 yet been reviewed.
-
-The following example writes a real temporary registry file, checks it,
-loads it and retrieves the width recorded in it:
-
-`registry_file`` ``<-`` `[`tempfile`](https://rdrr.io/r/base/tempfile.html)`(``fileext ``=`` ``".yaml"``)`` `[`writeLines`](https://rdrr.io/r/base/writeLines.html)`(`[`c`](https://rdrr.io/r/base/c.html)`(`` `` ``"schema_version: 2"``,`` `` ``"journals:"``,`` `` ``"- id: team_report"``,`` `` ``" name: Research team report"``,`` `` ``" publisher: Internal"``,`` `` ``" disciplines: [research]"``,`` `` ``" source_url: internal:report-handbook-v4"``,`` `` ``" verified_on: '2026-09-04'"``,`` `` ``" requirements:"``,`` `` ``" columns: {full: 160}"``,`` `` ``" source_quote_width: Figures occupy the 160 mm report content width."``,`` `` ``" dpi_min: 300"``,`` `` ``" source_quote_dpi: Export raster figures at 300 dpi or higher."``,`` `` ``" formats: [png, pdf]"``,`` `` ``" font_min_pt: 9"``,`` `` ``" source_quote_font: Figure text must be at least 9 pt."``,`` `` ``" not_stated: [height_max_mm]"`` ``)``, ``registry_file``)`` `` `[`registry_validate_file`](https://dansemakula.github.io/figspec/reference/registry_validate_file.md)`(``registry_file``)`` ``#> ``✔`` 1 entry, no problems found.`` ``loaded_ids`` ``<-`` `[`spec_load`](https://dansemakula.github.io/figspec/reference/spec_load.md)`(``registry_file``)`` ``loaded_ids`` ``#> [1] "team_report"`` `[`fig_width`](https://dansemakula.github.io/figspec/reference/fig_width.md)`(``"team_report"``, ``"full"``)`` ``#> [1] 160`` `[`spec_list`](https://dansemakula.github.io/figspec/reference/spec_list.md)`(``)``[`` `` `[`spec_list`](https://dansemakula.github.io/figspec/reference/spec_list.md)`(``)``$``id`` ``==`` ``"team_report"``,`` `` `[`c`](https://rdrr.io/r/base/c.html)`(``"id"``, ``"name"``, ``"dpi_min"``, ``"origin"``)`` ``]`` ``#> id name dpi_min origin`` ``#> 31 team_report Research team report 300 user`
-
-Validation checks that the file can be read and that its entries use the
-expected structure and values. It cannot confirm that the source was
-interpreted correctly. That still needs to be reviewed by a person.
 
 ### Propose a specification for figspec
 

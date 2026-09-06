@@ -9,8 +9,10 @@ figspec_final_api_contract <- list(
     registry_check_sources = alist(ids = NULL, timeout = 10),
     submission_check = alist(
       x = , spec = NULL, column = NULL, dpi = NULL,
-      pattern = "\\.(tiff?|png|jpe?g|pdf|eps|ps|svg)$", recursive = FALSE,
-      art_type = c("auto", "colour", "bw", "line", "combination")
+      pattern = "\\.(tiff?|png|jpe?g|pdf|eps|ps|svg|html?|docx|rtf|tex|latex)$",
+      recursive = FALSE,
+      art_type = c("auto", "colour", "bw", "line", "combination"),
+      asset_type = c("auto", "figure", "table")
     ),
     fig_check = alist(
       x = , spec = NULL, column = NULL, width = NULL, height = NULL,
@@ -66,6 +68,10 @@ figspec_final_api_contract <- list(
     spec_list = alist(discipline = NULL),
     style_load = alist(path = , allow_functions = FALSE),
     spec_load = alist(path = ),
+    spec_save = alist(
+      spec = , path = , id = NULL, source_url = NULL,
+      verified_on = NULL, overwrite = FALSE
+    ),
     media_spec = alist(spec = ),
     registry_entry_template = alist(id = , name = , source_url = ),
     fig_refit = alist(
@@ -88,6 +94,12 @@ figspec_final_api_contract <- list(
     submission_detail = alist(x = , file = ),
     fig_suggest_art_type = alist(plot = , spec = NULL),
     table_spec = alist(spec = ),
+    table_apply_spec = alist(table = , spec = ),
+    table_check = alist(x = , spec = NULL),
+    table_save = alist(
+      filename = , table = , spec = NULL, transform = TRUE,
+      check = TRUE, ... =
+    ),
     fig_tag_panels = alist(
       plot = , spec = NULL, level = NULL, open = "(", close = ")",
       strips = FALSE, x = -Inf, y = Inf, hjust = -0.6, vjust = 1.4, ... =
@@ -103,7 +115,8 @@ figspec_final_api_contract <- list(
     "plot.figspec_geometry", "print.figspec_abstract_spec",
     "print.figspec_geometry", "print.figspec_media_spec",
     "print.figspec_report", "print.figspec_sources", "print.figspec_spec",
-    "print.figspec_submission", "print.figspec_table_spec"
+    "print.figspec_submission", "print.figspec_table_report",
+    "print.figspec_table_spec"
   ),
   exact_aliases = c(
     color_safety_check = "colour_safety_check",
@@ -124,7 +137,37 @@ figspec_final_api_contract <- list(
   ),
   submission_attributes = c(
     "names", "row.names", "class", "reports", "spec_name", "source_url",
-    "verified_on", "from_plots"
+    "verified_on", "asset_types", "from_plots"
+  ),
+  submission_columns = c(
+    "file", "asset", "column", "result", "failed", "unresolved",
+    "unspecified", "panel_mm"
+  ),
+  table_report_attributes = c(
+    "names", "row.names", "class", "no_spec", "spec_name", "spec_id",
+    "source_url", "verified_on", "publication_stage", "input",
+    "table_system"
+  ),
+  spec_list_columns = c(
+    "id", "name", "publisher", "disciplines", "single_mm", "double_mm",
+    "dpi_min", "font_min_pt", "max_file_mb", "table_requirements",
+    "publication_stage", "verified_on", "origin"
+  ),
+  registry_status_columns = c(
+    "id", "verified_on", "age_days", "stale", "stated",
+    "confirmed_absent", "unharvested", "table_stated",
+    "table_confirmed_absent", "table_unreviewed", "origin"
+  ),
+  table_report_columns = c("check", "requirement", "actual", "status"),
+  table_status_values = c("pass", "fail", "unspecified", "unknown", "invalid"),
+  submission_result_values = c(
+    "pass", "fail", "incomplete", "invalid", "inspection"
+  ),
+  table_registry_fields = c(
+    "formats", "editable", "orientation", "width_max_mm", "font_families",
+    "font_min_pt", "font_max_pt", "title_style", "title_position",
+    "header_bold", "vertical_rules", "horizontal_rules", "decimal_alignment",
+    "footnotes", "abbreviations", "repeat_header", "split_rows"
   ),
   asset_spec_name_field = "spec_name",
   table_spec_fields = c(

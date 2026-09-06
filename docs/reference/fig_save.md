@@ -3,10 +3,8 @@
 Saves a figure built to a specification. A journal is one way to supply
 one: name a journal and the size, resolution, file format and font come
 from its published requirements. Give a panel size instead, or as well,
-and the plot area is set to that size exactly. Give neither and this
-behaves like
-[`ggplot2::ggsave()`](https://ggplot2.tidyverse.org/reference/ggsave.html)
-with millimetres as the default unit and the written file checked
+and the plot area is set to that size exactly. Give neither and the
+figure is written with millimetres as the default unit and checked
 afterwards.
 
 ## Usage
@@ -23,6 +21,7 @@ fig_save(
   panel_height = NULL,
   units = c("mm", "cm", "in"),
   dpi = NULL,
+  transform = TRUE,
   check = TRUE,
   art_type = c("auto", "colour", "bw", "line", "combination"),
   ...
@@ -38,8 +37,10 @@ fig_save(
 
 - plot:
 
-  Plot to save: a ggplot, a patchwork composition, or a `gtable`.
-  Defaults to the last plot displayed.
+  Figure to save. This can be a ggplot2 or patchwork object, a `gtable`
+  or grid grob, a lattice plot, a Plotly or other HTML widget, a
+  recorded base plot, or base-graphics code wrapped in a function or
+  one-sided formula. Defaults to the last ggplot2 plot displayed.
 
 - spec:
 
@@ -75,10 +76,20 @@ fig_save(
 
   Resolution. Defaults to the journal's stated minimum, or 300.
 
+- transform:
+
+  Whether to apply the specification's reachable visual requirements
+  before export. For ggplot2 and lattice this includes typography and
+  line rules together with accessible colour and shape defaults; Plotly
+  receives the corresponding layout and trace settings; base graphics
+  functions and grid grobs receive specification-aware defaults. A
+  completed recorded plot cannot be restyled and is reported as such.
+  Set to `FALSE` to preserve the plot exactly as supplied.
+
 - check:
 
-  Whether to check the result and report failures as a warning. Only
-  checks against a journal when one is given.
+  Whether to check the result and report failures as a warning.
+  Compliance is judged only when `spec` is supplied.
 
 - art_type:
 
@@ -87,8 +98,14 @@ fig_save(
 
 - ...:
 
-  Passed to
-  [`ggplot2::ggsave()`](https://ggplot2.tidyverse.org/reference/ggsave.html).
+  Named arguments passed to the renderer selected for the figure:
+  [`ggplot2::ggsave()`](https://ggplot2.tidyverse.org/reference/ggsave.html)
+  for ggplot2-compatible figures, the graphics device for base, lattice
+  and grid figures,
+  [`webshot2::webshot()`](https://rstudio.github.io/webshot2/reference/webshot.html)
+  for browser raster export, or
+  [`plotly::save_image()`](https://rdrr.io/pkg/plotly/man/save_image.html)
+  for Plotly vector export.
 
 ## Value
 
@@ -127,27 +144,27 @@ without your having to work out what it is.
 
 ## What `column` means
 
-Journals lay their pages out in columns, and state a figure width for
-each one a figure may span. `column` selects between the widths that
-journal publishes: `"single"` fits one text column, `"double"` spans the
-page, and some publishers also state `"half"`, `"onehalf"` or
-`"triple"`. The names and the millimetres both come from the journal, so
-they differ between publishers — Science's single column is 57 mm where
-Cell Press's is 85 mm. Call
+Specifications can name the widths available for a figure. `column`
+selects between them: `"single"` often fits one text column and
+`"double"` often spans the page, while a project can use names of its
+own. Both the names and measurements come from the selected
+specification. Call
 [`fig_columns()`](https://dansemakula.github.io/figspec/reference/fig_columns.md)
-to see what a journal offers, and
+to see the available widths, and
 [`fig_width()`](https://dansemakula.github.io/figspec/reference/fig_width.md)
 for one value.
 
-`column` is a lookup into a journal's own layout, so it means nothing
-without `spec`. Sizing without a specification is what `width` is for.
+`column` is a lookup into the specification, so it requires `spec`. Use
+`width` when no specification is needed.
 
 ## See also
 
 [`fig_panel_size()`](https://dansemakula.github.io/figspec/reference/fig_panel_size.md)
 to set a panel size without saving,
 [`fig_columns()`](https://dansemakula.github.io/figspec/reference/fig_columns.md)
-for a journal's stated widths.
+for a journal's stated widths, and
+[`vignette("figure-systems")`](https://dansemakula.github.io/figspec/articles/figure-systems.md)
+for worked examples with ggplot2, base R, lattice, grid and Plotly.
 
 ## Examples
 

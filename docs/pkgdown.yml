@@ -3,11 +3,13 @@ pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   figspec: figspec.html
+  figure-systems: figure-systems.html
   journals: journals.html
   options: options.html
   panels: panels.html
   registry: registry.html
-last_built: 2026-09-06T05:26Z
+  tables: tables.html
+last_built: 2026-09-06T22:20Z
 urls:
   reference: https://dansemakula.github.io/figspec/reference
   article: https://dansemakula.github.io/figspec/articles

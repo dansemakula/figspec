@@ -23,8 +23,22 @@ spec <- list(
   columns = list(single = 85),
   dpi_min = 96,
   formats = list("png"),
-  font_min_pt = 8
+  font_min_pt = 8,
+  tables = list(
+    formats = "html",
+    font_min_pt = 9,
+    header_bold = TRUE,
+    vertical_rules = FALSE
+  )
 )
+spec_registry <- file.path(getwd(), "installed-smoke-specifications.yml")
+spec_save(spec, spec_registry, id = "installed_smoke")
+stopifnot(
+  file.exists(spec_registry),
+  isTRUE(suppressMessages(registry_validate_file(spec_registry))),
+  identical(spec_load(spec_registry), "installed_smoke")
+)
+spec <- spec_get("installed_smoke")
 plot <- ggplot2::ggplot(
   ggplot2::mpg,
   ggplot2::aes(displ, hwy, colour = class, shape = drv)
@@ -60,6 +74,30 @@ collection <- suppressWarnings(submission_check(
   dpi = 96
 ))
 stopifnot(inherits(collection, "figspec_submission"), nrow(collection) == 2L)
+
+table_output <- file.path(getwd(), "installed-smoke-table.html")
+saved_table <- suppressWarnings(table_save(
+  table_output,
+  ggplot2::mpg[1:20, c("manufacturer", "model", "displ", "hwy")],
+  spec
+))
+table_report <- attr(saved_table, "figspec_table_report")
+stopifnot(
+  file.exists(table_output),
+  file.size(table_output) > 1000,
+  inherits(table_report, "figspec_table_report"),
+  !any(table_report$status %in% c("fail", "invalid"))
+)
+
+mixed <- suppressWarnings(submission_check(
+  list(figure = plot, table = head(ggplot2::mpg)),
+  spec = spec,
+  column = "single"
+))
+stopifnot(
+  identical(mixed$asset, c("figure", "table")),
+  inherits(submission_detail(mixed, "table"), "figspec_table_report")
+)
 stopifnot(
   identical(table_spec("nature")$spec_name, "Nature"),
   identical(media_spec("science")$spec_name, "Science"),

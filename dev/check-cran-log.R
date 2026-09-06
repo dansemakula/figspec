@@ -62,13 +62,25 @@ end <- if (length(end_candidates)) min(end_candidates) - 1L else length(lines)
 body <- trimws(lines[seq.int(start + 1L, end)])
 body <- body[nzchar(body)]
 
+prelaunch_urls <- c(
+  "https://dansemakula.github.io/figspec/",
+  paste0(
+    "https://dansemakula.github.io/figspec/articles/",
+    c("figspec.html", "figure-systems.html", "journals.html", "options.html",
+      "panels.html", "registry.html", "tables.html")
+  )
+)
+prelaunch_sources <- c(
+  "From: DESCRIPTION", "man/figspec-package.Rd", "inst/CITATION",
+  "From: README.md"
+)
+
 allowed <- vapply(body, function(line) {
   grepl("^Maintainer:", line) ||
     identical(line, "New submission") ||
     identical(line, "Found the following (possibly) invalid URLs:") ||
-    grepl("^URL: https://dansemakula[.]github[.]io/figspec(/|$)", line) ||
-    grepl("^From: (DESCRIPTION|README[.]md|man/[A-Za-z0-9_.-]+[.]Rd)$", line) ||
-    grepl("^(DESCRIPTION|README[.]md|man/[A-Za-z0-9_.-]+[.]Rd)$", line) ||
+    sub("^URL: ", "", line) %in% prelaunch_urls ||
+    line %in% prelaunch_sources ||
     identical(line, "Status: 404") ||
     identical(line, "Message: Not Found")
 }, logical(1))

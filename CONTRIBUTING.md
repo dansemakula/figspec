@@ -79,6 +79,11 @@ worse than a narrower one.
 * A new check needs a registry field, a test for the passing case, a test for
   the failing case, and a test that journals stating no such rule raise no
   check at all.
+* Figure and table requirements are reviewed separately. Record table fields
+  under `tables:`. Add a field to `tables_not_stated:` only after checking
+  the relevant guidance and confirming that it is absent; otherwise leave it
+  unreviewed. Use `registry_status()` to confirm that the table-field counts
+  still balance.
 * Prefer reporting to guessing. Several checks deliberately do not exist
   because they would fire on correct figures: axis labels are not required to
   carry units in parentheses, for instance, because a count has no unit.

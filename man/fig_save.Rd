@@ -59,7 +59,7 @@ defaults. A completed recorded plot cannot be restyled and is reported as
 such. Set to \code{FALSE} to preserve the plot exactly as supplied.}
 
 \item{check}{Whether to check the result and report failures as a warning.
-Only checks against a journal when one is given.}
+Compliance is judged only when \code{spec} is supplied.}
 
 \item{art_type}{Resolution category. \code{"auto"} classifies the live plot;
 explicit choices are \code{"colour"}, \code{"bw"}, \code{"line"}, and \code{"combination"}.}
@@ -109,17 +109,14 @@ having to work out what it is.
 }
 
 \section{What \code{column} means}{
-Journals lay their pages out in columns, and state a figure width for each
-one a figure may span. \code{column} selects between the widths that journal
-publishes: \code{"single"} fits one text column, \code{"double"} spans the page, and
-some publishers also state \code{"half"}, \code{"onehalf"} or \code{"triple"}. The names
-and the millimetres both come from the journal, so they differ between
-publishers — Science's single column is 57 mm where Cell Press's is 85 mm.
-Call \code{\link[=fig_columns]{fig_columns()}} to see what a journal offers, and \code{\link[=fig_width]{fig_width()}} for one
-value.
+Specifications can name the widths available for a figure. \code{column} selects
+between them: \code{"single"} often fits one text column and \code{"double"} often
+spans the page, while a project can use names of its own. Both the names and
+measurements come from the selected specification. Call \code{\link[=fig_columns]{fig_columns()}} to
+see the available widths, and \code{\link[=fig_width]{fig_width()}} for one value.
 
-\code{column} is a lookup into a journal's own layout, so it means nothing
-without \code{spec}. Sizing without a specification is what \code{width} is for.
+\code{column} is a lookup into the specification, so it requires \code{spec}. Use
+\code{width} when no specification is needed.
 }
 
 \examples{
@@ -173,5 +170,7 @@ unlink(measured)
 }
 \seealso{
 \code{\link[=fig_panel_size]{fig_panel_size()}} to set a panel size without saving,
-\code{\link[=fig_columns]{fig_columns()}} for a journal's stated widths.
+\code{\link[=fig_columns]{fig_columns()}} for a journal's stated widths, and
+\code{vignette("figure-systems")} for worked examples with ggplot2, base R,
+lattice, grid and Plotly.
 }

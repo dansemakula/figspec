@@ -1,11 +1,9 @@
-# Review a set of figures together
+# Review figures and tables together
 
-Runs
-[`fig_check()`](https://dansemakula.github.io/figspec/reference/fig_check.md)
-over every figure in a collection and returns one summary row per
-figure. Use it to review the figures for a manuscript, report,
-presentation or other project in one place, while retaining the full
-check report for each item.
+Runs the relevant figure or table check over every item in a collection
+and returns one summary row per item. Use it to review a manuscript,
+report, presentation or other project in one place, while retaining
+every complete report.
 
 ## Usage
 
@@ -15,9 +13,10 @@ submission_check(
   spec = NULL,
   column = NULL,
   dpi = NULL,
-  pattern = "\\.(tiff?|png|jpe?g|pdf|eps|ps|svg)$",
+  pattern = "\\.(tiff?|png|jpe?g|pdf|eps|ps|svg|html?|docx|rtf|tex|latex)$",
   recursive = FALSE,
-  art_type = c("auto", "colour", "bw", "line", "combination")
+  art_type = c("auto", "colour", "bw", "line", "combination"),
+  asset_type = c("auto", "figure", "table")
 )
 ```
 
@@ -25,9 +24,8 @@ submission_check(
 
 - x:
 
-  A non-empty list containing only plots, a directory path, or a
-  character vector of figure-file paths. Plot names and file basenames
-  are used in the summary.
+  A non-empty list of supported live figures or tables, a directory
+  path, or a character vector of exported asset paths.
 
 - spec:
 
@@ -49,7 +47,7 @@ submission_check(
 - pattern:
 
   Regular expression selecting files when `x` is a directory. Defaults
-  to common figure extensions.
+  to common figure and table extensions.
 
 - recursive:
 
@@ -64,28 +62,35 @@ submission_check(
   evidence has been lost, it applies the strictest recorded threshold.
   Explicit choices are `"colour"`, `"bw"`, `"line"` and `"combination"`.
 
+- asset_type:
+
+  Whether each item is a figure or table. The default detects live
+  objects and treats HTML, DOCX, RTF and TeX files as tables. A uniquely
+  named vector can classify every item explicitly.
+
 ## Value
 
 An object of class `figspec_submission`: a data frame with one row per
-figure. The full per-requirement reports are kept in the `"reports"`
+item. The full per-requirement reports are kept in the `"reports"`
 attribute.
 
 ## Details
 
-Check plot objects before export and the written files afterwards when
-you can. The plot objects preserve typography, colour mappings and panel
-geometry. The files provide the actual dimensions, resolution, format,
-validity and file size. Raster files cannot preserve editable type-size
-information, so the two checks answer complementary questions.
+Check live figure objects before export and the written files afterwards
+when you can. A live object may preserve styling information that a
+finished file does not. The files provide the actual dimensions,
+resolution, format, validity and file size. Raster files cannot preserve
+editable type-size information, so the two checks answer complementary
+questions.
 
 ## Panel consistency
 
-Given plot objects, this also reports the plot area of each figure.
-Figures that meet the same width requirement still have different plot
-areas when their axis labels differ in length, and on the page that is
-what makes a set look uneven. No publisher states a rule about it, so it
-is never reported as a failure — it is an observation about your own
-figures, and
+For ggplot2-compatible objects, this also reports the plot area of each
+figure. Figures that meet the same width requirement still have
+different plot areas when their axis labels differ in length, and on the
+page that is what makes a set look uneven. No publisher states a rule
+about it, so it is never reported as a failure — it is an observation
+about your own figures, and
 [`fig_save()`](https://dansemakula.github.io/figspec/reference/fig_save.md)
 with a shared `panel_width` from
 [`fig_panel_width()`](https://dansemakula.github.io/figspec/reference/fig_panel_width.md)
@@ -107,15 +112,15 @@ figs$economy
 submission_check(figs, "frontiers")
 #>
 #> ── Submission check - Frontiers journals ───────────────────────────────────────
-#> 2 figures checked
+#> 2 items checked (2 figures, 0 tables)
 #>
-#> ! vehicles                   single  incomplete (5 recorded requirement(s) not judged)
-#> ✖ economy                    single  failed: Line width
+#> ! vehicles                   figure single  incomplete (5 recorded requirement(s) not judged)
+#> ✖ economy                    figure single  failed: Line width
 #>
 #> ℹ Plot areas differ by 5.3 mm across this set (economy 66 mm, vehicles 71.3 mm). No publisher requires them to match, so this is not a failure. To make them match, pass fig_panel_width() to fig_save().
 #>
-#> ✖ 1 figure would fail this specification.
-#> ℹ Some requirements are not on record in this specification, so they were not judged.
+#> ✖ 1 item would fail this specification.
+#> ℹ Some requirements could not be judged automatically. Use submission_detail() to see what remains to be reviewed for each item.
 #> Source: <https://www.frontiersin.org/guidelines/author-guidelines> (verified
 #> 2026-08-21)
 ```

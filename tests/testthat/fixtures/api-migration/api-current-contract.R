@@ -67,6 +67,10 @@ figspec_current_api_contract <- list(
     journals = alist(discipline = NULL),
     load_house_styles = alist(path = , allow_functions = FALSE),
     load_journals = alist(path = ),
+    spec_save = alist(
+      spec = , path = , id = NULL, source_url = NULL,
+      verified_on = NULL, overwrite = FALSE
+    ),
     media_spec = alist(journal = ),
     new_journal_entry = alist(id = , name = , source_url = ),
     refit_journal = alist(
@@ -89,6 +93,12 @@ figspec_current_api_contract <- list(
     submission_detail = alist(x = , file = ),
     suggest_art_type = alist(plot = , journal = NULL),
     table_spec = alist(journal = ),
+    table_apply_spec = alist(table = , spec = ),
+    table_check = alist(x = , spec = NULL),
+    table_save = alist(
+      filename = , table = , spec = NULL, transform = TRUE,
+      check = TRUE, ... =
+    ),
     tag_panels = alist(
       plot = , journal = NULL, level = NULL, open = "(", close = ")",
       strips = FALSE, x = -Inf, y = Inf, hjust = -0.6, vjust = 1.4, ... =
@@ -104,7 +114,8 @@ figspec_current_api_contract <- list(
     "plot.figspec_geometry", "print.figspec_abstract_spec",
     "print.figspec_geometry", "print.figspec_media_spec",
     "print.figspec_report", "print.figspec_sources", "print.figspec_spec",
-    "print.figspec_submission", "print.figspec_table_spec"
+    "print.figspec_submission", "print.figspec_table_report",
+    "print.figspec_table_spec"
   ),
   exact_aliases = c(
     check_color_safety = "check_colour_safety",
@@ -126,6 +137,36 @@ figspec_current_api_contract <- list(
   submission_attributes = c(
     "names", "row.names", "class", "reports", "journal", "source_url",
     "verified_on", "from_plots"
+  ),
+  submission_columns = c(
+    "file", "asset", "column", "result", "failed", "unresolved",
+    "unspecified", "panel_mm"
+  ),
+  table_report_attributes = c(
+    "names", "row.names", "class", "no_spec", "spec_name", "spec_id",
+    "source_url", "verified_on", "publication_stage", "input",
+    "table_system"
+  ),
+  spec_list_columns = c(
+    "id", "name", "publisher", "disciplines", "single_mm", "double_mm",
+    "dpi_min", "font_min_pt", "max_file_mb", "table_requirements",
+    "publication_stage", "verified_on", "origin"
+  ),
+  registry_status_columns = c(
+    "id", "verified_on", "age_days", "stale", "stated",
+    "confirmed_absent", "unharvested", "table_stated",
+    "table_confirmed_absent", "table_unreviewed", "origin"
+  ),
+  table_report_columns = c("check", "requirement", "actual", "status"),
+  table_status_values = c("pass", "fail", "unspecified", "unknown", "invalid"),
+  submission_result_values = c(
+    "pass", "fail", "incomplete", "invalid", "inspection"
+  ),
+  table_registry_fields = c(
+    "formats", "editable", "orientation", "width_max_mm", "font_families",
+    "font_min_pt", "font_max_pt", "title_style", "title_position",
+    "header_bold", "vertical_rules", "horizontal_rules", "decimal_alignment",
+    "footnotes", "abbreviations", "repeat_header", "split_rows"
   ),
   asset_spec_name_field = "journal",
   table_spec_fields = c(

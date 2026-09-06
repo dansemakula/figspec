@@ -2,9 +2,13 @@
 
 Publications, organisations and projects may set separate requirements
 for tables, including orientation, titles, notes and permitted file
-types. `table_spec()` returns the recorded instructions so they can be
-consulted while the table is still being prepared. It does not claim to
-verify rules that require editorial judgement.
+types. `table_spec()` returns the recorded instructions used by
+[`table_apply_spec()`](https://dansemakula.github.io/figspec/reference/table_apply_spec.md),
+[`table_save()`](https://dansemakula.github.io/figspec/reference/table_save.md)
+and
+[`table_check()`](https://dansemakula.github.io/figspec/reference/table_check.md).
+Rules that require editorial judgement remain visible but are not
+claimed as verified.
 
 ## Usage
 

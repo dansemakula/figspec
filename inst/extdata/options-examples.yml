@@ -1168,8 +1168,9 @@ style_save:
   arguments:
     path:
       prose: >-
-        Choose where the RDS file should be written. Existing files at that
-        path are replaced, so use a project-controlled location.
+        Choose a project-controlled .rds file. figspec writes and validates a
+        temporary copy before replacing an existing file, and it refuses
+        directories and symbolic links.
       code: |-
         saved_path <- style_save(
           path = style_file
@@ -1210,7 +1211,8 @@ style_load:
   arguments:
     path:
       prose: >-
-        Load an RDS file created by style_save(). Use only files you
+        Load an RDS file created by style_save(). The file must be non-empty,
+        no larger than 10 MB and contain valid named styles. Use only files you
         created or received through a source you trust.
       code: |-
         loaded_names <- style_load(
@@ -2652,6 +2654,170 @@ spec_register:
         profile_row
       result: The registry listing shows the publication name, publisher, health and statistics disciplines, all-stage scope and user origin recorded by the additional fields.
 
+spec_save:
+  introduction: >-
+    Save a publication, project or organisational specification in a YAML file
+    that figspec can load in later R sessions. figspec validates the complete
+    file before replacing anything, so a failed update leaves the previous
+    registry intact.
+  setup: |-
+    reusable_spec <- list(
+      name = "Research unit report",
+      columns = list(full = 160),
+      dpi_min = 300,
+      formats = c("png", "pdf"),
+      font_min_pt = 9,
+      tables = list(
+        formats = c("html", "docx"),
+        font_min_pt = 9,
+        header_bold = TRUE,
+        vertical_rules = FALSE
+      )
+    )
+
+    spec_output_dir <- tempfile("figspec-spec-save-")
+    dir.create(spec_output_dir)
+  arguments:
+    spec:
+      prose: >-
+        Supply a registry id, a specification returned by spec_get() or a named
+        list of your own requirements. Figure and table requirements are stored
+        together and retain their separate structure.
+      code: |-
+        specification_file <- file.path(
+          spec_output_dir,
+          "saved-list.yml"
+        )
+        spec_save(
+          reusable_spec,
+          specification_file,
+          id = "research_unit_report"
+        )
+        saved_entry <- yaml::read_yaml(
+          specification_file,
+          eval.expr = FALSE
+        )$specifications[[1]]
+
+        c(
+          name = saved_entry$name,
+          figure_width_mm = saved_entry$requirements$columns$full,
+          table_font_pt = saved_entry$tables$font_min_pt
+        )
+      result: The saved entry retains the report name, its 160 mm figure width and its 9 pt table-text requirement in one validated file.
+    path:
+      prose: >-
+        Choose a .yaml or .yml file in an existing directory. Keep it with the
+        project or in a shared version-controlled folder, then pass the same
+        path to spec_load() when an R session starts.
+      code: |-
+        project_registry <- file.path(
+          spec_output_dir,
+          "project-specifications.yml"
+        )
+        saved_path <- spec_save(
+          reusable_spec,
+          project_registry,
+          id = "project_report"
+        )
+
+        c(
+          path = saved_path,
+          exists = file.exists(saved_path),
+          valid = suppressMessages(
+            registry_validate_file(saved_path)
+          )
+        )
+      result: figspec creates project-specifications.yml, validates it and returns the supplied path invisibly.
+    id:
+      prose: >-
+        Give the specification a short stable identifier. This is the name used
+        in later calls after spec_load(); lower-case letters, numbers and
+        underscores are accepted.
+      code: |-
+        id_file <- file.path(spec_output_dir, "id-example.yml")
+        spec_save(
+          reusable_spec,
+          id_file,
+          id = "quarterly_report"
+        )
+        spec_load(id_file)
+
+        loaded_spec <- spec_get("quarterly_report")
+        c(id = loaded_spec$id, name = loaded_spec$name)
+      result: The YAML entry is loaded under quarterly_report while reports display the readable name Research unit report.
+    source_url:
+      prose: >-
+        Record where the requirements came from. Use a public HTTP or HTTPS
+        page when one exists, a file: address for a controlled local document,
+        or an internal: label for an organisational decision. If this argument
+        and the specification both omit a source, figspec records internal:id.
+      code: |-
+        source_file <- file.path(spec_output_dir, "source-example.yml")
+        spec_save(
+          reusable_spec,
+          source_file,
+          id = "methods_handbook",
+          source_url = "internal:methods-handbook-v3"
+        )
+        yaml::read_yaml(
+          source_file,
+          eval.expr = FALSE
+        )$specifications[[1]]$source_url
+      result: The reusable entry records internal:methods-handbook-v3 instead of implying that its requirements came from a publisher.
+    verified_on:
+      prose: >-
+        Record when the source or internal requirements were last checked. Use
+        a Date or a real date in YYYY-MM-DD form. If it is omitted everywhere,
+        figspec records the day the specification is saved.
+      code: |-
+        dated_file <- file.path(spec_output_dir, "dated-example.yml")
+        review_date <- Sys.Date() - 30
+        spec_save(
+          reusable_spec,
+          dated_file,
+          id = "reviewed_report",
+          verified_on = review_date
+        )
+        yaml::read_yaml(
+          dated_file,
+          eval.expr = FALSE
+        )$specifications[[1]]$verified_on
+      result: The YAML file retains the supplied review date in YYYY-MM-DD form so users can see when the requirements were last checked.
+    overwrite:
+      prose: >-
+        Leave overwrite as FALSE to prevent an existing id from being replaced
+        accidentally. Set it to TRUE only when deliberately updating that
+        specification; every other entry in the file is preserved.
+      code: |-
+        update_file <- file.path(spec_output_dir, "updates.yml")
+        spec_save(
+          reusable_spec,
+          update_file,
+          id = "annual_report"
+        )
+        spec_save(
+          list(name = "Poster format", columns = list(full = 900)),
+          update_file,
+          id = "conference_poster"
+        )
+        spec_save(
+          c(reusable_spec, list(notes = "Reviewed for the new report cycle")),
+          update_file,
+          id = "annual_report",
+          overwrite = TRUE
+        )
+
+        updated_ids <- vapply(
+          yaml::read_yaml(
+            update_file,
+            eval.expr = FALSE
+          )$specifications,
+          function(entry) entry$id,
+          character(1)
+        )
+        updated_ids
+      result: annual_report is deliberately replaced and conference_poster remains in the same file; without overwrite = TRUE, figspec refuses the duplicate id.
+
 spec_load:
   introduction: >-
     Load one or more reusable specifications from a YAML file maintained by a
@@ -2667,7 +2833,7 @@ spec_load:
 
     yaml::write_yaml(
       list(
-        journals = list(
+        specifications = list(
           list(
             id = "research_unit_report",
             name = "Research Unit Report",
@@ -2770,9 +2936,10 @@ spec_load:
 
 submission_check:
   introduction: >-
-    Review a collection of figures in one operation. A concise summary shows
-    which figures pass, fail or still need information, while the complete
-    report for every figure remains available for closer inspection.
+    Review figures and tables in one operation. A concise summary identifies
+    each item and shows whether it passes, fails, needs more information or was
+    inspected without a specification. The complete report for every item
+    remains available for closer inspection.
   setup: |-
     library(ggplot2)
 
@@ -2872,10 +3039,11 @@ submission_check:
   arguments:
     x:
       prose: >-
-        Supply a named list of live plots, one directory, or a character vector
-        of saved-file paths. The example checks three plots containing 234,
-        574 and 53,940 observations, exports them at their assigned widths and
-        then checks the written files as a second, complementary review.
+        Supply a named list of live figures and tables, one directory, or a
+        character vector of saved-file paths. The example checks three plots
+        containing 234, 574 and 53,940 observations, exports them at their
+        assigned widths and then checks the written files as a second,
+        complementary review.
       code: |-
         plot_review <- submission_check(
           figures,
@@ -3118,14 +3286,44 @@ submission_check:
           line_art = line_resolution
         )
       result: At 300 dpi the colour interpretation passes Cell Press's 300 dpi rule, while the line-art interpretation fails its stricter 1,000 dpi rule.
+    asset_type:
+      prose: >-
+        Leave asset_type as auto for ordinary use. figspec recognises supported
+        live figures and tables and recognises HTML, DOCX, RTF and TeX files as
+        tables. Name each value when an image or PDF contains a table and the
+        file type alone cannot reveal that.
+      code: |-
+        mixed_spec <- list(
+          name = "Research report",
+          columns = list(single = 85),
+          dpi_min = 300,
+          formats = "png",
+          tables = list(
+            font_min_pt = 9,
+            header_bold = TRUE
+          )
+        )
+        mixed_review <- submission_check(
+          list(
+            figure = vehicles_plot,
+            table = head(mpg)
+          ),
+          spec = mixed_spec,
+          column = "single",
+          asset_type = "auto"
+        )
+
+        mixed_review[, c("file", "asset", "result")]
+      result: The summary identifies the ggplot as a figure and the data frame as a table, then sends each item through the checks that apply to that kind of asset.
 
 submission_detail:
   introduction: >-
-    A collection review is intentionally brief. Open one figure's full report
-    when you need to see why it failed, which values were measured or which
-    requirements could not be assessed. This example checks two plots made
-    from all 234 rows of ggplot2's mpg data. The second plot deliberately uses
-    text below the project's minimum so there is a real problem to diagnose.
+    A collection review is intentionally brief. Open one figure or table's
+    full report when you need to see why it failed, which values were measured
+    or which requirements could not be assessed. This example checks two plots
+    made from all 234 rows of ggplot2's mpg data. The second plot deliberately
+    uses text below the project's minimum so there is a real problem to
+    diagnose.
   setup: |-
     library(ggplot2)
 
@@ -3178,7 +3376,7 @@ submission_detail:
       prose: >-
         Pass the complete result from submission_check(). Keep that object
         intact: it contains the short summary you can see and the full report
-        stored for each figure.
+        stored for each figure or table.
       code: |-
         ready_detail <- submission_detail(
           x = detail_review,
@@ -3190,7 +3388,7 @@ submission_detail:
     file:
       prose: >-
         Choose one name exactly as it appears in the summary's file column.
-        For a named list of plots this is the list name; for saved figures it
+        For a named list this is the item name; for saved figures or tables it
         is the displayed file name.
       code: |-
         problem_detail <- submission_detail(
@@ -3463,10 +3661,10 @@ fig_refit:
 
 table_spec:
   introduction: >-
-    Table instructions are usually editorial rather than measurements that can
-    be verified automatically. This lookup keeps them beside the figure
-    requirements so the same source and review date remain visible while a
-    manuscript, report or presentation is being prepared.
+    Retrieve the table requirements recorded for a publication, project or
+    organisation. Measurable fields can be passed directly to the table build,
+    export and check workflow; editorial instructions remain visible for
+    review with the same source and review date.
   setup: |-
     custom_table_spec <- list(
       name = "Annual research report",
@@ -3497,6 +3695,262 @@ table_spec:
           project = report_table_rules
         )
       result: The publication lookup returns Nature's recorded table instructions, while the project lookup returns the portrait orientation, title placement and abbreviation note defined in the local specification.
+
+table_apply_spec:
+  introduction: >-
+    Apply measurable table requirements while the table is still editable.
+    Data frames and matrices become gt tables; gt, flextable, kableExtra and
+    grid tables remain in their own table systems.
+  setup: |-
+    table_project_spec <- list(
+      name = "Research report",
+      source_url = "internal:report-table-guide",
+      verified_on = as.character(Sys.Date()),
+      tables = list(
+        formats = c("html", "docx"),
+        orientation = "portrait",
+        font_families = "Arial",
+        font_min_pt = 9,
+        header_bold = TRUE,
+        vertical_rules = FALSE,
+        horizontal_rules = "minimal",
+        repeat_header = TRUE
+      )
+    )
+    vehicle_table <- ggplot2::mpg[1:12, c(
+      "manufacturer", "model", "displ", "year", "hwy"
+    )]
+  arguments:
+    table:
+      prose: >-
+        Supply a data frame, matrix, gt table, flextable, kableExtra table or
+        grid table. The example uses twelve real vehicle records and keeps all
+        five selected columns.
+      code: |-
+        styled_vehicle_table <- table_apply_spec(
+          table = vehicle_table,
+          spec = table_project_spec
+        )
+
+        styled_vehicle_table
+      result: The data frame becomes an editable gt table containing the same 12 rows and five columns.
+    spec:
+      prose: >-
+        Supply a specification with a tables section. figspec applies the
+        stated type size, font, header emphasis, rules and width where the
+        selected table system exposes them.
+      code: |-
+        styled_for_report <- table_apply_spec(
+          vehicle_table,
+          spec = table_project_spec
+        )
+        table_check(
+          styled_for_report,
+          spec = table_project_spec
+        )
+      result: The live-table report confirms the applied 9 pt type, bold header, minimal horizontal rules and absence of vertical rules; repeated headers remain output-format dependent.
+
+table_save:
+  introduction: >-
+    Export a table through its own table system, reopen the completed file and
+    keep the live-object and file checks together. A temporary file is promoted
+    only after the renderer succeeds and, when checking is enabled, the file is
+    confirmed to be structurally valid.
+  setup: |-
+    table_save_spec <- list(
+      name = "Research report",
+      source_url = "internal:report-table-guide",
+      verified_on = as.character(Sys.Date()),
+      tables = list(
+        formats = "html",
+        font_min_pt = 9,
+        header_bold = TRUE,
+        vertical_rules = FALSE
+      )
+    )
+    table_for_export <- ggplot2::mpg[1:20, c(
+      "manufacturer", "model", "displ", "hwy"
+    )]
+    table_output_dir <- tempfile("figspec-table-options-")
+    dir.create(table_output_dir)
+  arguments:
+    filename:
+      prose: >-
+        Give a path whose extension names the required table format. The
+        example writes into a directory with a space to exercise an ordinary
+        real-world path.
+      code: |-
+        html_table_path <- file.path(
+          table_output_dir,
+          "vehicle summary.html"
+        )
+        saved_html_table <- table_save(
+          filename = html_table_path,
+          table = table_for_export,
+          spec = table_save_spec
+        )
+
+        file.exists(saved_html_table)
+      result: A non-empty HTML table is written at the requested path and TRUE is returned.
+    table:
+      prose: >-
+        Supply the editable table object. This example starts from 20 rows of
+        mpg data; the written HTML is then reopened rather than inferred from
+        the input object.
+      code: |-
+        second_table_path <- file.path(
+          table_output_dir,
+          "second-table.html"
+        )
+        saved_second_table <- table_save(
+          second_table_path,
+          table = table_for_export,
+          spec = table_save_spec
+        )
+        attr(
+          saved_second_table,
+          "figspec_table_report"
+        )
+      result: The returned report includes a passing HTML format check from the file and styling checks from the editable table.
+    spec:
+      prose: >-
+        Use a bundled or project specification with table requirements. Leave
+        it NULL to export without transforming or assigning compliance
+        decisions.
+      code: |-
+        specified_table_path <- file.path(
+          table_output_dir,
+          "specified-table.html"
+        )
+        specified_table <- table_save(
+          specified_table_path,
+          table_for_export,
+          spec = table_save_spec
+        )
+
+        attr(specified_table, "figspec_table_report")
+      result: The table is styled, exported and checked against the project specification in one call.
+    transform:
+      prose: >-
+        TRUE applies supported requirements before export. FALSE preserves an
+        already prepared table and still allows the completed file to be
+        checked.
+      code: |-
+        prepared_table <- table_apply_spec(
+          table_for_export,
+          table_save_spec
+        )
+        preserved_table_path <- file.path(
+          table_output_dir,
+          "preserved-table.html"
+        )
+        preserved_table <- table_save(
+          preserved_table_path,
+          prepared_table,
+          spec = table_save_spec,
+          transform = FALSE
+        )
+
+        attr(preserved_table, "figspec_table_report")
+      result: The existing table styling is preserved and both live and file evidence remain in the report.
+    check:
+      prose: >-
+        TRUE reopens the completed file and attaches its report. Set FALSE only
+        when export is wanted without verification.
+      code: |-
+        unchecked_table_path <- file.path(
+          table_output_dir,
+          "unchecked-table.html"
+        )
+        unchecked_table <- table_save(
+          unchecked_table_path,
+          table_for_export,
+          spec = table_save_spec,
+          check = FALSE
+        )
+
+        is.null(attr(
+          unchecked_table,
+          "figspec_table_report"
+        ))
+      result: The file is written and TRUE confirms that no report was attached.
+    ...:
+      prose: >-
+        Named extra values are passed to the selected table exporter. Use them
+        only for options understood by that backend.
+      code: |-
+        exporter_table_path <- file.path(
+          table_output_dir,
+          "exporter-table.html"
+        )
+        exporter_table <- table_save(
+          exporter_table_path,
+          table_for_export,
+          spec = table_save_spec,
+          inline_css = TRUE
+        )
+
+        file.exists(exporter_table)
+      result: The gt exporter receives the named inline-CSS option and writes the HTML table.
+
+table_check:
+  introduction: >-
+    Check an editable R table or a completed table file. The two inputs retain
+    different evidence, so table_save combines them when both are available.
+  setup: |-
+    table_check_spec <- list(
+      name = "Research report",
+      source_url = "internal:report-table-guide",
+      verified_on = as.character(Sys.Date()),
+      tables = list(
+        formats = "html",
+        font_min_pt = 9,
+        header_bold = TRUE,
+        vertical_rules = FALSE
+      )
+    )
+    table_check_data <- ggplot2::mpg[1:10, c(
+      "manufacturer", "model", "displ", "hwy"
+    )]
+  arguments:
+    x:
+      prose: >-
+        Supply a live supported table or one HTML, DOCX, RTF, TeX, PDF, PNG or
+        JPEG path. The example checks a styled table containing ten real rows.
+      code: |-
+        check_ready_table <- table_apply_spec(
+          table_check_data,
+          table_check_spec
+        )
+        live_table_report <- table_check(
+          x = check_ready_table,
+          spec = table_check_spec
+        )
+
+        live_table_report
+      result: The report verifies the measurable styling retained by the live gt table and leaves the future file format unresolved.
+    spec:
+      prose: >-
+        Supply the table specification used to decide pass, fail and unresolved
+        results. NULL produces an inspection without claiming compliance.
+      code: |-
+        inspection_report <- table_check(
+          table_check_data,
+          spec = NULL
+        )
+        specified_report <- table_check(
+          table_apply_spec(
+            table_check_data,
+            table_check_spec
+          ),
+          spec = table_check_spec
+        )
+
+        list(
+          inspection = inspection_report,
+          specified = specified_report
+        )
+      result: The inspection has no compliance verdict; the specified check evaluates the requirements that the live table exposes.
 
 media_spec:
   introduction: >-

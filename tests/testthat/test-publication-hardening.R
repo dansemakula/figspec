@@ -86,18 +86,44 @@ test_that("automatic art type uses the plot and the saved-file fallback is conse
     fig_check(out, "cell_press", dpi = 300)$check == "Resolution"], "fail")
 })
 
-test_that("fig_save merges plot and file evidence", {
+test_that("fig_save transforms by default and can verify without transforming", {
   skip_if_not_installed("ragg")
   p <- ggplot2::ggplot(datasets::mtcars,
                        ggplot2::aes(wt, mpg, colour = factor(cyl))) +
     ggplot2::geom_point() + ggplot2::labs(title = "Fuel economy")
-  out <- tempfile(fileext = ".tiff"); on.exit(unlink(out))
-  saved <- suppressWarnings(fig_save(out, p, "cell_press", column = "single",
-                                     art_type = "colour", check = TRUE))
-  report <- attr(saved, "figspec_report")
-  expect_s3_class(report, "figspec_report")
-  expect_equal(report$status[report$check == "Type size"], "fail")
-  expect_equal(report$status[report$check == "Colour pairs"], "fail")
+  transformed_out <- tempfile(fileext = ".tiff")
+  unchanged_out <- tempfile(fileext = ".tiff")
+  on.exit(unlink(c(transformed_out, unchanged_out)))
+
+  transformed <- suppressWarnings(fig_save(
+    transformed_out, p, "cell_press", column = "single",
+    art_type = "colour", check = TRUE
+  ))
+  transformed_report <- attr(transformed, "figspec_report")
+  expect_s3_class(transformed_report, "figspec_report")
+  expect_equal(
+    transformed_report$status[transformed_report$check == "Type size"],
+    "pass"
+  )
+  expect_equal(
+    transformed_report$status[transformed_report$check == "Colour pairs"],
+    "pass"
+  )
+
+  unchanged <- suppressWarnings(fig_save(
+    unchanged_out, p, "cell_press", column = "single",
+    art_type = "colour", transform = FALSE, check = TRUE
+  ))
+  unchanged_report <- attr(unchanged, "figspec_report")
+  expect_s3_class(unchanged_report, "figspec_report")
+  expect_equal(
+    unchanged_report$status[unchanged_report$check == "Type size"],
+    "fail"
+  )
+  expect_equal(
+    unchanged_report$status[unchanged_report$check == "Colour pairs"],
+    "fail"
+  )
 })
 
 test_that("PLOS TIFF export satisfies format-specific requirements", {

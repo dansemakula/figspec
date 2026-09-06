@@ -9,13 +9,13 @@ template:
     code_font: {google: "JetBrains Mono"}
 
 home:
-  title: Build, export and verify figures against a specification
+  title: Build, export and verify figures and tables against a specification
   description: >
     figspec enables researchers and other R users to build, export and verify
-    figures against requirements from journals, house styles and individual
-    projects. It applies specifications while a figure is still editable,
-    checks the exported result and clearly reports anything that needs
-    attention or cannot be determined.
+    figures and tables against requirements from publications, organisations
+    and individual projects. It applies supported requirements while the work
+    is still editable, checks the exported result and clearly reports anything
+    that needs attention or cannot be determined.
 
 navbar:
   structure:
@@ -33,8 +33,12 @@ navbar:
       - text: -------
       - text: Getting started with figspec
         href: articles/figspec.html
+      - text: Use figspec with different R plotting systems
+        href: articles/figure-systems.html
       - text: Control figure and panel dimensions
         href: articles/panels.html
+      - text: Build and check tables from R
+        href: articles/tables.html
       - text: Find and use publication specifications
         href: articles/journals.html
       - text: Choose, verify and add specifications
@@ -50,7 +54,9 @@ articles:
     working on. Each guide uses real data and runnable examples.
   contents:
   - figspec
+  - figure-systems
   - panels
+  - tables
   - journals
   - registry
   - options
@@ -114,16 +120,22 @@ reference:
 - title: Find and use specifications
   desc: >
     Browse the included publisher and journal profiles, inspect their recorded
-    requirements, retrieve stated widths, or load requirements maintained by
-    your own team. A specification can be a registry profile or a named set of
-    requirements supplied directly in R.
-  contents: [spec_list, spec_get, fig_width, fig_columns, spec_register, spec_load]
+    requirements, retrieve stated widths, or save and load requirements
+    maintained by your own team. A specification can be a registry profile or
+    a named set of requirements supplied directly in R.
+  contents: [spec_list, spec_get, fig_width, fig_columns, spec_register, spec_save, spec_load]
 - title: Check collections and publication assets
   desc: >
-    Review several figures together, choose the appropriate resolution rule,
-    adapt a figure set to another destination, and inspect requirements for
-    tables, supplementary media and graphical abstracts.
-  contents: [submission_check, submission_detail, fig_suggest_art_type, fig_refit, table_spec, media_spec, media_check, graphical_abstract_spec]
+    Review figures and tables together, choose the appropriate resolution
+    rule, adapt a figure set to another destination, and inspect requirements
+    for supplementary media and graphical abstracts.
+  contents: [submission_check, submission_detail, fig_suggest_art_type, fig_refit, media_spec, media_check, graphical_abstract_spec]
+- title: Build, export and check tables
+  desc: >
+    Apply table requirements to data frames and tables made with gt,
+    flextable, kableExtra or grid; export through the table's own system; and
+    verify the editable object together with the completed file.
+  contents: [table_spec, table_apply_spec, table_save, table_check]
 - title: R Markdown and Quarto
   desc: >
     Carry the same dimensions and output requirements into reproducible

@@ -3,9 +3,9 @@
 This is the first public release of figspec.
 
 figspec enables researchers and other R users to build, export and verify
-figures against the specifications their work must meet. A specification can
-come from a journal, a publisher, a house style, an organisation or the needs
-of a particular project.
+figures and tables against the specifications their work must meet. A
+specification can come from a journal, a publisher, a house style, an
+organisation or the needs of a particular project.
 
 ## Build and export figures to a specification
 
@@ -30,9 +30,9 @@ of a particular project.
   dimensions, resolution, format, file validity, typography, line weights,
   colour use, visual distinction, panel labels, axes, number formatting and
   relevant properties of raster and vector files.
-* `submission_check()` reviews several plots or saved files together.
-  `submission_detail()` opens the complete report for any one figure in the
-  collection.
+* `submission_check()` reviews figures and tables, as live objects or saved
+  files, together. `submission_detail()` opens the complete report for any one
+  item in the collection.
 * `fig_suggest_art_type()` helps select the appropriate resolution category for
   colour, greyscale, line or combination artwork while keeping the recorded
   source guidance visible.
@@ -75,6 +75,11 @@ compositions, allowing every panel to retain a deliberate physical size.
 
 ## Use publication requirements or create your own
 
+* `spec_save()` writes project, organisational or publication specifications
+  to a validated YAML registry for reuse. It appends new ids, requires explicit
+  permission before replacing an existing id and leaves the previous file
+  intact if the updated registry cannot be written or validated.
+
 The bundled registry contains 29 carefully sourced profiles. Twenty-two cover
 publisher-wide guidance and therefore apply across large journal portfolios;
 seven record requirements for individual journals that publish their own
@@ -91,6 +96,21 @@ University Press, Cell Press, BMJ, Frontiers and IEEE.
   session. `spec_load()` loads reusable specifications from a YAML file.
 * House styles can be registered, saved and reloaded independently of
   publication requirements.
+
+## Build, export and verify tables
+
+* `table_apply_spec()` applies measurable table requirements to data frames,
+  matrices and tables made with gt, flextable, kableExtra or grid while they
+  remain editable.
+* `table_save()` exports through the table's own system, checks the completed
+  HTML, DOCX, RTF, TeX, PDF or image file when that format is supported, and
+  replaces an existing output only after rendering succeeds and the result is
+  structurally valid.
+* `table_check()` combines evidence retained by the editable object with
+  evidence recovered from the written file. Rules needing editorial judgement
+  remain unresolved instead of being reported as passes.
+* `submission_check()` now accepts mixed collections of figures and tables
+  and labels each item in its summary.
 * `table_spec()`, `media_spec()` and `graphical_abstract_spec()` retrieve the
   separate requirements recorded for tables, supplementary media and graphical
   abstracts.

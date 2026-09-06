@@ -18,8 +18,10 @@ spec_load(path)
 - path:
 
   Path to a non-empty YAML registry file. The file may contain a
-  top-level `journals:` list, like figspec's bundled registry, or be the
-  list of entries itself.
+  top-level `specifications:` list written by
+  [`spec_save()`](https://dansemakula.github.io/figspec/reference/spec_save.md),
+  the legacy `journals:` list used by figspec's bundled registry, or be
+  the list of entries itself.
 
 ## Value
 
@@ -40,6 +42,8 @@ leave a partly updated session.
 
 ## See also
 
+[`spec_save()`](https://dansemakula.github.io/figspec/reference/spec_save.md)
+to write reusable entries,
 [`spec_register()`](https://dansemakula.github.io/figspec/reference/spec_register.md)
 to add one entry directly in R and
 [`registry_validate_file()`](https://dansemakula.github.io/figspec/reference/registry_validate_file.md)

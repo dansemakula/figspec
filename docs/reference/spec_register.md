@@ -80,8 +80,10 @@ decision, use an `internal:` identifier such as
 
 ## See also
 
+[`spec_save()`](https://dansemakula.github.io/figspec/reference/spec_save.md)
+to write a reusable YAML registry,
 [`spec_load()`](https://dansemakula.github.io/figspec/reference/spec_load.md)
-to load reusable entries from YAML and
+to load reusable entries and
 [`registry_entry_template()`](https://dansemakula.github.io/figspec/reference/registry_entry_template.md)
 to create a registry template.
 

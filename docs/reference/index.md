@@ -83,9 +83,9 @@ the choices in a real plot.
 ## Find and use specifications
 
 Browse the included publisher and journal profiles, inspect their
-recorded requirements, retrieve stated widths, or load requirements
-maintained by your own team. A specification can be a registry profile
-or a named set of requirements supplied directly in R.
+recorded requirements, retrieve stated widths, or save and load
+requirements maintained by your own team. A specification can be a
+registry profile or a named set of requirements supplied directly in R.
 
 - [`spec_list()`](https://dansemakula.github.io/figspec/reference/spec_list.md)
   : Browse available specification profiles
@@ -97,31 +97,46 @@ or a named set of requirements supplied directly in R.
   : List the available figure widths
 - [`spec_register()`](https://dansemakula.github.io/figspec/reference/spec_register.md)
   : Register a publication specification for this session
+- [`spec_save()`](https://dansemakula.github.io/figspec/reference/spec_save.md)
+  : Save a specification for reuse
 - [`spec_load()`](https://dansemakula.github.io/figspec/reference/spec_load.md)
   : Load specifications from a YAML registry
 
 ## Check collections and publication assets
 
-Review several figures together, choose the appropriate resolution rule,
-adapt a figure set to another destination, and inspect requirements for
-tables, supplementary media and graphical abstracts.
+Review figures and tables together, choose the appropriate resolution
+rule, adapt a figure set to another destination, and inspect
+requirements for supplementary media and graphical abstracts.
 
 - [`submission_check()`](https://dansemakula.github.io/figspec/reference/submission_check.md)
-  : Review a set of figures together
+  : Review figures and tables together
 - [`submission_detail()`](https://dansemakula.github.io/figspec/reference/submission_detail.md)
-  : Open the full report for one figure
+  : Open the full report for one submission item
 - [`fig_suggest_art_type()`](https://dansemakula.github.io/figspec/reference/fig_suggest_art_type.md)
   : Choose a resolution category for a figure
 - [`fig_refit()`](https://dansemakula.github.io/figspec/reference/fig_refit.md)
   : Re-export a figure set for a new specification
-- [`table_spec()`](https://dansemakula.github.io/figspec/reference/table_spec.md)
-  : Look up table requirements
 - [`media_spec()`](https://dansemakula.github.io/figspec/reference/media_spec.md)
   : Look up supplementary media requirements
 - [`media_check()`](https://dansemakula.github.io/figspec/reference/media_check.md)
   : Verify a supplementary media file
 - [`graphical_abstract_spec()`](https://dansemakula.github.io/figspec/reference/graphical_abstract_spec.md)
   : Look up graphical abstract requirements
+
+## Build, export and check tables
+
+Apply table requirements to data frames and tables made with gt,
+flextable, kableExtra or grid; export through the table’s own system;
+and verify the editable object together with the completed file.
+
+- [`table_spec()`](https://dansemakula.github.io/figspec/reference/table_spec.md)
+  : Look up table requirements
+- [`table_apply_spec()`](https://dansemakula.github.io/figspec/reference/table_apply_spec.md)
+  : Apply a specification to a table
+- [`table_save()`](https://dansemakula.github.io/figspec/reference/table_save.md)
+  : Export and verify a table
+- [`table_check()`](https://dansemakula.github.io/figspec/reference/table_check.md)
+  : Verify a table against a specification
 
 ## R Markdown and Quarto
 

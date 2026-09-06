@@ -22,7 +22,9 @@ fig_preview(
 
 - plot:
 
-  Plot to preview. Defaults to the last plot displayed.
+  Figure to preview. Accepts the same live figure inputs as
+  [`fig_save()`](https://dansemakula.github.io/figspec/reference/fig_save.md)
+  and defaults to the last ggplot2 plot displayed.
 
 - spec:
 

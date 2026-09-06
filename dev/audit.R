@@ -25,6 +25,7 @@ topic_of <- local({
 })
 
 gaps <- 0L
+site_mode <- "--site" %in% commandArgs(trailingOnly = TRUE)
 chk <- function(label, missing) {
   ok <- length(missing) == 0L
   cat(sprintf("  %-46s %s%s\n", label, if (ok) "ok" else "GAP  ",
@@ -66,7 +67,7 @@ chk("the options page has no unknown functions", setdiff(options_names, ex))
 chk("each options-page function appears once", unique(options_names[duplicated(options_names)]))
 
 site_index <- "docs/reference/index.html"
-if (file.exists(site_index)) {
+if (site_mode && file.exists(site_index)) {
   idx <- paste(readLines(site_index, warn = FALSE), collapse = "\n")
   linked <- gsub('href="|\\.html"', "",
                  regmatches(idx, gregexpr('href="[a-zA-Z0-9_.]+\\.html"', idx))[[1]])
@@ -80,7 +81,7 @@ if (file.exists(site_index)) {
   expected_site_topics <- unique(c("index", rd_topics, names(alias_owner)))
   chk("no obsolete reference pages remain",
       setdiff(site_topics, expected_site_topics))
-} else if ("--site" %in% commandArgs(trailingOnly = TRUE)) {
+} else if (site_mode) {
   chk("the built site has a reference index", site_index)
 }
 
@@ -93,17 +94,43 @@ chk("each pkgdown topic is grouped once", unique(listed[duplicated(listed)]))
 
 nav <- sub("\\.html$", "", sub("^articles/", "",
            unlist(lapply(y$navbar$components$guides$menu, function(m) m$href))))
+vignette_files <- list.files("vignettes", pattern = "[.]Rmd$", full.names = TRUE)
 chk("every vignette is in the navbar",
-    setdiff(sub("[.]Rmd$", "", basename(list.files("vignettes", pattern = "[.]Rmd$"))), nav))
+    setdiff(sub("[.]Rmd$", "", basename(vignette_files)), nav))
+bad_chunk_fences <- basename(vignette_files[vapply(vignette_files, function(path) {
+  any(grepl("^~~~\\{r(?:[ ,}]|$)", readLines(path, warn = FALSE), perl = TRUE))
+}, logical(1))])
+chk("vignettes use executable R chunk fences", bad_chunk_fences)
 
-if (dir.exists("docs/articles")) {
+# Syntax-check every R chunk, including examples marked eval=FALSE. Those
+# setup examples appear in the published guide but are not executed while the
+# vignette is rendered, so a normal site build cannot detect a typing error in
+# them.
+bad_vignette_code <- basename(vignette_files[vapply(vignette_files, function(path) {
+  tangled <- tempfile(fileext = ".R")
+  on.exit(unlink(tangled), add = TRUE)
+  result <- tryCatch({
+    suppressMessages(knitr::purl(
+      path,
+      output = tangled,
+      documentation = 0,
+      quiet = TRUE
+    ))
+    parse(file = tangled)
+    NULL
+  }, error = identity)
+  inherits(result, "error")
+}, logical(1))])
+chk("every R vignette example parses", bad_vignette_code)
+
+if (site_mode && dir.exists("docs/articles")) {
   article_pages <- sub(
     "[.]html$", "",
     basename(list.files("docs/articles", pattern = "[.]html$", full.names = TRUE))
   )
   expected_articles <- c(
     "index",
-    sub("[.]Rmd$", "", basename(list.files("vignettes", pattern = "[.]Rmd$")))
+    sub("[.]Rmd$", "", basename(vignette_files))
   )
   chk("no obsolete article pages remain",
       setdiff(article_pages, expected_articles))
@@ -114,7 +141,7 @@ if (dir.exists("docs/articles")) {
 # timestamp comparison flags a rebuild that has not actually gone stale. It is
 # worth checking before publishing, where the site is genuinely about to be
 # served, and dev/check.sh --full runs it there after rebuilding.
-if ("--site" %in% commandArgs(trailingOnly = TRUE)) {
+if (site_mode) {
   src <- c(list.files("R", full.names = TRUE), list.files("man", full.names = TRUE),
            list.files("vignettes", full.names = TRUE), "README.md", "_pkgdown.yml")
   stale <- if (!file.exists("docs/index.html") ||

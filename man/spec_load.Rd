@@ -8,8 +8,9 @@ spec_load(path)
 }
 \arguments{
 \item{path}{Path to a non-empty YAML registry file. The file may contain a
-top-level \verb{journals:} list, like figspec's bundled registry, or be the list
-of entries itself.}
+top-level \verb{specifications:} list written by \code{\link[=spec_save]{spec_save()}}, the legacy
+\verb{journals:} list used by figspec's bundled registry, or be the list of
+entries itself.}
 }
 \value{
 A character vector containing the loaded ids, invisibly.
@@ -36,6 +37,7 @@ partly updated session.
 # spec_load("my-journals.yaml")
 }
 \seealso{
-\code{\link[=spec_register]{spec_register()}} to add one entry directly in R and
-\code{\link[=registry_validate_file]{registry_validate_file()}} to check a file without loading it.
+\code{\link[=spec_save]{spec_save()}} to write reusable entries, \code{\link[=spec_register]{spec_register()}} to add
+one entry directly in R and \code{\link[=registry_validate_file]{registry_validate_file()}} to check a file
+without loading it.
 }

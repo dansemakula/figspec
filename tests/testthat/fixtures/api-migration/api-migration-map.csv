@@ -27,6 +27,7 @@ journal_spec,spec_get,specification,migrated,migrated
 journals,spec_list,specification,migrated,keep
 load_house_styles,style_load,style,migrated,keep
 load_journals,spec_load,specification,migrated,keep
+spec_save,spec_save,specification,keep,keep
 media_spec,media_spec,media,keep,migrated
 new_journal_entry,registry_entry_template,registry,migrated,keep
 refit_journal,fig_refit,figure,migrated,migrated
@@ -43,6 +44,9 @@ stale_entries,registry_stale_entries,registry,migrated,keep
 submission_detail,submission_detail,submission,keep,keep
 suggest_art_type,fig_suggest_art_type,figure,migrated,migrated
 table_spec,table_spec,table,keep,migrated
+table_apply_spec,table_apply_spec,table,keep,keep
+table_check,table_check,table,keep,keep
+table_save,table_save,table,keep,keep
 tag_panels,fig_tag_panels,figure,migrated,migrated
 theme_journal,theme_spec,ggplot_theme,migrated,migrated
 validate_registry_file,registry_validate_file,registry,migrated,keep

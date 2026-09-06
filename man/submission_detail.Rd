@@ -2,7 +2,7 @@
 % Please edit documentation in R/submission.R
 \name{submission_detail}
 \alias{submission_detail}
-\title{Open the full report for one figure}
+\title{Open the full report for one submission item}
 \usage{
 submission_detail(x, file)
 }
@@ -10,18 +10,18 @@ submission_detail(x, file)
 \item{x}{The complete \code{figspec_submission} object returned by
 \code{\link[=submission_check]{submission_check()}}.}
 
-\item{file}{Exactly one figure name from the \code{file} column of \code{x}. For live
-plots this is the list name; for saved figures it is the file name shown
+\item{file}{Exactly one item name from the \code{file} column of \code{x}. For live
+objects this is the list name; for saved assets it is the file name shown
 in the submission summary.}
 }
 \value{
 The \code{figspec_report} for that file.
 }
 \description{
-\code{\link[=submission_check]{submission_check()}} gives one summary row for each figure. This function
-retrieves the underlying \code{\link[=fig_check]{fig_check()}} report for the figure you select, so
-you can see every requirement, the measured value and the reason for any
-failure or unresolved result.
+\code{\link[=submission_check]{submission_check()}} gives one summary row for each figure or table. This
+function retrieves the underlying report for the item you select, so you can
+see every requirement, measured value and reason for any failure or
+unresolved result.
 }
 \examples{
 library(ggplot2)

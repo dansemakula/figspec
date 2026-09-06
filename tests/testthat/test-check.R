@@ -61,7 +61,7 @@ test_that("subsetting a report yields a plain data frame", {
 })
 
 test_that("fig_check rejects inputs it cannot handle", {
-  expect_error(fig_check(42, "frontiers"), "ggplot object or a path")
+  expect_error(fig_check(42, "frontiers"), "supported live figure or a path")
   expect_error(fig_check("no/such/file.tiff", "frontiers"), "File not found")
 })
 

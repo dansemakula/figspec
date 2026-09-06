@@ -19,12 +19,12 @@
 # The per-figure reports are kept whole in the "reports" attribute, so
 # submission_detail() can show the full finding for any one file.
 
-#' Review a set of figures together
+#' Review figures and tables together
 #'
-#' Runs [fig_check()] over every figure in a collection and returns one summary
-#' row per figure. Use it to review the figures for a manuscript, report,
-#' presentation or other project in one place, while retaining the full check
-#' report for each item.
+#' Runs the relevant figure or table check over every item in a collection and
+#' returns one summary row per item. Use it to review a manuscript, report,
+#' presentation or other project in one place, while retaining every complete
+#' report.
 #'
 #' Check live figure objects before export and the written files afterwards
 #' when you can. A live object may preserve styling information that a finished
@@ -42,11 +42,8 @@
 #' a failure — it is an observation about your own figures, and [fig_save()]
 #' with a shared `panel_width` from [fig_panel_width()] is the fix.
 #'
-#' @param x A non-empty list of supported live figures, a directory path, or a
-#'   character vector of figure-file paths. A live figure may be a ggplot2 or
-#'   patchwork object, a lattice or Plotly plot, a grid object, or base-graphics
-#'   code wrapped in a function or one-sided formula. Figure names and file
-#'   basenames are used in the summary.
+#' @param x A non-empty list of supported live figures or tables, a directory
+#'   path, or a character vector of exported asset paths.
 #' @param spec The specification to use: a registry id, a `figspec_spec`, a
 #'   named list of requirements, or `NULL` to inspect without assigning pass or
 #'   fail results.
@@ -56,7 +53,7 @@
 #' @param dpi The shared resolution of files that do not record it themselves.
 #'   It is also the intended export resolution when `x` contains live plots.
 #' @param pattern Regular expression selecting files when `x` is a directory.
-#'   Defaults to common figure extensions.
+#'   Defaults to common figure and table extensions.
 #' @param recursive Whether a directory scan should include subdirectories.
 #'   Must be one `TRUE` or `FALSE` value.
 #' @param art_type Resolution category passed to [fig_check()]. `"auto"` uses
@@ -64,8 +61,11 @@
 #'   lost, it applies the strictest recorded threshold. Explicit choices are
 #'   `"colour"`, `"bw"`, `"line"` and `"combination"`.
 #' @return An object of class `figspec_submission`: a data frame with one row
-#'   per figure. The full per-requirement reports are kept in the `"reports"`
+#'   per item. The full per-requirement reports are kept in the `"reports"`
 #'   attribute.
+#' @param asset_type Whether each item is a figure or table. The default
+#'   detects live objects and treats HTML, DOCX, RTF and TeX files as tables.
+#'   A uniquely named vector can classify every item explicitly.
 #' @examples
 #' library(ggplot2)
 #' figs <- list(
@@ -79,9 +79,10 @@
 #' @export
 submission_check <- function(x, spec = NULL,
                              column = NULL, dpi = NULL,
-                             pattern = "\\.(tiff?|png|jpe?g|pdf|eps|ps|svg)$",
+                             pattern = "\\.(tiff?|png|jpe?g|pdf|eps|ps|svg|html?|docx|rtf|tex|latex)$",
                              recursive = FALSE,
-                             art_type = c("auto", "colour", "bw", "line", "combination")) {
+                             art_type = c("auto", "colour", "bw", "line", "combination"),
+                             asset_type = c("auto", "figure", "table")) {
   if (!is.character(pattern) || length(pattern) != 1L ||
       is.na(pattern) || !nzchar(pattern)) {
     figspec_abort("{.arg pattern} must be one non-empty regular expression.", "bad_input")
@@ -99,21 +100,53 @@ submission_check <- function(x, spec = NULL,
   check_dpi(dpi)
   art_type <- british_spelling(art_type)
   art_type <- match.arg(art_type)
-  is_figures <- is.list(x) && !is.data.frame(x) &&
-    all(vapply(x, function(e) !is.null(figure_system_or_null(e)), logical(1)))
+  if (is.null(names(asset_type))) {
+    asset_type <- match.arg(asset_type)
+  }
+  if (!is.character(asset_type) || !length(asset_type) || anyNA(asset_type) ||
+      any(!asset_type %in% c("auto", "figure", "table"))) {
+    figspec_abort(
+      "{.arg asset_type} must contain only auto, figure, or table.",
+      "bad_input"
+    )
+  }
+  is_live_collection <- is.list(x) && !is.data.frame(x)
 
-  if (is_figures) {
-    if (!length(x)) figspec_abort("{.arg x} is empty: there are no figures to check.", "bad_input")
+  if (is_live_collection) {
+    if (!length(x)) {
+      figspec_abort(
+        "{.arg x} is empty: there are no figures or tables to check.",
+        "bad_input"
+      )
+    }
     items <- x
-    labels <- names(x) %||% paste0("figure_", seq_along(x))
+    labels <- names(x) %||% paste0("item_", seq_along(x))
     missing_labels <- is.na(labels) | !nzchar(trimws(labels))
-    labels[missing_labels] <- paste0("figure_", which(missing_labels))
+    labels[missing_labels] <- paste0("item_", which(missing_labels))
     labels <- make.unique(labels, sep = "__")
+    detected <- vapply(items, function(item) {
+      if (!is.null(figure_system_or_null(item))) {
+        "figure"
+      } else if (!is.null(table_system_or_null(item))) {
+        "table"
+      } else {
+        NA_character_
+      }
+    }, character(1))
+    if (anyNA(detected)) {
+      figspec_abort(
+        c(
+          "Every item in {.arg x} must be a supported live figure or table.",
+          "x" = "Unsupported item(s): {.val {labels[is.na(detected)]}}."
+        ),
+        "bad_input"
+      )
+    }
   } else {
     if (is.list(x) && !is.data.frame(x)) {
       figspec_abort(
         c(
-          "When {.arg x} is a list, every item must be a supported live figure.",
+          "When {.arg x} is a list, every item must be a supported live figure or table.",
           "i" = "Pass file paths as a character vector instead of a list."
         ),
         "bad_input"
@@ -122,7 +155,7 @@ submission_check <- function(x, spec = NULL,
     if (!is.character(x) || !length(x) || anyNA(x) ||
         any(!nzchar(trimws(x)))) {
       figspec_abort(
-        "{.arg x} must be a non-empty plot list, directory path, or character vector of file paths.",
+        "{.arg x} must be a non-empty asset list, directory path, or character vector of file paths.",
         "bad_input"
       )
     }
@@ -133,7 +166,7 @@ submission_check <- function(x, spec = NULL,
       x
     }
     if (!length(files)) figspec_abort(
-      c("No figure files found to check.",
+      c("No figure files or table files found to check.",
         "i" = "Looked for files matching {.val {pattern}}.",
         ">" = "Widen {.arg pattern}, or set {.code recursive = TRUE} to look in
                subdirectories."),
@@ -157,6 +190,47 @@ submission_check <- function(x, spec = NULL,
     }
     items <- as.list(files)
     labels <- make.unique(basename(files), sep = "__")
+    table_extensions <- c("html", "htm", "docx", "rtf", "tex", "latex")
+    detected <- ifelse(
+      tolower(tools::file_ext(files)) %in% table_extensions,
+      "table",
+      "figure"
+    )
+  }
+
+  if (length(asset_type) == 1L && is.null(names(asset_type))) {
+    asset_types <- if (asset_type == "auto") {
+      detected
+    } else {
+      rep(asset_type, length(items))
+    }
+  } else {
+    type_names <- names(asset_type)
+    if (is.null(type_names) || anyNA(type_names) ||
+        any(!nzchar(trimws(type_names))) || anyDuplicated(type_names) ||
+        !setequal(type_names, labels)) {
+      figspec_abort(
+        "A per-item {.arg asset_type} vector must have unique names matching every item.",
+        "bad_input"
+      )
+    }
+    asset_types <- unname(asset_type[labels])
+    automatic <- asset_types == "auto"
+    asset_types[automatic] <- detected[automatic]
+  }
+  names(asset_types) <- labels
+
+  if (!any(asset_types == "figure") && !is.null(column)) {
+    figspec_abort(
+      "{.arg column} applies to figures, but this collection contains only tables.",
+      "bad_input"
+    )
+  }
+  if (!any(asset_types == "figure") && !is.null(dpi)) {
+    figspec_abort(
+      "{.arg dpi} applies to figures, but this collection contains only tables.",
+      "bad_input"
+    )
   }
 
   spec_for_column <- if (is.null(spec)) NULL else spec_get(spec)
@@ -184,8 +258,9 @@ submission_check <- function(x, spec = NULL,
           "bad_input"
         )
       }
-      missing_columns <- setdiff(labels, column_names)
-      extra_columns <- setdiff(column_names, labels)
+      figure_labels <- labels[asset_types == "figure"]
+      missing_columns <- setdiff(figure_labels, column_names)
+      extra_columns <- setdiff(column_names, figure_labels)
       if (length(missing_columns) || length(extra_columns)) {
         details <- c(
           if (length(missing_columns)) {
@@ -206,20 +281,28 @@ submission_check <- function(x, spec = NULL,
     }
   }
   col_for <- function(nm) {
+    if (asset_types[[nm]] == "table") return(NA_character_)
     if (is.null(column)) return(default_column(spec_for_column) %||% NA_character_)
     if (length(column) == 1L && is.null(names(column))) return(column)
     unname(column[[nm]])
   }
 
   reports <- Map(function(it, nm) {
-    fig_check(it, spec, column = col_for(nm), dpi = dpi, art_type = art_type)
+    if (asset_types[[nm]] == "table") {
+      table_check(it, spec)
+    } else {
+      fig_check(
+        it, spec, column = col_for(nm), dpi = dpi, art_type = art_type
+      )
+    }
   }, items, labels)
   names(reports) <- labels
 
   # Panel geometry is only recoverable from a plot object. Reporting NA from
   # files is honest; guessing from pixel dimensions would not be.
-  panels <- if (is_figures) {
+  panels <- if (is_live_collection) {
     vapply(seq_along(items), function(i) {
+      if (asset_types[[labels[[i]]]] == "table") return(NA_real_)
       system <- figure_system_or_null(items[[i]])
       if (is.null(system) || !panel_capable_system(system)) return(NA_real_)
       tryCatch({
@@ -247,8 +330,19 @@ submission_check <- function(x, spec = NULL,
     absent <- sum(r$status == "unspecified")
     data.frame(
       file = nm,
+      asset = unname(asset_types[[nm]]),
       column = col_for(nm),
-      result = if (invalid) "invalid" else if (length(fails)) "fail" else if (open > 0) "incomplete" else "pass",
+      result = if (invalid) {
+        "invalid"
+      } else if (isTRUE(attr(r, "no_spec"))) {
+        "inspection"
+      } else if (length(fails)) {
+        "fail"
+      } else if (open > 0) {
+        "incomplete"
+      } else {
+        "pass"
+      },
       failed = if (length(fails)) paste(fails, collapse = ", ") else "",
       unresolved = open,
       unspecified = absent,
@@ -266,7 +360,8 @@ submission_check <- function(x, spec = NULL,
     spec_name = if (is.null(resolved)) NULL else resolved$name,
     source_url = if (is.null(resolved)) NULL else resolved$source_url,
     verified_on = if (is.null(resolved)) NULL else resolved$verified_on,
-    from_plots = is_figures,
+    asset_types = asset_types,
+    from_plots = is_live_collection && any(asset_types == "figure"),
     class = c("figspec_submission", "data.frame")
   )
 }
@@ -280,7 +375,7 @@ submission_check <- function(x, spec = NULL,
   out <- NextMethod()
   if (is.data.frame(out)) {
     attributes(out)[c("reports", "spec_name", "source_url", "verified_on",
-                      "from_plots")] <- NULL
+                      "asset_types", "from_plots")] <- NULL
     class(out) <- "data.frame"
   }
   out
@@ -290,17 +385,28 @@ submission_check <- function(x, spec = NULL,
 print.figspec_submission <- function(x, ...) {
   jn <- attr(x, "spec_name")
   cli::cli_h1(if (is.null(jn)) "Submission check" else "Submission check - {jn}")
-  cli::cli_text("{nrow(x)} figure{?s} checked")
+  n_figures <- sum(x$asset == "figure")
+  n_tables <- sum(x$asset == "table")
+  cli::cli_text(
+    "{nrow(x)} item{?s} checked ({n_figures} figure{?s}, {n_tables} table{?s})"
+  )
   cli::cli_text("")
   for (i in seq_len(nrow(x))) {
     r <- x[i, ]
-    label <- paste0(format(r$file, width = 26), " ", r$column)
+    target <- if (r$asset == "figure" && !is.na(r$column)) {
+      paste0(" ", r$column)
+    } else {
+      ""
+    }
+    label <- paste0(format(r$file, width = 26), " ", r$asset, target)
     if (r$result == "invalid") {
       cli::cli_alert_danger("{label}  invalid or unreadable input")
     } else if (r$result == "fail") {
       cli::cli_alert_danger("{label}  failed: {r$failed}")
     } else if (r$result == "incomplete") {
       cli::cli_alert_warning("{label}  incomplete ({r$unresolved} recorded requirement(s) not judged)")
+    } else if (r$result == "inspection") {
+      cli::cli_alert_info("{label}  inspected; no specification supplied")
     } else {
       cli::cli_alert_success("{label}  all requirements met")
     }
@@ -333,23 +439,25 @@ print.figspec_submission <- function(x, ...) {
   cli::cli_text("")
   n_fail <- sum(x$result == "fail")
   n_invalid <- sum(x$result == "invalid")
+  n_inspection <- sum(x$result == "inspection")
   if (n_invalid > 0) {
     cli::cli_alert_danger("{n_invalid} input{?s} invalid; no compliance conclusion is possible.")
+  } else if (n_inspection > 0) {
+    cli::cli_alert_info(paste0(
+      "Inspection only: no specification was supplied, so no compliance ",
+      "conclusion was made."
+    ))
   } else if (n_fail == 0 && !any(x$result == "incomplete")) {
-    cli::cli_alert_success("No figure breaches a requirement on record.")
+    cli::cli_alert_success("No checked item breaches a requirement on record.")
   } else if (n_fail == 0) {
-    cli::cli_alert_warning("No failures found, but at least one figure is not fully assessed.")
+    cli::cli_alert_warning("No failures found, but at least one item is not fully assessed.")
   } else {
-    cli::cli_alert_danger("{n_fail} figure{?s} would fail this specification.")
+    cli::cli_alert_danger("{n_fail} item{?s} would fail this specification.")
   }
   if (any(x$unresolved > 0)) {
-    # Told to check plots, the advice to check plots is noise, and the reason
-    # for the gaps is different: the registry, not the file format.
-    cli::cli_alert_info(if (isTRUE(attr(x, "from_plots"))) {
-      "Some requirements are not on record in this specification, so they were not judged."
-    } else {
-      "Some requirements cannot be judged from a saved file - type size in particular. Check the plot objects before saving."
-    })
+    cli::cli_alert_info(
+      "Some requirements could not be judged automatically. Use submission_detail() to see what remains to be reviewed for each item."
+    )
   }
   src <- attr(x, "source_url")
   if (!is.null(src) && nzchar(src)) {
@@ -362,17 +470,17 @@ print.figspec_submission <- function(x, ...) {
   invisible(x)
 }
 
-#' Open the full report for one figure
+#' Open the full report for one submission item
 #'
-#' [submission_check()] gives one summary row for each figure. This function
-#' retrieves the underlying [fig_check()] report for the figure you select, so
-#' you can see every requirement, the measured value and the reason for any
-#' failure or unresolved result.
+#' [submission_check()] gives one summary row for each figure or table. This
+#' function retrieves the underlying report for the item you select, so you can
+#' see every requirement, measured value and reason for any failure or
+#' unresolved result.
 #'
 #' @param x The complete `figspec_submission` object returned by
 #'   [submission_check()].
-#' @param file Exactly one figure name from the `file` column of `x`. For live
-#'   plots this is the list name; for saved figures it is the file name shown
+#' @param file Exactly one item name from the `file` column of `x`. For live
+#'   objects this is the list name; for saved assets it is the file name shown
 #'   in the submission summary.
 #' @return The `figspec_report` for that file.
 #' @examples

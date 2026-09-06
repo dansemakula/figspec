@@ -19,7 +19,7 @@ check(
   ),
   "migration manifest columns have changed"
 )
-check(nrow(map) == 47L, sprintf("manifest has %d rows instead of 47", nrow(map)))
+check(nrow(map) == 51L, sprintf("manifest has %d rows instead of 51", nrow(map)))
 check(!anyDuplicated(map$old_name), "manifest contains duplicate old names")
 check(!anyDuplicated(map$new_name), "manifest contains duplicate new names")
 check(
@@ -39,13 +39,16 @@ map_identity <- tempfile()
 on.exit(unlink(map_identity), add = TRUE)
 writeLines(paste(map$old_name, map$new_name, map$family, sep = "|"), map_identity)
 check(
-  identical(unname(tools::md5sum(map_identity)), "31eb219554d134077249a2ff1e25b23d"),
+  identical(unname(tools::md5sum(map_identity)), "43da1c0224143e8e6722eedcfd1b7ede"),
   "old/new/family columns changed after the naming map was frozen"
 )
 
 expected_surfaces <- c(
   "fit_config", "report_attributes", "merged_report_attributes",
-  "colour_report_attributes", "submission_attributes", "asset_spec_name_field",
+  "colour_report_attributes", "submission_attributes", "submission_columns",
+  "table_report_attributes", "spec_list_columns", "registry_status_columns",
+  "table_report_columns", "table_status_values", "submission_result_values",
+  "table_registry_fields", "asset_spec_name_field",
   "table_spec_fields",
   "media_spec_fields", "abstract_spec_fields", "column_condition_classes",
   "column_condition_fields", "report_subset_behavior", "report_print_behavior"
@@ -67,7 +70,7 @@ surface_identity <- tempfile()
 on.exit(unlink(surface_identity), add = TRUE)
 writeLines(surfaces$surface, surface_identity)
 check(
-  identical(unname(tools::md5sum(surface_identity)), "26f6135a4d39236cbbc04d641d04e58e"),
+  identical(unname(tools::md5sum(surface_identity)), "8cc7238ae430571a1db7e1236e101b71"),
   "surface names changed after the surface map was frozen"
 )
 
@@ -77,8 +80,8 @@ contract_files <- file.path(
   c("api-current-contract.R", "api-final-contract.R")
 )
 approved_contract_md5 <- c(
-  "40d0b4fc43482ccd852138ece8d56157",
-  "2a5c91312ff0625620fe22f0a1100914"
+  "9e2c535d3cda348a35ef2550fa4c2734",
+  "a09ca7d6e13e99ac1c479373f7c1df1a"
 )
 check(
   identical(unname(tools::md5sum(contract_files)), approved_contract_md5),
@@ -261,6 +264,7 @@ if (final) {
     submission <- suppressWarnings(suppressMessages(submission_check(
       list(first = plot, second = plot), spec = "cell_press", column = "single", dpi = 300
     )))
+    check(identical(names(submission), final_contract$submission_columns), "final submission columns differ")
     check(identical(names(attributes(submission)), final_contract$submission_attributes), "final submission attributes differ")
     table <- table_spec(spec = "nature")
     media <- media_spec(spec = "science")
@@ -273,6 +277,43 @@ if (final) {
         final_contract$asset_spec_name_field %in% names(media) &&
         final_contract$asset_spec_name_field %in% names(abstract),
       "final asset specification-name field is absent"
+    )
+    table_report <- table_check(
+      table_apply_spec(head(ggplot2::mpg), "nature"),
+      "nature"
+    )
+    check(
+      identical(
+        names(attributes(table_report)),
+        final_contract$table_report_attributes
+      ),
+      "final table-report attributes differ"
+    )
+    check(
+      identical(names(table_report), final_contract$table_report_columns),
+      "final table-report columns differ"
+    )
+    check(
+      all(table_report$status %in% final_contract$table_status_values),
+      "final table report contains an unapproved status"
+    )
+    check(
+      identical(names(spec_list()), final_contract$spec_list_columns),
+      "final specification-list columns differ"
+    )
+    check(
+      identical(names(registry_status()), final_contract$registry_status_columns),
+      "final registry-status columns differ"
+    )
+    check(
+      identical(table_requirement_keys(), final_contract$table_registry_fields),
+      "final table registry schema differs"
+    )
+    inspection <- submission_check(list(item = plot))
+    check(
+      all(c(submission$result, inspection$result) %in%
+            final_contract$submission_result_values),
+      "final submission contains an unapproved result"
     )
     subset <- report[report$status == "fail", , drop = FALSE]
     check(identical(class(subset), final_contract$report_subset_behavior$class), "final report subset class differs")

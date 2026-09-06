@@ -5,9 +5,9 @@
 This is the first public release of figspec.
 
 figspec enables researchers and other R users to build, export and
-verify figures against the specifications their work must meet. A
-specification can come from a journal, a publisher, a house style, an
-organisation or the needs of a particular project.
+verify figures and tables against the specifications their work must
+meet. A specification can come from a journal, a publisher, a house
+style, an organisation or the needs of a particular project.
 
 ### Build and export figures to a specification
 
@@ -40,9 +40,9 @@ organisation or the needs of a particular project.
   weights, colour use, visual distinction, panel labels, axes, number
   formatting and relevant properties of raster and vector files.
 - [`submission_check()`](https://dansemakula.github.io/figspec/reference/submission_check.md)
-  reviews several plots or saved files together.
+  reviews figures and tables, as live objects or saved files, together.
   [`submission_detail()`](https://dansemakula.github.io/figspec/reference/submission_detail.md)
-  opens the complete report for any one figure in the collection.
+  opens the complete report for any one item in the collection.
 - [`fig_suggest_art_type()`](https://dansemakula.github.io/figspec/reference/fig_suggest_art_type.md)
   helps select the appropriate resolution category for colour,
   greyscale, line or combination artwork while keeping the recorded
@@ -96,6 +96,13 @@ compositions, allowing every panel to retain a deliberate physical size.
 
 ### Use publication requirements or create your own
 
+- [`spec_save()`](https://dansemakula.github.io/figspec/reference/spec_save.md)
+  writes project, organisational or publication specifications to a
+  validated YAML registry for reuse. It appends new ids, requires
+  explicit permission before replacing an existing id and leaves the
+  previous file intact if the updated registry cannot be written or
+  validated.
+
 The bundled registry contains 29 carefully sourced profiles. Twenty-two
 cover publisher-wide guidance and therefore apply across large journal
 portfolios; seven record requirements for individual journals that
@@ -124,6 +131,25 @@ and IEEE.
   loads reusable specifications from a YAML file.
 - House styles can be registered, saved and reloaded independently of
   publication requirements.
+
+### Build, export and verify tables
+
+- [`table_apply_spec()`](https://dansemakula.github.io/figspec/reference/table_apply_spec.md)
+  applies measurable table requirements to data frames, matrices and
+  tables made with gt, flextable, kableExtra or grid while they remain
+  editable.
+- [`table_save()`](https://dansemakula.github.io/figspec/reference/table_save.md)
+  exports through the table’s own system, checks the completed HTML,
+  DOCX, RTF, TeX, PDF or image file when that format is supported, and
+  replaces an existing output only after rendering succeeds and the
+  result is structurally valid.
+- [`table_check()`](https://dansemakula.github.io/figspec/reference/table_check.md)
+  combines evidence retained by the editable object with evidence
+  recovered from the written file. Rules needing editorial judgement
+  remain unresolved instead of being reported as passes.
+- [`submission_check()`](https://dansemakula.github.io/figspec/reference/submission_check.md)
+  now accepts mixed collections of figures and tables and labels each
+  item in its summary.
 - [`table_spec()`](https://dansemakula.github.io/figspec/reference/table_spec.md),
   [`media_spec()`](https://dansemakula.github.io/figspec/reference/media_spec.md)
   and

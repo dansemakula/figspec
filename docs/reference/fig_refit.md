@@ -1,8 +1,8 @@
 # Re-export a figure set for a new specification
 
 A figure set may need to move to a different journal, report template or
-organisational standard. This takes the editable plot objects you
-already have and exports the whole set against the new specification.
+organisational standard. This takes the editable figures you already
+have and exports the whole set against the new specification.
 
 ## Usage
 
@@ -21,8 +21,11 @@ fig_refit(
 
 - plots:
 
-  A non-empty named list of plot objects. Names become file stems and
-  must therefore be unique and safe to use as file names.
+  A non-empty named list of editable figures. Supported inputs include
+  ggplot2 and patchwork objects, lattice and Plotly plots, grid grobs,
+  and base-graphics code wrapped in functions or one-sided formulas.
+  Names become file stems and must be unique and safe to use as file
+  names.
 
 - spec:
 
@@ -40,10 +43,8 @@ fig_refit(
 
 - retheme:
 
-  Whether to apply
-  [`theme_spec()`](https://dansemakula.github.io/figspec/reference/theme_spec.md)
-  to each plot so its typography matches the new specification. Must be
-  one `TRUE` or `FALSE`.
+  Whether to apply the requirements exposed by each plotting system
+  before export. Must be one `TRUE` or `FALSE`.
 
 - format:
 
@@ -58,7 +59,7 @@ report for the files written.
 
 ## Details
 
-It works from plot objects, not from saved files, and that is
+It works from live figure objects, not from saved files, and that is
 deliberate. Type size cannot be recovered from a saved raster, and
 rescaling one only degrades it, so re-fitting a finished TIFF cannot
 produce a compliant figure. Keep your plots in a list and this stays a
@@ -78,12 +79,12 @@ res <- suppressWarnings(
 res
 #>
 #> ── Submission check - Frontiers journals ───────────────────────────────────────
-#> 1 figure checked
+#> 1 item checked (1 figure, 0 tables)
 #>
-#> ! figure_1.tiff              single  incomplete (1 recorded requirement(s) not judged)
+#> ! figure_1.tiff              figure single  incomplete (1 recorded requirement(s) not judged)
 #>
-#> ! No failures found, but at least one figure is not fully assessed.
-#> ℹ Some requirements cannot be judged from a saved file - type size in particular. Check the plot objects before saving.
+#> ! No failures found, but at least one item is not fully assessed.
+#> ℹ Some requirements could not be judged automatically. Use submission_detail() to see what remains to be reviewed for each item.
 #> Source: <https://www.frontiersin.org/guidelines/author-guidelines> (verified
 #> 2026-08-21)
 unlink(dir, recursive = TRUE)

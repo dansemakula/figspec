@@ -2,29 +2,33 @@
 
 [`library`](https://rdrr.io/r/base/library.html)`(`[`ggplot2`](https://ggplot2.tidyverse.org)`)`` `[`library`](https://rdrr.io/r/base/library.html)`(`[`figspec`](https://dansemakula.github.io/figspec/)`)`
 
-## Choose the requirements for your figure
+## Choose the requirements for your figure or table
 
-A clear and accurate figure may still need changes before it can be
-submitted, published or placed in a report. It may be too wide for the
-page, have too few pixels for print, use an unsupported file format, or
-contain text that will be unreadable at its final size. Figures saved at
-the same width can also look uneven when their plotting areas do not
-line up.
+A clear and accurate figure or table may still need changes before it
+can be submitted, published or placed in a report. A figure may be too
+wide, have too few pixels for print or contain text that will be
+unreadable at its final size. A table may need to remain editable, use a
+particular page orientation or follow rules for type and borders.
+Figures saved at the same width can also look uneven when their plotting
+areas do not line up.
 
-Start by giving figspec the requirements for the finished figure. You
-can do this in three ways:
+Start by providing figspec with the requirements or specifications for
+the finished work. You can do this in three ways:
 
-- **Use a publication profile.** Name a journal or publisher in the
-  registry. figspec loads its recorded requirements and shows where they
-  came from and when they were last verified.
-- **Write your own requirements.** Describe the needs of a report,
-  presentation, thesis, organisation or production workflow in a named R
-  list.
-- **Set the dimensions directly.** Give the exact image or
+- **Use an existing publication profile.** Select your intended journal
+  or publisher from figspec’s registry. figspec loads the recorded
+  requirements and shows where they came from and when they were last
+  verified.
+- **Write and use your own requirements.** Create a specification for a
+  report, presentation, thesis, organisation or production workflow in a
+  named R list. You can use it immediately or save it for reuse.
+- **Set the required dimensions directly.** Give the exact image or
   plotting-panel size when size is the only constraint.
 
 Whichever route you take, the workflow is the same: define the
-requirements, build the plot, export it and check the finished file.
+requirements → build the figure or table to meet them → export it
+correctly → verify the finished file → repeat when the work or its
+requirements change.
 
 ### Using your own requirements
 
@@ -35,8 +39,8 @@ least 300 dpi, with text no smaller than 9 pt and lines no thinner than
 
 `report_spec`` ``<-`` `[`list`](https://rdrr.io/r/base/list.html)`(`` `` name ``=`` ``"Quarterly outcomes report"``,`` `` columns ``=`` `[`list`](https://rdrr.io/r/base/list.html)`(``full ``=`` ``160``)``,`` `` formats ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``"png"``, ``"pdf"``)``,`` `` dpi_min ``=`` ``300``,`` `` font_min_pt ``=`` ``9``,`` `` min_line_pt ``=`` ``0.5`` ``)`
 
-Use `report_spec` wherever a function asks for a journal or
-specification, including
+Use `report_spec` wherever a function asks for a specification,
+including
 [`fig_apply_spec()`](https://dansemakula.github.io/figspec/reference/fig_apply_spec.md),
 [`theme_spec()`](https://dansemakula.github.io/figspec/reference/theme_spec.md),
 [`fig_check()`](https://dansemakula.github.io/figspec/reference/fig_check.md)
@@ -45,12 +49,116 @@ and
 Those functions accept either a registry name or your own list, so no
 journal is required.
 
-A **specification** lists the requirements the finished figure must
-meet. A **house style** sets visual choices, such as a reusable ggplot2
-theme. They can be used together, but they are kept separate so a
-preferred appearance is not mistaken for a requirement. Use
+To use the same requirements in a later R session, save them in a
+project YAML file and load that file when the project starts:
+
+`project_spec_file`` ``<-`` `[`file.path`](https://rdrr.io/r/base/file.path.html)`(`[`tempdir`](https://rdrr.io/r/base/tempfile.html)`(``)``, ``"project-specifications.yml"``)`` `` `[`spec_save`](https://dansemakula.github.io/figspec/reference/spec_save.md)`(`` `` ``report_spec``,`` `` ``project_spec_file``,`` `` id ``=`` ``"quarterly_outcomes_report"`` ``)`` `[`spec_load`](https://dansemakula.github.io/figspec/reference/spec_load.md)`(``project_spec_file``)`` `` ``saved_report_spec`` ``<-`` `[`spec_get`](https://dansemakula.github.io/figspec/reference/spec_get.md)`(``"quarterly_outcomes_report"``)`` `[`fig_width`](https://dansemakula.github.io/figspec/reference/fig_width.md)`(``saved_report_spec``, ``"full"``)`` ``#> [1] 160`
+
+In a real project, use a path such as `"project-specifications.yml"` and
+keep the file with the analysis.
+[`spec_save()`](https://dansemakula.github.io/figspec/reference/spec_save.md)
+creates or updates the file safely;
+[`spec_load()`](https://dansemakula.github.io/figspec/reference/spec_load.md)
+makes its entries available in the current session. Users do not need to
+change figspec or add files to the installed package.
+
+A **specification** lists the requirements the finished work must meet.
+A **house style** sets visual choices, such as a reusable ggplot2 theme.
+They can be used together, but they are kept separate so a preferred
+appearance is not mistaken for a requirement. Use
 [`style_register()`](https://dansemakula.github.io/figspec/reference/style_register.md)
-to save and reuse that appearance.
+to name that appearance for the current session and
+[`style_save()`](https://dansemakula.github.io/figspec/reference/style_save.md)
+to keep it for later sessions.
+
+### Reusing your own requirements and visual styles
+
+The two kinds of reusable addition serve different purposes:
+
+| If you want to reuse… | It should contain… | Save and restore it with… |
+|----|----|----|
+| A specification | Requirements that a finished figure or table must meet | [`spec_save()`](https://dansemakula.github.io/figspec/reference/spec_save.md) and [`spec_load()`](https://dansemakula.github.io/figspec/reference/spec_load.md) |
+| A house style | Preferred ggplot2 appearance, such as the theme, grid and legend position | [`style_save()`](https://dansemakula.github.io/figspec/reference/style_save.md) and [`style_load()`](https://dansemakula.github.io/figspec/reference/style_load.md) |
+
+Specifications are saved as readable YAML. House styles are saved as RDS
+because they contain R theme objects. For example, the report
+specification above has already been saved and loaded. A visual style
+can be preserved in a separate file:
+
+[`style_register`](https://dansemakula.github.io/figspec/reference/style_register.md)`(`` `` ``"quarterly_report"``,`` `` `[`theme_minimal`](https://ggplot2.tidyverse.org/reference/ggtheme.html)`(``)`` ``+`` `` `[`theme`](https://ggplot2.tidyverse.org/reference/theme.html)`(`` `` panel.grid.minor ``=`` `[`element_blank`](https://ggplot2.tidyverse.org/reference/element.html)`(``)``,`` `` legend.position ``=`` ``"bottom"`` `` ``)``,`` `` description ``=`` ``"Quarterly report figures"`` ``)`` `` ``project_style_file`` ``<-`` `[`file.path`](https://rdrr.io/r/base/file.path.html)`(`[`tempdir`](https://rdrr.io/r/base/tempfile.html)`(``)``, ``"project-figure-styles.rds"``)`` `[`style_save`](https://dansemakula.github.io/figspec/reference/style_save.md)`(``project_style_file``)`` `[`style_remove`](https://dansemakula.github.io/figspec/reference/style_remove.md)`(``"quarterly_report"``)`` `[`style_load`](https://dansemakula.github.io/figspec/reference/style_load.md)`(``project_style_file``)`` `[`style_list`](https://dansemakula.github.io/figspec/reference/style_list.md)`(``)``[`[`style_list`](https://dansemakula.github.io/figspec/reference/style_list.md)`(``)``$``name`` ``==`` ``"quarterly_report"``, ``]`` ``#> name description`` ``#> 1 quarterly_report Quarterly report figures`
+
+Once both files have been loaded, their names can be combined whenever a
+plot is built:
+
+[`ggplot`](https://ggplot2.tidyverse.org/reference/ggplot.html)`(``ggplot2``::`[`mpg`](https://ggplot2.tidyverse.org/reference/mpg.html)`, `[`aes`](https://ggplot2.tidyverse.org/reference/aes.html)`(``displ``, ``hwy``, colour ``=`` `[`factor`](https://rdrr.io/r/base/factor.html)`(``cyl``)``)``)`` ``+`` `` `[`geom_point`](https://ggplot2.tidyverse.org/reference/geom_point.html)`(``size ``=`` ``2``, alpha ``=`` ``0.8``)`` ``+`` `` `[`labs`](https://ggplot2.tidyverse.org/reference/labs.html)`(`` `` x ``=`` ``"Engine displacement (litres)"``,`` `` y ``=`` ``"Highway miles per gallon"``,`` `` colour ``=`` ``"Cylinders"`` `` ``)`` ``+`` `` `[`fig_apply_spec`](https://dansemakula.github.io/figspec/reference/fig_apply_spec.md)`(`` `` ``"quarterly_outcomes_report"``,`` `` style ``=`` ``"quarterly_report"`` `` ``)`
+
+![](figspec_files/figure-html/apply-saved-spec-and-style-1.png)
+
+For a project or research team, a simple layout is:
+
+```
+project/
+├── config/
+│   └── figspec/
+│       ├── specifications.yml
+│       └── styles.rds
+└── analysis.R
+```
+
+Load the files at the beginning of an analysis, in a project setup
+script or in the first code chunk of an R Markdown or Quarto document:
+
+[`library`](https://rdrr.io/r/base/library.html)`(`[`figspec`](https://dansemakula.github.io/figspec/)`)`` `` `[`spec_load`](https://dansemakula.github.io/figspec/reference/spec_load.md)`(`[`file.path`](https://rdrr.io/r/base/file.path.html)`(``"config"``, ``"figspec"``, ``"specifications.yml"``)``)`` `[`style_load`](https://dansemakula.github.io/figspec/reference/style_load.md)`(`[`file.path`](https://rdrr.io/r/base/file.path.html)`(``"config"``, ``"figspec"``, ``"styles.rds"``)``)`
+
+These paths are relative to the project directory, so they work on every
+team member’s computer even when the project is stored in a different
+location.
+
+Each team member has a separate R installation and a separate local copy
+of the project. Git records changes to the project files, while GitHub
+or another Git hosting service stores the shared repository. The team
+shares the figspec setup in the same way that it shares analysis code:
+
+1.  Add `.Rprofile`, `config/figspec/specifications.yml` and
+    `config/figspec/styles.rds` to the project repository.
+2.  Commit the files and push the commit to GitHub.
+3.  Each team member clones the repository to their computer the first
+    time they join the project.
+4.  When someone updates a specification or style, they commit and push
+    the change. Other team members pull it into their own project copy.
+5.  When a team member opens the project, their own R installation reads
+    the local `.Rprofile` and loads the local copies of the
+    specification and style files.
+6.  If a team member pulls an update while R is already running, they
+    restart R or run
+    [`spec_load()`](https://dansemakula.github.io/figspec/reference/spec_load.md)
+    and
+    [`style_load()`](https://dansemakula.github.io/figspec/reference/style_load.md)
+    again.
+
+The team is not sharing one running copy of R, and `.Rprofile` is not
+sent directly from one computer to another. GitHub holds the shared
+project files; Git places a copy on each team member’s computer. Every
+computer must have figspec installed. A project that uses `renv` can
+also record the package version so that the team uses the same release.
+
+An explicit setup script is usually easiest to see and debug. If every R
+session in the project should load the files automatically, put the
+following in the project’s `.Rprofile`:
+
+`if`` ``(`[`requireNamespace`](https://rdrr.io/r/base/ns-load.html)`(``"figspec"``, quietly ``=`` ``TRUE``)``)`` ``{`` `` ``specification_file`` ``<-`` `[`file.path`](https://rdrr.io/r/base/file.path.html)`(`` `` ``"config"``, ``"figspec"``, ``"specifications.yml"`` `` ``)`` `` ``style_file`` ``<-`` `[`file.path`](https://rdrr.io/r/base/file.path.html)`(``"config"``, ``"figspec"``, ``"styles.rds"``)`` `` `` ``if`` ``(`[`file.exists`](https://rdrr.io/r/base/files.html)`(``specification_file``)``)`` ``{`` `` ``figspec``::`[`spec_load`](https://dansemakula.github.io/figspec/reference/spec_load.md)`(``specification_file``)`` `` ``}`` `` ``if`` ``(`[`file.exists`](https://rdrr.io/r/base/files.html)`(``style_file``)``)`` ``{`` `` ``figspec``::`[`style_load`](https://dansemakula.github.io/figspec/reference/style_load.md)`(``style_file``)`` `` ``}`` ``}`
+
+Because `.Rprofile` contains R code that runs when the project starts,
+review changes to it before accepting them and never store passwords,
+access tokens or other secrets in it. Load an RDS style file only from a
+repository controlled by people you trust. Stored theme functions are
+blocked by default and require the explicit `allow_functions = TRUE`
+option.
+
+An organisation with many specifications, styles and helper functions
+can put them in a small internal R package that imports figspec. That is
+the most maintainable way to provide a larger shared extension across
+many projects.
 
 For exact panel sizing without any specification, see the [panel-sizing
 guide](https://dansemakula.github.io/figspec/articles/panels.md). It
@@ -76,7 +184,7 @@ after submission or during production.
 It is easier to make changes while the plot is still editable. Add a
 publication profile much like a ggplot2 scale:
 
-`fitted`` ``<-`` `[`ggplot`](https://ggplot2.tidyverse.org/reference/ggplot.html)`(``ggplot2``::`[`mpg`](https://ggplot2.tidyverse.org/reference/mpg.html)`,`` `` `[`aes`](https://ggplot2.tidyverse.org/reference/aes.html)`(``displ``, ``hwy``, colour ``=`` `[`factor`](https://rdrr.io/r/base/factor.html)`(``cyl``)``, shape ``=`` `[`factor`](https://rdrr.io/r/base/factor.html)`(``cyl``)``)``)`` ``+`` `` `[`geom_point`](https://ggplot2.tidyverse.org/reference/geom_point.html)`(``)`` ``+`` `` `[`labs`](https://ggplot2.tidyverse.org/reference/labs.html)`(``title ``=`` ``"Engine size and highway fuel economy"``,`` `` x ``=`` ``"Engine displacement (litres)"``, y ``=`` ``"Highway miles per gallon"``,`` `` colour ``=`` ``"Cylinders"``, shape ``=`` ``"Cylinders"``)`` ``+`` `` `[`fig_apply_spec`](https://dansemakula.github.io/figspec/reference/fig_apply_spec.md)`(``"cell_press"``)`` `` ``report`` ``<-`` `[`fig_check`](https://dansemakula.github.io/figspec/reference/fig_check.md)`(``fitted``, ``"cell_press"``, column ``=`` ``"single"``)`` ``knitr``::`[`kable`](https://rdrr.io/pkg/knitr/man/kable.html)`(``report``[``, `[`c`](https://rdrr.io/r/base/c.html)`(``"check"``, ``"actual"``, ``"status"``)``]``, row.names ``=`` ``FALSE``)`
+`fitted`` ``<-`` `[`ggplot`](https://ggplot2.tidyverse.org/reference/ggplot.html)`(``ggplot2``::`[`mpg`](https://ggplot2.tidyverse.org/reference/mpg.html)`,`` `` `[`aes`](https://ggplot2.tidyverse.org/reference/aes.html)`(``displ``, ``hwy``, colour ``=`` `[`factor`](https://rdrr.io/r/base/factor.html)`(``cyl``)``, shape ``=`` `[`factor`](https://rdrr.io/r/base/factor.html)`(``cyl``)``)``)`` ``+`` `` `[`geom_point`](https://ggplot2.tidyverse.org/reference/geom_point.html)`(``size ``=`` ``2.1``, alpha ``=`` ``0.8``, stroke ``=`` ``0.6``)`` ``+`` `` `[`labs`](https://ggplot2.tidyverse.org/reference/labs.html)`(``title ``=`` ``"Engine size and highway fuel economy"``,`` `` x ``=`` ``"Engine displacement (litres)"``, y ``=`` ``"Highway miles per gallon"``,`` `` colour ``=`` ``"Cylinders"``, shape ``=`` ``"Cylinders"``)`` ``+`` `` `[`fig_apply_spec`](https://dansemakula.github.io/figspec/reference/fig_apply_spec.md)`(``"cell_press"``)`` `` ``report`` ``<-`` `[`fig_check`](https://dansemakula.github.io/figspec/reference/fig_check.md)`(``fitted``, ``"cell_press"``, column ``=`` ``"single"``)`` ``knitr``::`[`kable`](https://rdrr.io/pkg/knitr/man/kable.html)`(``report``[``, `[`c`](https://rdrr.io/r/base/c.html)`(``"check"``, ``"actual"``, ``"status"``)``]``, row.names ``=`` ``FALSE``)`
 
 | check | actual | status |
 |:---|:---|:---|
@@ -139,7 +247,7 @@ knows the text sizes, colours, layers and theme settings. In a finished
 TIFF, text is stored as pixels and its original point size cannot be
 recovered reliably.
 
-`p`` ``<-`` ``plain`` `` `[`fig_check`](https://dansemakula.github.io/figspec/reference/fig_check.md)`(``p``, ``"cell_press"``, column ``=`` ``"single"``)`` ``#> `` ``#> ``──`` ``Cell Press journals`` ``─────────────────────────────────────────────────────────`` ``#> ``checked: ggplot object`` ``#> `` ``#> ``✔`` Width 85 mm requires: single 85 mm`` ``#> ``!`` Height could not determine requires: max 200 mm`` ``#> ``!`` Resolution could not determine`` ``#> requires: min 300 dpi for colour; also states black and`` ``#> white 500, line art 1000 dpi`` ``#> ``!`` File format could not determine requires: TIFF, PDF, EPS, JPEG`` ``#> ``✖`` Type size smallest 8.8 pt, largest 13.2 pt`` ``#> requires: min 6 pt, max 8 pt`` ``#> ``!`` Font could not determine requires: Arial`` ``#> ``!`` Line width could not determine requires: min 0.5 pt, max 1.5 pt`` ``#> ``✔`` Colour mode RGB requires: RGB`` ``#> ``✖`` Colour pairs red and green both used (#F8766D, #7CAE00)`` ``#> requires: red and green not used together`` ``#> ``ℹ`` Greyscale 6 pair(s) merge in greyscale: #F8766D/#00BFC4,`` ``#> #F8766D/#C77CFF, #F8766D/#7CAE00, #00BFC4/#C77CFF and 2 more`` ``#> requires: not specified by publisher`` ``#> ``ℹ`` Colour vision colours merge under deuteranopia (1)`` ``#> requires: not specified by publisher`` ``#> ``ℹ`` Redundant coding colour is the only cue: all series share one shape and one`` ``#> line type`` ``#> requires: not specified by publisher`` ``#> ``ℹ`` Text case 4 label(s), not checked`` ``#> requires: not specified by publisher`` ``#> ``!`` File size could not determine requires: max 20 MB`` ``#> `` ``#> ``✖`` 2 requirements not met.`` ``#> ``ℹ`` 6 requirements or registry fields could not be judged automatically - check`` ``#> by hand.`` ``#> ``Source:`` ``<https://www.cell.com/information-for-authors/figure-guidelines>`` ``#> (verified 2026-08-21)`
+`p`` ``<-`` ``plain`` `` `[`fig_check`](https://dansemakula.github.io/figspec/reference/fig_check.md)`(``p``, ``"cell_press"``, column ``=`` ``"single"``)`` ``#> `` ``#> ``──`` ``Cell Press journals`` ``─────────────────────────────────────────────────────────`` ``#> ``checked: ggplot2 plot`` ``#> `` ``#> ``✔`` Width 85 mm requires: single 85 mm`` ``#> ``!`` Height could not determine requires: max 200 mm`` ``#> ``!`` Resolution could not determine`` ``#> requires: min 300 dpi for colour; also states black and`` ``#> white 500, line art 1000 dpi`` ``#> ``!`` File format could not determine requires: TIFF, PDF, EPS, JPEG`` ``#> ``✖`` Type size smallest 8.8 pt, largest 13.2 pt`` ``#> requires: min 6 pt, max 8 pt`` ``#> ``!`` Font could not determine requires: Arial`` ``#> ``!`` Line width could not determine requires: min 0.5 pt, max 1.5 pt`` ``#> ``✔`` Colour mode RGB requires: RGB`` ``#> ``✖`` Colour pairs red and green both used (#F8766D, #7CAE00)`` ``#> requires: red and green not used together`` ``#> ``ℹ`` Greyscale 6 pair(s) merge in greyscale: #F8766D/#00BFC4,`` ``#> #F8766D/#C77CFF, #F8766D/#7CAE00, #00BFC4/#C77CFF and 2 more`` ``#> requires: not specified by publisher`` ``#> ``ℹ`` Colour vision colours merge under deuteranopia (1)`` ``#> requires: not specified by publisher`` ``#> ``ℹ`` Redundant coding colour is the only cue: all series share one shape and one`` ``#> line type`` ``#> requires: not specified by publisher`` ``#> ``ℹ`` Text case 4 label(s), not checked`` ``#> requires: not specified by publisher`` ``#> ``!`` File size could not determine requires: max 20 MB`` ``#> `` ``#> ``✖`` 2 requirements not met.`` ``#> ``ℹ`` 6 requirements or registry fields could not be judged automatically - check`` ``#> by hand.`` ``#> ``Source:`` ``<https://www.cell.com/information-for-authors/figure-guidelines>`` ``#> (verified 2026-08-21)`
 
 The report finds two failures caused by ordinary ggplot2 defaults. The
 text is larger than Cell Press permits, and the default palette uses red
@@ -347,18 +455,39 @@ rather than risk approving a file with too little resolution.
 
 ## Checking a whole submission
 
-One call can review a named collection of live plots. Because the plots
-are still editable R objects, figspec can inspect their text sizes,
-colours and structure as well as their dimensions:
+One call can review a named collection of live plots. Here, both plots
+are prepared for the quarterly report specification created earlier.
+Because the plots are still editable R objects, figspec can inspect
+their text sizes, colours and structure as well as their dimensions:
 
-`submission_figures`` ``<-`` `[`list`](https://rdrr.io/r/base/list.html)`(`` `` engine_size ``=`` ``fitted``,`` `` vehicle_class ``=`` `[`ggplot`](https://ggplot2.tidyverse.org/reference/ggplot.html)`(``ggplot2``::`[`mpg`](https://ggplot2.tidyverse.org/reference/mpg.html)`, `[`aes`](https://ggplot2.tidyverse.org/reference/aes.html)`(``class``, ``hwy``, fill ``=`` ``class``)``)`` ``+`` `` `[`geom_boxplot`](https://ggplot2.tidyverse.org/reference/geom_boxplot.html)`(``show.legend ``=`` ``FALSE``)`` ``+`` `` `[`labs`](https://ggplot2.tidyverse.org/reference/labs.html)`(``x ``=`` ``"Vehicle class"``, y ``=`` ``"Highway miles per gallon"``)`` ``+`` `` `[`fig_apply_spec`](https://dansemakula.github.io/figspec/reference/fig_apply_spec.md)`(``"cell_press"``)`` ``)`` `` ``submission_figures``$``engine_size`` ``submission_figures``$``vehicle_class`
+- The first plot shows how highway fuel economy changes with engine
+  size. Colour and shape identify the number of cylinders.
+- The second compares the distribution of highway fuel economy across
+  vehicle classes. It is drawn horizontally so all seven class names
+  remain readable.
 
-![A fitted scatter plot of engine displacement and highway fuel
-economy.](figspec_files/figure-html/submission-plots-1.png)![A fitted
-box plot comparing highway fuel economy across vehicle
-classes.](figspec_files/figure-html/submission-plots-2.png)
+They answer different questions and use different types of chart, just
+as the figures in a real report often do. They are checked together
+because both must follow the same report requirements—not because they
+are intended to be one combined figure.
 
-[`submission_check`](https://dansemakula.github.io/figspec/reference/submission_check.md)`(``submission_figures``, ``"cell_press"``)`` ``#> `` ``#> ``──`` ``Submission check - Cell Press journals`` ``──────────────────────────────────────`` ``#> 2 figures checked`` ``#> `` ``#> ``!`` engine_size single incomplete (6 recorded requirement(s) not judged)`` ``#> ``!`` vehicle_class single incomplete (5 recorded requirement(s) not judged)`` ``#> `` ``#> ``ℹ`` Plot areas differ by 13 mm across this set (engine_size 64 mm, vehicle_class 77.1 mm). No publisher requires them to match, so this is not a failure. To make them match, pass fig_panel_width() to fig_save().`` ``#> `` ``#> ``!`` No failures found, but at least one figure is not fully assessed.`` ``#> ``ℹ`` Some requirements are not on record in this specification, so they were not judged.`` ``#> ``Source:`` ``<https://www.cell.com/information-for-authors/figure-guidelines>`` ``#> (verified 2026-08-21)`
+`submission_figures`` ``<-`` `[`list`](https://rdrr.io/r/base/list.html)`(`` `` engine_size ``=`` `[`ggplot`](https://ggplot2.tidyverse.org/reference/ggplot.html)`(`` `` ``ggplot2``::`[`mpg`](https://ggplot2.tidyverse.org/reference/mpg.html)`,`` `` `[`aes`](https://ggplot2.tidyverse.org/reference/aes.html)`(``displ``, ``hwy``, colour ``=`` `[`factor`](https://rdrr.io/r/base/factor.html)`(``cyl``)``, shape ``=`` `[`factor`](https://rdrr.io/r/base/factor.html)`(``cyl``)``)`` `` ``)`` ``+`` `` `[`geom_point`](https://ggplot2.tidyverse.org/reference/geom_point.html)`(``size ``=`` ``2.5``, alpha ``=`` ``0.8``, stroke ``=`` ``0.7``)`` ``+`` `` `[`labs`](https://ggplot2.tidyverse.org/reference/labs.html)`(`` `` title ``=`` ``"Engine size and highway fuel economy"``,`` `` x ``=`` ``"Engine displacement (litres)"``,`` `` y ``=`` ``"Highway miles per gallon"``,`` `` colour ``=`` ``"Cylinders"``,`` `` shape ``=`` ``"Cylinders"`` `` ``)`` ``+`` `` `[`fig_apply_spec`](https://dansemakula.github.io/figspec/reference/fig_apply_spec.md)`(``report_spec``, base_size ``=`` ``12``)``,`` `` vehicle_class ``=`` `[`ggplot`](https://ggplot2.tidyverse.org/reference/ggplot.html)`(`` `` ``ggplot2``::`[`mpg`](https://ggplot2.tidyverse.org/reference/mpg.html)`,`` `` `[`aes`](https://ggplot2.tidyverse.org/reference/aes.html)`(``hwy``, `[`reorder`](https://rdrr.io/r/stats/reorder.factor.html)`(``class``, ``hwy``, ``median``)``, fill ``=`` ``class``)`` `` ``)`` ``+`` `` `[`geom_boxplot`](https://ggplot2.tidyverse.org/reference/geom_boxplot.html)`(`` `` width ``=`` ``0.65``,`` `` alpha ``=`` ``0.9``,`` `` outlier.shape ``=`` ``21``,`` `` outlier.size ``=`` ``1.8``,`` `` show.legend ``=`` ``FALSE`` `` ``)`` ``+`` `` `[`labs`](https://ggplot2.tidyverse.org/reference/labs.html)`(`` `` title ``=`` ``"Highway fuel economy by vehicle class"``,`` `` x ``=`` ``"Highway miles per gallon"``,`` `` y ``=`` ``"Vehicle class"`` `` ``)`` ``+`` `` `[`fig_apply_spec`](https://dansemakula.github.io/figspec/reference/fig_apply_spec.md)`(``report_spec``, base_size ``=`` ``12``)`` ``)`` `` ``submission_figures``$``engine_size`` ``submission_figures``$``vehicle_class`
+
+![A fitted scatter plot of engine displacement and highway fuel economy.
+Colour and shape identify the number of
+cylinders.](figspec_files/figure-html/submission-plots-1.png)![A
+horizontal box plot comparing highway fuel economy across vehicle
+classes, with each class shown in a different accessible
+colour.](figspec_files/figure-html/submission-plots-2.png)
+
+[`submission_check`](https://dansemakula.github.io/figspec/reference/submission_check.md)`(``submission_figures``, ``report_spec``, column ``=`` ``"full"``)`` ``#> `` ``#> ``──`` ``Submission check - Quarterly outcomes report`` ``────────────────────────────────`` ``#> 2 items checked (2 figures, 0 tables)`` ``#> `` ``#> ``!`` engine_size figure full incomplete (3 recorded requirement(s) not judged)`` ``#> ``!`` vehicle_class figure full incomplete (2 recorded requirement(s) not judged)`` ``#> `` ``#> ``ℹ`` Plot areas differ by 12.5 mm across this set (engine_size 119.2 mm, vehicle_class 131.7 mm). No publisher requires them to match, so this is not a failure. To make them match, pass fig_panel_width() to fig_save().`` ``#> `` ``#> ``!`` No failures found, but at least one item is not fully assessed.`` ``#> ``ℹ`` Some requirements could not be judged automatically. Use submission_detail() to see what remains to be reviewed for each item.`
+
+This first report checks everything that can be inspected while the
+plots are still editable. Properties that belong to the finished files,
+such as the saved format, resolution and file size, cannot be confirmed
+yet and remain incomplete. After export, run
+[`submission_check()`](https://dansemakula.github.io/figspec/reference/submission_check.md)
+on the saved files to verify those properties as well.
 
 The same function accepts a directory or a vector of saved file paths.
 It can check those files for dimensions, format, resolution and file
@@ -399,7 +528,7 @@ project specification instead of a registry name. The function needs the
 original plot objects because a finished TIFF no longer contains
 reliable information about settings such as the original text sizes.
 
-## Tables, graphical abstracts, video and audio
+## Preparing tables and other publication files
 
 A publication may also include tables, graphical abstracts, video or
 audio, each with requirements of its own. A publisher may specify how
@@ -407,6 +536,21 @@ tables are formatted, the dimensions of a graphical abstract, or the
 file types and technical limits accepted for video and audio. figspec
 reports each kind of requirement separately so it is clear which rules
 apply to which file.
+
+`table_report_spec`` ``<-`` `[`list`](https://rdrr.io/r/base/list.html)`(`` `` name ``=`` ``"Quarterly outcomes report"``,`` `` tables ``=`` `[`list`](https://rdrr.io/r/base/list.html)`(`` `` formats ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``"html"``, ``"docx"``)``,`` `` font_min_pt ``=`` ``9``,`` `` header_bold ``=`` ``TRUE``,`` `` vertical_rules ``=`` ``FALSE`` `` ``)`` ``)`` `` ``summary_table`` ``<-`` `[`table_apply_spec`](https://dansemakula.github.io/figspec/reference/table_apply_spec.md)`(`` `` ``mpg``[``1``:``10``, `[`c`](https://rdrr.io/r/base/c.html)`(``"manufacturer"``, ``"model"``, ``"displ"``, ``"hwy"``)``]``,`` `` ``table_report_spec`` ``)`` `[`table_check`](https://dansemakula.github.io/figspec/reference/table_check.md)`(``summary_table``, ``table_report_spec``)`` ``#> `` ``#> ``──`` ``Quarterly outcomes report`` ``───────────────────────────────────────────────────`` ``#> ``checked: gt table object`` ``#> `` ``#> ``✔`` File validity valid requires: readable table object`` ``#> ``!`` File format could not determine requires: HTML, DOCX`` ``#> ``✔`` Minimum type size 9 requires: 9`` ``#> ``✔`` Bold header TRUE requires: TRUE`` ``#> ``✔`` Vertical rules FALSE requires: FALSE`` ``#> `` ``#> ``!`` No failures were found, but this assessment is incomplete.`` ``#> ``ℹ`` 1 requirement or registry field could not be judged automatically - check by`` ``#> hand.`
+
+The same table can be exported and checked in one call:
+
+`table_path`` ``<-`` `[`file.path`](https://rdrr.io/r/base/file.path.html)`(`[`tempdir`](https://rdrr.io/r/base/tempfile.html)`(``)``, ``"vehicle-summary.html"``)`` ``saved_table`` ``<-`` `[`table_save`](https://dansemakula.github.io/figspec/reference/table_save.md)`(`` `` ``table_path``,`` `` ``summary_table``,`` `` ``table_report_spec``,`` `` transform ``=`` ``FALSE`` ``)`` `[`attr`](https://rdrr.io/r/base/attr.html)`(``saved_table``, ``"figspec_table_report"``)`` ``#> `` ``#> ``──`` ``Quarterly outcomes report`` ``───────────────────────────────────────────────────`` ``#> ``checked:`` ``#> ``/var/folders/nr/p09jj77n7jn9606qt_2m77nc0000gn/T//Rtmp41AIs8/vehicle-summary.html`` ``#> `` ``#> ``✔`` File validity valid requires: readable table object`` ``#> ``✔`` Minimum type size 9 requires: 9`` ``#> ``✔`` Bold header TRUE requires: TRUE`` ``#> ``✔`` Vertical rules FALSE requires: FALSE`` ``#> ``✔`` File format html requires: HTML, DOCX`` ``#> `` ``#> ``✔`` Every recorded requirement that applies was met.`
+
+[`table_apply_spec()`](https://dansemakula.github.io/figspec/reference/table_apply_spec.md)
+also accepts existing gt, flextable, kableExtra and grid tables. Read
+[Build and check tables from
+R](https://dansemakula.github.io/figspec/articles/tables.md) for worked
+examples and the limits of each table system.
+
+The lookup functions remain useful for publication assets with their own
+requirements:
 
 [`graphical_abstract_spec`](https://dansemakula.github.io/figspec/reference/graphical_abstract_spec.md)`(``"rsc"``)`` ``#> `` ``#> ``──`` ``Royal Society of Chemistry journals - graphical abstract`` ``────────────────────`` ``#> • ``Maximum size:`` 80 x 40 mm`` ``#> • ``Resolution:`` 600 dpi`` ``#> • ``Formats:`` TIFF`` ``#> • ``Text limit:`` 250 characters`` ``#> `` ``#> ``The figure should be a maximum size of 8 cm wide x 4 cm high ... Figures should`` ``#> ``be supplied as TIFF files, with a resolution of 600 dpi or greater ... The text`` ``#> ``supplied should be 1-2 sentences long, using a maximum of 250 characters.`` ``#> `` ``#> ``Source:`` ``#> ``<https://www.rsc.org/publishing/publish-with-us/publish-a-journal-article/chem-soc-rev>`` ``#> (verified 2026-08-22)`` `[`table_spec`](https://dansemakula.github.io/figspec/reference/table_spec.md)`(``"nature"``)`` ``#> `` ``#> ``──`` ``Nature - tables`` ``─────────────────────────────────────────────────────────────`` ``#> • ``Orientation:`` portrait`` ``#> • ``Title style:`` short, one-line title in bold text`` ``#> • ``Notes:`` Symbols and abbreviations are defined immediately below the table,`` ``#> followed by essential descriptive material, all in double-spaced text.`` ``#> `` ``#> ``Publisher's wording: Tables should each be presented on a separate page,`` ``#> ``portrait (not landscape) orientation, and upright on the page, not sideways.`` ``#> ``Tables have a short, one-line title in bold text. Tables should be as small as`` ``#> ``possible.`` ``#> `` ``#> ``Source:`` ``<https://www.nature.com/nature/for-authors/final-submission>`` (verified`` ``#> 2026-09-03)`` `[`media_spec`](https://dansemakula.github.io/figspec/reference/media_spec.md)`(``"science"``)`` ``#> `` ``#> ``──`` ``Science - supplementary media`` ``───────────────────────────────────────────────`` ``#> • ``Video formats:`` MP4, MOV`` ``#> • ``Video codec:`` H.264`` ``#> • ``Maximum frame size:`` 1920 x 1080`` ``#> • ``Preferred frame sizes:`` 640 x 480 or 1280 x 720`` ``#> • ``Maximum file size:`` 50 MB`` ``#> • ``Audio formats:`` WAV, MP3, M4A`` ``#> • ``Audio bit rate:`` 160 kb/s`` ``#> `` ``#> ``Aim to stay within 640 x 480 or 1280 x 720 resolution. Do not exceed full HD`` ``#> ``frame size (1920 x 1080)`` ``#> `` ``#> ``Source:`` ``#> ``<https://www.science.org/content/page/instructions-preparing-initial-manuscript>`` ``#> (verified 2026-08-22)`` ``#> ``Applies at:`` initial submission`
 
@@ -424,7 +568,9 @@ keeps the dimensions in pixels rather than guessing a physical size. If
 the guidance does not state a rule, the report says that it is
 unspecified. To check text size, provide the original plot because a
 saved raster image no longer records the text’s point size. The report
-lists each item that still needs manual review.
+lists each item that still needs manual review. For tables, instructions
+about whether a title is concise, a footnote is clear or every
+abbreviation is defined also remain for a person to assess.
 
 figspec also measures differences between plotting-panel sizes without
 calling them a failure. No publisher profile in the registry currently
@@ -435,9 +581,15 @@ requirement.
 
 ## Where to go next
 
+- [Use figspec with different R plotting
+  systems](https://dansemakula.github.io/figspec/articles/figure-systems.md)
+  for worked ggplot2, base R, lattice, grid and Plotly examples.
 - [Learn about panel
   sizing](https://dansemakula.github.io/figspec/articles/panels.md) to
   align the plotting areas across a set of figures.
+- [Build and check tables from
+  R](https://dansemakula.github.io/figspec/articles/tables.md) to apply
+  table requirements and verify exported files.
 - [Browse the publication
   profiles](https://dansemakula.github.io/figspec/articles/journals.md)
   and see how complete each registry entry is.

@@ -3,11 +3,13 @@
 <url><loc>https://dansemakula.github.io/figspec/CONTRIBUTING.html</loc></url>
 <url><loc>https://dansemakula.github.io/figspec/LICENSE.html</loc></url>
 <url><loc>https://dansemakula.github.io/figspec/articles/figspec.html</loc></url>
+<url><loc>https://dansemakula.github.io/figspec/articles/figure-systems.html</loc></url>
 <url><loc>https://dansemakula.github.io/figspec/articles/index.html</loc></url>
 <url><loc>https://dansemakula.github.io/figspec/articles/journals.html</loc></url>
 <url><loc>https://dansemakula.github.io/figspec/articles/options.html</loc></url>
 <url><loc>https://dansemakula.github.io/figspec/articles/panels.html</loc></url>
 <url><loc>https://dansemakula.github.io/figspec/articles/registry.html</loc></url>
+<url><loc>https://dansemakula.github.io/figspec/articles/tables.html</loc></url>
 <url><loc>https://dansemakula.github.io/figspec/authors.html</loc></url>
 <url><loc>https://dansemakula.github.io/figspec/index.html</loc></url>
 <url><loc>https://dansemakula.github.io/figspec/news/index.html</loc></url>
@@ -48,6 +50,7 @@
 <url><loc>https://dansemakula.github.io/figspec/reference/spec_list.html</loc></url>
 <url><loc>https://dansemakula.github.io/figspec/reference/spec_load.html</loc></url>
 <url><loc>https://dansemakula.github.io/figspec/reference/spec_register.html</loc></url>
+<url><loc>https://dansemakula.github.io/figspec/reference/spec_save.html</loc></url>
 <url><loc>https://dansemakula.github.io/figspec/reference/spec_style_palette.html</loc></url>
 <url><loc>https://dansemakula.github.io/figspec/reference/style_list.html</loc></url>
 <url><loc>https://dansemakula.github.io/figspec/reference/style_load.html</loc></url>
@@ -56,6 +59,9 @@
 <url><loc>https://dansemakula.github.io/figspec/reference/style_save.html</loc></url>
 <url><loc>https://dansemakula.github.io/figspec/reference/submission_check.html</loc></url>
 <url><loc>https://dansemakula.github.io/figspec/reference/submission_detail.html</loc></url>
+<url><loc>https://dansemakula.github.io/figspec/reference/table_apply_spec.html</loc></url>
+<url><loc>https://dansemakula.github.io/figspec/reference/table_check.html</loc></url>
+<url><loc>https://dansemakula.github.io/figspec/reference/table_save.html</loc></url>
 <url><loc>https://dansemakula.github.io/figspec/reference/table_spec.html</loc></url>
 <url><loc>https://dansemakula.github.io/figspec/reference/theme_spec.html</loc></url>
 </urlset>

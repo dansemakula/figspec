@@ -2,24 +2,22 @@
 % Please edit documentation in R/submission.R
 \name{submission_check}
 \alias{submission_check}
-\title{Review a set of figures together}
+\title{Review figures and tables together}
 \usage{
 submission_check(
   x,
   spec = NULL,
   column = NULL,
   dpi = NULL,
-  pattern = "\\\\.(tiff?|png|jpe?g|pdf|eps|ps|svg)$",
+  pattern = "\\\\.(tiff?|png|jpe?g|pdf|eps|ps|svg|html?|docx|rtf|tex|latex)$",
   recursive = FALSE,
-  art_type = c("auto", "colour", "bw", "line", "combination")
+  art_type = c("auto", "colour", "bw", "line", "combination"),
+  asset_type = c("auto", "figure", "table")
 )
 }
 \arguments{
-\item{x}{A non-empty list of supported live figures, a directory path, or a
-character vector of figure-file paths. A live figure may be a ggplot2 or
-patchwork object, a lattice or Plotly plot, a grid object, or base-graphics
-code wrapped in a function or one-sided formula. Figure names and file
-basenames are used in the summary.}
+\item{x}{A non-empty list of supported live figures or tables, a directory
+path, or a character vector of exported asset paths.}
 
 \item{spec}{The specification to use: a registry id, a \code{figspec_spec}, a
 named list of requirements, or \code{NULL} to inspect without assigning pass or
@@ -33,7 +31,7 @@ every figure name in \code{x}.}
 It is also the intended export resolution when \code{x} contains live plots.}
 
 \item{pattern}{Regular expression selecting files when \code{x} is a directory.
-Defaults to common figure extensions.}
+Defaults to common figure and table extensions.}
 
 \item{recursive}{Whether a directory scan should include subdirectories.
 Must be one \code{TRUE} or \code{FALSE} value.}
@@ -42,17 +40,21 @@ Must be one \code{TRUE} or \code{FALSE} value.}
 the content of a live plot; for saved files, where that evidence has been
 lost, it applies the strictest recorded threshold. Explicit choices are
 \code{"colour"}, \code{"bw"}, \code{"line"} and \code{"combination"}.}
+
+\item{asset_type}{Whether each item is a figure or table. The default
+detects live objects and treats HTML, DOCX, RTF and TeX files as tables.
+A uniquely named vector can classify every item explicitly.}
 }
 \value{
 An object of class \code{figspec_submission}: a data frame with one row
-per figure. The full per-requirement reports are kept in the \code{"reports"}
+per item. The full per-requirement reports are kept in the \code{"reports"}
 attribute.
 }
 \description{
-Runs \code{\link[=fig_check]{fig_check()}} over every figure in a collection and returns one summary
-row per figure. Use it to review the figures for a manuscript, report,
-presentation or other project in one place, while retaining the full check
-report for each item.
+Runs the relevant figure or table check over every item in a collection and
+returns one summary row per item. Use it to review a manuscript, report,
+presentation or other project in one place, while retaining every complete
+report.
 }
 \details{
 Check live figure objects before export and the written files afterwards

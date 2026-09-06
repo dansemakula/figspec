@@ -136,7 +136,7 @@ transformed &lt;- fig_save(
 )
 
 transformed</code></pre><p class="fs-example-result"><strong>Result:</strong> The transformed file applies the project specification; the preserved file retains the supplied plot styling.</p></div></details></td></tr>
-<tr><td><code>check</code></td><td>Whether to check the result and report failures as a warning. Only checks against a journal when one is given.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Leave checking on to verify the saved file against the specification. The report is attached to the returned path for later inspection.</p><pre><code class="language-r">checked &lt;- fig_save(
+<tr><td><code>check</code></td><td>Whether to check the result and report failures as a warning. Compliance is judged only when spec is supplied.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Leave checking on to verify the saved file against the specification. The report is attached to the returned path for later inspection.</p><pre><code class="language-r">checked &lt;- fig_save(
   file.path(tempdir(), &quot;checked-pnas-figure.tiff&quot;),
   p,
   spec = &quot;pnas&quot;,
@@ -205,7 +205,7 @@ report_spec &lt;- list(
 <colgroup><col style="width:26%"><col style="width:74%"></colgroup>
 <thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
 <tbody>
-<tr><td><code>x</code></td><td>A ggplot object, or a path to a figure file.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Check either a plot that is still editable or a finished figure file. This example reopens the TIFF created in the setup and reads its saved properties.</p><pre><code class="language-r">fig_check(
+<tr><td><code>x</code></td><td>A supported live figure, or a path to a figure file. Live figures include ggplot2 and patchwork objects, lattice plots, Plotly and other HTML widgets, grid grobs, recorded base plots, and base-graphics code wrapped in a function or one-sided formula.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Check either a plot that is still editable or a finished figure file. This example reopens the TIFF created in the setup and reads its saved properties.</p><pre><code class="language-r">fig_check(
   x = pnas_file,
   spec = &quot;pnas&quot;,
   column = &quot;small&quot;,
@@ -924,7 +924,7 @@ style_file &lt;- tempfile(fileext = &quot;.rds&quot;)
 <colgroup><col style="width:26%"><col style="width:74%"></colgroup>
 <thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
 <tbody>
-<tr><td><code>path</code></td><td>The RDS file to create.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Choose where the RDS file should be written. Existing files at that path are replaced, so use a project-controlled location.</p><pre><code class="language-r">saved_path &lt;- style_save(
+<tr><td><code>path</code></td><td>The RDS file to create.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Choose a project-controlled .rds file. figspec writes and validates a temporary copy before replacing an existing file, and it refuses directories and symbolic links.</p><pre><code class="language-r">saved_path &lt;- style_save(
   path = style_file
 )
 
@@ -968,7 +968,7 @@ style_remove(&quot;dynamic_style&quot;)
 <colgroup><col style="width:26%"><col style="width:74%"></colgroup>
 <thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
 <tbody>
-<tr><td><code>path</code></td><td>The RDS file previously created by style_save().<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Load an RDS file created by style_save(). Use only files you created or received through a source you trust.</p><pre><code class="language-r">loaded_names &lt;- style_load(
+<tr><td><code>path</code></td><td>The RDS file previously created by style_save().<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Load an RDS file created by style_save(). The file must be non-empty, no larger than 10 MB and contain valid named styles. Use only files you created or received through a source you trust.</p><pre><code class="language-r">loaded_names &lt;- style_load(
   path = style_file
 )
 
@@ -2281,6 +2281,134 @@ profile_row &lt;- profile_row[
 profile_row</code></pre><p class="fs-example-result"><strong>Result:</strong> The registry listing shows the publication name, publisher, health and statistics disciplines, all-stage scope and user origin recorded by the additional fields.</p></div></details></td></tr>
 </tbody></table>
 
+### `spec_save()`
+
+Save a specification for reuse
+
+Save a publication, project or organisational specification in a YAML file that figspec can load in later R sessions. figspec validates the complete file before replacing anything, so a failed update leaves the previous registry intact.
+
+<details class="fs-function-setup"><summary>Run the example setup</summary>
+<div class="fs-argument-example-body"><pre><code class="language-r">
+reusable_spec &lt;- list(
+  name = &quot;Research unit report&quot;,
+  columns = list(full = 160),
+  dpi_min = 300,
+  formats = c(&quot;png&quot;, &quot;pdf&quot;),
+  font_min_pt = 9,
+  tables = list(
+    formats = c(&quot;html&quot;, &quot;docx&quot;),
+    font_min_pt = 9,
+    header_bold = TRUE,
+    vertical_rules = FALSE
+  )
+)
+
+spec_output_dir &lt;- tempfile(&quot;figspec-spec-save-&quot;)
+dir.create(spec_output_dir)
+</code></pre></div></details>
+
+<table class="table fs-options-table">
+<colgroup><col style="width:26%"><col style="width:74%"></colgroup>
+<thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
+<tbody>
+<tr><td><code>spec</code></td><td>A registry id, a figspec_spec, or a named list containing at least a non-empty name and any figure, table, media or graphical-abstract requirements to save.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a registry id, a specification returned by spec_get() or a named list of your own requirements. Figure and table requirements are stored together and retain their separate structure.</p><pre><code class="language-r">specification_file &lt;- file.path(
+  spec_output_dir,
+  &quot;saved-list.yml&quot;
+)
+spec_save(
+  reusable_spec,
+  specification_file,
+  id = &quot;research_unit_report&quot;
+)
+saved_entry &lt;- yaml::read_yaml(
+  specification_file,
+  eval.expr = FALSE
+)$specifications[[1]]
+
+c(
+  name = saved_entry$name,
+  figure_width_mm = saved_entry$requirements$columns$full,
+  table_font_pt = saved_entry$tables$font_min_pt
+)</code></pre><p class="fs-example-result"><strong>Result:</strong> The saved entry retains the report name, its 160 mm figure width and its 9 pt table-text requirement in one validated file.</p></div></details></td></tr>
+<tr><td><code>path</code></td><td>Destination .yaml or .yml file. If it already contains a valid figspec registry, a new id is appended without removing the other entries.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Choose a .yaml or .yml file in an existing directory. Keep it with the project or in a shared version-controlled folder, then pass the same path to spec_load() when an R session starts.</p><pre><code class="language-r">project_registry &lt;- file.path(
+  spec_output_dir,
+  &quot;project-specifications.yml&quot;
+)
+saved_path &lt;- spec_save(
+  reusable_spec,
+  project_registry,
+  id = &quot;project_report&quot;
+)
+
+c(
+  path = saved_path,
+  exists = file.exists(saved_path),
+  valid = suppressMessages(
+    registry_validate_file(saved_path)
+  )
+)</code></pre><p class="fs-example-result"><strong>Result:</strong> figspec creates project-specifications.yml, validates it and returns the supplied path invisibly.</p></div></details></td></tr>
+<tr><td><code>id</code></td><td>A short identifier beginning with a lower-case letter and containing only lower-case letters, numbers and underscores. It may be omitted when spec already contains an id.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Give the specification a short stable identifier. This is the name used in later calls after spec_load(); lower-case letters, numbers and underscores are accepted.</p><pre><code class="language-r">id_file &lt;- file.path(spec_output_dir, &quot;id-example.yml&quot;)
+spec_save(
+  reusable_spec,
+  id_file,
+  id = &quot;quarterly_report&quot;
+)
+spec_load(id_file)
+
+loaded_spec &lt;- spec_get(&quot;quarterly_report&quot;)
+c(id = loaded_spec$id, name = loaded_spec$name)</code></pre><p class="fs-example-result"><strong>Result:</strong> The YAML entry is loaded under quarterly_report while reports display the readable name Research unit report.</p></div></details></td></tr>
+<tr><td><code>source_url</code></td><td>Where the requirements came from: an HTTP(S) page, a file: URI or an internal: identifier. When omitted, an existing value in spec is kept; otherwise internal:&lt;id&gt; is recorded.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Record where the requirements came from. Use a public HTTP or HTTPS page when one exists, a file: address for a controlled local document, or an internal: label for an organisational decision. If this argument and the specification both omit a source, figspec records internal:id.</p><pre><code class="language-r">source_file &lt;- file.path(spec_output_dir, &quot;source-example.yml&quot;)
+spec_save(
+  reusable_spec,
+  source_file,
+  id = &quot;methods_handbook&quot;,
+  source_url = &quot;internal:methods-handbook-v3&quot;
+)
+yaml::read_yaml(
+  source_file,
+  eval.expr = FALSE
+)$specifications[[1]]$source_url</code></pre><p class="fs-example-result"><strong>Result:</strong> The reusable entry records internal:methods-handbook-v3 instead of implying that its requirements came from a publisher.</p></div></details></td></tr>
+<tr><td><code>verified_on</code></td><td>Date the source or internal requirements were last checked, as &quot;YYYY-MM-DD&quot; or a Date. When omitted, an existing value in spec is kept; otherwise today's date is recorded.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Record when the source or internal requirements were last checked. Use a Date or a real date in YYYY-MM-DD form. If it is omitted everywhere, figspec records the day the specification is saved.</p><pre><code class="language-r">dated_file &lt;- file.path(spec_output_dir, &quot;dated-example.yml&quot;)
+review_date &lt;- Sys.Date() - 30
+spec_save(
+  reusable_spec,
+  dated_file,
+  id = &quot;reviewed_report&quot;,
+  verified_on = review_date
+)
+yaml::read_yaml(
+  dated_file,
+  eval.expr = FALSE
+)$specifications[[1]]$verified_on</code></pre><p class="fs-example-result"><strong>Result:</strong> The YAML file retains the supplied review date in YYYY-MM-DD form so users can see when the requirements were last checked.</p></div></details></td></tr>
+<tr><td><code>overwrite</code></td><td>Whether an entry with the same id may be replaced. Other entries in the file are always preserved.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Leave overwrite as FALSE to prevent an existing id from being replaced accidentally. Set it to TRUE only when deliberately updating that specification; every other entry in the file is preserved.</p><pre><code class="language-r">update_file &lt;- file.path(spec_output_dir, &quot;updates.yml&quot;)
+spec_save(
+  reusable_spec,
+  update_file,
+  id = &quot;annual_report&quot;
+)
+spec_save(
+  list(name = &quot;Poster format&quot;, columns = list(full = 900)),
+  update_file,
+  id = &quot;conference_poster&quot;
+)
+spec_save(
+  c(reusable_spec, list(notes = &quot;Reviewed for the new report cycle&quot;)),
+  update_file,
+  id = &quot;annual_report&quot;,
+  overwrite = TRUE
+)
+
+updated_ids &lt;- vapply(
+  yaml::read_yaml(
+    update_file,
+    eval.expr = FALSE
+  )$specifications,
+  function(entry) entry$id,
+  character(1)
+)
+updated_ids</code></pre><p class="fs-example-result"><strong>Result:</strong> annual_report is deliberately replaced and conference_poster remains in the same file; without overwrite = TRUE, figspec refuses the duplicate id.</p></div></details></td></tr>
+</tbody></table>
+
 ### `spec_load()`
 
 Load specifications from a YAML registry
@@ -2298,7 +2426,7 @@ registry_file &lt;- file.path(
 
 yaml::write_yaml(
   list(
-    journals = list(
+    specifications = list(
       list(
         id = &quot;research_unit_report&quot;,
         name = &quot;Research Unit Report&quot;,
@@ -2334,7 +2462,7 @@ yaml::write_yaml(
 <colgroup><col style="width:26%"><col style="width:74%"></colgroup>
 <thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
 <tbody>
-<tr><td><code>path</code></td><td>Path to a non-empty YAML registry file. The file may contain a top-level journals: list, like figspec's bundled registry, or be the list of entries itself.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply the path to a YAML registry. The entire file is validated before anything is added. The example loads one specification, applies it to all 574 observations in ggplot2's economics data, exports a real PNG and verifies the result.</p><pre><code class="language-r">loaded_ids &lt;- spec_load(
+<tr><td><code>path</code></td><td>Path to a non-empty YAML registry file. The file may contain a top-level specifications: list written by spec_save(), the legacy journals: list used by figspec's bundled registry, or be the list of entries itself.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply the path to a YAML registry. The entire file is validated before anything is added. The example loads one specification, applies it to all 574 observations in ggplot2's economics data, exports a real PNG and verifies the result.</p><pre><code class="language-r">loaded_ids &lt;- spec_load(
   registry_file
 )
 
@@ -2401,9 +2529,9 @@ saved_report[
 
 ### `submission_check()`
 
-Review a set of figures together
+Review figures and tables together
 
-Review a collection of figures in one operation. A concise summary shows which figures pass, fail or still need information, while the complete report for every figure remains available for closer inspection.
+Review figures and tables in one operation. A concise summary identifies each item and shows whether it passes, fails, needs more information or was inspected without a specification. The complete report for every item remains available for closer inspection.
 
 <details class="fs-function-setup"><summary>Run the example setup</summary>
 <div class="fs-argument-example-body"><pre><code class="language-r">
@@ -2508,7 +2636,7 @@ save_figure_set &lt;- function(directory) {
 <colgroup><col style="width:26%"><col style="width:74%"></colgroup>
 <thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
 <tbody>
-<tr><td><code>x</code></td><td>A non-empty list of supported live figures, a directory path, or a character vector of figure-file paths. A live figure may be a ggplot2 or patchwork object, a lattice or Plotly plot, a grid object, or base-graphics code wrapped in a function or one-sided formula. Figure names and file basenames are used in the summary.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a named list of live plots, one directory, or a character vector of saved-file paths. The example checks three plots containing 234, 574 and 53,940 observations, exports them at their assigned widths and then checks the written files as a second, complementary review.</p><pre><code class="language-r">plot_review &lt;- submission_check(
+<tr><td><code>x</code></td><td>A non-empty list of supported live figures or tables, a directory path, or a character vector of exported asset paths.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a named list of live figures and tables, one directory, or a character vector of saved-file paths. The example checks three plots containing 234, 574 and 53,940 observations, exports them at their assigned widths and then checks the written files as a second, complementary review.</p><pre><code class="language-r">plot_review &lt;- submission_check(
   figures,
   spec = submission_spec,
   column = column_map,
@@ -2596,7 +2724,7 @@ list(
     basename(png_without_dpi)
   )
 )</code></pre><p class="fs-example-result"><strong>Result:</strong> Without a recorded or supplied resolution, the file's physical width and resolution remain unresolved. Supplying 300 dpi allows its 1,004 pixels to be interpreted as approximately 85 mm and both checks pass.</p></div></details></td></tr>
-<tr><td><code>pattern</code></td><td>Regular expression selecting files when x is a directory. Defaults to common figure extensions.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>When x is a directory, use a regular expression to select the files to check. Matching is case-insensitive. Files that do not match remain untouched and are not included in the result.</p><pre><code class="language-r">pattern_directory &lt;- file.path(
+<tr><td><code>pattern</code></td><td>Regular expression selecting files when x is a directory. Defaults to common figure and table extensions.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>When x is a directory, use a regular expression to select the files to check. Matching is case-insensitive. Files that do not match remain untouched and are not included in the result.</p><pre><code class="language-r">pattern_directory &lt;- file.path(
   example_root,
   &quot;pattern-selection&quot;
 )
@@ -2704,13 +2832,34 @@ rbind(
   colour = colour_resolution,
   line_art = line_resolution
 )</code></pre><p class="fs-example-result"><strong>Result:</strong> At 300 dpi the colour interpretation passes Cell Press's 300 dpi rule, while the line-art interpretation fails its stricter 1,000 dpi rule.</p></div></details></td></tr>
+<tr><td><code>asset_type</code></td><td>Whether each item is a figure or table. The default detects live objects and treats HTML, DOCX, RTF and TeX files as tables. A uniquely named vector can classify every item explicitly.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Leave asset_type as auto for ordinary use. figspec recognises supported live figures and tables and recognises HTML, DOCX, RTF and TeX files as tables. Name each value when an image or PDF contains a table and the file type alone cannot reveal that.</p><pre><code class="language-r">mixed_spec &lt;- list(
+  name = &quot;Research report&quot;,
+  columns = list(single = 85),
+  dpi_min = 300,
+  formats = &quot;png&quot;,
+  tables = list(
+    font_min_pt = 9,
+    header_bold = TRUE
+  )
+)
+mixed_review &lt;- submission_check(
+  list(
+    figure = vehicles_plot,
+    table = head(mpg)
+  ),
+  spec = mixed_spec,
+  column = &quot;single&quot;,
+  asset_type = &quot;auto&quot;
+)
+
+mixed_review[, c(&quot;file&quot;, &quot;asset&quot;, &quot;result&quot;)]</code></pre><p class="fs-example-result"><strong>Result:</strong> The summary identifies the ggplot as a figure and the data frame as a table, then sends each item through the checks that apply to that kind of asset.</p></div></details></td></tr>
 </tbody></table>
 
 ### `submission_detail()`
 
-Open the full report for one figure
+Open the full report for one submission item
 
-A collection review is intentionally brief. Open one figure's full report when you need to see why it failed, which values were measured or which requirements could not be assessed. This example checks two plots made from all 234 rows of ggplot2's mpg data. The second plot deliberately uses text below the project's minimum so there is a real problem to diagnose.
+A collection review is intentionally brief. Open one figure or table's full report when you need to see why it failed, which values were measured or which requirements could not be assessed. This example checks two plots made from all 234 rows of ggplot2's mpg data. The second plot deliberately uses text below the project's minimum so there is a real problem to diagnose.
 
 <details class="fs-function-setup"><summary>Run the example setup</summary>
 <div class="fs-argument-example-body"><pre><code class="language-r">
@@ -2766,13 +2915,13 @@ detail_review &lt;- submission_check(
 <colgroup><col style="width:26%"><col style="width:74%"></colgroup>
 <thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
 <tbody>
-<tr><td><code>x</code></td><td>The complete figspec_submission object returned by submission_check().<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Pass the complete result from submission_check(). Keep that object intact: it contains the short summary you can see and the full report stored for each figure.</p><pre><code class="language-r">ready_detail &lt;- submission_detail(
+<tr><td><code>x</code></td><td>The complete figspec_submission object returned by submission_check().<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Pass the complete result from submission_check(). Keep that object intact: it contains the short summary you can see and the full report stored for each figure or table.</p><pre><code class="language-r">ready_detail &lt;- submission_detail(
   x = detail_review,
   file = &quot;ready&quot;
 )
 
 ready_detail</code></pre><p class="fs-example-result"><strong>Result:</strong> The full report for ready lists every requirement that figspec assessed, including width, resolution, typography, colour and panel geometry.</p></div></details></td></tr>
-<tr><td><code>file</code></td><td>Exactly one figure name from the file column of x. For live plots this is the list name; for saved figures it is the file name shown in the submission summary.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Choose one name exactly as it appears in the summary's file column. For a named list of plots this is the list name; for saved figures it is the displayed file name.</p><pre><code class="language-r">problem_detail &lt;- submission_detail(
+<tr><td><code>file</code></td><td>Exactly one item name from the file column of x. For live objects this is the list name; for saved assets it is the file name shown in the submission summary.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Choose one name exactly as it appears in the summary's file column. For a named list this is the item name; for saved figures or tables it is the displayed file name.</p><pre><code class="language-r">problem_detail &lt;- submission_detail(
   detail_review,
   file = &quot;text_too_small&quot;
 )
@@ -2998,43 +3147,6 @@ rbind(
 png_review[, c(&quot;file&quot;, &quot;result&quot;)]</code></pre><p class="fs-example-result"><strong>Result:</strong> The exported file is named economy.png and its detailed report confirms that PNG is accepted by the specification.</p></div></details></td></tr>
 </tbody></table>
 
-### `table_spec()`
-
-Look up table requirements
-
-Table instructions are usually editorial rather than measurements that can be verified automatically. This lookup keeps them beside the figure requirements so the same source and review date remain visible while a manuscript, report or presentation is being prepared.
-
-<details class="fs-function-setup"><summary>Run the example setup</summary>
-<div class="fs-argument-example-body"><pre><code class="language-r">
-custom_table_spec &lt;- list(
-  name = &quot;Annual research report&quot;,
-  source_url = &quot;internal:report-style-guide&quot;,
-  verified_on = as.character(Sys.Date()),
-  tables = list(
-    orientation = &quot;portrait&quot;,
-    title_style = &quot;Short title above the table&quot;,
-    notes = &quot;Define abbreviations below the table&quot;
-  )
-)
-</code></pre></div></details>
-
-<table class="table fs-options-table">
-<colgroup><col style="width:26%"><col style="width:74%"></colgroup>
-<thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
-<tbody>
-<tr><td><code>spec</code></td><td>A registry id such as &quot;nature&quot;, a figspec_spec, or a named list containing table requirements.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a bundled registry id or a specification maintained by your project or organisation. The returned object contains only the table instructions, together with their source and review date.</p><pre><code class="language-r">nature_table_rules &lt;- table_spec(
-  spec = &quot;nature&quot;
-)
-report_table_rules &lt;- table_spec(
-  spec = custom_table_spec
-)
-
-list(
-  publication = nature_table_rules,
-  project = report_table_rules
-)</code></pre><p class="fs-example-result"><strong>Result:</strong> The publication lookup returns Nature's recorded table instructions, while the project lookup returns the portrait orientation, title placement and abbreviation note defined in the local specification.</p></div></details></td></tr>
-</tbody></table>
-
 ### `media_spec()`
 
 Look up supplementary media requirements
@@ -3181,6 +3293,259 @@ list(
   publication = rsc_abstract_rules,
   project = project_abstract_rules
 )</code></pre><p class="fs-example-result"><strong>Result:</strong> The RSC profile returns its 80 × 40 mm graphical-abstract size and 250-character limit; the project profile returns its separate 120 × 70 mm PNG specification.</p></div></details></td></tr>
+</tbody></table>
+
+## Build, export and check tables
+
+### `table_spec()`
+
+Look up table requirements
+
+Retrieve the table requirements recorded for a publication, project or organisation. Measurable fields can be passed directly to the table build, export and check workflow; editorial instructions remain visible for review with the same source and review date.
+
+<details class="fs-function-setup"><summary>Run the example setup</summary>
+<div class="fs-argument-example-body"><pre><code class="language-r">
+custom_table_spec &lt;- list(
+  name = &quot;Annual research report&quot;,
+  source_url = &quot;internal:report-style-guide&quot;,
+  verified_on = as.character(Sys.Date()),
+  tables = list(
+    orientation = &quot;portrait&quot;,
+    title_style = &quot;Short title above the table&quot;,
+    notes = &quot;Define abbreviations below the table&quot;
+  )
+)
+</code></pre></div></details>
+
+<table class="table fs-options-table">
+<colgroup><col style="width:26%"><col style="width:74%"></colgroup>
+<thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
+<tbody>
+<tr><td><code>spec</code></td><td>A registry id such as &quot;nature&quot;, a figspec_spec, or a named list containing table requirements.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a bundled registry id or a specification maintained by your project or organisation. The returned object contains only the table instructions, together with their source and review date.</p><pre><code class="language-r">nature_table_rules &lt;- table_spec(
+  spec = &quot;nature&quot;
+)
+report_table_rules &lt;- table_spec(
+  spec = custom_table_spec
+)
+
+list(
+  publication = nature_table_rules,
+  project = report_table_rules
+)</code></pre><p class="fs-example-result"><strong>Result:</strong> The publication lookup returns Nature's recorded table instructions, while the project lookup returns the portrait orientation, title placement and abbreviation note defined in the local specification.</p></div></details></td></tr>
+</tbody></table>
+
+### `table_apply_spec()`
+
+Apply a specification to a table
+
+Apply measurable table requirements while the table is still editable. Data frames and matrices become gt tables; gt, flextable, kableExtra and grid tables remain in their own table systems.
+
+<details class="fs-function-setup"><summary>Run the example setup</summary>
+<div class="fs-argument-example-body"><pre><code class="language-r">
+table_project_spec &lt;- list(
+  name = &quot;Research report&quot;,
+  source_url = &quot;internal:report-table-guide&quot;,
+  verified_on = as.character(Sys.Date()),
+  tables = list(
+    formats = c(&quot;html&quot;, &quot;docx&quot;),
+    orientation = &quot;portrait&quot;,
+    font_families = &quot;Arial&quot;,
+    font_min_pt = 9,
+    header_bold = TRUE,
+    vertical_rules = FALSE,
+    horizontal_rules = &quot;minimal&quot;,
+    repeat_header = TRUE
+  )
+)
+vehicle_table &lt;- ggplot2::mpg[1:12, c(
+  &quot;manufacturer&quot;, &quot;model&quot;, &quot;displ&quot;, &quot;year&quot;, &quot;hwy&quot;
+)]
+</code></pre></div></details>
+
+<table class="table fs-options-table">
+<colgroup><col style="width:26%"><col style="width:74%"></colgroup>
+<thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
+<tbody>
+<tr><td><code>table</code></td><td>A supported table object.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a data frame, matrix, gt table, flextable, kableExtra table or grid table. The example uses twelve real vehicle records and keeps all five selected columns.</p><pre><code class="language-r">styled_vehicle_table &lt;- table_apply_spec(
+  table = vehicle_table,
+  spec = table_project_spec
+)
+
+styled_vehicle_table</code></pre><p class="fs-example-result"><strong>Result:</strong> The data frame becomes an editable gt table containing the same 12 rows and five columns.</p></div></details></td></tr>
+<tr><td><code>spec</code></td><td>The specification to apply. It must contain a tables section.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a specification with a tables section. figspec applies the stated type size, font, header emphasis, rules and width where the selected table system exposes them.</p><pre><code class="language-r">styled_for_report &lt;- table_apply_spec(
+  vehicle_table,
+  spec = table_project_spec
+)
+table_check(
+  styled_for_report,
+  spec = table_project_spec
+)</code></pre><p class="fs-example-result"><strong>Result:</strong> The live-table report confirms the applied 9 pt type, bold header, minimal horizontal rules and absence of vertical rules; repeated headers remain output-format dependent.</p></div></details></td></tr>
+</tbody></table>
+
+### `table_save()`
+
+Export and verify a table
+
+Export a table through its own table system, reopen the completed file and keep the live-object and file checks together. A temporary file is promoted only after the renderer succeeds and, when checking is enabled, the file is confirmed to be structurally valid.
+
+<details class="fs-function-setup"><summary>Run the example setup</summary>
+<div class="fs-argument-example-body"><pre><code class="language-r">
+table_save_spec &lt;- list(
+  name = &quot;Research report&quot;,
+  source_url = &quot;internal:report-table-guide&quot;,
+  verified_on = as.character(Sys.Date()),
+  tables = list(
+    formats = &quot;html&quot;,
+    font_min_pt = 9,
+    header_bold = TRUE,
+    vertical_rules = FALSE
+  )
+)
+table_for_export &lt;- ggplot2::mpg[1:20, c(
+  &quot;manufacturer&quot;, &quot;model&quot;, &quot;displ&quot;, &quot;hwy&quot;
+)]
+table_output_dir &lt;- tempfile(&quot;figspec-table-options-&quot;)
+dir.create(table_output_dir)
+</code></pre></div></details>
+
+<table class="table fs-options-table">
+<colgroup><col style="width:26%"><col style="width:74%"></colgroup>
+<thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
+<tbody>
+<tr><td><code>filename</code></td><td>Destination file. The extension selects the output format.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Give a path whose extension names the required table format. The example writes into a directory with a space to exercise an ordinary real-world path.</p><pre><code class="language-r">html_table_path &lt;- file.path(
+  table_output_dir,
+  &quot;vehicle summary.html&quot;
+)
+saved_html_table &lt;- table_save(
+  filename = html_table_path,
+  table = table_for_export,
+  spec = table_save_spec
+)
+
+file.exists(saved_html_table)</code></pre><p class="fs-example-result"><strong>Result:</strong> A non-empty HTML table is written at the requested path and TRUE is returned.</p></div></details></td></tr>
+<tr><td><code>table</code></td><td>A supported table object.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply the editable table object. This example starts from 20 rows of mpg data; the written HTML is then reopened rather than inferred from the input object.</p><pre><code class="language-r">second_table_path &lt;- file.path(
+  table_output_dir,
+  &quot;second-table.html&quot;
+)
+saved_second_table &lt;- table_save(
+  second_table_path,
+  table = table_for_export,
+  spec = table_save_spec
+)
+attr(
+  saved_second_table,
+  &quot;figspec_table_report&quot;
+)</code></pre><p class="fs-example-result"><strong>Result:</strong> The returned report includes a passing HTML format check from the file and styling checks from the editable table.</p></div></details></td></tr>
+<tr><td><code>spec</code></td><td>The specification to apply and check, or NULL.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Use a bundled or project specification with table requirements. Leave it NULL to export without transforming or assigning compliance decisions.</p><pre><code class="language-r">specified_table_path &lt;- file.path(
+  table_output_dir,
+  &quot;specified-table.html&quot;
+)
+specified_table &lt;- table_save(
+  specified_table_path,
+  table_for_export,
+  spec = table_save_spec
+)
+
+attr(specified_table, &quot;figspec_table_report&quot;)</code></pre><p class="fs-example-result"><strong>Result:</strong> The table is styled, exported and checked against the project specification in one call.</p></div></details></td></tr>
+<tr><td><code>transform</code></td><td>Whether to call table_apply_spec() before export.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>TRUE applies supported requirements before export. FALSE preserves an already prepared table and still allows the completed file to be checked.</p><pre><code class="language-r">prepared_table &lt;- table_apply_spec(
+  table_for_export,
+  table_save_spec
+)
+preserved_table_path &lt;- file.path(
+  table_output_dir,
+  &quot;preserved-table.html&quot;
+)
+preserved_table &lt;- table_save(
+  preserved_table_path,
+  prepared_table,
+  spec = table_save_spec,
+  transform = FALSE
+)
+
+attr(preserved_table, &quot;figspec_table_report&quot;)</code></pre><p class="fs-example-result"><strong>Result:</strong> The existing table styling is preserved and both live and file evidence remain in the report.</p></div></details></td></tr>
+<tr><td><code>check</code></td><td>Whether to reopen and check the completed file.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>TRUE reopens the completed file and attaches its report. Set FALSE only when export is wanted without verification.</p><pre><code class="language-r">unchecked_table_path &lt;- file.path(
+  table_output_dir,
+  &quot;unchecked-table.html&quot;
+)
+unchecked_table &lt;- table_save(
+  unchecked_table_path,
+  table_for_export,
+  spec = table_save_spec,
+  check = FALSE
+)
+
+is.null(attr(
+  unchecked_table,
+  &quot;figspec_table_report&quot;
+))</code></pre><p class="fs-example-result"><strong>Result:</strong> The file is written and TRUE confirms that no report was attached.</p></div></details></td></tr>
+<tr><td><code>...</code></td><td>Arguments passed to the table system's exporter.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Named extra values are passed to the selected table exporter. Use them only for options understood by that backend.</p><pre><code class="language-r">exporter_table_path &lt;- file.path(
+  table_output_dir,
+  &quot;exporter-table.html&quot;
+)
+exporter_table &lt;- table_save(
+  exporter_table_path,
+  table_for_export,
+  spec = table_save_spec,
+  inline_css = TRUE
+)
+
+file.exists(exporter_table)</code></pre><p class="fs-example-result"><strong>Result:</strong> The gt exporter receives the named inline-CSS option and writes the HTML table.</p></div></details></td></tr>
+</tbody></table>
+
+### `table_check()`
+
+Verify a table against a specification
+
+Check an editable R table or a completed table file. The two inputs retain different evidence, so table_save combines them when both are available.
+
+<details class="fs-function-setup"><summary>Run the example setup</summary>
+<div class="fs-argument-example-body"><pre><code class="language-r">
+table_check_spec &lt;- list(
+  name = &quot;Research report&quot;,
+  source_url = &quot;internal:report-table-guide&quot;,
+  verified_on = as.character(Sys.Date()),
+  tables = list(
+    formats = &quot;html&quot;,
+    font_min_pt = 9,
+    header_bold = TRUE,
+    vertical_rules = FALSE
+  )
+)
+table_check_data &lt;- ggplot2::mpg[1:10, c(
+  &quot;manufacturer&quot;, &quot;model&quot;, &quot;displ&quot;, &quot;hwy&quot;
+)]
+</code></pre></div></details>
+
+<table class="table fs-options-table">
+<colgroup><col style="width:26%"><col style="width:74%"></colgroup>
+<thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
+<tbody>
+<tr><td><code>x</code></td><td>A supported live table or one table-file path.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a live supported table or one HTML, DOCX, RTF, TeX, PDF, PNG or JPEG path. The example checks a styled table containing ten real rows.</p><pre><code class="language-r">check_ready_table &lt;- table_apply_spec(
+  table_check_data,
+  table_check_spec
+)
+live_table_report &lt;- table_check(
+  x = check_ready_table,
+  spec = table_check_spec
+)
+
+live_table_report</code></pre><p class="fs-example-result"><strong>Result:</strong> The report verifies the measurable styling retained by the live gt table and leaves the future file format unresolved.</p></div></details></td></tr>
+<tr><td><code>spec</code></td><td>The specification to use, or NULL for inspection only.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply the table specification used to decide pass, fail and unresolved results. NULL produces an inspection without claiming compliance.</p><pre><code class="language-r">inspection_report &lt;- table_check(
+  table_check_data,
+  spec = NULL
+)
+specified_report &lt;- table_check(
+  table_apply_spec(
+    table_check_data,
+    table_check_spec
+  ),
+  spec = table_check_spec
+)
+
+list(
+  inspection = inspection_report,
+  specified = specified_report
+)</code></pre><p class="fs-example-result"><strong>Result:</strong> The inspection has no compliance verdict; the specified check evaluates the requirements that the live table exposes.</p></div></details></td></tr>
 </tbody></table>
 
 ## R Markdown and Quarto

@@ -624,11 +624,14 @@ graded <- function(check, requirement, actual, ok, spec = NULL, fields = NULL) {
 
 #' Inspect a figure and verify it against a specification
 #'
-#' Accepts either a ggplot object, checked before it is saved, or the path to
-#' a figure file that has already been written. With no specification it
+#' Accepts a live figure made with ggplot2, lattice, Plotly, base graphics or
+#' grid, or the path to an exported figure file. With no specification it
 #' reports what can be measured without issuing pass or fail claims. A
 #' specification may come from the included registry, your own registry, or a
-#' named list supplied directly in R.
+#' named list supplied directly in R. Plotting systems that do not expose the
+#' same layer and theme details as ggplot2 are rendered to a temporary file;
+#' file properties are then verified and unavailable properties remain
+#' `unknown`.
 #'
 #' Each requirement is reported with one of five outcomes. `pass` and `fail`
 #' mean what they say. `unspecified` means the publisher does not state that
@@ -646,7 +649,10 @@ graded <- function(check, requirement, actual, ok, spec = NULL, fields = NULL) {
 #' needs the pdftools package. A raster carries no type sizes at all, and is
 #' reported as `unknown` rather than estimated.
 #'
-#' @param x A ggplot object, or a path to a figure file.
+#' @param x A supported live figure, or a path to a figure file. Live figures
+#'   include ggplot2 and patchwork objects, lattice plots, Plotly and other HTML
+#'   widgets, grid grobs, recorded base plots, and base-graphics code wrapped
+#'   in a function or one-sided formula.
 #' @param spec Optional specification: a registry id such as `"frontiers"`,
 #'   a `figspec_spec`, or a named list of requirements.
 #' @param column Which column width the figure is intended for. One of
@@ -675,8 +681,10 @@ graded <- function(check, requirement, actual, ok, spec = NULL, fields = NULL) {
 #' @return An object of class `figspec_report`, a data frame of one row per
 #'   requirement.
 #' @seealso [fig_save()] to export and check in one step,
-#'   [submission_check()] to review several figures together, and
-#'   [spec_get()] for registry and project specifications.
+#'   [submission_check()] to review several figures together,
+#'   [spec_get()] for registry and project specifications, and
+#'   `vignette("figure-systems")` for worked examples with different R
+#'   plotting systems.
 #' @examples
 #' library(ggplot2)
 #' p <- ggplot(ggplot2::mpg, aes(displ, hwy, colour = class)) + geom_point()
@@ -809,7 +817,7 @@ fig_check <- function(x, spec = NULL, column = NULL,
     text_sizes <- collect_text_sizes(x)
   } else {
     figspec_abort(
-      c("{.arg x} must be a ggplot object or a path to a figure file.",
+      c("{.arg x} must be a supported live figure or a path to a figure file.",
         "x" = "You gave {.cls {class(x)}}."),
       "bad_input")
   }
@@ -1106,6 +1114,9 @@ fig_check <- function(x, spec = NULL, column = NULL,
     # no publisher and no registry entry in play. Say the third thing.
     out$requirement <- NO_SPEC
     out$status <- "unspecified"
+    if (is_file && identical(info$valid, FALSE)) {
+      out$status[out$check == "File validity"] <- "invalid"
+    }
   } else if (!from_registry) {
     # A hand-written or loaded specification. Silence about a field is the
     # author's own omission, not a gap in figspec's registry, so it must not be
@@ -1123,7 +1134,7 @@ fig_check <- function(x, spec = NULL, column = NULL,
     source_url = spec$source_url,
     verified_on = spec$verified_on,
     publication_stage = spec$publication_stage,
-    input = if (is_file) x else "ggplot object",
+    input = if (is_file) x else figure_system_label(live_system),
     class = c("figspec_report", "data.frame")
   )
 }

@@ -35,9 +35,11 @@ record of former and canonical names and the basis for future API additions.
 ## Complete exported-function map
 
 The pre-migration package exported 47 ordinary user-facing functions. The
-first public release retains 47 canonical exports, including the two intentional
-American-spelling aliases. S3 print, plot and ggplot-add methods are registered
-separately and are not called directly by users.
+naming migration retained those functions, including the two intentional
+American-spelling aliases. The pre-release table expansion then added three
+functions, and `spec_save()` added safe persistence for user specifications,
+bringing the first public API to 51 exports. S3 print, plot and ggplot-add
+methods are registered separately and are not called directly by users.
 
 After the naming migration was completed, `fig_save()` gained the
 `transform` argument as part of the pre-release plotting-system expansion. It
@@ -94,6 +96,10 @@ Plotly, grid or base graphics before the figure is written.
 | 45 | `tag_panels()` | `fig_tag_panels()` | Figure | Rename |
 | 46 | `theme_journal()` | `theme_spec()` | ggplot2 theme | Rename; retain ggplot2's `theme_*` convention |
 | 47 | `validate_registry_file()` | `registry_validate_file()` | Registry | Rename; make the file input explicit |
+| 48 | — | `table_apply_spec()` | Table | Add; apply measurable table requirements while editable |
+| 49 | — | `table_check()` | Table | Add; inspect a live table or completed table file |
+| 50 | — | `table_save()` | Table | Add; export transactionally and verify the result |
+| 51 | — | `spec_save()` | Specification | Add; write and safely update reusable specification files |
 
 ## How the functions are grouped
 
@@ -113,6 +119,8 @@ The groups are based on the following practical areas of work:
   built.
 - `spec_` covers the requirements applied to the work, whether they come from
   a publisher, an individual journal, an organisation or a project.
+- `table_` covers the table workflow: retrieving table requirements,
+  applying them to an editable table, exporting and checking.
 - `style_` covers reusable house styles and the functions used to register,
   list, save, load and remove them.
 - `registry_` covers maintenance of the specification registry, including
@@ -150,9 +158,9 @@ fig_apply_spec()          spec_get()                 style_list()
 fig_check()               spec_list()                style_load()
 fig_columns()             spec_load()                style_register()
 fig_geometry()            spec_register()            style_remove()
-fig_panel_size()          spec_linewidth()           style_save()
-fig_panel_width()         spec_style_palette()
-fig_preview()
+fig_panel_size()          spec_save()                style_save()
+fig_panel_width()         spec_linewidth()
+fig_preview()             spec_style_palette()
 fig_refit()               registry_check_sources()   submission_check()
 fig_save()                registry_entry_template()  submission_detail()
 fig_suggest_art_type()    registry_stale_entries()
@@ -173,6 +181,8 @@ than forced into one of these prefixes:
 ```text
 colour_safety_check()     graphical_abstract_spec()
 color_safety_check()      table_spec()
+table_apply_spec()        table_check()
+table_save()
 theme_spec()
 scale_colour_figspec()
 scale_color_figspec()

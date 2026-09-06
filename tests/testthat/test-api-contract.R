@@ -120,7 +120,7 @@ test_that("public result metadata follows the active surface contract", {
   ))
   expect_identical(
     names(submission),
-    c("file", "column", "result", "failed", "unresolved", "unspecified", "panel_mm")
+    surface_expected("submission_columns")
   )
   expect_identical(
     names(attributes(submission)),
@@ -137,6 +137,29 @@ test_that("public result metadata follows the active surface contract", {
   expect_true(asset_name_field %in% names(table))
   expect_true(asset_name_field %in% names(media))
   expect_true(asset_name_field %in% names(abstract))
+
+  table_report <- table_check(
+    table_apply_spec(head(datasets::mtcars), "nature"),
+    "nature"
+  )
+  expect_identical(
+    names(attributes(table_report)),
+    surface_expected("table_report_attributes")
+  )
+  expect_identical(names(table_report), surface_expected("table_report_columns"))
+  expect_true(all(table_report$status %in% surface_expected("table_status_values")))
+  expect_identical(names(spec_list()), surface_expected("spec_list_columns"))
+  expect_identical(
+    names(registry_status()),
+    surface_expected("registry_status_columns")
+  )
+  expect_identical(
+    figspec:::table_requirement_keys(),
+    surface_expected("table_registry_fields")
+  )
+  inspection <- submission_check(list(item = plot))
+  expect_true(all(c(submission$result, inspection$result) %in%
+    surface_expected("submission_result_values")))
 
   subset_behavior <- surface_expected("report_subset_behavior")
   subset <- report[report$status == "fail", , drop = FALSE]

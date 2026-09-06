@@ -192,9 +192,9 @@ print.figspec_spec <- function(x, ...) {
 #'
 #' Publications, organisations and projects may set separate requirements for
 #' tables, including orientation, titles, notes and permitted file types.
-#' `table_spec()` returns the recorded instructions so they can be consulted
-#' while the table is still being prepared. It does not claim to verify rules
-#' that require editorial judgement.
+#' `table_spec()` returns the recorded instructions used by
+#' [table_apply_spec()], [table_save()] and [table_check()]. Rules that require
+#' editorial judgement remain visible but are not claimed as verified.
 #'
 #' @param spec A registry id such as `"nature"`, a `figspec_spec`, or a
 #'   named list containing table requirements.
