@@ -1,28 +1,30 @@
-# Figure width for a journal column
+# Look up a figure width
 
-Resolves the width a figure should be saved at. Column names come from
-the journal itself rather than a fixed vocabulary: Science lays out in
-one, two or three columns, most journals in one, one-and-a-half or two.
-Use
+Returns a named figure width from a publication, project or
+organisational specification. The specification defines both the
+available names and their widths: for example, Cell Press records
+`"single"`, `"onehalf"` and `"double"`, while Science also records
+`"triple"`. Use
 [`fig_columns()`](https://dansemakula.github.io/figspec/reference/fig_columns.md)
-to see what a given journal offers.
+to see the names available in a specification.
 
 ## Usage
 
 ``` r
-fig_width(journal, column = "single", units = c("mm", "cm", "in"))
+fig_width(spec, column = "single", units = c("mm", "cm", "in"))
 ```
 
 ## Arguments
 
-- journal:
+- spec:
 
-  Registry id, for example `"cell_press"`.
+  The specification to use: a registry id such as `"cell_press"`, a
+  `figspec_spec`, or a named list of requirements.
 
 - column:
 
-  Column name, for example `"single"`, `"double"` or, for Science,
-  `"triple"`.
+  Name of the required width, such as `"single"`, `"double"` or
+  `"triple"`. The available names come from the specification.
 
 - units:
 
@@ -30,13 +32,13 @@ fig_width(journal, column = "single", units = c("mm", "cm", "in"))
 
 ## Value
 
-A single numeric width, or an error if the journal does not state a
-width for that column.
+A single numeric width in the requested unit. An error is raised if the
+specification does not contain the requested width.
 
 ## Details
 
-When a journal states a permitted range rather than named columns,
-`"single"` returns the minimum width and `"double"` the maximum.
+When a specification records a permitted range instead of named widths,
+`"single"` returns the minimum and `"double"` returns the maximum.
 
 ## Examples
 
@@ -47,4 +49,11 @@ fig_width("science", "triple")
 #> [1] 184
 fig_width("frontiers", "double", units = "in")
 #> [1] 7.086614
+
+report_spec <- spec_get(list(
+  name = "Research report",
+  columns = list(half = 80, full = 160)
+))
+fig_width(report_spec, "full")
+#> [1] 160
 ```

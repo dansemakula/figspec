@@ -37,12 +37,12 @@ test_that("tone is classified the way publishers define it", {
 })
 
 test_that("the suggestion follows the classification", {
-  expect_equal(suppressMessages(suggest_art_type(
+  expect_equal(suppressMessages(fig_suggest_art_type(
     ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
       ggplot2::geom_point(colour = "black"))), "line")
-  expect_equal(suppressMessages(suggest_art_type(bars())), "bw")
-  expect_equal(suppressMessages(suggest_art_type(raster_plot())), "combination")
-  expect_equal(suppressMessages(suggest_art_type(
+  expect_equal(suppressMessages(fig_suggest_art_type(bars())), "bw")
+  expect_equal(suppressMessages(fig_suggest_art_type(raster_plot())), "combination")
+  expect_equal(suppressMessages(fig_suggest_art_type(
     ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
       ggplot2::geom_point())), "colour")
 })
@@ -53,7 +53,7 @@ test_that("a coloured plot is never suggested as line art", {
   # to prevent.
   coloured <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
     ggplot2::geom_point()
-  expect_false(identical(suppressMessages(suggest_art_type(coloured)), "line"))
+  expect_false(identical(suppressMessages(fig_suggest_art_type(coloured)), "line"))
 })
 
 test_that("the art type genuinely changes the verdict", {
@@ -91,8 +91,8 @@ test_that("the line-art nudge fires only for genuinely bitonal plots", {
   expect_false(grepl("pure black and white", r4[r4$check == "Resolution", ]$requirement))
 })
 
-test_that("suggest_art_type refuses a file, which cannot be inspected this way", {
-  expect_error(suggest_art_type("figure.tiff"), "ggplot object")
+test_that("fig_suggest_art_type refuses a file, which cannot be inspected this way", {
+  expect_error(fig_suggest_art_type("figure.tiff"), "ggplot object")
 })
 
 test_that("a journal's own resolution figures are shown alongside the suggestion", {
@@ -101,9 +101,10 @@ test_that("a journal's own resolution figures are shown alongside the suggestion
   skip_if_not_installed("ggplot2")
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
     ggplot2::geom_point(colour = "black")
-  out <- capture.output(suggest_art_type(p, "bmj"), type = "message")
+  out <- capture.output(fig_suggest_art_type(p, "bmj"), type = "message")
   txt <- paste(out, collapse = " ")
   expect_match(txt, "BMJ")
+  expect_match(txt, "Requirements from BMJ journals")
   expect_match(txt, "300")
   expect_match(txt, "1200")
 })
@@ -112,14 +113,14 @@ test_that("the publisher's own wording is quoted where the registry has it", {
   skip_if_not_installed("ggplot2")
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
     ggplot2::geom_point(colour = "black")
-  out <- capture.output(suggest_art_type(p, "bmj"), type = "message")
+  out <- capture.output(fig_suggest_art_type(p, "bmj"), type = "message")
   expect_match(paste(out, collapse = " "), "line art")
 })
 
 test_that("a journal stating only a general minimum lists just that", {
   skip_if_not_installed("ggplot2")
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
-  out <- capture.output(suggest_art_type(p, "frontiers"), type = "message")
+  out <- capture.output(fig_suggest_art_type(p, "frontiers"), type = "message")
   txt <- paste(out, collapse = " ")
   expect_match(txt, "Frontiers")
   expect_match(txt, "300")
@@ -129,6 +130,6 @@ test_that("the suggestion is returned invisibly for use in a call", {
   skip_if_not_installed("ggplot2")
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
     ggplot2::geom_point(colour = "black")
-  got <- suppressMessages(suggest_art_type(p, "bmj"))
+  got <- suppressMessages(fig_suggest_art_type(p, "bmj"))
   expect_equal(got, "line")
 })

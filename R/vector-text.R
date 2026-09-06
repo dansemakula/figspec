@@ -58,12 +58,16 @@ is_pdf <- function(path) {
 # scaled. This is the one format where reaching for a library beats parsing.
 pdf_text_sizes <- function(path) {
   if (!has_package("pdftools")) return(NULL)
+  size <- file.size(path)
+  if (!is.finite(size) || size < 1 || size > 256 * 1024^2) return(NULL)
   # poppler reports a malformed file by writing to stderr from C, which no R
   # handler can catch and which then appears in the middle of unrelated output.
   # A file that does not open with the PDF signature is not worth handing to it.
   if (!is_pdf(path)) return(NULL)
-  pages <- tryCatch(pdftools::pdf_data(path, font_info = TRUE),
-                    error = function(e) NULL)
+  pages <- with_r_fontconfig(
+    tryCatch(pdftools::pdf_data(path, font_info = TRUE),
+             error = function(e) NULL)
+  )
   if (is.null(pages) || !length(pages)) return(NULL)
   out <- unlist(lapply(pages, function(p) {
     if (is.null(p$font_size)) NULL else as.numeric(p$font_size)
@@ -74,7 +78,9 @@ pdf_text_sizes <- function(path) {
 # svglite writes the size straight onto each text element, unrounded, and sets
 # the canvas so that one user unit is one point.
 svg_text_sizes <- function(path) {
-  txt <- tryCatch(paste(readLines(path, warn = FALSE), collapse = "\n"),
+  size <- file.size(path)
+  if (!is.finite(size) || size < 1 || isTRUE(file.info(path)$isdir)) return(NULL)
+  txt <- tryCatch(rawToChar(readBin(path, "raw", min(size, 4 * 1024^2))),
                   error = function(e) NULL)
   if (is.null(txt)) return(NULL)
   hits <- regmatches(txt, gregexpr("font-size: *[0-9.]+ *(px|pt)?", txt))[[1]]
@@ -88,8 +94,12 @@ svg_text_sizes <- function(path) {
 # Both are matched, and the `findfont` on the same line keeps a bare number
 # from being read as a size.
 ps_text_sizes <- function(path) {
-  lines <- tryCatch(readLines(path, warn = FALSE), error = function(e) NULL)
-  if (is.null(lines)) return(NULL)
+  size <- file.size(path)
+  if (!is.finite(size) || size < 1 || isTRUE(file.info(path)$isdir)) return(NULL)
+  txt <- tryCatch(rawToChar(readBin(path, "raw", min(size, 4 * 1024^2))),
+                  error = function(e) NULL)
+  if (is.null(txt)) return(NULL)
+  lines <- strsplit(txt, "\n", fixed = TRUE)[[1]]
   short <- regmatches(lines, regexpr("findfont +[0-9.]+ +s\\b", lines))
   long <- regmatches(lines, regexpr("[0-9.]+ +scalefont", lines))
   vals <- c(sub("^findfont +([0-9.]+).*$", "\\1", short),

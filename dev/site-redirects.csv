@@ -1,0 +1,5 @@
+current_source,current_target,final_source,final_target,reason
+check_color_safety,check_colour_safety,color_safety_check,colour_safety_check,American spelling alias
+scale_color_figspec,scale_colour_figspec,scale_color_figspec,scale_colour_figspec,American spelling alias
+figspec,figspec-package,figspec,figspec-package,package help alias
+plot.figspec_geometry,fig_geometry,plot.figspec_geometry,fig_geometry,S3 method help alias

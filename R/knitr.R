@@ -10,44 +10,79 @@
 # way as in R/save.R, preferring ragg where it is installed because it renders
 # text more accurately and records the resolution in the file.
 
-#' Chunk options that produce journal-compliant figures in R Markdown or Quarto
+#' Create figure settings for R Markdown or Quarto
 #'
-#' A large share of academic figures never pass through [ggplot2::ggsave()] at
-#' all: they are produced by a knitr chunk, at whatever size `fig.width` and
-#' `fig.height` happen to be. This returns the chunk options that make knitr
-#' emit figures at the journal's size, resolution and format.
+#' Figures created inside an R Markdown or Quarto code chunk do not pass through
+#' [fig_save()]. This function translates a publication, project or
+#' organisational specification into the width, height, resolution and graphics
+#' device settings understood by knitr.
 #'
-#' @param journal Registry id, for example `"plos_one"`.
-#' @param column Which column width to size to.
+#' @param spec The specification to use: a registry id such as `"plos_one"`,
+#'   a `figspec_spec`, or a named list of requirements.
+#' @param column Which named width in the specification to use. Leave it `NULL`
+#'   when supplying `width` explicitly.
+#' @param width Explicit figure width for specifications that do not publish
+#'   named columns.
 #' @param height Figure height. Defaults to three quarters of the width, which
 #'   is a convenience rather than a journal requirement.
-#' @param units Units for `height`.
-#' @return A named list suitable for [knitr::opts_chunk]`$set()`.
+#' @param units Units for `width` and `height`.
+#' @param art_type Resolution category. With no plot available, `"auto"`
+#'   conservatively uses the strictest rule the journal states.
+#' @return A named list suitable for `knitr::opts_chunk$set()`.
 #' @examples
-#' figspec_chunk_opts("plos_one", "single")
+#' figspec_knitr_options("plos_one", "single")
+#'
+#' # A report format maintained by your own team.
+#' report_spec <- list(
+#'   name = "Landscape report figure",
+#'   columns = list(full = 180),
+#'   formats = "png",
+#'   dpi_min = 300
+#' )
+#' figspec_knitr_options(report_spec, "full", height = 100, units = "mm")
 #'
 #' # In a setup chunk:
-#' # do.call(knitr::opts_chunk$set, figspec_chunk_opts("plos_one"))
+#' # do.call(knitr::opts_chunk$set, figspec_knitr_options("plos_one"))
 #' @export
-figspec_chunk_opts <- function(journal, column = "single",
-                               height = NULL, units = c("mm", "cm", "in")) {
+figspec_knitr_options <- function(spec, column = NULL, width = NULL,
+                                  height = NULL, units = c("mm", "cm", "in"),
+                                  art_type = c("auto", "colour", "bw", "line", "combination")) {
   units <- match.arg(units)
-  spec <- journal_spec(journal)
+  art_type <- british_spelling(art_type)
+  art_type <- match.arg(art_type)
+  resolved <- spec_get(spec)
 
-  width_mm <- fig_width(journal, column, "mm")
+  if (!is.null(column) && !is.null(width)) {
+    figspec_abort("{.arg column} and {.arg width} cannot both set chunk width.",
+                  "size_conflict")
+  }
+  if (is.null(width)) {
+    if (is.null(column)) column <- default_column(resolved)
+    if (is.null(column)) {
+      figspec_abort(
+        c("{resolved$name} has no named column widths on record.",
+          ">" = "Supply {.arg width} explicitly."),
+        "missing_arg")
+    }
+    width_mm <- fig_width(resolved, column, "mm")
+  } else {
+    check_size(width, "width", units)
+    width_mm <- convert_length(width, units, "mm")
+  }
+  if (!is.null(height)) check_size(height, "height", units)
   height_mm <- if (is.null(height)) width_mm * 0.75 else convert_length(height, units, "mm")
 
-  fmt <- if (is.null(spec$formats)) {
-    default_note(spec, "formats", "PNG", "which file formats it accepts")
+  fmt <- if (is.null(resolved$formats)) {
+    default_note(resolved, "formats", "PNG", "which file formats it accepts")
     "png"
   } else {
-    tolower(unlist(spec$formats)[[1]])
+    default_format(resolved)
   }
-  res <- if (is.null(spec$dpi_min)) {
-    default_note(spec, "dpi_min", "300 dpi", "a minimum resolution")
-    300
-  } else {
-    as.numeric(spec$dpi_min)
+  if (identical(art_type, "auto")) art_type <- strictest_art_type(resolved)
+  res <- resolution_for_art_type(resolved, art_type)
+  if (is.null(res)) {
+    default_note(resolved, "dpi_min", "300 dpi", "a minimum resolution")
+    res <- 300
   }
   list(
     # knitr expects inches.
@@ -58,26 +93,31 @@ figspec_chunk_opts <- function(journal, column = "single",
   )
 }
 
-#' Set knitr chunk options for a journal
+#' Apply figure settings to R Markdown or Quarto
 #'
-#' Convenience wrapper that applies [figspec_chunk_opts()] to the current
-#' document. Call it from a setup chunk.
+#' Applies the settings returned by [figspec_knitr_options()] to knitr's current
+#' chunk configuration. Call it once in a document's setup chunk so later
+#' figures use the chosen dimensions, resolution and output format by default.
 #'
-#' @inheritParams figspec_chunk_opts
+#' @inheritParams figspec_knitr_options
 #' @return The previous chunk options, invisibly.
 #' @examples
 #' # In a setup chunk:
 #' # figspec_knitr_setup("frontiers", "double")
 #' @export
-figspec_knitr_setup <- function(journal, column = "single",
-                                height = NULL, units = c("mm", "cm", "in")) {
+figspec_knitr_setup <- function(spec, column = NULL, width = NULL,
+                                height = NULL, units = c("mm", "cm", "in"),
+                                art_type = c("auto", "colour", "bw", "line", "combination")) {
   if (!has_package("knitr")) {
     figspec_abort(
       c("{.fn figspec_knitr_setup} needs the knitr package.",
         ">" = 'Install it with {.code install.packages("knitr")}.'),
       "needs_package", package = "knitr")
   }
-  opts <- figspec_chunk_opts(journal, column, height, units)
+  opts <- figspec_knitr_options(
+    spec = spec, column = column, width = width, height = height,
+    units = units, art_type = art_type
+  )
   invisible(do.call(knitr::opts_chunk$set, opts))
 }
 

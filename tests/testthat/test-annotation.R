@@ -125,7 +125,7 @@ test_that("journals that state no axis rule raise no axis check", {
 })
 
 test_that("PNAS resolution now comes from the Digital Art Guidelines", {
-  p <- journal_spec("pnas")
+  p <- spec_get("pnas")
   expect_equal(p$dpi_min, 300)          # images with no type
   expect_equal(p$dpi_combination, 600)  # images with type, floor of 600-900
   expect_equal(p$dpi_line_art, 1000)    # floor of 1000-1200
@@ -176,9 +176,9 @@ test_that("journals that state no panel limit raise no panel-count check", {
 })
 
 test_that("RSC's entry names its scope as books, not journals", {
-  expect_match(journal_spec("rsc_books")$name, "books")
-  expect_match(journal_spec("rsc_books")$notes, "not journals")
-  expect_null(journal_spec("rsc_books")$print_greyscale)
+  expect_match(spec_get("rsc_books")$name, "books")
+  expect_match(spec_get("rsc_books")$notes, "not journals")
+  expect_null(spec_get("rsc_books")$print_greyscale)
 })
 
 test_that("Nature requires axis lines, which ggplot2's default theme omits", {
@@ -191,8 +191,8 @@ test_that("Nature requires axis lines, which ggplot2's default theme omits", {
   expect_match(r[r$check == "Axis furniture", ]$actual, "missing axis lines")
 })
 
-test_that("theme_journal satisfies the axis requirement rather than only reporting it", {
-  fixed <- base_plot() + theme_journal("nature")
+test_that("theme_spec satisfies the axis requirement rather than only reporting it", {
+  fixed <- base_plot() + theme_spec("nature")
   expect_length(missing_axis_furniture(fixed), 0)
   expect_equal(fig_check(fixed, "nature")[
     fig_check(fixed, "nature")$check == "Axis furniture", ]$status, "pass")
@@ -204,7 +204,7 @@ test_that("both pieces of axis furniture are reported when both are missing", {
 })
 
 test_that("coloured text fails Nature, and grey text does not", {
-  base <- base_plot() + theme_journal("nature")
+  base <- base_plot() + theme_spec("nature")
   expect_equal(fig_check(base, "nature")[
     fig_check(base, "nature")$check == "Text colour", ]$status, "pass")
 
@@ -275,11 +275,11 @@ test_that("Nature and the Royal Society require opposite panel-label styling", {
   # Society italicised. figspec reads the tag level, not the styling, so both
   # record lowercase and neither italic rule is checked. The conflict is real
   # and is recorded in the entries.
-  expect_equal(journal_spec("nature")$panel_labels, "lowercase")
-  expect_equal(journal_spec("royal_society")$panel_labels, "lowercase")
-  expect_match(journal_spec("nature")$source_quote_panel_labels, "upright \\(not italic\\)")
-  expect_match(journal_spec("royal_society")$source_quote_panel_labels, "italicized")
-  expect_match(journal_spec("royal_society")$notes, "conflict|Nature requires")
+  expect_equal(spec_get("nature")$panel_labels, "lowercase")
+  expect_equal(spec_get("royal_society")$panel_labels, "lowercase")
+  expect_match(spec_get("nature")$source_quote_panel_labels, "upright \\(not italic\\)")
+  expect_match(spec_get("royal_society")$source_quote_panel_labels, "italicized")
+  expect_match(spec_get("royal_society")$notes, "conflict|Nature requires")
 })
 
 test_that("the Royal Society requires tables as editable text", {

@@ -10,6 +10,7 @@
 #   ./dev/check.sh            documentation, tests, completeness audit, R CMD check
 #   ./dev/check.sh --fast     tests only, for a tight edit loop
 #   ./dev/check.sh --full     the above plus coverage and the pkgdown site
+#   ./dev/check.sh --final    full check plus final API and 250,000-row stress gates
 #
 # Exits non-zero on the first failure, so it can gate a commit.
 
@@ -20,17 +21,33 @@ MODE="${1:-}"
 step() { printf '\n\033[1m── %s\033[0m\n' "$1"; }
 fail() { printf '\033[31mFAILED: %s\033[0m\n' "$1"; exit 1; }
 
+case "$MODE" in
+  ""|--fast|--full|--final) ;;
+  *) fail "unknown mode: $MODE" ;;
+esac
+
+if [ "$MODE" = "--final" ]; then
+  export FIGSPEC_RUN_STRESS=true
+fi
+
 step "Documentation"
-Rscript -e 'roxygen2::roxygenise(".")' || fail "roxygen"
+# clean = TRUE removes obsolete .Rd files after a topic is renamed. Without it,
+# an old help file can survive and pkgdown can quietly rebuild its old page.
+Rscript -e 'roxygen2::roxygenise(".", clean = TRUE)' || fail "roxygen"
+
+step "Generated options guide"
+Rscript data-raw/make-options-table.R || \
+  fail "options guide - exports, help topics and executable examples disagree"
 
 step "Tests"
 Rscript -e '
   pkgload::load_all(".", quiet = TRUE)
   res <- testthat::test_dir("tests/testthat", stop_on_failure = FALSE)
   df <- as.data.frame(res)
-  bad <- sum(df$failed) + sum(df$error)
-  cat(sprintf("\n%d passed, %d failed, %d errors, %d skipped\n",
-              sum(df$passed), sum(df$failed), sum(df$error), sum(df$skipped)))
+  bad <- sum(df$failed) + sum(df$error) + sum(df$warning)
+  cat(sprintf("\n%d passed, %d failed, %d errors, %d warnings, %d skipped\n",
+              sum(df$passed), sum(df$failed), sum(df$error), sum(df$warning),
+              sum(df$skipped)))
   if (bad > 0) quit(status = 1)
 ' || fail "tests"
 
@@ -40,24 +57,41 @@ fi
 
 step "Completeness"
 Rscript dev/audit.R || fail "audit - something generated has drifted from its source"
+if [ "$MODE" = "--final" ]; then
+  Rscript dev/audit-api-migration.R --final || fail "final API migration audit"
+else
+  Rscript dev/audit-api-migration.R || fail "staged API migration audit"
+fi
 
 step "R CMD check"
-R CMD build . > /dev/null || fail "build"
-TARBALL=$(ls -t figspec_*.tar.gz | head -1)
+REPO_ROOT=$(pwd)
+CHECK_ROOT=$(mktemp -d /tmp/figspec-r-cmd-check.XXXXXX)
+cleanup_check_root() { rm -rf "$CHECK_ROOT"; }
+trap cleanup_check_root EXIT
+(cd "$CHECK_ROOT" && R CMD build "$REPO_ROOT" > build.log 2>&1) || fail "build"
+TARBALL_COUNT=$(find "$CHECK_ROOT" -maxdepth 1 -type f -name 'figspec_*.tar.gz' | wc -l | tr -d ' ')
+[ "$TARBALL_COUNT" = "1" ] || fail "build created $TARBALL_COUNT tarballs instead of exactly one"
+TARBALL=$(find "$CHECK_ROOT" -maxdepth 1 -type f -name 'figspec_*.tar.gz' -print)
 set +e
-R CMD check --as-cran --no-manual "$TARBALL" > /tmp/figspec-check.log 2>&1
+(cd "$CHECK_ROOT" && R CMD check --as-cran "$TARBALL" > /tmp/figspec-check.log 2>&1)
 STATUS=$?
 set -e
 grep -E '^Status|^\* checking.*(NOTE|WARNING|ERROR)' /tmp/figspec-check.log || true
-rm -rf figspec.Rcheck "$TARBALL"
-# Only "New submission" and its unreachable URLs are tolerated: those clear
-# when the repository exists and cannot be fixed before then.
-if grep -qE '^Status:.*(ERROR|WARNING)' /tmp/figspec-check.log; then
+Rscript dev/check-cran-log.R "$CHECK_ROOT/figspec.Rcheck/00check.log" "$STATUS" || \
   fail "R CMD check - see /tmp/figspec-check.log"
-fi
-[ $STATUS -ne 0 ] && printf '\033[33m(check exited %d; notes above)\033[0m\n' "$STATUS"
 
-if [ "$MODE" = "--full" ]; then
+step "Installed-package smoke test"
+INSTALL_LIB="$CHECK_ROOT/library"
+INSTALL_WORK="$CHECK_ROOT/consumer"
+mkdir -p "$INSTALL_LIB" "$INSTALL_WORK"
+R CMD INSTALL --library="$INSTALL_LIB" "$TARBALL" > "$CHECK_ROOT/install.log" 2>&1 || \
+  fail "installing the built tarball - see $CHECK_ROOT/install.log"
+(cd "$INSTALL_WORK" && \
+  FIGSPEC_REPO_ROOT="$REPO_ROOT" R_LIBS="$INSTALL_LIB" \
+  Rscript "$REPO_ROOT/dev/smoke-installed.R") || \
+  fail "installed-package consumer smoke test"
+
+if [ "$MODE" = "--full" ] || [ "$MODE" = "--final" ]; then
   step "Coverage"
   Rscript -e '
     Sys.setenv(NOT_CRAN = "true")
@@ -70,10 +104,8 @@ if [ "$MODE" = "--full" ]; then
   ' || fail "coverage"
 
   step "Site"
-  Rscript -e 'pkgdown::clean_site(quiet = TRUE); pkgdown::build_site(preview = FALSE, devel = FALSE)' \
-    > /tmp/figspec-pkgdown.log 2>&1 || fail "pkgdown - see /tmp/figspec-pkgdown.log"
-  touch docs/.nojekyll
-  echo "site rebuilt into docs/"
+  Rscript dev/build-site.R > /tmp/figspec-pkgdown.log 2>&1 || \
+    fail "staged pkgdown build - see /tmp/figspec-pkgdown.log"
   Rscript dev/audit.R --site || fail "site is stale after rebuilding, which should not happen"
 fi
 

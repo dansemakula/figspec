@@ -17,7 +17,7 @@
 # is exactly one label per panel and those labels form a complete sequence,
 # because a looser test would read an ordinary annotation as a panel label and
 # report a pass nobody earned. Where figspec applied the labels itself,
-# tag_panels() leaves a marker so the work can be recognised rather than
+# fig_tag_panels() leaves a marker so the work can be recognised rather than
 # inferred.
 #
 # The file ends with the rows fig_check() folds into its report.
@@ -54,7 +54,12 @@ count_parts <- function(plot) {
   if (inherits(plot, "patchwork")) {
     kids <- plot$patches$plots
     if (!length(kids)) return(1L)
-    return(patchwork_self(plot) + sum(vapply(kids, count_parts, integer(1))))
+    self_parts <- if (patchwork_self(plot) == 0L) 0L else {
+      n <- tryCatch(length(ggplot2::ggplot_build(plot)$layout$panel_params),
+                    error = function(e) 1L)
+      max(1L, as.integer(n))
+    }
+    return(self_parts + sum(vapply(kids, count_parts, integer(1))))
   }
   n <- tryCatch(length(ggplot2::ggplot_build(plot)$layout$panel_params),
                 error = function(e) 1L)
@@ -81,7 +86,7 @@ panel_tag_levels <- function(plot) {
   facet_tag_levels(plot)
 }
 
-# Tags applied by tag_panels() are recorded on the plot, so figspec can always
+# Tags applied by fig_tag_panels() are recorded on the plot, so figspec can always
 # recognise its own work. Anything else has to be inferred, and inference here
 # is deliberately strict: a text layer counts as panel labels only when it has
 # exactly one label per panel AND those labels are a complete tag sequence.
@@ -208,12 +213,14 @@ plot_text_colour <- function(plot) {
 labels_with_comma_thousands <- function(plot) {
   b <- tryCatch(ggplot2::ggplot_build(plot), error = function(e) NULL)
   if (is.null(b)) return(NULL)
-  pp <- tryCatch(b$layout$panel_params[[1]], error = function(e) NULL)
-  if (is.null(pp)) return(NULL)
+  panels <- tryCatch(b$layout$panel_params, error = function(e) NULL)
+  if (is.null(panels)) return(NULL)
   labs <- character(0)
-  for (ax in c("x", "y")) {
-    l <- tryCatch(pp[[ax]]$get_labels(), error = function(e) NULL)
-    if (!is.null(l)) labs <- c(labs, as.character(l))
+  for (pp in panels) {
+    for (ax in c("x", "y")) {
+      l <- tryCatch(pp[[ax]]$get_labels(), error = function(e) NULL)
+      if (!is.null(l)) labs <- c(labs, as.character(l))
+    }
   }
   labs <- labs[!is.na(labs)]
   unique(labs[grepl("[0-9],[0-9]{3}", labs)])
@@ -269,6 +276,19 @@ annotation_rows <- function(plot, spec) {
       uppercase = "A", lowercase = "a", numbers = "1", NULL)
     ok <- !is.null(tag_level) && (is.null(wanted) || identical(tag_level, wanted))
     rows[[length(rows) + 1L]] <- graded("Panel labels", req, actual, ok)
+    if (!is.null(spec$panel_labels_placement)) {
+      placement <- attr(plot, "figspec_panel_tags_placement")
+      required_placement <- switch(spec$panel_labels_placement,
+        outside_image = "labels not embedded over image",
+        inside_panel = "labels inside panels",
+        publisher = "labels supplied by publisher",
+        spec$panel_labels_placement)
+      rows[[length(rows) + 1L]] <- graded(
+        "Panel label placement", required_placement,
+        if (is.null(placement)) NULL else gsub("_", " ", placement),
+        !is.null(placement) && identical(placement, spec$panel_labels_placement),
+        spec, "panel_labels_placement")
+    }
   }
 
   # Panel count -----------------------------------------------------------
@@ -405,18 +425,24 @@ annotation_rows <- function(plot, spec) {
 axes_missing_zero <- function(plot) {
   b <- tryCatch(ggplot2::ggplot_build(plot), error = function(e) NULL)
   if (is.null(b)) return(NULL)
-  pp <- tryCatch(b$layout$panel_params[[1]], error = function(e) NULL)
-  if (is.null(pp)) return(NULL)
+  panels <- tryCatch(b$layout$panel_params, error = function(e) NULL)
+  if (is.null(panels)) return(NULL)
 
   out <- character(0)
-  for (ax in c("x", "y")) {
-    rng <- pp[[paste0(ax, ".range")]]
-    if (is.null(rng) || length(rng) != 2L || anyNA(rng)) next
-    sc <- tryCatch(pp[[ax]]$scale, error = function(e) NULL)
-    if (is.null(sc) || inherits(sc, "ScaleDiscretePosition")) next
-    trans <- tryCatch(pp[[ax]]$scale$trans$name, error = function(e) NULL)
-    if (!is.null(trans) && grepl("log", trans, ignore.case = TRUE)) next
-    if (rng[1] > 0 || rng[2] < 0) out <- c(out, ax)
+  many <- length(panels) > 1L
+  for (i in seq_along(panels)) {
+    pp <- panels[[i]]
+    for (ax in c("x", "y")) {
+      rng <- pp[[paste0(ax, ".range")]]
+      if (is.null(rng) || length(rng) != 2L || anyNA(rng)) next
+      sc <- tryCatch(pp[[ax]]$scale, error = function(e) NULL)
+      if (is.null(sc) || inherits(sc, "ScaleDiscretePosition")) next
+      trans <- tryCatch(pp[[ax]]$scale$trans$name, error = function(e) NULL)
+      if (!is.null(trans) && grepl("log", trans, ignore.case = TRUE)) next
+      if (rng[1] > 0 || rng[2] < 0) {
+        out <- c(out, if (many) paste0("panel ", i, " ", ax) else ax)
+      }
+    }
   }
-  out
+  unique(out)
 }

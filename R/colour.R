@@ -200,34 +200,38 @@ simulate_cvd <- function(cols, type) {
   )
 }
 
-#' Check a figure's colours for safety in print and for colour-blind readers
+#' Check whether a figure's colours remain distinguishable
 #'
-#' Reports three things about the colours a plot maps data to: whether it
-#' relies on a red/green contrast, whether its colours stay distinguishable in
-#' greyscale, and whether they stay distinguishable to readers with the common
-#' forms of colour vision deficiency.
+#' Examines the colours used to represent data before the figure is exported.
+#' The report shows whether the plot uses a prohibited colour pairing, whether
+#' its colours remain distinguishable in greyscale, and how they appear under
+#' three common forms of colour-vision deficiency. If colours become difficult
+#' to tell apart, the report also notes whether shape or line type gives readers
+#' another way to identify the groups.
 #'
-#' Only the first two are ever stated as requirements, and only by some
-#' publishers: Cell Press states that red and green should not be used
-#' together, and the Royal Society states that figures are reproduced in black
-#' and white in print by default. The colour-vision result is reported for
-#' every journal but is marked `unspecified` unless the publisher states it,
-#' because it is advice rather than a rule.
+#' When the selected specification states a colour or reproduction rule,
+#' figspec reports a pass or fail against that rule. Other findings are still
+#' shown as guidance, but are marked `unspecified` rather than being presented
+#' as requirements that the source did not state.
 #'
-#' @param plot A ggplot object.
-#' @param journal Registry id.
-#' @param threshold Perceptual distance (CIE Delta-E 2000) below which two
-#'   colours are treated as too close to tell apart. Defaults to 10, the point
-#'   at which two colours read as clearly different rather than as shades of
-#'   one another. This is a judgement of figspec's, not a journal requirement,
-#'   and you can raise it if you want a stricter figure.
+#' @param plot A ggplot object. Use the editable plot rather than an exported
+#'   file so that figspec can inspect the colours actually mapped to data.
+#' @param spec The specification to check against. Supply a registry id, a
+#'   `figspec_spec`, or a named list containing the colour and reproduction
+#'   requirements for a publication, project or organisation.
+#' @param threshold The smallest perceptual difference that figspec will accept
+#'   between two colours, measured as CIE Delta-E 2000. The default is 10;
+#'   raising it makes the distinction test stricter. This setting controls the
+#'   analysis and does not create a publication requirement that the selected
+#'   specification does not state.
 #' @return A `figspec_report`.
 #' @examples
 #' library(ggplot2)
-#' p <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) + geom_point()
-#' check_colour_safety(p, "cell_press")
+#' p <- ggplot(ggplot2::mpg, aes(displ, hwy, colour = class)) + geom_point()
+#' p
+#' colour_safety_check(p, "cell_press")
 #' @export
-check_colour_safety <- function(plot, journal, threshold = 10) {
+colour_safety_check <- function(plot, spec, threshold = 10) {
   if (!is_ggplot_object(plot)) {
     figspec_abort(
       c("{.arg plot} must be a ggplot object.",
@@ -235,25 +239,29 @@ check_colour_safety <- function(plot, journal, threshold = 10) {
                compression and colour conversion have already changed them."),
       "bad_input")
   }
-  spec <- journal_spec(journal)
+  if (!is.numeric(threshold) || length(threshold) != 1L ||
+      !is.finite(threshold) || threshold <= 0) {
+    figspec_abort("{.arg threshold} must be one positive finite number.", "bad_input")
+  }
+  resolved <- spec_get(spec)
   cols <- plot_colours(plot)
-  rows <- colour_rows(cols, spec, threshold, plot)
+  rows <- colour_rows(cols, resolved, threshold, plot)
   out <- do.call(rbind, rows)
   rownames(out) <- NULL
   structure(
     out,
-    journal = spec$name, journal_id = spec$id,
-    source_url = spec$source_url, verified_on = spec$verified_on,
+    spec_name = resolved$name, spec_id = resolved$id,
+    source_url = resolved$source_url, verified_on = resolved$verified_on,
     input = "ggplot object", colours = cols,
     class = c("figspec_report", "data.frame")
   )
 }
 
-#' @rdname check_colour_safety
+#' @rdname colour_safety_check
 #' @export
-check_color_safety <- check_colour_safety
+color_safety_check <- colour_safety_check
 
-# Shared by check_colour_safety() and fig_check().
+# Shared by colour_safety_check() and fig_check().
 colour_rows <- function(cols, spec, threshold = 10, plot = NULL) {
   rows <- list()
 

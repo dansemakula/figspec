@@ -1,4 +1,4 @@
-# Tests for check_sources() and its helpers.
+# Tests for registry_check_sources() and its helpers.
 #
 # The fetching itself is not tested: it needs the network, which would make the
 # suite depend on publishers being up. What is tested is how a response is
@@ -30,10 +30,19 @@ test_that("a response that arrives is ok, and silence is not an error code", {
 
 test_that("an unknown id is a figspec_not_found error, not a fetch", {
   skip_if_not_installed("curl")
-  expect_error(check_sources("no_such_journal"), class = "figspec_not_found")
+  expect_error(registry_check_sources("no_such_journal"), class = "figspec_not_found")
 })
 
-# A stand-in for the data frame check_sources() returns, so the print method
+test_that("source selection and request timeouts are validated before fetching", {
+  skip_if_not_installed("curl")
+  expect_error(registry_check_sources(character()), class = "figspec_bad_input")
+  expect_error(registry_check_sources(c("plos_one", NA_character_)), class = "figspec_bad_input")
+  expect_error(registry_check_sources(c("plos_one", "plos_one")), class = "figspec_bad_input")
+  expect_error(registry_check_sources("plos_one", timeout = 0), class = "figspec_bad_input")
+  expect_error(registry_check_sources("plos_one", timeout = c(5, 10)), class = "figspec_bad_input")
+})
+
+# A stand-in for the data frame registry_check_sources() returns, so the print method
 # can be tested without making any requests. One dead entry, two blocked, one
 # reachable.
 fake_sources <- function() {

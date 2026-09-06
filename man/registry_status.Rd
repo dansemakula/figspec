@@ -2,7 +2,7 @@
 % Please edit documentation in R/maintenance.R
 \name{registry_status}
 \alias{registry_status}
-\title{How current is each registry entry, and how complete}
+\title{Review registry coverage and update dates}
 \usage{
 registry_status(max_age_days = 365, as_of = Sys.Date())
 }
@@ -10,16 +10,17 @@ registry_status(max_age_days = 365, as_of = Sys.Date())
 \item{max_age_days}{Age beyond which an entry is flagged for rechecking.
 Defaults to 365.}
 
-\item{as_of}{Date to measure against. Defaults to today.}
+\item{as_of}{One \code{Date} to measure against. Defaults to today.}
 }
 \value{
 A data frame with one row per entry, ordered oldest first.
 }
 \description{
-Author guidelines change, and an entry read two years ago reads exactly like
-one read yesterday unless something says otherwise. This reports the age of
-every entry and how much of it has actually been harvested, so a registry
-that is quietly going stale is visible rather than merely wrong.
+Shows when each bundled specification was last checked and how its fields are
+accounted for. A field may contain a stated requirement, be recorded as not
+stated by the source, or remain to be reviewed. The result makes older and
+less complete profiles easy to identify without implying that a missing
+field has no requirement.
 }
 \examples{
 registry_status()

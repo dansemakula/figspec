@@ -1,201 +1,811 @@
 ---
-title: "Sizing figures by panel, not by canvas"
+title: "Control figure and panel dimensions"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Sizing figures by panel, not by canvas}
+  %\VignetteIndexEntry{Control figure and panel dimensions}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+
+embed_plot <- function(draw, width, height, dpi, alt, out_width = "100%") {
+  path <- tempfile(fileext = ".png")
+  if (requireNamespace("ragg", quietly = TRUE)) {
+    ragg::agg_png(
+      path, width = width, height = height, units = "in", res = dpi,
+      background = "white"
+    )
+  } else {
+    grDevices::png(
+      path, width = width, height = height, units = "in", res = dpi,
+      bg = "white"
+    )
+  }
+  tryCatch(draw(), finally = grDevices::dev.off())
+  uri <- knitr::image_uri(path)
+  unlink(path)
+  knitr::asis_output(sprintf(
+    paste0(
+      '<p class="figspec-embedded-plot">',
+      '<img src="%s" style="width:%s;max-width:100%%;height:auto" ',
+      'alt="%s"></p>'
+    ),
+    uri, out_width, alt
+  ))
+}
 ```
-
-Every figure has two widths, and the one you can normally set is not the one a
-reader notices.
-
-* The **canvas** is the image file. `ggsave(width = 85, units = "mm")` sets this.
-* The **panel** is the plot area left over once the axis title, the tick
-  labels, the tick marks, the legend and the margins have taken their share.
-
-You set the canvas. The panel gets whatever is left. So a figure with long tick
-labels has a smaller plot area than one with short labels, even when both were
-saved at exactly the same width — and side by side on a page, they look
-uneven. That mismatch is the most common reason a set of figures looks
-unfinished, and it is invisible in the code.
-
-figspec lets you set the panel instead, and works the canvas out for you.
 
 ```{r setup}
 library(figspec)
 library(ggplot2)
 ```
 
-## The problem, in three figures
+The **plot panel** is the rectangle in which the data are drawn. Panel sizing
+means setting the physical width or height of that rectangle, rather than only
+setting the size of the complete image around it.
 
-Three plots of the same data. They differ only in the magnitude of the y
-values, which changes how wide the tick labels are.
+This matters when several figures will appear together in a paper, report or
+presentation. Readers compare the axes and data regions, so those regions
+should line up even when one figure has longer labels or a larger legend.
 
-```{r}
-figs <- list(
-  fig1 = ggplot(mtcars, aes(wt, mpg)) + geom_point(),
-  fig2 = ggplot(mtcars, aes(wt, mpg * 100000)) + geom_point(),
-  fig3 = ggplot(mtcars, aes(wt, mpg / 100)) + geom_point()
+Two measurements determine the result:
+
+* The **canvas** is the complete image, including labels, legends and margins.
+  A call such as `ggsave(width = 85, units = "mm")` sets the canvas width.
+* The **panel** is the area in which the data are drawn. It receives whatever
+  space remains after the axes, labels, legend and margins have been placed.
+
+Labels, legends and margins have fixed physical sizes. On canvases of equal
+width, a longer label leaves less room for the data. figspec can instead hold
+the panel width constant and calculate how much canvas each figure needs
+around it.
+
+## See where the space around the panel goes
+
+`fig_geometry()` shows how a figure's canvas is divided between its data panel
+and the material around it. This example uses all 234 observations in
+`ggplot2::mpg`, with its axis text and legend kept at their intended sizes:
+
+```{r geometry-example}
+geometry_colours <- setNames(
+  figspec_palette("okabe_ito")[c(6, 7, 4)],
+  c("4", "f", "r")
+)
+geometry_shapes <- setNames(figspec_shapes(3), c("4", "f", "r"))
+
+geometry_example <- ggplot(
+  ggplot2::mpg,
+  aes(displ, hwy, colour = drv, shape = drv)
+) +
+  geom_point(alpha = 0.72, size = 1.8) +
+  scale_colour_manual(values = geometry_colours) +
+  scale_shape_manual(values = geometry_shapes) +
+  labs(x = "Engine displacement (litres)",
+       y = "Highway fuel economy",
+       colour = "Drive type",
+       shape = "Drive type") +
+  theme_spec("cell_press", base_size = 8) +
+  theme(legend.position = "bottom")
+
+geometry_example <- fig_panel_size(
+  geometry_example, width = 62, height = 45, units = "mm"
+)
+sized_geometry <- fig_geometry(geometry_example)
+sized_geometry
+```
+
+Read the diagram from the inside out. The white rectangle is the 62 by 45 mm
+data panel. The surrounding grey area shows the space required by everything
+outside the data:
+
+* The `r round(sized_geometry$left_mm, 1)` mm on the left contains the y-axis
+  tick labels and axis title.
+* The `r round(sized_geometry$bottom_mm, 1)` mm below the panel contains the
+  x-axis text and bottom legend, which is why it is the largest allowance.
+* The `r round(sized_geometry$top_mm, 1)` mm above and
+  `r round(sized_geometry$right_mm, 1)` mm to the right are mainly outer
+  spacing.
+
+```{r geometry-diagram, echo = FALSE, results = "asis"}
+embed_plot(
+  function() print(plot(sized_geometry)),
+  width = 5,
+  height = 3.6,
+  dpi = 200,
+  alt = paste(
+    "A diagram showing the measured panel and the space used by labels",
+    "and margins on each side."
+  ),
+  out_width = "75%"
 )
 ```
 
-Saved the usual way, all three are 85 mm wide — the single-column width Cell
-Press asks for. `check_submission()` measures what that leaves for the plot
-area:
+These measurements turn a vague problem such as “the plot looks cramped” into
+a specific choice. Shortening y-axis labels can recover horizontal room;
+moving or removing the legend can recover vertical room. If those elements are
+needed, figspec shows exactly how much larger the canvas must be to preserve
+them.
 
-```{r}
-check_submission(figs, "cell_press")
+## Panel-sizing functions at a glance
+
+| What you need | Function |
+|---|---|
+| Set the overall image size | `fig_save(width = ...)` |
+| Set an exact plotting-panel size | `fig_panel_size()` or `fig_save(panel_width = ...)` |
+| Find one panel width that fits a complete set | `fig_panel_width()` |
+| Inspect the current canvas, panel and surrounding space | `fig_geometry()` |
+| Check whether a set is aligned | `submission_check()` |
+
+The sections below demonstrate each part of this workflow with real plots and
+exported files.
+
+## Keep long labels from shrinking the data area
+
+Both plots below are 85 mm wide and use the same 234 observations, variables
+and scales from `ggplot2::mpg`. The only difference is the wording of the
+y-axis tick labels. Because the longer labels keep their full text size, they
+take space away from the rectangle in which the data are drawn.
+
+The pale blue rectangle marks that data panel; the grey outline marks the
+complete image. Colour and shape both identify the vehicle drive type, so the
+groups remain distinguishable without relying on colour alone.
+
+```{r create-panel-examples}
+drive_colours <- setNames(
+  figspec_palette("okabe_ito")[c(6, 7, 4)],
+  c("4", "f", "r")
+)
+drive_shapes <- setNames(figspec_shapes(3), c("4", "f", "r"))
+
+base_plot <- ggplot(
+  ggplot2::mpg,
+  aes(displ, hwy, colour = drv, shape = drv)
+) +
+  geom_point(alpha = 0.72, size = 1.8) +
+  scale_colour_manual(values = drive_colours) +
+  scale_shape_manual(values = drive_shapes) +
+  labs(x = "Engine displacement (litres)",
+       y = "Highway fuel economy",
+       colour = "Drive type",
+       shape = "Drive type") +
+  theme_spec("cell_press", base_size = 8) +
+  theme(
+    legend.position = "bottom",
+    panel.background = element_rect(
+      fill = "#F3F8FC", colour = "#0072B2", linewidth = 0.7
+    ),
+    plot.background = element_rect(
+      fill = "white", colour = "#9AA4AE", linewidth = 0.6
+    )
+  )
+
+figs <- list(
+  short_labels = base_plot,
+  labels_written_out = base_plot +
+    scale_y_continuous(labels = function(x) paste(x, "miles per gallon"))
+)
 ```
 
-Same canvas, three different plot areas. Nothing here is wrong: every figure
-meets the journal's stated width. But the middle one has millimetres less room
-to draw in, and on the printed page you can see it.
+The more polished appearance comes from figspec's `theme_spec()`,
+`figspec_palette()` and `figspec_shapes()` helpers. The panel-sizing functions
+do not recolour or redesign a chart; they control its physical geometry. This
+guide uses the styling and sizing tools together because a finished figure
+should be both clear and correctly sized.
 
-Note how that is reported. **No publisher states a rule about panel
-consistency, so figspec never calls it a failure.** It is an observation about
-your figures, printed apart from the pass and fail lines and never counted
-among them. A green tick against an invented rule would be the same error as
-inventing the rule.
+### Before: equal canvases, unequal panels
 
-## Setting a panel width
+```{r comparison-helper, include = FALSE}
+draw_pair <- function(plots, widths_mm, labels, panel_widths_mm,
+                      canvas_height_mm = 62, gap_mm = 8) {
+  grobs <- lapply(plots, function(x) {
+    if (inherits(x, "ggplot")) ggplotGrob(x) else x
+  })
+  grid::grid.newpage()
+  device_width <- grid::convertWidth(
+    grid::unit(1, "npc"), "mm", valueOnly = TRUE
+  )
+  total_width <- sum(widths_mm) + gap_mm * (length(grobs) - 1)
+  left <- max(0, (device_width - total_width) / 2)
 
-`fig_save()` takes `panel_width`. Give it a number and the plot area comes out
-that size exactly, whatever the labels do:
-
-```{r}
-f <- tempfile(fileext = ".png")
-
-fig_geometry(fig_save(f, figs$fig1, panel_width = 62))
-fig_geometry(fig_save(f, figs$fig2, panel_width = 62))
-```
-
-Both panels are 62 mm. The canvases differ, because the second figure needs
-more room for its labels — which is the right way round. The panel is what you
-care about; the canvas is the consequence.
-
-## Making a set match
-
-For a set, the panel width you can share is set by the figure with the *least*
-room — the one with the longest tick labels. `fig_panel_width()` measures every
-figure and returns the widest panel all of them can use:
-
-```{r}
-pw <- fig_panel_width(figs, journal = "cell_press", format = "tiff")
-pw
-attr(pw, "per_figure")
-```
-
-`fig2` is the binding constraint. Pass that number back to `fig_save()` and
-every figure comes out with the same plot area, still at the journal's 85 mm
-canvas — the slack goes to the margin rather than stretching the panel:
-
-```{r}
-for (nm in names(figs)) {
-  fig_save(file.path(tempdir(), paste0(nm, ".tiff")), figs[[nm]],
-           journal = "cell_press", panel_width = pw)
+  for (i in seq_along(grobs)) {
+    x <- left + sum(widths_mm[seq_len(i - 1)]) + gap_mm * (i - 1)
+    grid::grid.text(
+      paste0(labels[[i]], "\nPanel width: ",
+             round(panel_widths_mm[[i]], 1), " mm"),
+      x = grid::unit(x + widths_mm[[i]] / 2, "mm"),
+      y = grid::unit(canvas_height_mm + 11, "mm"),
+      gp = grid::gpar(fontsize = 10, fontface = "bold")
+    )
+    grid::pushViewport(grid::viewport(
+      x = grid::unit(x, "mm"), y = grid::unit(2, "mm"),
+      width = grid::unit(widths_mm[[i]], "mm"),
+      height = grid::unit(canvas_height_mm, "mm"),
+      just = c("left", "bottom")
+    ))
+    grid::grid.draw(grobs[[i]])
+    grid::popViewport()
+  }
 }
 
-check_submission(lapply(figs, fig_panel_size, width = pw), "cell_press")
+draw_stack <- function(plots, widths_mm, labels, panel_widths_mm,
+                       canvas_height_mm = 56, gap_mm = 8) {
+  grobs <- lapply(plots, function(x) {
+    if (inherits(x, "ggplot")) ggplotGrob(x) else x
+  })
+  grid::grid.newpage()
+  device_width <- grid::convertWidth(
+    grid::unit(1, "npc"), "mm", valueOnly = TRUE
+  )
+  device_height <- grid::convertHeight(
+    grid::unit(1, "npc"), "mm", valueOnly = TRUE
+  )
+  row_height <- canvas_height_mm + 10
+  total_height <- length(grobs) * row_height +
+    (length(grobs) - 1) * gap_mm
+  bottom <- max(0, (device_height - total_height) / 2)
+
+  for (i in seq_along(grobs)) {
+    y <- bottom + (length(grobs) - i) * (row_height + gap_mm)
+    x <- max(0, (device_width - widths_mm[[i]]) / 2)
+    grid::grid.text(
+      paste0(
+        labels[[i]], "\nCanvas: ", round(widths_mm[[i]], 1),
+        " mm  |  each panel: ", round(panel_widths_mm[[i]], 1), " mm"
+      ),
+      x = grid::unit(device_width / 2, "mm"),
+      y = grid::unit(y + canvas_height_mm + 6, "mm"),
+      gp = grid::gpar(fontsize = 10, fontface = "bold")
+    )
+    grid::pushViewport(grid::viewport(
+      x = grid::unit(x, "mm"), y = grid::unit(y, "mm"),
+      width = grid::unit(widths_mm[[i]], "mm"),
+      height = grid::unit(canvas_height_mm, "mm"),
+      just = c("left", "bottom")
+    ))
+    grid::grid.draw(grobs[[i]])
+    grid::popViewport()
+  }
+}
+
+embed_png_pair <- function(paths, widths, alt) {
+  images <- vapply(seq_along(paths), function(i) {
+    sprintf(
+      paste0(
+        '<img src="data:image/png;base64,%s" ',
+        'style="width:%s;max-width:100%%;height:auto" alt="%s">'
+      ),
+      sub("^data:image/png;base64,", "", knitr::image_uri(paths[[i]])),
+      widths[[i]], alt[[i]]
+    )
+  }, character(1))
+  knitr::asis_output(paste0(
+    '<div class="figspec-export-pair">',
+    paste(images, collapse = "\n"),
+    '</div>'
+  ))
+}
+
 ```
 
-## Letting the journal decide
+```{r panel-before, echo = FALSE, results = "asis"}
+before_widths <- fig_panel_width(
+  figs,
+  spec = "cell_press",
+  column = "single",
+  format = "tiff"
+)
 
-If you only have one figure and simply want it to use its column as fully as
-possible, `panel_width = "max"` takes the widest panel that still fits:
+embed_plot(
+  function() draw_pair(
+    figs,
+    widths_mm = c(85, 85),
+    labels = c("Numeric tick labels", "Long tick labels"),
+    panel_widths_mm = attr(before_widths, "per_figure")
+  ),
+  width = 7.15,
+  height = 3.05,
+  dpi = 200,
+  alt = paste(
+    "Two scatter plots with equal 85 millimetre canvases.",
+    "The plot with long y-axis labels has a visibly narrower blue data",
+    "panel than the plot with numeric labels."
+  )
+)
+```
+
+The outer canvases are the same width, but the blue panel on the right is
+narrower. Its longer labels occupy
+`r round(diff(range(attr(before_widths, "per_figure"))), 1)` mm more horizontal
+space, leaving less room for the data.
+
+## After: make both data panels the same width
+
+To align a set, first find the widest panel that every figure can share within
+the available canvas. `fig_panel_width()` measures the space used by each
+figure's labels, axes, legend and margins, then returns the common width that
+fits them all:
 
 ```{r}
-fig_geometry(fig_save(f, figs$fig1, journal = "cell_press", panel_width = "max"))
+shared_width <- fig_panel_width(
+  figs,
+  spec = "cell_press",
+  column = "single",
+  format = "tiff"
+)
+shared_width
 ```
 
-Note that `"max"` is per figure. It gives *this* figure the largest panel it
-can have, which is not the same as giving a *set* matching panels — for that
-you want `fig_panel_width()` above.
+The per-figure values show how wide each panel could have been on its own. The
+smaller value becomes the shared width because it is the only value that fits
+both figures.
 
-## Canvas and panel together
-
-`width` and `panel_width` are not alternatives. They are two constraints on one
-equation:
-
-```
-canvas = panel + decoration
-```
-
-The third term is measured, not guessed, so figspec can solve for whichever you
-leave out. Give both and both are honoured — the leftover becomes margin:
+Apply that width to every plot with `fig_panel_size()`:
 
 ```{r}
-fig_geometry(fig_save(f, figs$fig1, width = 120, panel_width = 62))
+aligned <- lapply(figs, fig_panel_size, width = shared_width)
 ```
 
-Ask for a pair that cannot exist and it refuses, naming the two values that
-would work. You cannot arrive at those without doing the measurement, so the
-error carries them:
+```{r panel-after, echo = FALSE, results = "asis"}
+after_geometry <- lapply(aligned, fig_geometry)
 
-```{r, error = TRUE}
-fig_save(f, figs$fig1, width = 70, panel_width = 62)
+embed_plot(
+  function() draw_pair(
+    aligned,
+    widths_mm = vapply(
+      after_geometry, function(x) x$canvas_width_mm, numeric(1)
+    ),
+    labels = c("Numeric tick labels", "Long tick labels"),
+    panel_widths_mm = vapply(
+      after_geometry, function(x) x$panel_width_mm, numeric(1)
+    )
+  ),
+  width = 7.15,
+  height = 3.05,
+  dpi = 200,
+  alt = paste(
+    "The same two scatter plots after alignment. Both blue data panels",
+    "have the same measured width. The canvas around the long-label plot",
+    "is wider so its labels fit without shrinking the data panel."
+  )
+)
 ```
 
-Under a journal, the column width pins the canvas — a figure that is not the
-column width gets rescaled in production, and rescaling is what drives type
-below the stated minimum. So an over-wide panel is refused for the same reason:
+The matching blue rectangles show the result: both data panels are now
+`r round(shared_width, 1)` mm wide. The second canvas is wider because figspec
+has added room for its longer labels instead of shrinking the panel or clipping
+the text.
 
-```{r, error = TRUE}
-fig_save(f, figs$fig1, journal = "cell_press", panel_width = 200)
+```{r panel-measurements, echo = FALSE}
+comparison <- data.frame(
+  Figure = c("Numeric tick labels", "Long tick labels"),
+  `Panel before (mm)` = round(attr(before_widths, "per_figure"), 1),
+  `Panel after (mm)` = round(vapply(
+    after_geometry, function(x) x$panel_width_mm, numeric(1)
+  ), 1),
+  `Canvas after (mm)` = round(vapply(
+    after_geometry, function(x) x$canvas_width_mm, numeric(1)
+  ), 1),
+  check.names = FALSE
+)
+knitr::kable(comparison, row.names = FALSE, align = c("l", "r", "r", "r"))
 ```
 
-## Facets and compositions
+The table is the reproducible check behind the illustration. Before alignment,
+the panels differ by
+`r round(diff(range(attr(before_widths, "per_figure"))), 1)` mm. After
+alignment, both measure `r round(shared_width, 1)` mm; the outer canvases are
+allowed to differ so the labels retain their intended size.
 
-A panel width applies to *each* panel, which is what keeps panels comparable
-between figures rather than between layouts. A three-facet figure at 30 mm
-panels is three 30 mm panels wide, not 30 mm in total:
+`submission_check()` measures the same alignment across a complete set:
 
 ```{r}
-faceted <- ggplot(mtcars, aes(wt, mpg)) + geom_point() + facet_wrap(~cyl)
-fig_geometry(fig_save(f, faceted, panel_width = 30))
+submission_check(aligned, "cell_press")
 ```
 
-The same holds for a patchwork composition, measured through the nesting.
+Publisher profiles specify the overall image dimensions, not the size of the
+plotting area inside the image. `submission_check()` therefore reports panel
+alignment as useful layout information, not as a journal requirement. Any
+publisher requirements that cannot be checked from a live plot remain clearly
+marked as incomplete.
 
-## Setting a panel without saving
-
-`fig_panel_size()` does the geometry and hands back a figure you can print,
-inspect or pass on. It keeps the plot it was built from, so the result can
-still be checked in full — type size, font and colour live on the plot, not on
-the layout, and would otherwise be lost:
+This workflow is not limited to journals. Replace `journal` and `column` with
+an explicit canvas width for a report, thesis, presentation or dashboard:
 
 ```{r}
-sized <- fig_panel_size(figs$fig1, width = 62, height = 45)
+report_panel_width <- fig_panel_width(figs, width = 150, units = "mm")
+report_panel_width
+```
+
+## Set an exact data area
+
+Sometimes the data region itself must be a known size: for example, maps that
+will be compared at the same scale, plots that must align in a report, or a
+series whose axes should occupy identical space. `fig_panel_size()` sets that
+region directly:
+
+```{r}
+sized <- fig_panel_size(
+  figs$short_labels,
+  width = 62,
+  height = 45,
+  units = "mm"
+)
 fig_geometry(sized)
 ```
 
-## What a figure is right now
+The data panel is exactly 62 by 45 mm. figspec measures the labels, legend and
+margins, then gives the complete figure the additional space they require.
+Nothing in the data or scales is stretched to make the dimensions fit.
 
-`fig_geometry()` reports where the space in a figure is going, which is usually
-the fastest way to see why one is not the size you expected:
+## Export files with the same data area
+
+`fig_save()` applies the panel dimensions while it writes the file. This avoids
+the usual cycle of exporting, measuring, changing the canvas and exporting
+again. Here, two real PNG files are written at 300 dpi. Their labels differ,
+but both receive a 62 by 45 mm data panel:
 
 ```{r}
-fig_geometry(figs$fig2)
+short_file <- tempfile(fileext = ".png")
+long_file <- tempfile(fileext = ".png")
+
+short_saved <- fig_save(
+  short_file,
+  figs$short_labels + labs(title = "Short tick labels"),
+  panel_width = 62,
+  panel_height = 45,
+  dpi = 300
+)
+long_saved <- fig_save(
+  long_file,
+  figs$labels_written_out + labs(title = "Long tick labels"),
+  panel_width = 62,
+  panel_height = 45,
+  dpi = 300
+)
 ```
 
-An unsized plot reports `NA` for its panel and canvas, and a real number for
-its decoration. That is not a failure to measure — a panel with no size of its
-own genuinely has no width until a canvas is chosen. The decoration, which
-depends only on the labels and the font, is known either way.
-
-The per-side figures are usually what you want. A total tells you the canvas
-has to grow; the sides tell you *why*, and they have different fixes — a wide
-right margin is a legend to move, a wide left margin is axis labels to shorten.
-
-```{r fig.width = 5, fig.height = 3.6}
-plot(fig_geometry(fig_panel_size(figs$fig1, width = 60, height = 40)))
+```{r exported-files, echo = FALSE, results = "asis"}
+embed_png_pair(
+  c(short_saved, long_saved),
+  c("43%", "52%"),
+  c(
+    "The exported short-label PNG with a 62 by 45 millimetre blue data panel.",
+    paste(
+      "The exported long-label PNG with the same 62 by 45 millimetre blue",
+      "data panel and a wider surrounding canvas."
+    )
+  )
+)
 ```
+
+```{r exported-file-check, echo = FALSE}
+export_paths <- list(short_saved, long_saved)
+export_geometry <- lapply(export_paths, fig_geometry)
+export_reports <- lapply(export_paths, fig_check, spec = "cell_press")
+actual_value <- function(report, item) {
+  trimws(report$actual[report$check == item])
+}
+
+export_summary <- data.frame(
+  File = c("Short labels", "Long labels"),
+  `Panel (mm)` = vapply(
+    export_geometry,
+    function(x) paste0(round(x$panel_width_mm, 1), " x ",
+                       round(x$panel_height_mm, 1)),
+    character(1)
+  ),
+  `Canvas (mm)` = vapply(
+    export_reports,
+    function(x) paste(actual_value(x, "Width"), "x",
+                       actual_value(x, "Height")),
+    character(1)
+  ),
+  Resolution = vapply(
+    export_reports, actual_value, character(1), item = "Resolution"
+  ),
+  check.names = FALSE
+)
+knitr::kable(export_summary, row.names = FALSE, align = c("l", "c", "c", "c"))
+```
+
+These values come from the files that were actually written, not from the code
+arguments alone: `fig_check()` reopened each PNG and read its saved dimensions
+and resolution. The panels match. The long-label image has a wider canvas
+because the text is preserved at its intended size rather than squeezed or
+clipped.
+
+For a publication profile, add `journal` and `column`. figspec will retain the
+publisher's required canvas width while fitting the requested panel inside it:
+
+```{r, eval = FALSE}
+fig_save(
+  "figure_1.tiff",
+  figs$short_labels,
+  spec = "cell_press",
+  column = "single",
+  panel_width = shared_width
+)
+```
+
+## Use all the available canvas
+
+If a figure must fit an 85 mm space, guessing a conservative panel width can
+leave valuable room unused. `panel_width = "max"` measures the surrounding
+labels, axes, legend and margins, then gives everything else to the data panel.
+The comparison below uses the same plot and the same 85 mm canvas:
+
+```{r}
+conservative_file <- tempfile(fileext = ".png")
+maximum_file <- tempfile(fileext = ".png")
+
+conservative_panel <- fig_save(
+  conservative_file,
+  figs$short_labels + labs(title = "A guessed 55 mm panel"),
+  width = 85,
+  panel_width = 55,
+  panel_height = 42,
+  dpi = 300
+)
+maximum_panel <- fig_save(
+  maximum_file,
+  figs$short_labels + labs(title = "The widest panel that fits"),
+  width = 85,
+  panel_width = "max",
+  panel_height = 42,
+  dpi = 300
+)
+```
+
+```{r maximum-panel-comparison, echo = FALSE, results = "asis"}
+embed_png_pair(
+  c(conservative_panel, maximum_panel),
+  c("48%", "48%"),
+  c(
+    "An 85 millimetre figure with a conservatively chosen 55 millimetre data panel.",
+    paste(
+      "The same 85 millimetre figure using the widest data panel that its",
+      "labels and legend allow."
+    )
+  )
+)
+```
+
+```{r maximum-panel-table, echo = FALSE}
+maximum_comparison <- data.frame(
+  Method = c("Guessed panel width", 'panel_width = "max"'),
+  `Canvas width (mm)` = round(vapply(
+    list(conservative_panel, maximum_panel),
+    function(x) fig_geometry(x)$canvas_width_mm,
+    numeric(1)
+  ), 1),
+  `Panel width (mm)` = round(vapply(
+    list(conservative_panel, maximum_panel),
+    function(x) fig_geometry(x)$panel_width_mm,
+    numeric(1)
+  ), 1),
+  check.names = FALSE
+)
+knitr::kable(maximum_comparison, row.names = FALSE, align = c("l", "r", "r"))
+```
+
+`"max"` is calculated for the particular figure, so it makes full use of the
+canvas without clipping its surrounding material. It is ideal for one figure.
+To give several different figures a common panel width, continue to use
+`fig_panel_width()` as shown earlier.
+
+## Setting both canvas and panel dimensions
+
+Canvas width and panel width describe different parts of the same figure:
+
+```
+canvas = panel + axes + labels + legend + margins
+```
+
+When you provide both, figspec measures the surrounding material and checks
+that the requested combination is possible:
+
+```{r}
+both_sizes <- fig_save(
+  tempfile(fileext = ".png"),
+  figs$short_labels,
+  width = 120,
+  panel_width = 62,
+  dpi = 300
+)
+fig_geometry(both_sizes)
+```
+
+If the two dimensions cannot coexist, figspec stops before writing the file.
+The error states how wide the canvas must be or how small the panel must
+become:
+
+```{r, error = TRUE}
+fig_save(
+  tempfile(fileext = ".png"),
+  figs$short_labels,
+  width = 65,
+  panel_width = 62,
+  dpi = 300
+)
+```
+
+## Keep every panel readable in a multi-panel figure
+
+### Faceted plots
+
+Facets multiply the number of data panels inside one canvas. On a narrow
+canvas, adding facets can quietly make every panel too small. In this example,
+three facets squeezed into an 85 mm canvas leave only about 24 mm for each data
+panel. Asking for 30 mm panels makes figspec calculate the wider canvas that
+the complete figure requires.
+
+```{r faceted-plot}
+facet_colours <- setNames(
+  figspec_palette("okabe_ito")[c(6, 7, 4)],
+  c("4", "6", "8")
+)
+
+faceted <- ggplot(subset(ggplot2::mpg, cyl %in% c(4, 6, 8)),
+                  aes(displ, hwy, colour = factor(cyl))) +
+  geom_point(alpha = 0.72, size = 1.7) +
+  scale_colour_manual(values = facet_colours) +
+  guides(colour = "none") +
+  facet_wrap(~ cyl, nrow = 1) +
+  labs(x = "Engine displacement (litres)",
+       y = "Highway fuel economy") +
+  theme_spec("cell_press", base_size = 8) +
+  theme(
+    panel.background = element_rect(
+      fill = "#F3F8FC", colour = "#0072B2", linewidth = 0.7
+    ),
+    plot.background = element_rect(
+      fill = "white", colour = "#9AA4AE", linewidth = 0.6
+    )
+  )
+```
+
+```{r}
+faceted_width_before <- fig_panel_width(
+  list(faceted = faceted), width = 85, units = "mm"
+)
+faceted_before <- fig_panel_size(
+  faceted, width = faceted_width_before, height = 42
+)
+faceted_sized <- fig_panel_size(faceted, width = 30, height = 42)
+```
+
+```{r faceted-before-after, echo = FALSE, results = "asis"}
+faceted_geometry <- lapply(
+  list(before = faceted_before, after = faceted_sized),
+  fig_geometry
+)
+embed_plot(
+  function() draw_stack(
+    list(faceted_before, faceted_sized),
+    widths_mm = vapply(
+      faceted_geometry, function(x) x$canvas_width_mm, numeric(1)
+    ),
+    labels = c("Before: three panels share 85 mm",
+               "After: every panel receives 30 mm"),
+    panel_widths_mm = vapply(
+      faceted_geometry, function(x) x$panel_width_mm, numeric(1)
+    )
+  ),
+  width = 5.8,
+  height = 5.8,
+  dpi = 200,
+  alt = paste(
+    "A before-and-after comparison of a three-facet plot. On the 85",
+    "millimetre canvas each panel is 24.1 millimetres wide; after sizing,",
+    "every panel is 30 millimetres wide and the canvas expands to fit."
+  )
+)
+```
+
+With conventional canvas sizing, R honours the requested 85 mm image width by
+leaving only `r round(faceted_geometry[[1]]$panel_width_mm, 1)` mm for each
+facet. ggplot2 does not provide an argument for saying that every facet must be
+30 mm wide. figspec adds that control: it keeps every data panel at 30 mm and
+calculates that the complete image must be
+`r round(faceted_geometry[[2]]$canvas_width_mm, 1)` mm wide.
+
+The data ranges and text sizes do not change. The added value is predictable
+physical space for every facet, so adding more facets does not silently make
+each chart too narrow to read.
+
+### Separate plots assembled with patchwork
+
+figspec can measure through a patchwork composition and control the physical
+size of every underlying data panel in the finished file. This makes an
+assembled figure subject to the same reproducible sizing rules as a single
+plot.
+
+Suppose this composition is first exported on a 120 mm canvas. Its two panels
+are about 45 mm wide. If a report layout requires each panel to be 60 mm wide,
+setting a larger canvas by trial and error does not guarantee the result.
+figspec sets the two 60 mm panels directly and calculates the canvas required
+for their axes, titles, spacing and margins.
+
+```{r patchwork-composition}
+vehicle_classes <- sort(unique(ggplot2::mpg$class))
+class_colours <- setNames(
+  figspec_palette("viridis", length(vehicle_classes)),
+  vehicle_classes
+)
+
+scatter_panel <- figs$short_labels +
+  guides(colour = "none", shape = "none") +
+  labs(title = "Fuel economy and engine size")
+
+box_panel <- ggplot(ggplot2::mpg, aes(hwy, class, fill = class)) +
+  geom_boxplot(show.legend = FALSE, width = 0.65, outlier.alpha = 0.45) +
+  scale_fill_manual(values = class_colours) +
+  labs(title = "Fuel economy by vehicle class",
+       x = "Highway fuel economy", y = NULL) +
+  theme_spec("cell_press", base_size = 8) +
+  theme(
+    panel.background = element_rect(
+      fill = "#F8F6F1", colour = "#D55E00", linewidth = 0.7
+    ),
+    plot.background = element_rect(
+      fill = "white", colour = "#9AA4AE", linewidth = 0.6
+    )
+  )
+
+composition <- patchwork::wrap_plots(scatter_panel, box_panel, nrow = 1)
+composition_width_before <- fig_panel_width(
+  list(composition = composition), width = 120, units = "mm"
+)
+composition_before <- fig_panel_size(
+  composition, width = composition_width_before, height = 42
+)
+composition_after <- fig_panel_size(composition, width = 60, height = 42)
+```
+
+```{r patchwork-before-after, echo = FALSE, results = "asis"}
+composition_geometry <- lapply(
+  list(composition_before, composition_after), fig_geometry
+)
+embed_plot(
+  function() draw_stack(
+    list(composition_before, composition_after),
+    widths_mm = vapply(
+      composition_geometry, function(x) x$canvas_width_mm, numeric(1)
+    ),
+    labels = c("Before: two panels share 120 mm",
+               "With figspec: each panel is exactly 60 mm"),
+    panel_widths_mm = vapply(
+      composition_geometry, function(x) x$panel_width_mm, numeric(1)
+    )
+  ),
+  width = 7.2,
+  height = 5.8,
+  dpi = 200,
+  alt = paste(
+    "A comparison of a two-plot composition at two physical sizes.",
+    "A 120 millimetre canvas produces panels about 45 millimetres wide;",
+    "figspec gives each panel 60 millimetres and calculates the larger",
+    "canvas required."
+  )
+)
+```
+
+The compositions retain the same data, scales and relative arrangement, so
+the comparison isolates the change in geometry. Each data panel grows from
+`r round(composition_geometry[[1]]$panel_width_mm, 1)` to
+`r round(composition_geometry[[2]]$panel_width_mm, 1)` mm, and figspec expands
+the canvas from `r round(composition_geometry[[1]]$canvas_width_mm, 1)` to
+`r round(composition_geometry[[2]]$canvas_width_mm, 1)` mm without shrinking
+the labels.
+
+The result can then be passed directly to `fig_save()` for export or compared
+with other figures through `submission_check()`. The composition now has known,
+repeatable panel dimensions rather than dimensions inferred from whichever
+canvas happened to be used.
+
 
 ```{r, include = FALSE}
-unlink(f)
-unlink(file.path(tempdir(), paste0(names(figs), ".tiff")))
+unlink(c(short_file, long_file, conservative_file, maximum_file))
 ```

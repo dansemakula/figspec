@@ -7,7 +7,7 @@
 fig_save(
   filename,
   plot = ggplot2::last_plot(),
-  journal = NULL,
+  spec = NULL,
   column = NULL,
   width = NULL,
   height = NULL,
@@ -16,6 +16,7 @@ fig_save(
   units = c("mm", "cm", "in"),
   dpi = NULL,
   check = TRUE,
+  art_type = c("auto", "colour", "bw", "line", "combination"),
   ...
 )
 }
@@ -26,11 +27,12 @@ journal and no extension, the journal's first accepted format is used.}
 \item{plot}{Plot to save: a ggplot, a patchwork composition, or a \code{gtable}.
 Defaults to the last plot displayed.}
 
-\item{journal}{Registry id, for example \code{"cell_press"}. Optional. When
-given, it supplies the canvas width, resolution, format and font.}
+\item{spec}{Optional specification: a registry id such as \code{"cell_press"},
+a \code{figspec_spec}, or a named list of requirements. When given, it supplies
+the canvas width, resolution, format and font.}
 
 \item{column}{Which of the journal's stated column widths to fit. Only
-meaningful with \code{journal}; defaults to \code{"single"} when one is given.}
+meaningful with \code{spec}; defaults to \code{"single"} when one is given.}
 
 \item{width}{Canvas width. Overrides the journal's column width.}
 
@@ -47,6 +49,9 @@ composition this applies to each panel.}
 
 \item{check}{Whether to check the result and report failures as a warning.
 Only checks against a journal when one is given.}
+
+\item{art_type}{Resolution category. \code{"auto"} classifies the live plot;
+explicit choices are \code{"colour"}, \code{"bw"}, \code{"line"}, and \code{"combination"}.}
 
 \item{...}{Passed to \code{\link[ggplot2:ggsave]{ggplot2::ggsave()}}.}
 }
@@ -101,22 +106,41 @@ Call \code{\link[=fig_columns]{fig_columns()}} to see what a journal offers, and
 value.
 
 \code{column} is a lookup into a journal's own layout, so it means nothing
-without \code{journal}. Sizing without a journal is what \code{width} is for.
+without \code{spec}. Sizing without a specification is what \code{width} is for.
 }
 
 \examples{
 library(ggplot2)
-p <- ggplot(mtcars, aes(wt, mpg)) + geom_point()
+p <- ggplot(ggplot2::mpg, aes(displ, hwy, colour = class)) + geom_point()
 
 # To a journal's requirements, saved in a format that journal accepts
 out <- file.path(tempdir(), "figure_1.tiff")
-fig_save(out, p + theme_journal("frontiers"), journal = "frontiers")
+styled <- p + theme_spec("frontiers")
+styled
+fig_save(out, styled, spec = "frontiers")
 unlink(out)
 
 # To an exact panel size, no journal involved
 panelled <- file.path(tempdir(), "figure_2.png")
 fig_save(panelled, p, panel_width = 62)
 unlink(panelled)
+
+\donttest{
+# To a project specification supplied directly in R. This opens a second
+# graphics device, so it remains a worked website example without slowing
+# CRAN's ordinary example pass.
+report_spec <- list(
+  name = "Quarterly research report",
+  columns = list(full = 160),
+  formats = "png",
+  dpi_min = 300,
+  font_min_pt = 9
+)
+report_file <- file.path(tempdir(), "report-figure.png")
+fig_save(report_file, p + theme_spec(report_spec),
+         spec = report_spec, column = "full")
+unlink(report_file)
+}
 
 # Working the canvas out from the panel means opening a device to measure
 # the decoration on, which is slow enough that the rest of the tour is kept
@@ -125,7 +149,7 @@ unlink(panelled)
 widest <- file.path(tempdir(), "figure_3.tiff")
 
 # The widest panel that still fits the column
-fig_save(widest, p, journal = "frontiers", panel_width = "max")
+fig_save(widest, p, spec = "frontiers", panel_width = "max")
 unlink(widest)
 
 # Where the space in a figure went

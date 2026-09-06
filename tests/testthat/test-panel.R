@@ -42,7 +42,7 @@ test_that("a journal pins the canvas even when a panel size is given", {
   out <- png_out(); on.exit(unlink(out))
   col <- fig_width("cell_press", "single", "mm")
   g <- geom_of(suppressWarnings(
-    fig_save(out, p_plain(), journal = "cell_press", panel_width = 50)
+    fig_save(out, p_plain(), spec = "cell_press", panel_width = 50)
   ))
   expect_equal(g$canvas_width_mm, col, tolerance = 0.05)
   expect_equal(g$panel_width_mm, 50, tolerance = 0.05)
@@ -50,7 +50,7 @@ test_that("a journal pins the canvas even when a panel size is given", {
 
 test_that("journal-only sizing is unchanged", {
   out <- png_out(); on.exit(unlink(out))
-  g <- geom_of(suppressWarnings(fig_save(out, p_plain(), journal = "cell_press")))
+  g <- geom_of(suppressWarnings(fig_save(out, p_plain(), spec = "cell_press")))
   expect_equal(g$canvas_width_mm, fig_width("cell_press", "single", "mm"),
                tolerance = 0.05)
 })
@@ -76,7 +76,7 @@ test_that("an impossible canvas and panel pair reports both escape values", {
 test_that("a panel too wide for the column is refused, with the width that fits", {
   out <- png_out(); on.exit(unlink(out))
   err <- tryCatch(
-    suppressWarnings(fig_save(out, p_plain(), journal = "cell_press",
+    suppressWarnings(fig_save(out, p_plain(), spec = "cell_press",
                               panel_width = 200)),
     error = conditionMessage
   )
@@ -86,17 +86,17 @@ test_that("a panel too wide for the column is refused, with the width that fits"
   expect_match(err, "panel_width = ")
 })
 
-test_that("column without a journal is refused and says what to use instead", {
+test_that("column without a specification is refused and says what to use instead", {
   out <- png_out(); on.exit(unlink(out))
   err <- tryCatch(fig_save(out, p_plain(), column = "double"),
                   error = conditionMessage)
-  expect_match(err, "needs a `journal`")
+  expect_match(err, "needs a `spec`")
   expect_match(err, "panel_width")
 })
 
 test_that("fig_panel_width takes the narrowest figure as the constraint", {
   figs <- list(plain = p_plain(), wordy = p_wordy())
-  pw <- fig_panel_width(figs, journal = "cell_press", format = "png")
+  pw <- fig_panel_width(figs, spec = "cell_press", format = "png")
   per <- attr(pw, "per_figure")
 
   expect_equal(as.numeric(pw), min(per), tolerance = 1e-8)
@@ -106,11 +106,11 @@ test_that("fig_panel_width takes the narrowest figure as the constraint", {
 test_that("a shared panel width makes a set match at one canvas", {
   out <- png_out(); on.exit(unlink(out))
   figs <- list(plain = p_plain(), wordy = p_wordy())
-  pw <- fig_panel_width(figs, journal = "cell_press", format = "png")
+  pw <- fig_panel_width(figs, spec = "cell_press", format = "png")
 
   got <- vapply(figs, function(f) {
     geom_of(suppressWarnings(
-      fig_save(out, f, journal = "cell_press", panel_width = pw)
+      fig_save(out, f, spec = "cell_press", panel_width = pw)
     ))$panel_width_mm
   }, numeric(1))
 
@@ -132,7 +132,7 @@ test_that("panel size applies to each panel of a faceted plot", {
 test_that("panel_width = \"max\" fills the column it is given", {
   out <- png_out(); on.exit(unlink(out))
   g <- geom_of(suppressWarnings(
-    fig_save(out, p_plain(), journal = "cell_press", panel_width = "max")
+    fig_save(out, p_plain(), spec = "cell_press", panel_width = "max")
   ))
   expect_equal(g$canvas_width_mm, g$panel_width_mm + g$decoration_width_mm,
                tolerance = 0.05)
@@ -169,8 +169,8 @@ test_that("units are respected", {
 test_that("fig_save still works and matches fig_save", {
   out1 <- png_out(); out2 <- png_out()
   on.exit(unlink(c(out1, out2)))
-  a <- geom_of(suppressWarnings(fig_save(out1, p_plain(), journal = "cell_press")))
-  b <- geom_of(suppressWarnings(fig_save(out2, p_plain(), journal = "cell_press")))
+  a <- geom_of(suppressWarnings(fig_save(out1, p_plain(), spec = "cell_press")))
+  b <- geom_of(suppressWarnings(fig_save(out2, p_plain(), spec = "cell_press")))
   expect_equal(a$canvas_width_mm, b$canvas_width_mm)
   expect_equal(a$panel_width_mm, b$panel_width_mm)
 })
@@ -201,7 +201,7 @@ test_that("an unsized plot reports no panel width rather than zero", {
 test_that("column and width together are refused, naming both", {
   out <- png_out(); on.exit(unlink(out))
   err <- tryCatch(
-    fig_save(out, p_plain(), journal = "cell_press", column = "double",
+    fig_save(out, p_plain(), spec = "cell_press", column = "double",
              width = 100),
     error = conditionMessage
   )
@@ -227,18 +227,18 @@ test_that("with no specification nothing passes and nothing fails", {
   expect_true(all(r$requirement == "no specification given"))
 })
 
-test_that("check_submission reports panel spread without calling it a failure", {
+test_that("submission_check reports panel spread without calling it a failure", {
   figs <- list(a = p_plain(), b = p_wordy())
-  res <- suppressWarnings(check_submission(figs, "frontiers"))
+  res <- suppressWarnings(submission_check(figs, "frontiers"))
 
   expect_true(all(!is.na(res$panel_mm)))
   expect_gt(diff(range(res$panel_mm)), 0.5)
   # Differing plot areas must never be counted as a breach.
   expect_false(any(res$result == "fail"))
 
-  pw <- fig_panel_width(figs, journal = "frontiers")
+  pw <- fig_panel_width(figs, spec = "frontiers")
   matched <- suppressWarnings(
-    check_submission(lapply(figs, fig_panel_size, width = pw), "frontiers")
+    submission_check(lapply(figs, fig_panel_size, width = pw), "frontiers")
   )
   expect_equal(diff(range(matched$panel_mm)), 0, tolerance = 0.05)
 })
@@ -298,7 +298,7 @@ test_that("refusals carry the numbers, not just a message", {
 test_that("the column conflict names both widths", {
   out <- png_out(); on.exit(unlink(out))
   e <- tryCatch(
-    fig_save(out, p_plain(), journal = "cell_press", column = "double",
+    fig_save(out, p_plain(), spec = "cell_press", column = "double",
              width = 100),
     figspec_column_width_conflict = identity
   )
@@ -308,11 +308,11 @@ test_that("the column conflict names both widths", {
   expect_equal(e$column_width, fig_width("cell_press", "double", "mm"))
 })
 
-test_that("column without a journal is its own condition", {
+test_that("column without a specification is its own condition", {
   out <- png_out(); on.exit(unlink(out))
   e <- tryCatch(fig_save(out, p_plain(), column = "double"),
-                figspec_column_without_journal = identity)
-  expect_s3_class(e, "figspec_column_without_journal")
+                figspec_column_without_spec = identity)
+  expect_s3_class(e, "figspec_column_without_spec")
   expect_equal(e$column, "double")
 })
 
@@ -323,7 +323,7 @@ test_that("every refusal in this family is catchable as one class", {
     function() fig_save(out, p_plain(), width = 70, panel_width = 62),
     function() fig_save(out, p_plain(), column = "double"),
     function() fig_save(out, p_plain(), panel_width = "max"),
-    function() fig_save(out, p_plain(), journal = "cell_press",
+    function() fig_save(out, p_plain(), spec = "cell_press",
                         column = "double", width = 100)
   )
   for (f in cases) expect_error(f(), class = "figspec_error")
@@ -337,7 +337,7 @@ test_that("every error figspec raises is catchable as figspec_error", {
   cases <- list(
     bad_input     = function() fig_check(42),
     missing_arg   = function() fig_panel_size(p_plain()),
-    not_found     = function() journal_spec("definitely_not_a_journal"),
+    not_found     = function() spec_get("definitely_not_a_journal"),
     unsupported   = function() figspec_shapes(99),
     bad_registry  = function() validate_registry(list(list(id = "x"))),
     bad_size      = function() fig_save(out, p_plain(), panel_width = -1),

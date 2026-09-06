@@ -2,22 +2,23 @@
 % Please edit documentation in R/panel.R
 \name{fig_panel_size}
 \alias{fig_panel_size}
-\alias{set_panel_size}
-\alias{panel_size}
-\title{Set the size of a plot's panels}
+\title{Set exact dimensions for every data panel}
 \usage{
 fig_panel_size(plot, width = NULL, height = NULL, units = c("mm", "cm", "in"))
 }
 \arguments{
-\item{plot}{A ggplot, a patchwork composition, or a \code{gtable}.}
+\item{plot}{The plot or composition whose data panels you want to size. This
+can be a ggplot, a patchwork composition, or a \code{gtable}.}
 
-\item{width, height}{Panel size. \code{NULL} leaves that dimension alone.}
+\item{width, height}{The size of each data panel. Leave either value as
+\code{NULL} to change only the other dimension.}
 
-\item{units}{Units for \code{width} and \code{height}.}
+\item{units}{The units used for \code{width} and \code{height}.}
 }
 \value{
-A \code{gtable}, which prints and saves like a plot. Its achieved
-geometry is attached as the \code{"figspec_geometry"} attribute.
+A \code{gtable}, which can be drawn with \code{\link[grid:grid.draw]{grid::grid.draw()}} and saved
+like a plot. Its achieved geometry is attached as the
+\code{"figspec_geometry"} attribute.
 }
 \description{
 Sets the plot area to an exact physical size, rather than the image file.
@@ -35,9 +36,10 @@ to \emph{each} panel, which is what makes panels comparable between figures.
 }
 \examples{
 library(ggplot2)
-p <- ggplot(mtcars, aes(wt, mpg)) + geom_point()
+p <- ggplot(ggplot2::mpg, aes(displ, hwy, colour = class)) + geom_point()
 g <- fig_panel_size(p, width = 62, height = 45)
 fig_geometry(g)
+grid::grid.draw(g)
 }
 \seealso{
 \code{\link[=fig_save]{fig_save()}}, which does this and works out the image size for you.

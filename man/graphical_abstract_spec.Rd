@@ -2,22 +2,23 @@
 % Please edit documentation in R/abstract.R
 \name{graphical_abstract_spec}
 \alias{graphical_abstract_spec}
-\title{Graphical abstract requirements for a journal}
+\title{Look up graphical abstract requirements}
 \usage{
-graphical_abstract_spec(journal)
+graphical_abstract_spec(spec)
 }
 \arguments{
-\item{journal}{Registry id, for example \code{"rsc"}.}
+\item{spec}{A registry id such as \code{"rsc"}, a \code{figspec_spec}, or a named
+list containing graphical-abstract requirements.}
 }
 \value{
 A list of the stated requirements, or \code{NULL} with a message when the
-registry records none for that journal.
+selected specification records none.
 }
 \description{
-Many journals ask for a graphical abstract, or table-of-contents entry, and
-set separate rules for it: usually a much smaller canvas than a figure, and
-sometimes a character limit on the accompanying text. These are not figure
-requirements and are not checked by \code{\link[=fig_check]{fig_check()}}.
+A publication or project may require a graphical abstract or
+table-of-contents image with its own dimensions, resolution, format and text
+limit. These requirements are separate from ordinary figures and are not
+checked by \code{\link[=fig_check]{fig_check()}}.
 }
 \examples{
 graphical_abstract_spec("rsc")

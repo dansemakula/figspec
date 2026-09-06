@@ -16,34 +16,55 @@
 # `columns` at all, only a minimum and a maximum, and asking for a column from
 # one is a question it cannot answer.
 
-#' Figure width for a journal column
+default_column <- function(spec) {
+  if (!is.null(spec$columns) && length(spec$columns)) return(names(spec$columns)[[1]])
+  if (!is.null(spec$width_min_mm)) return("single")
+  NULL
+}
+
+#' Look up a figure width
 #'
-#' Resolves the width a figure should be saved at. Column names come from the
-#' journal itself rather than a fixed vocabulary: Science lays out in one, two
-#' or three columns, most journals in one, one-and-a-half or two. Use
-#' [fig_columns()] to see what a given journal offers.
+#' Returns a named figure width from a publication, project or organisational
+#' specification. The specification defines both the available names and their
+#' widths: for example, Cell Press records `"single"`, `"onehalf"` and
+#' `"double"`, while Science also records `"triple"`. Use [fig_columns()] to
+#' see the names available in a specification.
 #'
-#' When a journal states a permitted range rather than named columns,
-#' `"single"` returns the minimum width and `"double"` the maximum.
+#' When a specification records a permitted range instead of named widths,
+#' `"single"` returns the minimum and `"double"` returns the maximum.
 #'
-#' @param journal Registry id, for example `"cell_press"`.
-#' @param column Column name, for example `"single"`, `"double"` or, for
-#'   Science, `"triple"`.
+#' @param spec The specification to use: a registry id such as
+#'   `"cell_press"`, a `figspec_spec`, or a named list of requirements.
+#' @param column Name of the required width, such as `"single"`, `"double"`
+#'   or `"triple"`. The available names come from the specification.
 #' @param units Unit for the returned width: `"mm"`, `"cm"` or `"in"`.
-#' @return A single numeric width, or an error if the journal does not state
-#'   a width for that column.
+#' @return A single numeric width in the requested unit. An error is raised if
+#'   the specification does not contain the requested width.
 #' @examples
 #' fig_width("cell_press", "single")
 #' fig_width("science", "triple")
 #' fig_width("frontiers", "double", units = "in")
+#'
+#' report_spec <- spec_get(list(
+#'   name = "Research report",
+#'   columns = list(half = 80, full = 160)
+#' ))
+#' fig_width(report_spec, "full")
 #' @export
-fig_width <- function(journal, column = "single", units = c("mm", "cm", "in")) {
+fig_width <- function(spec, column = "single", units = c("mm", "cm", "in")) {
   units <- match.arg(units)
-  spec <- journal_spec(journal)
-  if (!is.character(column) || length(column) != 1L) {
+  spec <- spec_get(spec)
+  if (!is.character(column) || length(column) != 1L ||
+      is.na(column) || !nzchar(column)) {
     figspec_abort(
-      c("{.arg column} must be a single column name.",
-        "x" = if (length(column) != 1L) "You gave {length(column)} value{?s}." else "You gave {.cls {class(column)}}."),
+      c("{.arg column} must be one non-empty width name.",
+        "x" = if (length(column) != 1L) {
+          "You gave {length(column)} value{?s}."
+        } else if (!is.character(column)) {
+          "You gave {.cls {class(column)}}."
+        } else {
+          "You gave a missing or empty name."
+        }),
       "bad_input")
   }
 
@@ -73,17 +94,32 @@ fig_width <- function(journal, column = "single", units = c("mm", "cm", "in")) {
   convert_length(as.numeric(w), "mm", units)
 }
 
-#' The column widths a journal states
+#' List the available figure widths
 #'
-#' @param journal Registry id.
+#' Lists the named widths recorded in a publication, project or organisational
+#' specification. The returned names can be supplied to the `column` argument
+#' of [fig_width()], [fig_save()] and other figspec functions.
+#'
+#' Some sources state only a permitted width range. In that case there are no
+#' named choices to list, so the function explains the range and returns
+#' `NULL`.
+#'
+#' @param spec The specification to inspect: a registry id, a
+#'   `figspec_spec`, or a named list of requirements.
 #' @return A named numeric vector of widths in millimetres, or `NULL` when the
-#'   journal states a range rather than named columns.
+#'   specification records a range instead of named widths.
 #' @examples
 #' fig_columns("science")
 #' fig_columns("cell_press")
+#'
+#' report_spec <- list(
+#'   name = "Research report",
+#'   columns = list(half = 80, full = 160)
+#' )
+#' fig_columns(report_spec)
 #' @export
-fig_columns <- function(journal) {
-  spec <- journal_spec(journal)
+fig_columns <- function(spec) {
+  spec <- spec_get(spec)
   if (is.null(spec$columns)) {
     msg_wrap(
       "'", spec$name, "' states a width range rather than named columns: ",
@@ -100,6 +136,9 @@ print.figspec_spec <- function(x, ...) {
   if (!is.null(x$publisher)) cli::cli_text("{.strong Publisher:} {x$publisher}")
   if (length(x$disciplines)) {
     cli::cli_text("{.strong Disciplines:} {paste(x$disciplines, collapse = ', ')}")
+  }
+  if (!is.null(x$publication_stage)) {
+    cli::cli_text("{.strong Applies at:} {x$publication_stage} submission")
   }
   cli::cli_text("")
 
@@ -149,29 +188,30 @@ print.figspec_spec <- function(x, ...) {
   invisible(x)
 }
 
-#' Table requirements for a journal
+#' Look up table requirements
 #'
-#' Journals also publish rules for tables, but those rules are mostly editorial
-#' rather than numeric: orientation, how the title is set, where footnotes go.
-#' `table_spec()` surfaces what the publisher states so you can follow it. It
-#' deliberately does not try to check a table automatically, because almost
-#' nothing in a table specification is mechanically checkable from an R object.
+#' Publications, organisations and projects may set separate requirements for
+#' tables, including orientation, titles, notes and permitted file types.
+#' `table_spec()` returns the recorded instructions so they can be consulted
+#' while the table is still being prepared. It does not claim to verify rules
+#' that require editorial judgement.
 #'
-#' @param journal Registry id, for example `"nature"`.
+#' @param spec A registry id such as `"nature"`, a `figspec_spec`, or a
+#'   named list containing table requirements.
 #' @return A list of the stated table requirements, or `NULL` with a message
-#'   when the registry records none for that journal.
+#'   when the selected specification records none.
 #' @examples
 #' table_spec("nature")
 #' @export
-table_spec <- function(journal) {
-  spec <- journal_spec(journal)
+table_spec <- function(spec) {
+  spec <- spec_get(spec)
   if (is.null(spec$tables)) {
     msg_wrap("No table requirements are recorded for '", spec$name,
             "'. See ", spec$source_url)
     return(invisible(NULL))
   }
   structure(
-    c(spec$tables, list(journal = spec$name, source_url = spec$source_url,
+    c(spec$tables, list(spec_name = spec$name, source_url = spec$source_url,
                         verified_on = spec$verified_on)),
     class = c("figspec_table_spec", "list")
   )
@@ -179,9 +219,11 @@ table_spec <- function(journal) {
 
 #' @export
 print.figspec_table_spec <- function(x, ...) {
-  cli::cli_h1("{x$journal} - tables")
-  for (nm in setdiff(names(x), c("journal", "source_url", "verified_on", "source_quote"))) {
-    cli::cli_li("{.strong {nm}:} {trimws(as.character(x[[nm]]))}")
+  cli::cli_h1("{x$spec_name} - tables")
+  for (nm in setdiff(names(x), c("spec_name", "source_url", "verified_on", "source_quote"))) {
+    label <- gsub("_", " ", nm, fixed = TRUE)
+    label <- paste0(toupper(substr(label, 1, 1)), substr(label, 2, nchar(label)))
+    cli::cli_li("{.strong {label}:} {trimws(as.character(x[[nm]]))}")
   }
   if (!is.null(x$source_quote)) {
     cli::cli_text("")

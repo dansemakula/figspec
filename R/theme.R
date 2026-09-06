@@ -19,22 +19,23 @@
 # override them; where the two disagree, the caller is told which of their own
 # settings the journal displaced.
 
-#' A ggplot2 theme that satisfies a journal's typography rules
+#' Apply typography requirements and a visual style
 #'
-#' Journals set a floor on type size, and often name the fonts they accept.
-#' `theme_journal()` takes any base theme and enforces those constraints on top
-#' of it, rather than imposing a look of its own. Every text element is set to
-#' at least the journal's minimum size, so nothing falls below the floor
-#' because of a relative sizing rule in the base theme.
+#' `theme_spec()` takes any base theme and applies the typographic constraints
+#' in a specification on top of it, rather than imposing a look of its own.
+#' The specification may come from a publisher, a journal or a project. Every
+#' text element is set to at least its minimum size, so nothing falls below the
+#' floor because of a relative sizing rule in the base theme.
 #'
 #' This only holds if the figure is saved at the journal's stated width, since
 #' type size is fixed in points but a figure scaled down after the fact takes
 #' its text with it. [fig_save()] saves at the right width for you.
 #'
-#' @param journal Registry id, for example `"plos_one"`.
+#' @param spec A registry id such as `"plos_one"`, a `figspec_spec`, or a
+#'   named list of requirements.
 #' @param base A ggplot2 theme to build on. Defaults to [ggplot2::theme_bw()].
 #' @param style A house style to apply: a name registered with
-#'   [register_house_style()], a ggplot2 theme, or a function returning one.
+#'   [style_register()], a ggplot2 theme, or a function returning one.
 #'   Styles are applied underneath the journal's requirements and can never
 #'   override them.
 #' @param base_size Base type size in points. Defaults to the journal's stated
@@ -45,26 +46,35 @@
 #'   [fig_save()] applies the journal's font at save time, where the
 #'   device is known. Pass a family explicitly to override.
 #' @return A ggplot2 theme object.
+#' @seealso [fig_apply_spec()] to apply typography, colour and shape together, and
+#'   [style_register()] to reuse an organisation or project style.
 #' @examples
 #' library(ggplot2)
-#' p <- ggplot(mtcars, aes(wt, mpg)) +
+#' p <- ggplot(ggplot2::economics, aes(date, unemploy)) +
 #'   geom_point() +
-#'   theme_journal("plos_one")
+#'   theme_spec("plos_one")
+#'
+#' # Project typography can be supplied directly.
+#' report_spec <- list(name = "Annual report", font_min_pt = 10)
+#' ggplot(ggplot2::economics, aes(date, unemploy)) +
+#'   geom_line() +
+#'   theme_spec(report_spec)
 #' @export
-theme_journal <- function(journal, base = NULL, style = NULL, base_size = NULL,
-                          base_family = NULL) {
-  spec <- journal_spec(journal)
-  min_pt <- as.numeric(spec$font_min_pt %||% 9)
-  max_pt <- if (is.null(spec$font_max_pt)) NULL else as.numeric(spec$font_max_pt)
+theme_spec <- function(spec, base = NULL, style = NULL, base_size = NULL,
+                       base_family = NULL) {
+  resolved <- spec_get(spec)
+  min_pt <- as.numeric(resolved$font_min_pt %||% 9)
+  max_pt <- if (is.null(resolved$font_max_pt)) NULL else as.numeric(resolved$font_max_pt)
 
   if (is.null(base_size)) base_size <- min_pt
   if (!is.null(max_pt) && base_size > max_pt) base_size <- max_pt
   if (base_size < min_pt) {
     warning(
       "`base_size` of ", base_size, " pt is below the ", min_pt,
-      " pt minimum stated by '", spec$name, "'.",
+      " pt minimum stated by '", resolved$name, "'; using ", min_pt, " pt.",
       call. = FALSE
     )
+    base_size <- min_pt
   }
   # Deliberately not the journal's font: see the base_family documentation.
   if (is.null(base_family)) base_family <- ""
@@ -83,10 +93,10 @@ theme_journal <- function(journal, base = NULL, style = NULL, base_size = NULL,
     overridden <- style_overrides(style_theme, min_pt, max_pt)
     if (length(overridden)) {
       msg_wrap(
-        "'", spec$name, "' requires type ",
+        "'", resolved$name, "' requires type ",
         if (is.null(max_pt)) paste0("of at least ", min_pt, " pt")
         else paste0("between ", min_pt, " and ", max_pt, " pt"),
-        ", so the journal's sizes override your style for: ",
+        ", so the specification's sizes override your style for: ",
         paste(overridden, collapse = ", "), "."
       )
     }
@@ -95,8 +105,8 @@ theme_journal <- function(journal, base = NULL, style = NULL, base_size = NULL,
 
   # Line weight is a stated requirement for several publishers, not a matter
   # of taste. ggplot2 measures linewidth in millimetres.
-  line_el <- if (!is.null(spec$min_line_pt)) {
-    ggplot2::element_line(linewidth = pt_to_ggplot_linewidth(spec$min_line_pt))
+  line_el <- if (!is.null(resolved$min_line_pt)) {
+    ggplot2::element_line(linewidth = pt_to_ggplot_linewidth(resolved$min_line_pt))
   } else {
     NULL
   }
@@ -104,9 +114,9 @@ theme_journal <- function(journal, base = NULL, style = NULL, base_size = NULL,
   # Pin every element that a base theme usually shrinks with rel(), so the
   # journal's floor holds regardless of which base theme was supplied.
   # Where a publisher requires axis lines and tick marks, draw them: the point
-  # of theme_journal is to meet the stated requirements, and ggplot2's default
+  # of theme_spec is to meet the stated requirements, and ggplot2's default
   # theme leaves the axis line out.
-  furniture <- if (isTRUE(spec$axis_lines_and_ticks)) {
+  furniture <- if (isTRUE(resolved$axis_lines_and_ticks)) {
     ggplot2::theme(axis.line = ggplot2::element_line(colour = "black"),
                    axis.ticks = ggplot2::element_line(colour = "black"))
   } else {
@@ -127,31 +137,32 @@ theme_journal <- function(journal, base = NULL, style = NULL, base_size = NULL,
     (if (!is.null(line_el)) ggplot2::theme(line = line_el) else ggplot2::theme())
 }
 
-#' Line width that satisfies a journal's minimum
+#' Use line widths that meet a specification
 #'
-#' Several publishers state a minimum line weight in points. ggplot2 measures
-#' `linewidth` in millimetres, so this converts the journal's figure into the
-#' number you pass to a geom. [theme_journal()] already applies it to axes,
-#' ticks and gridlines, but geom line widths are set on the layer, not the
-#' theme, so pass this to layers that draw lines.
+#' Some specifications state a minimum line weight in points, while ggplot2
+#' uses a different scale for its `linewidth` argument. This function converts
+#' the recorded requirement into the value you pass to a line-drawing geom.
+#' [theme_spec()] applies the requirement to axes, ticks and gridlines, but
+#' lines drawn by data layers must be set directly.
 #'
-#' @param journal Registry id.
-#' @return A single numeric `linewidth`, or `NULL` when the journal states no
+#' @param spec A registry id, a `figspec_spec`, or a named list containing
+#'   the required minimum line width.
+#' @return A single numeric `linewidth`, or `NULL` when the specification states no
 #'   minimum.
 #' @examples
 #' library(ggplot2)
-#' lw <- figspec_linewidth("frontiers")
+#' lw <- spec_linewidth("frontiers")
 #' ggplot(ggplot2::economics, aes(date, unemploy)) +
 #'   geom_line(linewidth = lw) +
-#'   theme_journal("frontiers")
+#'   theme_spec("frontiers")
 #' @export
-figspec_linewidth <- function(journal) {
-  spec <- journal_spec(journal)
-  if (is.null(spec$min_line_pt)) {
-    msg_wrap("'", spec$name, "' states no minimum line width.")
+spec_linewidth <- function(spec) {
+  resolved <- spec_get(spec)
+  if (is.null(resolved$min_line_pt)) {
+    msg_wrap("'", resolved$name, "' states no minimum line width.")
     return(invisible(NULL))
   }
-  pt_to_ggplot_linewidth(spec$min_line_pt)
+  pt_to_ggplot_linewidth(resolved$min_line_pt)
 }
 
 # The first font a journal names that is actually installed here. Returns ""

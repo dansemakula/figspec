@@ -16,7 +16,7 @@
 # Getting this backwards in either direction costs something real: calling a
 # colour figure line art demands a file four times larger than necessary, and
 # calling line art a colour figure ships it below the resolution the journal
-# asked for. suggest_art_type() therefore reports what it found and says
+# asked for. fig_suggest_art_type() therefore reports what it found and says
 # plainly that it is a suggestion, and fig_check() never changes its own
 # verdict on the strength of it.
 
@@ -64,73 +64,111 @@ plot_is_greyscale <- function(plot) {
   classify_tone(plot) %in% c("bitonal", "grayscale")
 }
 
-#' Which resolution rule applies to this figure
+# Silent counterpart to fig_suggest_art_type(), used where an API must choose a
+# safe resolution without printing an advisory essay as a side effect.
+infer_art_type <- function(plot) {
+  switch(classify_tone(plot),
+    bitonal = "line",
+    grayscale = "bw",
+    colour = "colour",
+    continuous = "combination"
+  )
+}
+
+strictest_art_type <- function(spec) {
+  vals <- c(
+    colour = as.numeric(spec$dpi_min %||% NA_real_),
+    bw = as.numeric(spec$dpi_bw %||% spec$dpi_min %||% NA_real_),
+    line = as.numeric(spec$dpi_line_art %||% spec$dpi_min %||% NA_real_),
+    combination = as.numeric(spec$dpi_combination %||% spec$dpi_min %||% NA_real_)
+  )
+  if (all(is.na(vals))) return("colour")
+  names(vals)[which.max(replace(vals, is.na(vals), -Inf))]
+}
+
+resolution_for_art_type <- function(spec, art_type) {
+  minimum <- switch(art_type,
+    colour = spec$dpi_min,
+    bw = spec$dpi_bw %||% spec$dpi_min,
+    line = spec$dpi_line_art %||% spec$dpi_min,
+    combination = spec$dpi_combination %||% spec$dpi_min
+  )
+  if (is.null(minimum)) return(NULL)
+  minimum <- as.numeric(minimum)
+  if (!isTRUE(spec$dpi_min_inclusive %||% TRUE)) minimum <- floor(minimum) + 1
+  minimum
+}
+
+#' Choose a resolution category for a figure
 #'
-#' Publishers set different resolutions for different kinds of artwork, and the
-#' gap is large: a general minimum of 300 dpi against 600 to 1200 dpi for line
-#' art. Which one applies to a statistical plot is not obvious, and getting it
-#' wrong is expensive in one direction.
+#' Specifications often set different resolutions for colour, greyscale, line
+#' and combination artwork. This function examines what a ggplot draws and
+#' suggests the corresponding `art_type` value for [fig_check()] or
+#' [fig_save()]. It also shows the recorded thresholds when you supply a
+#' publication or project specification.
 #'
-#' Most R plots are line art. PNAS says so explicitly, giving "line art, e.g.,
-#' bar graphs". A plot made of lines, flat fills and text is line art in that
-#' sense, whatever colour it is. Springer defines line art more narrowly, as a
-#' "Black and white graphic with no shading", which would place a coloured plot
-#' in combination art instead. Publishers genuinely disagree, so this reports
-#' what the plot contains and leaves the decision to you.
+#' The suggestion describes the plot's visible content; it does not rewrite or
+#' overrule the source's terminology. For example, some publishers reserve
+#' "line art" for pure black-and-white artwork, while others use the term more
+#' broadly. Read the displayed thresholds and source guidance before choosing a
+#' lower resolution for final delivery.
 #'
 #' @param plot A ggplot object.
-#' @param journal Optional registry id. When given, the journal's own
-#'   thresholds are shown alongside the suggestion.
-#' @return The suggested `art_type` for [fig_check()], invisibly.
+#' @param spec Optional specification: a registry id, a `figspec_spec`, or a
+#'   named list of requirements. When supplied, its resolution thresholds are
+#'   shown alongside the suggestion.
+#' @return The suggested `art_type` value for [fig_check()] or [fig_save()],
+#'   invisibly.
 #' @examples
 #' library(ggplot2)
-#' suggest_art_type(ggplot(mtcars, aes(factor(cyl))) + geom_bar(), "bmj")
+#' bars <- ggplot(ggplot2::mpg, aes(class)) + geom_bar()
+#' bars
+#' fig_suggest_art_type(bars, "bmj")
 #' @export
-suggest_art_type <- function(plot, journal = NULL) {
+fig_suggest_art_type <- function(plot, spec = NULL) {
   if (!is_ggplot_object(plot)) {
     figspec_abort("{.arg plot} must be a ggplot object.", "bad_input")
   }
   tone <- classify_tone(plot)
-  suggestion <- switch(tone,
-    bitonal = "line", grayscale = "bw", colour = "colour", continuous = "combination")
+  suggestion <- infer_art_type(plot)
 
-  cli::cli_h1("Which resolution rule applies")
+  cli::cli_h1("Choose a resolution category")
   switch(tone,
     bitonal = alert_wrap(
-      "This plot is pure black and white with no grey. That is {.strong line art} in the sense publishers mean, and it carries the highest resolution bar: sharp one-bit edges alias badly when sampled too coarsely."
+      "This plot uses only black and white, with no grey. Publishers classify this as {.strong line art} and usually require the highest resolution because sharp edges show pixelation easily."
     ),
     grayscale = alert_wrap(
-      "This plot uses grey but no colour, so it is {.strong grayscale art}, not line art. ggplot2's default bar fill is a mid grey, so a default bar chart lands here rather than in line art."
+      "This plot uses grey but no colour, so it is {.strong grayscale art}, not line art. For example, ggplot2's default bar fill is a mid grey, so a default bar chart belongs in this category."
     ),
     colour = alert_wrap(
-      "This plot uses colour, so it is not line art: five publishers in the registry define line art as black and white or monochrome. Treat it as {.strong colour art}. Springer would call a colour diagram {.strong combination art}, which is a higher bar, so check its wording if you are submitting there."
+      "This plot uses colour, so it is not line art: five publishers in the registry define line art as black and white or monochrome. Treat it as {.strong colour art}. Springer classifies a colour diagram as {.strong combination art} and requires a higher resolution, so check its guidance if you are submitting there."
     ),
     continuous = alert_wrap(
       "This plot draws continuous tone. An image carrying lettering is {.strong combination art}; a photograph without lettering is a halftone."
     ))
 
-  if (!is.null(journal)) {
-    spec <- journal_spec(journal)
+  if (!is.null(spec)) {
+    resolved <- spec_get(spec)
     cli::cli_text("")
-    cli::cli_text("{.strong {spec$name}} states:")
+    cli::cli_text("Requirements from {.strong {resolved$name}}:")
     cli::cli_ul()
     show <- function(label, v) if (!is.null(v)) cli::cli_li("{label}: {v} dpi")
-    show("general minimum", spec$dpi_min)
-    show("line art", spec$dpi_line_art)
-    show("combination art", spec$dpi_combination)
-    show("black and white", spec$dpi_bw)
+    show("general minimum", resolved$dpi_min)
+    show("line art", resolved$dpi_line_art)
+    show("combination art", resolved$dpi_combination)
+    show("black and white", resolved$dpi_bw)
     cli::cli_end()
-    if (!is.null(spec$source_quote_dpi)) {
-      cli::cli_text("{.emph {spec$source_quote_dpi}}")
+    if (!is.null(resolved$source_quote_dpi)) {
+      cli::cli_text("{.emph {resolved$source_quote_dpi}}")
     }
   }
 
   cli::cli_text("")
   cli::cli_alert_success(
-    'Suggested: fig_check(plot, journal, art_type = "{suggestion}")'
+    'Suggested: fig_check(plot, spec, art_type = "{suggestion}")'
   )
   alert_wrap(
-    "This is a suggestion from what the plot contains, not a rule. Where publishers disagree, the stricter reading costs file size; the looser one risks a figure below the resolution the journal asked for."
+    "This recommendation is based on what the plot contains. If publisher guidance is unclear, using a higher resolution increases the file size, while using a lower resolution may fall below the requirement. Check the linked guidance before submission."
   )
   invisible(suggestion)
 }

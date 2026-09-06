@@ -16,133 +16,166 @@ library(ggplot2)
 library(figspec)
 ```
 
-## The figure has to meet a specification
+## Choose the requirements for your figure
 
-You have made a plot, and before it goes anywhere it has to meet a
-specification: how wide it may be, how much resolution it needs, which file
-format is accepted, how small the type may get, sometimes which colours are
-allowed.
+A clear and accurate figure may still need changes before it can be submitted,
+published or placed in a report. It may be too wide for the page, have too few
+pixels for print, use an unsupported file format, or contain text that will be
+unreadable at its final size. Figures saved at the same width can also look
+uneven when their plotting areas do not line up.
 
-Where that specification comes from varies. It might be your own, or your
-lab's. It might be a format your employer or your field expects. Or it might be
-a journal's, published in its author guidelines. figspec works the same way in
-every case: it builds the figure to the specification, exports it at exactly
-that size and resolution, then checks the result and tells you where it falls
-short.
+Start by giving figspec the requirements for the finished figure. You can do
+this in three ways:
 
-**If you are submitting to a journal**, name it and the specification arrives
-ready-made. The width, resolution, file format, typography and colour rules
-come from that journal's author guidelines, held as data, along with the page
-they were read from and the date. That is what the rest of this article covers.
+* **Use a publication profile.** Name a journal or publisher in the registry.
+  figspec loads its recorded requirements and shows where they came from and
+  when they were last verified.
+* **Write your own requirements.** Describe the needs of a report,
+  presentation, thesis, organisation or production workflow in a named R
+  list.
+* **Set the dimensions directly.** Give the exact image or plotting-panel size
+  when size is the only constraint.
 
-**If the specification is your own**, write it as a plain list, or register it
-once as a house style and reuse it. Everything below works the same way; where
-this article says "journal", your own specification takes its place.
+Whichever route you take, the workflow is the same: define the requirements,
+build the plot, export it and check the finished file.
 
-**If what you need is a particular size**, no specification is needed at all.
-The useful case here is setting the *plot panel* rather than the image, so a
-set of figures shares one plot area whatever their axis labels do — something R
-cannot otherwise express. That has its own article: `vignette("panels")`.
+### Using your own requirements
 
-## Journals ask for different things
-
-Every journal sets its own figure rules, and they do not agree with each other.
-Cell Press asks for 85, 114 or 174 mm wide with type between 6 and 8 pt.
-Science asks for 57, 121 or 184 mm with type no smaller than 5 pt. PNAS caps
-type at 12 pt and asks that numerical axes reach zero. Nature wants panel
-labels upright; the Royal Society wants them italicised.
-
-None of that is unreasonable — each journal is designing its own pages. The
-difficulty is that nothing in an ordinary plotting workflow makes any of it
-visible, so most people find out at the production stage, after acceptance.
-
-## Building the figure to the journal from the start
-
-The simplest way to meet a journal's requirements is to build the figure to
-them from the start. Add the journal the way you would add a colour scale:
+For your own project, write the requirements in a named R list. Here, a
+quarterly report accepts PNG or PDF figures that are 160 mm wide, at least
+300 dpi, with text no smaller than 9 pt and lines no thinner than 0.5 pt:
 
 ```{r}
-fitted <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl), shape = factor(cyl))) +
+report_spec <- list(
+  name = "Quarterly outcomes report",
+  columns = list(full = 160),
+  formats = c("png", "pdf"),
+  dpi_min = 300,
+  font_min_pt = 9,
+  min_line_pt = 0.5
+)
+```
+
+Use `report_spec` wherever a function asks for a journal or specification,
+including `fig_apply_spec()`, `theme_spec()`, `fig_check()` and `fig_save()`.
+Those functions accept either a registry name or your own list, so no journal
+is required.
+
+A **specification** lists the requirements the finished figure must meet. A
+**house style** sets visual choices, such as a reusable ggplot2 theme. They can
+be used together, but they are kept separate so a preferred appearance is not
+mistaken for a requirement. Use `style_register()` to save and reuse
+that appearance.
+
+For exact panel sizing without any specification, see the
+[panel-sizing guide](panels.html). It demonstrates why equal image widths do
+not guarantee equal plotting areas and how to make a set align.
+
+## Using a journal or publisher profile
+
+Journals and publishers make a useful example because they give exact
+measurements and do not all use the same ones. Cell Press asks for widths of
+85, 114 or 174 mm and type between 6 and 8 pt. Science uses widths of 57, 121
+or 184 mm and type no smaller than 5 pt. PNAS caps type at 12 pt, while Nature
+and the Royal Society use different panel-label styles.
+
+Each publisher is designing a different page, so the differences are
+reasonable. The difficulty is that a normal ggplot gives no warning when a
+figure breaks one of these rules. The problem may only be discovered after
+submission or during production.
+
+## Apply the requirements while you build
+
+It is easier to make changes while the plot is still editable. Add a
+publication profile much like a ggplot2 scale:
+
+```{r}
+fitted <- ggplot(ggplot2::mpg,
+                 aes(displ, hwy, colour = factor(cyl), shape = factor(cyl))) +
   geom_point() +
-  labs(title = "Fuel economy", x = "Weight (1000 lbs)", y = "Miles per gallon") +
-  fit_journal("cell_press")
+  labs(title = "Engine size and highway fuel economy",
+       x = "Engine displacement (litres)", y = "Highway miles per gallon",
+       colour = "Cylinders", shape = "Cylinders") +
+  fig_apply_spec("cell_press")
 
 report <- fig_check(fitted, "cell_press", column = "single")
 knitr::kable(report[, c("check", "actual", "status")], row.names = FALSE)
 ```
 
-That one line carries the journal's typography, its stated line weights, its
-structural rules, and colours and shapes chosen to survive what the journal
-does to a figure in production.
+`fig_apply_spec()` applies the typography and structural rules that a ggplot2
+theme can control. It also uses accessible colours and, when the plot maps a
+variable to shape, shapes designed to remain distinguishable in print.
 
-### What changes in the figure
+### What figspec changes
 
-Both figures below are the same data and the same code, drawn at Cell Press's
-single-column width of 85 mm — the size a reader sees, not the size you draw
-at on a laptop. That is the whole difficulty: at 85 mm a default ggplot is
-about half the width it was designed at, and everything in it shrinks with it.
+The two figures below use the same data, variables and labels. Both are drawn
+on a Cell Press single-column canvas, which is 85 mm wide. The website displays
+them at a larger size so that the details are easy to compare; the underlying
+figure dimensions and measurements remain 85 mm. ggplot2's default text sizes
+do not adjust to the requirements of that smaller canvas, so labels that look
+fine on screen may be too large, too small or too crowded in the final figure.
 
-```{r before, fig.width = 85/25.4, fig.height = 62/25.4, dpi = 200, out.width = "322px", fig.alt = "A default ggplot at 85 mm wide, with type too large and a red-green palette."}
-plain <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
+```{r before, fig.width = 85/25.4, fig.height = 62/25.4, dpi = 200, out.width = "75%", fig.alt = "A default ggplot at 85 mm wide, with type too large and a red-green palette."}
+plain <- ggplot(ggplot2::mpg, aes(displ, hwy, colour = factor(cyl))) +
   geom_point() +
-  labs(title = "Fuel economy", x = "Weight (1000 lbs)",
-       y = "Miles per gallon", colour = "Cylinders")
+  labs(title = "Engine size and highway fuel economy",
+       x = "Engine displacement (litres)", y = "Highway miles per gallon",
+       colour = "Cylinders")
 
 plain
 ```
 
-ggplot2's default base size is 11 pt, which puts this figure's text between
-8.8 and 13.2 pt against Cell Press's 6 to 8. Its default palette opens with a
-red and a green, which Cell Press states should not be used together. And the
-three series are told apart by colour alone.
+ggplot2's default base size is 11 pt, which gives this figure text ranging from
+8.8 to 13.2 pt. Cell Press allows 6 to 8 pt. The default palette also includes
+red and green together, which Cell Press does not allow, and colour is the only
+way to tell the four series apart.
 
-```{r after, fig.width = 85/25.4, fig.height = 62/25.4, dpi = 200, out.width = "322px", fig.alt = "The same figure with fit_journal applied: smaller type, Okabe-Ito colours, and a different shape per series."}
+```{r after, fig.width = 85/25.4, fig.height = 62/25.4, dpi = 200, out.width = "75%", fig.alt = "The same figure with fig_apply_spec applied: smaller type, Okabe-Ito colours, and a different shape per series."}
 plain +
   aes(shape = factor(cyl)) +
   # Give the shape the same label as the colour, so ggplot2 merges the two
   # into one legend rather than drawing a second.
   labs(shape = "Cylinders") +
-  fit_journal("cell_press")
+  fig_apply_spec("cell_press")
 ```
 
-Type is now inside the journal's range, the palette is Okabe-Ito, which has no
-red-green pair and stays separable under the common colour vision
-deficiencies, and each series carries its own shape, so the figure still reads
-if it is printed in black and white. Nothing about the data changed.
+The text now falls within the journal's range. The Okabe-Ito palette avoids a
+red-green pairing and remains distinguishable for people with common forms of
+colour-vision deficiency. Each series also has its own shape, so the figure
+still works in black and white. The data have not changed.
 
 ## Checking a figure you have already drawn
 
-Type size lives in the plot object. Once a figure becomes a TIFF it is pixels,
-and the point sizes have gone with it, so the moment to check is while you
-still hold the plot.
+Check the plot before saving whenever possible. At that stage, R still knows
+the text sizes, colours, layers and theme settings. In a finished TIFF, text is
+stored as pixels and its original point size cannot be recovered reliably.
 
 ```{r}
-p <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
-  geom_point() +
-  labs(title = "Fuel economy", x = "Weight (1000 lbs)", y = "Miles per gallon",
-       colour = "Cylinders")
+p <- plain
 
 fig_check(p, "cell_press", column = "single")
 ```
 
-Two real failures in an ordinary ggplot, from defaults nobody thinks about.
-ggplot2's base size is 11 pt, which puts text between 8.8 and 13.2 pt against
-Cell Press's 6 to 8. And ggplot2's default palette contains a red and a green,
-which Cell Press states should not be used together.
+The report finds two failures caused by ordinary ggplot2 defaults. The text is
+larger than Cell Press permits, and the default palette uses red and green
+together.
 
 ## Reading the report
 
-Each requirement gets one of four outcomes, and only one of them is a problem
-you must fix.
+Each requirement receives one of five results. A `fail` identifies something
+that must be fixed. An `invalid` result means the file could not be assessed
+reliably.
 
 | Outcome | Meaning |
 |---|---|
 | <span class="fs-status fs-pass">pass</span> | Meets the requirement |
-| <span class="fs-status fs-fail">fail</span> | Breaches it |
-| <span class="fs-status fs-unspecified">unspecified</span> | The publisher does not state this. Nothing can be concluded |
-| <span class="fs-status fs-unknown">unknown</span> | The requirement exists, but this input cannot answer it |
+| <span class="fs-status fs-fail">fail</span> | Does not meet the requirement |
+| <span class="fs-status fs-unspecified">unspecified</span> | No requirement is stated, so there is nothing to test |
+| <span class="fs-status fs-unknown">unknown</span> | A requirement exists, but the plot or file does not contain enough information to test it |
+| <span class="fs-status fs-fail">invalid</span> | The file is damaged or its contents do not match its extension |
 
-`unspecified` splits further, and the distinction matters:
+When no value is available for a requirement, figspec distinguishes between
+two reasons:
 
 ```{r}
 r <- fig_check(p, "frontiers")
@@ -152,24 +185,26 @@ knitr::kable(
 )
 ```
 
-Frontiers' file-size rule was read and confirmed absent, so it is *not
-specified by publisher*. Its height rule has not been resolved into a number by
-anyone, so it is *not yet harvested for this journal*. The first is a fact
-about Frontiers. The second is a fact about this registry, and saying so is the
-difference between a registry you can trust and one that is confidently wrong.
+Frontiers does not publish a file-size limit in the guidance that was reviewed,
+so figspec reports *not specified by publisher*. A maximum figure height has
+not yet been entered in the registry, so it reports *not yet harvested for this
+journal*. The first describes the publisher's guidance; the second describes
+the current state of the registry. Keeping them separate prevents missing data
+from being mistaken for confirmation that no rule exists.
 
 ## Fixing what failed
 
-`theme_journal()` applies every requirement a theme can express: the font
-family, the type floor and ceiling, stated line weights, and structural rules
-such as Nature's requirement that axis lines and tick marks be drawn.
+`theme_spec()` applies the requirements that ggplot2's theme system can
+control, including the font family, minimum and maximum text sizes, theme line
+widths, and structural rules such as Nature's requirement to show axis lines
+and tick marks.
 
 ```{r}
 fixed <- p +
   scale_colour_figspec("cividis") +
-  scale_shape_manual(values = figspec_shapes(3)) +
+  scale_shape_manual(values = figspec_shapes(4)) +
   aes(shape = factor(cyl)) +
-  theme_journal("cell_press")
+  theme_spec("cell_press")
 
 r <- fig_check(fixed, "cell_press", column = "single")
 knitr::kable(
@@ -178,29 +213,34 @@ knitr::kable(
 )
 ```
 
-## Colour, and why shape matters as well
+## Adjusting colour and shape
 
-Three colour findings are reported, and which of them can *fail* depends on
-what the publisher actually states.
+figspec separates publisher requirements from general guidance. If a plot
+breaks a rule stated in the selected profile, the check fails. Other useful
+findings are shown as guidance.
 
 ```{r}
 knitr::kable(
-  check_colour_safety(p, "cell_press")[, c("check", "actual", "status")],
+  colour_safety_check(p, "cell_press")[, c("check", "actual", "status")],
   row.names = FALSE
 )
 ```
 
-Red-and-green is a **requirement** for Cell Press because Cell Press states it.
-Greyscale separability is a requirement for the Royal Society, which prints in
-black and white by default. Colour-vision safety is reported for every journal
-and stays `unspecified`, since it is good practice that publishers leave to
-your judgement.
+Cell Press states that red and green should not be used together, so figspec
+treats that combination as a failed requirement. The Royal Society publishes
+in black and white by default, so figspec checks whether its colours remain
+distinct in greyscale. When a publisher does not state either rule, figspec
+still reports the relevant result but labels it `unspecified` instead of
+presenting it as a requirement.
 
-Note the last row. If colours merge but shapes differ, the figure still reads:
+Colour does not have to carry all the information. Giving each series a
+different point shape or line type provides a second way to identify it if two
+colours look alike. figspec calls this *redundant coding* and reports whether
+the plot provides that additional visual cue:
 
 ```{r}
 knitr::kable(
-  check_colour_safety(fixed, "royal_society")[, c("check", "actual", "status")],
+  colour_safety_check(fixed, "royal_society")[, c("check", "actual", "status")],
   row.names = FALSE
 )
 ```
@@ -212,137 +252,265 @@ greyscale, because two of its colours sit at almost the same lightness.
 
 ## Saving at the right size
 
-Sizes here are canvas sizes: the image file is the width the journal states.
-That is what compliance means, and it is what `fig_save()` does by default.
-There is a second width — the plot area inside the image — which the journal
-says nothing about and which is what makes a set of figures look even or
-uneven. `vignette("panels")` covers it.
+`fig_save()` normally sizes the whole image, or canvas, to the width stated by
+the journal. The plotting area inside that image is a second measurement, and
+it can vary between figures even when their canvases are identical. The next
+section introduces panel sizing, and the [panel-sizing guide](panels.html)
+covers it in detail.
 
-
-This is the part that is easiest to get wrong. Type size is absolute. Save a
-figure at 180 mm, have the journal place it in an 85 mm column, and everything
-is scaled to 47%: a compliant 8 pt label arrives at 3.8 pt.
+A common mistake is to save a figure much wider than the space available and
+assume the publisher can reduce it safely. If a 180 mm figure is reduced to an
+85 mm column, everything becomes 47% of its original size. An 8 pt label then
+appears at only 3.8 pt.
 
 ```{r, eval = FALSE}
-fig_save("figure_1.tiff", fixed, journal = "cell_press", column = "single")
+fig_save("figure_1.tiff", fixed, spec = "cell_press", column = "single")
 ```
 
-`fig_save()` takes the width from the registry, defaults the resolution
-to the journal's stated minimum, picks a device that can render the required
-font, and re-checks the file it wrote.
+`fig_save()` reads the required width and resolution from the registry, chooses
+a graphics device for the requested file format, writes the file, and checks
+the result—including whether that format is accepted.
 
-Column names come from the journal itself:
+You can see the available column widths before choosing one:
 
 ```{r}
 fig_columns("science")
 fig_columns("cell_press")
 ```
 
-## Which resolution rule applies
+## Keep data panels aligned across a figure set
 
-Publishers set different resolutions for different kinds of artwork, and the
-gap is large: 300 dpi generally, against 600 to 1200 dpi for line art. Twelve
-entries in the registry state a separate line-art figure.
+Saving every figure at the same width does not guarantee that the regions
+containing the data will match. Axis labels, titles and legends use part of
+the surrounding canvas. A figure with longer labels therefore has less room
+left for its data, even when its image file is exactly the same width.
 
-Line art means **monochrome**, and the distinction carries real weight.
-Springer defines it as a
-"Black and white graphic with no shading"; ACS and IEEE both write "black and
-white line art"; Taylor & Francis and OUP both write "monochrome". In prepress
-it is a one-bit image, and it carries the highest resolution bar precisely
-because sharp one-bit edges alias badly when sampled too coarsely.
+The two plots below use all 234 observations in `ggplot2::mpg`, with identical
+variables, scales and a 150 mm canvas. Only the y-axis labels differ. Colour
+and shape identify the drive type, so the groups remain distinguishable
+without relying on colour alone.
 
-So a colour figure is *not* line art, and asking 1200 dpi of it would be the
-wrong advice. `suggest_art_type()` classifies what the plot actually contains:
+### Before: equal canvases leave unequal room for data
+
+```{r panel-before, fig.show = "hold", fig.width = 150/25.4, fig.height = 100/25.4, dpi = 200, out.width = "75%", fig.alt = c("A coloured fuel-economy plot with short y-axis labels and a relatively wide pale-blue data panel.", "The same coloured observations and scales with longer y-axis labels and a visibly narrower pale-blue data panel.")}
+panel_colours <- setNames(
+  figspec_palette("okabe_ito")[c(6, 7, 4)],
+  c("4", "f", "r")
+)
+panel_shapes <- setNames(figspec_shapes(3), c("4", "f", "r"))
+
+panel_base <- ggplot(
+  ggplot2::mpg,
+  aes(displ, hwy, colour = drv, shape = drv)
+) +
+  geom_point(alpha = 0.72, size = 1.8) +
+  scale_colour_manual(values = panel_colours) +
+  scale_shape_manual(values = panel_shapes) +
+  labs(x = "Engine displacement (litres)",
+       y = "Highway fuel economy",
+       colour = "Drive type",
+       shape = "Drive type") +
+  theme_spec("cell_press", base_size = 8) +
+  theme(
+    legend.position = "bottom",
+    panel.background = element_rect(
+      fill = "#F3F8FC", colour = "#0072B2", linewidth = 0.7
+    ),
+    plot.background = element_rect(
+      fill = "white", colour = "#9AA4AE", linewidth = 0.6
+    )
+  )
+
+panel_figures <- list(
+  short_labels = panel_base + labs(title = "Short tick labels"),
+  long_labels = panel_base +
+    scale_y_continuous(labels = function(x) paste(x, "miles per gallon")) +
+    labs(title = "Long tick labels")
+)
+
+panel_figures$short_labels
+panel_figures$long_labels
+```
+
+The longer labels leave less horizontal room for the data. `fig_panel_width()`
+measures both layouts and finds the widest data panel that every figure can
+share within the available 150 mm. `fig_panel_size()` then applies that exact
+width and gives each figure the additional canvas its labels require.
+
+### After: equal data panels with every label preserved
+
+```{r panel-after, out.width = "75%", fig.alt = c("The coloured short-label plot after figspec applies the shared data-panel width.", "The coloured long-label plot with the same measured data-panel width and enough surrounding canvas to preserve its labels.")}
+shared_width <- fig_panel_width(panel_figures, width = 150)
+aligned_figures <- lapply(panel_figures, fig_panel_size, width = shared_width)
+aligned_geometry <- lapply(aligned_figures, fig_geometry)
+
+aligned_dir <- knitr::opts_current$get("fig.path")
+dir.create(aligned_dir, recursive = TRUE, showWarnings = FALSE)
+aligned_files <- file.path(
+  aligned_dir, c("figspec-aligned-short.png", "figspec-aligned-long.png")
+)
+invisible(Map(function(figure, geometry, path) {
+  ggplot2::ggsave(
+    path, figure,
+    width = geometry$canvas_width_mm,
+    height = geometry$canvas_height_mm,
+    units = "mm", dpi = 180, bg = "white"
+  )
+}, aligned_figures, aligned_geometry, aligned_files))
+knitr::include_graphics(aligned_files)
+```
+
+Before adjustment, the two data panels could occupy
+`r paste(round(attr(shared_width, "per_figure"), 1), collapse = " and ")` mm
+respectively. After adjustment, both are exactly
+`r round(shared_width, 1)` mm wide. The long-label figure receives a wider
+canvas instead of a smaller plotting area, so its text remains readable and
+the two data regions align.
+
+This workflow is independent of journals. It is useful whenever figures must
+align in a report, presentation, thesis, dashboard or composite layout. The
+[panel-sizing guide](panels.html) explains the geometry and export options in
+detail.
+
+## Resolution requirements for different figure types
+
+Publishers often require different resolutions for different kinds of
+artwork. A colour or greyscale figure may need 300 dpi, while line art may need
+600 to 1200 dpi. Twelve registry entries currently state a separate resolution
+for line art.
+
+In this context, line art means **monochrome artwork with no shading**.
+Publishers use phrases such as "black and white graphic with no shading" and
+"monochrome". Its sharp edges show stair-stepping easily, which is why it is
+usually assigned the highest resolution.
+
+A colour figure is therefore not line art and should not automatically be
+checked against the line-art resolution. `fig_suggest_art_type()` examines what
+the plot contains and recommends the appropriate category:
 
 ```{r}
-line_art <- ggplot(mtcars, aes(wt, mpg)) + geom_point(colour = "black")
-suggest_art_type(line_art, "bmj")
+line_art <- ggplot(ggplot2::mpg, aes(displ, hwy)) +
+  geom_point(colour = "black")
+fig_suggest_art_type(line_art, "bmj")
 ```
 
 ggplot2's default bar fill is `#595959`, a mid grey, so a default bar chart is
 grayscale art:
 
 ```{r}
-suggest_art_type(ggplot(mtcars, aes(factor(cyl))) + geom_bar())
+fig_suggest_art_type(ggplot(ggplot2::mpg, aes(class)) + geom_bar())
 ```
 
-`fig_check()` checks against the general minimum unless you say otherwise,
-and mentions the line-art rule only when a plot really is pure black and white
-and the journal holds line art to more. It does not change the verdict for you.
+`fig_check()` can classify a live plot from its layers and colours and then use
+the matching resolution rule. A saved file may no longer reveal how the plot
+was constructed, so `"auto"` uses the strictest recorded threshold rather than
+risk approving a file with too little resolution.
 
 ## Checking a whole submission
 
-```{r, eval = FALSE}
-check_submission("figures/", "cell_press")
-#> ✔ Figure_1.tiff  single  all requirements met
-#> ✖ Figure_2.tiff  double  failed: Resolution, File format
+One call can review a named collection of live plots. Because the plots are
+still editable R objects, figspec can inspect their text sizes, colours and
+structure as well as their dimensions:
+
+```{r submission-plots, fig.show = "hold", out.width = "75%", fig.alt = c("A fitted scatter plot of engine displacement and highway fuel economy.", "A fitted box plot comparing highway fuel economy across vehicle classes.")}
+submission_figures <- list(
+  engine_size = fitted,
+  vehicle_class = ggplot(ggplot2::mpg, aes(class, hwy, fill = class)) +
+    geom_boxplot(show.legend = FALSE) +
+    labs(x = "Vehicle class", y = "Highway miles per gallon") +
+    fig_apply_spec("cell_press")
+)
+
+submission_figures$engine_size
+submission_figures$vehicle_class
 ```
 
-Files are checked as files, so geometry, format, resolution and file size can
-be judged but type size cannot. That is why step one happens before saving.
+```{r}
+submission_check(submission_figures, "cell_press")
+```
+
+The same function accepts a directory or a vector of saved file paths. It can
+check those files for dimensions, format, resolution and file size, but it can
+no longer recover plot settings such as the original text sizes. For the most
+complete assessment, check the editable plots first and the exported files
+afterwards.
 
 ## In R Markdown or Quarto
 
-A large share of academic figures never pass through `ggsave()` at all: they
-come out of a knitr chunk at whatever `fig.width` happens to be.
+Figures created in R Markdown or Quarto are often saved directly by knitr
+rather than through `ggsave()`. Their dimensions and resolution therefore come
+from chunk options such as `fig.width` and `dpi`.
 
 ```{r}
-figspec_chunk_opts("cell_press", "double")
+figspec_knitr_options("cell_press", "double")
 ```
 
-Put that in a setup chunk with `figspec_knitr_setup("cell_press", "double")`
-and every figure in the document is emitted at the journal's size.
+Use `figspec_knitr_setup("cell_press", "double")` in the setup chunk to apply
+the journal's size and resolution to every figure in the document.
 
-## Moving a figure set to a different journal
+The project specification created at the start works here too:
 
-Papers get resubmitted, and the next journal's rules are not the last one's.
-They can be flatly incompatible: Cell Press wants type between 6 and 8 pt,
-PLOS ONE between 8 and 12, so one figure cannot satisfy both. Rather than
-redraw the set, re-export it against the new specification.
+```{r}
+figspec_knitr_options(report_spec, "full", height = 100, units = "mm")
+```
+
+## Reusing a figure set for another specification
+
+A figure set may move to a new journal, report or production system. The new
+requirements can be incompatible with the old ones: Cell Press wants type
+between 6 and 8 pt, whereas PLOS ONE asks for 8 to 12 pt. Rather than redraw
+the set by hand, re-export the plot objects against the new specification.
 
 ```{r, eval = FALSE}
-refit_journal(my_plots, journal = "plos_one", outdir = "figures_plos/")
+fig_refit(my_plots, spec = "plos_one", output_dir = "figures_plos/")
 ```
 
-`refit_journal()` re-themes and re-exports the set. It works from plot objects
-and refuses saved files, because type size cannot be recovered from a finished
-TIFF and a re-fitted file could not be trusted.
+`fig_refit()` applies the new theme and exports the figures again. It also
+accepts a project specification instead of a registry name. The function needs
+the original plot objects because a finished TIFF no longer contains reliable
+information about settings such as the original text sizes.
 
-## Tables, videos and graphical abstracts
+## Tables, graphical abstracts, video and audio
 
-Figures are not the only thing a journal sets rules for. Tables, supplementary
-video and the graphical abstract each have their own, and they are reported
-separately rather than mixed into a figure's report — meeting one says nothing
-about the others.
+A publication may also include tables, graphical abstracts, video or audio,
+each with requirements of its own. A publisher may specify how tables are
+formatted, the dimensions of a graphical abstract, or the file types and
+technical limits accepted for video and audio. figspec reports each kind of
+requirement separately so it is clear which rules apply to which file.
 
 ```{r}
 graphical_abstract_spec("rsc")
+table_spec("nature")
+media_spec("science")
 ```
 
-`table_spec()` and `media_spec()` do the same for tables and for supplementary
-video and audio.
+`media_check()` inspects an actual supplementary video or audio file. It
+compares the file format, frame dimensions, file size, codec and audio bit rate
+with the recorded requirements. Anything it cannot determine is identified
+for manual review.
 
-## What figspec leaves for you to decide
+## When manual review is still needed
 
-Where a publisher never said what compliance means, figspec reports the
-silence. It leaves a pixel size in pixels until a resolution arrives to convert
-it with. It reports a recommendation as a recommendation. And when type size is
-the question it asks for the plot object, since a saved raster has already
-turned that into pixels.
+Some requirements cannot be checked automatically. If guidance gives
+dimensions in pixels but no resolution for converting them, figspec keeps the
+dimensions in pixels rather than guessing a physical size. If the guidance
+does not state a rule, the report says that it is unspecified. To check text
+size, provide the original plot because a saved raster image no longer records
+the text's point size. The report lists each item that still needs manual
+review.
 
-Each of those is a moment where the honest answer is "check this yourself", and
-figspec says so plainly instead of filling the gap with a guess.
-
-The same rule governs what figspec will *not* claim. Panel consistency across a
-set of figures is reported, because it is measurable and it is usually what an
-author is trying to fix — but never as a pass or a failure, because no
-publisher asks for it. A green tick against an invented rule would be the same
-error as inventing the rule.
+figspec also measures differences between plotting-panel sizes without calling
+them a failure. No publisher profile in the registry currently requires every
+panel to have the same dimensions. You can use the measurements to align a set
+when your report, presentation or figure layout needs it, without presenting a
+design preference as a publisher requirement.
 
 ## Where to go next
 
-* `vignette("panels")` — sizing by the plot panel rather than the image, and
-  making a set of figures match.
-* `vignette("journals")` — every entry in the registry, and how complete each
-  one is.
-* `vignette("options")` — every function and what its arguments do.
+* [Learn about panel sizing](panels.html) to align the plotting areas across a
+  set of figures.
+* [Browse the publication profiles](journals.html) and see how complete each
+  registry entry is.
+* [Review every function argument](options.html).
+* Run `help(package = "figspec")` in an installed R session to browse the
+  function index, organised by the job each function performs.

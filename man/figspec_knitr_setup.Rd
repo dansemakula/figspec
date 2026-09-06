@@ -2,31 +2,42 @@
 % Please edit documentation in R/knitr.R
 \name{figspec_knitr_setup}
 \alias{figspec_knitr_setup}
-\title{Set knitr chunk options for a journal}
+\title{Apply figure settings to R Markdown or Quarto}
 \usage{
 figspec_knitr_setup(
-  journal,
-  column = "single",
+  spec,
+  column = NULL,
+  width = NULL,
   height = NULL,
-  units = c("mm", "cm", "in")
+  units = c("mm", "cm", "in"),
+  art_type = c("auto", "colour", "bw", "line", "combination")
 )
 }
 \arguments{
-\item{journal}{Registry id, for example \code{"plos_one"}.}
+\item{spec}{The specification to use: a registry id such as \code{"plos_one"},
+a \code{figspec_spec}, or a named list of requirements.}
 
-\item{column}{Which column width to size to.}
+\item{column}{Which named width in the specification to use. Leave it \code{NULL}
+when supplying \code{width} explicitly.}
+
+\item{width}{Explicit figure width for specifications that do not publish
+named columns.}
 
 \item{height}{Figure height. Defaults to three quarters of the width, which
 is a convenience rather than a journal requirement.}
 
-\item{units}{Units for \code{height}.}
+\item{units}{Units for \code{width} and \code{height}.}
+
+\item{art_type}{Resolution category. With no plot available, \code{"auto"}
+conservatively uses the strictest rule the journal states.}
 }
 \value{
 The previous chunk options, invisibly.
 }
 \description{
-Convenience wrapper that applies \code{\link[=figspec_chunk_opts]{figspec_chunk_opts()}} to the current
-document. Call it from a setup chunk.
+Applies the settings returned by \code{\link[=figspec_knitr_options]{figspec_knitr_options()}} to knitr's current
+chunk configuration. Call it once in a document's setup chunk so later
+figures use the chosen dimensions, resolution and output format by default.
 }
 \examples{
 # In a setup chunk:

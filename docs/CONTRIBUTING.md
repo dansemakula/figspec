@@ -26,7 +26,7 @@ Each was plausible. Each was wrong. That is why the rule exists.
 
 ## Adding a journal
 
-[`new_journal_entry`](https://dansemakula.github.io/figspec/reference/new_journal_entry.md)`(``"plos_biology"``, ``"PLOS Biology"``,`` `` ``"https://journals.plos.org/plosbiology/s/figures"``)`
+[`registry_entry_template`](https://dansemakula.github.io/figspec/reference/registry_entry_template.md)`(``"plos_biology"``, ``"PLOS Biology"``,`` `` ``"https://journals.plos.org/plosbiology/s/figures"``)`
 
 prints a skeleton naming every field figspec understands. Then:
 
@@ -37,7 +37,7 @@ prints a skeleton naming every field figspec understands. Then:
 3.  Leave everything else alone. An untouched field reports as *not yet
     harvested*, which is true and is better than a guess.
 
-[`validate_registry_file`](https://dansemakula.github.io/figspec/reference/validate_registry_file.md)`(``"my-journals.yaml"``)`
+[`registry_validate_file`](https://dansemakula.github.io/figspec/reference/registry_validate_file.md)`(``"my-journals.yaml"``)`
 
 reports every problem rather than stopping at the first.
 

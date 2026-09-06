@@ -27,7 +27,7 @@ Each was plausible. Each was wrong. That is why the rule exists.
 ## Adding a journal
 
 ```r
-new_journal_entry("plos_biology", "PLOS Biology",
+registry_entry_template("plos_biology", "PLOS Biology",
                   "https://journals.plos.org/plosbiology/s/figures")
 ```
 
@@ -41,7 +41,7 @@ prints a skeleton naming every field figspec understands. Then:
    harvested*, which is true and is better than a guess.
 
 ```r
-validate_registry_file("my-journals.yaml")
+registry_validate_file("my-journals.yaml")
 ```
 
 reports every problem rather than stopping at the first.

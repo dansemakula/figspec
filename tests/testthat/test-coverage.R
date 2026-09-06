@@ -17,29 +17,29 @@ test_that("a confirmed-absent field and an unharvested field are told apart", {
   # Nature: nobody has harvested its file-size rule. That is a fact about the
   # registry, not about Nature.
   na <- fig_check(p, "nature")
-  expect_equal(na[na$check == "File size", ]$requirement, "not yet harvested for this journal")
+  expect_equal(na[na$check == "File size", ]$requirement, "not yet reviewed for this specification")
   expect_equal(na[na$check == "File size", ]$status, "unknown")
 })
 
 test_that("an unharvested requirement is never passed or failed", {
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
     ggplot2::geom_point()
-  for (id in journals()$id) {
+  for (id in spec_list()$id) {
     r <- suppressMessages(fig_check(p, id))
-    bad <- r[r$requirement == "not yet harvested for this journal" &
+    bad <- r[r$requirement == "not yet reviewed for this specification" &
                r$status %in% c("pass", "fail"), ]
     expect_equal(nrow(bad), 0, info = paste(id, paste(bad$check, collapse = ", ")))
   }
 })
 
 test_that("new_row refuses to grade an unharvested requirement", {
-  expect_equal(new_row("T", "not yet harvested for this journal", "x", "pass")$status,
+  expect_equal(new_row("T", "not yet reviewed for this specification", "x", "pass")$status,
                "unknown")
 })
 
 test_that("a field cannot be both stated and confirmed absent", {
   expect_error(
-    register_journal("clash", "Clash", "u", "2026-08-22",
+    spec_register("clash", "Clash", "internal:test", "2026-08-22",
                      requirements = list(dpi_min = 300),
                      not_stated = list("dpi_min")),
     "cannot both be absent"
@@ -61,9 +61,16 @@ test_that("registry_status reports age and how much is harvested", {
                     length(requirement_keys())))
 })
 
+test_that("registry maintenance dates and age limits are validated", {
+  expect_error(registry_status(max_age_days = -1), class = "figspec_bad_input")
+  expect_error(registry_status(max_age_days = c(30, 60)), class = "figspec_bad_input")
+  expect_error(registry_status(as_of = "2026-09-05"), class = "figspec_bad_input")
+  expect_error(registry_status(as_of = as.Date(NA)), class = "figspec_bad_input")
+})
+
 test_that("stale entries are surfaced rather than left to rot", {
-  expect_message(stale_entries(max_age_days = 0), "due a recheck")
-  expect_message(stale_entries(max_age_days = 100000), "No registry entry is older")
+  expect_message(registry_stale_entries(max_age_days = 0), "due a recheck")
+  expect_message(registry_stale_entries(max_age_days = 100000), "No registry entry is older")
 })
 
 test_that("a contributor file is validated before it is trusted", {
@@ -75,7 +82,7 @@ test_that("a contributor file is validated before it is trusted", {
                "  verified_on: '2026-08-22'",
                "  requirements:",
                "    dpi_min: 300"), good)
-  expect_true(validate_registry_file(good))
+  expect_true(registry_validate_file(good))
 
   bad <- withr::local_tempfile(fileext = ".yaml")
   writeLines(c("journals:",
@@ -86,12 +93,12 @@ test_that("a contributor file is validated before it is trusted", {
                "    made_up_field: 3",
                "  house_style:",
                "    font_min_pt: 4"), bad)
-  expect_message(res <- validate_registry_file(bad), "problem")
+  expect_message(res <- registry_validate_file(bad), "problem")
   expect_false(res)
 })
 
 test_that("the skeleton names every field a contributor must consider", {
-  tmpl <- capture.output(new_journal_entry("x", "X", "https://example.org"))
+  tmpl <- capture.output(registry_entry_template("x", "X", "https://example.org"))
   joined <- paste(tmpl, collapse = "\n")
   for (f in c("columns", "dpi_min", "formats", "font_min_pt", "colour_mode",
               "min_line_pt", "not_stated")) {
@@ -100,21 +107,39 @@ test_that("the skeleton names every field a contributor must consider", {
   expect_match(joined, "not yet harvested", fixed = TRUE)
 })
 
+test_that("new-entry templates are validly quoted and reject injected lines", {
+  skip_if_not_installed("yaml")
+  template <- suppressMessages(capture.output(
+    value <- registry_entry_template(
+      "research_report",
+      "Director's research report",
+      "internal:director's-guide"
+    )
+  ))
+  parsed <- yaml::yaml.load(paste(c("journals:", paste0("  ", strsplit(value, "\n", fixed = TRUE)[[1]])), collapse = "\n"))
+  expect_identical(parsed$journals[[1]]$name, "Director's research report")
+  expect_identical(parsed$journals[[1]]$source_url, "internal:director's-guide")
+
+  expect_error(registry_entry_template("Bad-ID", "Name", "internal:test"), class = "figspec_bad_input")
+  expect_error(registry_entry_template("good_id", "Name\ninjected: true", "internal:test"), class = "figspec_bad_input")
+  expect_error(registry_entry_template("good_id", "Name", "javascript:alert(1)"), class = "figspec_bad_input")
+})
+
 test_that("printing a spec distinguishes confirmed-absent from unharvested", {
   # IOP's resolution rule was read and confirmed absent.
   # cli writes to the message stream, not stdout.
-  iop <- capture.output(print(journal_spec("iop")), type = "message")
+  iop <- capture.output(print(spec_get("iop")), type = "message")
   res_line <- grep("Minimum resolution", iop, value = TRUE)
   expect_match(res_line, "not specified by publisher")
 
   # APS was harvested only for width and line weight; nobody read its
   # resolution rule, so the printout must not speak for the publisher.
-  aps <- capture.output(print(journal_spec("aps")), type = "message")
+  aps <- capture.output(print(spec_get("aps")), type = "message")
   expect_match(grep("Minimum resolution", aps, value = TRUE), "not yet harvested")
 })
 
 test_that("an entry sourced from an archive records the snapshot date", {
-  aps <- journal_spec("aps")
+  aps <- spec_get("aps")
   # The live page 403s; the value came from a 2026-04-04 snapshot, and
   # verified_on must say so rather than claiming today.
   expect_equal(as.character(aps$verified_on), "2026-04-04")
@@ -123,7 +148,7 @@ test_that("an entry sourced from an archive records the snapshot date", {
 })
 
 test_that("APS records only what its page unambiguously states", {
-  aps <- journal_spec("aps")
+  aps <- spec_get("aps")
   expect_equal(aps$columns$single, 85)      # "8.5 cm"
   expect_equal(aps$min_line_pt, 0.5)        # "0.18 mm (0.5 point)"
   # 2 mm capital-letter height is not font size, so it is not recorded as one.
@@ -133,7 +158,7 @@ test_that("APS records only what its page unambiguously states", {
 })
 
 test_that("PNAS records only what is required of the author", {
-  p <- journal_spec("pnas")
+  p <- spec_get("pnas")
   expect_equal(unlist(p$columns), c(small = 90, medium = 110, large = 180))
   expect_equal(p$font_min_pt, 6)
   expect_equal(p$font_max_pt, 12)
@@ -151,9 +176,16 @@ test_that("PNAS records only what is required of the author", {
   expect_false(grepl("processed to display|HTML display", p$source_quote_dpi))
   expect_match(p$source_quote_dpi, "no type or lettering")
 
-  r <- fig_check(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
-                       ggplot2::geom_point(), "pnas", column = "medium")
-  expect_match(r[r$check == "Resolution", ]$requirement, "min 300 dpi")
+  plot <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+    ggplot2::geom_point()
+  # Automatic classification sees a black-only point plot and conservatively
+  # applies PNAS's line-art rule. An explicit colour classification applies the
+  # general raster threshold.
+  r <- fig_check(plot, "pnas", column = "medium")
+  expect_match(r[r$check == "Resolution", ]$requirement, "min 1000 dpi for line")
+  colour <- fig_check(plot, "pnas", column = "medium", art_type = "colour")
+  expect_match(colour[colour$check == "Resolution", ]$requirement,
+               "min 300 dpi for colour")
 })
 
 test_that("PNAS's named sizes work like any other column vocabulary", {
@@ -170,13 +202,13 @@ test_that("a default ggplot title breaches PNAS's 12 pt ceiling", {
   r <- fig_check(titled, "pnas", column = "medium")
   expect_equal(r[r$check == "Type size", ]$status, "fail")
 
-  fixed <- titled + theme_journal("pnas")
+  fixed <- titled + theme_spec("pnas")
   expect_equal(fig_check(fixed, "pnas", column = "medium")[
     fig_check(fixed, "pnas", column = "medium")$check == "Type size", ]$status, "pass")
 })
 
 test_that("ACS point measurements convert at 72 points to the inch", {
-  a <- journal_spec("acs")
+  a <- spec_get("acs")
   expect_equal(a$columns$single, round(240 * 25.4 / 72, 1))   # 240 pt = 3.33 in
   expect_equal(a$columns$double, round(504 * 25.4 / 72, 1))   # 504 pt = 7 in
   expect_equal(a$height_max_mm, round(660 * 25.4 / 72, 1))    # 660 pt = 9.167 in
@@ -193,14 +225,19 @@ test_that("resolution stated by art type is checked by art type", {
   grDevices::dev.off()
 
   # ACS: 300 colour, 600 grayscale, 1200 line art.
+  # A raster file no longer carries enough evidence to infer its art type, so
+  # auto uses the strictest stated threshold instead of issuing a false pass.
   expect_equal(fig_check(path, "acs", dpi = 300)[
-    fig_check(path, "acs", dpi = 300)$check == "Resolution", ]$status, "pass")
+    fig_check(path, "acs", dpi = 300)$check == "Resolution", ]$status, "fail")
+  expect_equal(fig_check(path, "acs", dpi = 300, art_type = "colour")[
+    fig_check(path, "acs", dpi = 300, art_type = "colour")$check == "Resolution", ]$status,
+    "pass")
   expect_equal(fig_check(path, "acs", dpi = 300, art_type = "line")[
     fig_check(path, "acs", dpi = 300, art_type = "line")$check == "Resolution", ]$status, "fail")
 })
 
 test_that("OUP records a line-width range, not just a floor", {
-  o <- journal_spec("oup")
+  o <- spec_get("oup")
   expect_equal(o$min_line_pt, 0.25)
   expect_equal(o$max_line_pt, 1)
 
@@ -212,24 +249,24 @@ test_that("OUP records a line-width range, not just a floor", {
 
 test_that("entries carry the caveats that make them auditable", {
   # BMJ's source PDF may be a decade old and shows signs of adaptation.
-  expect_match(journal_spec("bmj")$notes, "2017")
+  expect_match(spec_get("bmj")$notes, "2017")
   # OUP calls its own document tips rather than strict rules.
-  expect_match(journal_spec("oup")$notes, "tips rather than strict rules")
+  expect_match(spec_get("oup")$notes, "tips rather than strict rules")
   # Neither publisher's proofing-pipeline resolution became a requirement.
   # Word boundary again: "1200dpi" contains "200" as a substring.
-  expect_false(grepl("\\b200dpi", journal_spec("oup")$source_quote_dpi))
-  expect_false(grepl("proof", journal_spec("oup")$source_quote_dpi, ignore.case = TRUE))
+  expect_false(grepl("\\b200dpi", spec_get("oup")$source_quote_dpi))
+  expect_false(grepl("proof", spec_get("oup")$source_quote_dpi, ignore.case = TRUE))
 })
 
 test_that("Nature's expanded entry enforces its own narrow type range", {
-  n <- journal_spec("nature")
+  n <- spec_get("nature")
   expect_equal(n$font_min_pt, 5)
   expect_equal(n$font_max_pt, 7)
   expect_setequal(unlist(n$font_families), c("Arial", "Helvetica"))
   expect_equal(unlist(n$colour_mode), "RGB")
-  # Corroborated across two Nature author pages harvested a day apart.
-  expect_equal(n$columns$single, 90)
-  expect_equal(n$columns$double, 180)
+  # Current final-artwork dimensions, re-verified from Nature's live guide.
+  expect_equal(n$columns$single, 89)
+  expect_equal(n$columns$double, 183)
   expect_equal(n$height_max_mm, 170)
 
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point() +
@@ -237,7 +274,7 @@ test_that("Nature's expanded entry enforces its own narrow type range", {
   # ggplot2's defaults run 8.8-13.2 pt, well outside 5-7.
   expect_equal(fig_check(p, "nature")[
     fig_check(p, "nature")$check == "Type size", ]$status, "fail")
-  fixed <- p + theme_journal("nature")
+  fixed <- p + theme_spec("nature")
   expect_equal(fig_check(fixed, "nature")[
     fig_check(fixed, "nature")$check == "Type size", ]$status, "pass")
 })
@@ -254,19 +291,19 @@ test_that("Nature forbids red with green, and says so imperatively", {
   expect_equal(fig_check(safe, "nature")[
     fig_check(safe, "nature")$check == "Colour pairs", ]$status, "pass")
 
-  expect_null(journal_spec("agu")$avoid_colour_pairs)
+  expect_null(spec_get("agu")$avoid_colour_pairs)
 })
 
 test_that("IEEE inch measurements convert, and the entry names its scope", {
   expect_equal(fig_width("ieee_magazines", "single"), round(3.5 * 25.4, 1))
   expect_equal(fig_width("ieee_magazines", "double"), round(7.16 * 25.4, 1))
   # This is IEEE's magazine guidance, not its journal guidance.
-  expect_match(journal_spec("ieee_magazines")$name, "magazines")
-  expect_match(journal_spec("ieee_magazines")$notes, "journals have a separate author centre")
+  expect_match(spec_get("ieee_magazines")$name, "magazines")
+  expect_match(spec_get("ieee_magazines")$notes, "journals have a separate author centre")
 })
 
 test_that("IEEE journals and magazines are separate entries with their own sources", {
-  j <- journal_spec("ieee"); m <- journal_spec("ieee_magazines")
+  j <- spec_get("ieee"); m <- spec_get("ieee_magazines")
   expect_false(identical(j$source_url, m$source_url))
   # IEEE states the millimetres itself for journals, rather than by conversion.
   expect_equal(j$columns$single, 88.9)
@@ -276,7 +313,7 @@ test_that("IEEE journals and magazines are separate entries with their own sourc
 })
 
 test_that("Springer's inverted width sentence is recorded on the right reading", {
-  s <- journal_spec("springer")
+  s <- spec_get("springer")
   # "84 mm (for double-column text areas), or 174 mm (for single-column text
   # areas)" describes the journal's TEXT AREA, not the figure's span: 84 mm is
   # one column of a two-column layout, 174 mm the full width of a one-column
@@ -288,26 +325,26 @@ test_that("Springer's inverted width sentence is recorded on the right reading",
 })
 
 test_that("Springer records a stated size range but not a suggested font list", {
-  s <- journal_spec("springer")
+  s <- spec_get("springer")
   # "usually about 2-3 mm (8-12 pt)" is hedged but concrete.
   expect_equal(s$font_min_pt, 8)
   expect_equal(s$font_max_pt, 12)
   # "it is best to use Helvetica or Arial" is a suggestion, the same strength
   # as ACS's "work well", and is treated the same way.
   expect_null(s$font_families)
-  expect_null(journal_spec("acs")$font_families)
+  expect_null(spec_get("acs")$font_families)
 })
 
 test_that("Springer labels figure parts in lower case and requires RGB", {
-  expect_equal(journal_spec("springer")$panel_labels, "lowercase")
-  expect_equal(unlist(journal_spec("springer")$colour_mode), "RGB")
+  expect_equal(spec_get("springer")$panel_labels, "lowercase")
+  expect_equal(unlist(spec_get("springer")$colour_mode), "RGB")
   # Its greyscale advice is conditional on the journal printing in black and
   # white, so it is not a rule figspec can check.
-  expect_null(journal_spec("springer")$print_greyscale)
+  expect_null(spec_get("springer")$print_greyscale)
 })
 
 test_that("RSC journals and RSC books are different documents with different rules", {
-  j <- journal_spec("rsc"); b <- journal_spec("rsc_books")
+  j <- spec_get("rsc"); b <- spec_get("rsc_books")
   expect_false(identical(j$source_url, b$source_url))
   # Journals: 83 / 171 mm columns. Books: a single 200 x 120 mm canvas.
   expect_equal(j$columns$single, 83)
@@ -324,10 +361,10 @@ test_that("colour in print differs between the two RSC documents", {
   # Journals: colour is free online and in print, so nothing follows about
   # greyscale. Books: colour depends on the author's contract. Neither becomes
   # a print_greyscale rule, but for different reasons, both recorded.
-  expect_null(journal_spec("rsc")$print_greyscale)
-  expect_null(journal_spec("rsc_books")$print_greyscale)
-  expect_match(journal_spec("rsc")$notes, "colour is free|Colour is free")
-  expect_match(journal_spec("rsc_books")$notes, "contract")
+  expect_null(spec_get("rsc")$print_greyscale)
+  expect_null(spec_get("rsc_books")$print_greyscale)
+  expect_match(spec_get("rsc")$notes, "colour is free|Colour is free")
+  expect_match(spec_get("rsc_books")$notes, "contract")
 })
 
 test_that("graphical abstract requirements are surfaced separately from figures", {
@@ -355,7 +392,7 @@ test_that("MDPI's pixel-based graphical abstract is recorded as stated", {
 })
 
 test_that("BMJ records its own line-art figure, not a summary's", {
-  b <- journal_spec("bmj")
+  b <- spec_get("bmj")
   # BMJ: "line art which should be 1200 dpi". A third-party summary said 600.
   expect_equal(b$dpi_line_art, 1200)
   expect_equal(b$dpi_min, 300)
@@ -365,7 +402,7 @@ test_that("BMJ records its own line-art figure, not a summary's", {
 })
 
 test_that("BMJ's unverifiable widths were withdrawn, not kept or denied", {
-  b <- journal_spec("bmj")
+  b <- spec_get("bmj")
   # Neither recorded nor marked confirmed-absent: nobody can currently verify
   # them, and claiming BMJ states no width would be its own invention.
   expect_null(b$width_max_mm)
@@ -374,12 +411,12 @@ test_that("BMJ's unverifiable widths were withdrawn, not kept or denied", {
 
   r <- fig_check(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
                        ggplot2::geom_point(), "bmj")
-  expect_equal(r[r$check == "Width", ]$requirement, "not yet harvested for this journal")
+  expect_equal(r[r$check == "Width", ]$requirement, "not yet reviewed for this specification")
 })
 
 test_that("BMJ and Nature give opposite instructions on outlining text", {
   # BMJ: "In EPS files, text (if present) should be outlined."
   # Nature: "Do not outline text". Neither is checked; both are recorded.
-  expect_match(journal_spec("bmj")$notes, "outlined", ignore.case = TRUE)
-  expect_match(journal_spec("bmj")$notes, "opposite of Nature")
+  expect_match(spec_get("bmj")$notes, "outlined", ignore.case = TRUE)
+  expect_match(spec_get("bmj")$notes, "opposite of Nature")
 })

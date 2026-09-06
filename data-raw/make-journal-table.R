@@ -49,7 +49,7 @@ block <- c(
   "[The full table of widths, resolutions and type sizes](https://dansemakula.github.io/figspec/articles/journals.html)",
   "is generated from the registry, as is",
   "[the reference to every function and option](https://dansemakula.github.io/figspec/articles/options.html).",
-  "Use `journal_spec(id)` for any entry's full specification and its source.",
+  "Use `spec_get(id)` for any entry's full specification and its source.",
   ""
 )
 

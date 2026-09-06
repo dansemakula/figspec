@@ -2,21 +2,35 @@
 % Please edit documentation in R/spec.R
 \name{fig_columns}
 \alias{fig_columns}
-\title{The column widths a journal states}
+\title{List the available figure widths}
 \usage{
-fig_columns(journal)
+fig_columns(spec)
 }
 \arguments{
-\item{journal}{Registry id.}
+\item{spec}{The specification to inspect: a registry id, a
+\code{figspec_spec}, or a named list of requirements.}
 }
 \value{
 A named numeric vector of widths in millimetres, or \code{NULL} when the
-journal states a range rather than named columns.
+specification records a range instead of named widths.
 }
 \description{
-The column widths a journal states
+Lists the named widths recorded in a publication, project or organisational
+specification. The returned names can be supplied to the \code{column} argument
+of \code{\link[=fig_width]{fig_width()}}, \code{\link[=fig_save]{fig_save()}} and other figspec functions.
+}
+\details{
+Some sources state only a permitted width range. In that case there are no
+named choices to list, so the function explains the range and returns
+\code{NULL}.
 }
 \examples{
 fig_columns("science")
 fig_columns("cell_press")
+
+report_spec <- list(
+  name = "Research report",
+  columns = list(half = 80, full = 160)
+)
+fig_columns(report_spec)
 }

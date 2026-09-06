@@ -2,24 +2,27 @@
 % Please edit documentation in R/check.R
 \name{fig_check}
 \alias{fig_check}
-\title{Check a figure against a journal's requirements}
+\title{Inspect a figure and verify it against a specification}
 \usage{
 fig_check(
   x,
-  journal = NULL,
-  column = "single",
+  spec = NULL,
+  column = NULL,
   width = NULL,
   height = NULL,
   units = c("mm", "cm", "in"),
   dpi = NULL,
   format = NULL,
-  art_type = c("colour", "bw", "line", "combination")
+  colour_mode = NULL,
+  color_mode = NULL,
+  art_type = c("auto", "colour", "bw", "line", "combination")
 )
 }
 \arguments{
 \item{x}{A ggplot object, or a path to a figure file.}
 
-\item{journal}{Registry id, for example \code{"frontiers"}.}
+\item{spec}{Optional specification: a registry id such as \code{"frontiers"},
+a \code{figspec_spec}, or a named list of requirements.}
 
 \item{column}{Which column width the figure is intended for. One of
 \code{"single"}, \code{"onehalf"} or \code{"double"}.}
@@ -37,12 +40,20 @@ judge physical size for files that do not record it themselves - base R's
 \item{format}{Output format, for example \code{"tiff"}. Only used when \code{x} is a
 ggplot object.}
 
+\item{colour_mode}{Intended output colour model for a ggplot object. Defaults
+to \code{"RGB"}; \code{\link[=fig_save]{fig_save()}} supplies \code{"CMYK"} when it selects a CMYK-capable
+vector device.}
+
+\item{color_mode}{American spelling of \code{colour_mode}. Takes precedence when
+supplied.}
+
 \item{art_type}{Which resolution rule applies. Publishers set different
 minimums for different kinds of artwork: Cell Press asks 300 dpi for
 colour or greyscale, 500 for black and white, and 1000 for line art.
-figspec cannot tell which one your figure is, so it checks against
-\code{"colour"} by default and names the other thresholds in the report rather
-than quietly applying the most lenient one. \code{"color"} is accepted too.}
+\code{"auto"} classifies a plot from what it actually draws. For a saved file,
+where that evidence has been lost, it applies the strictest stated rule so
+that an ambiguous file cannot pass under the most lenient interpretation.
+\code{"color"} is accepted as an alias for \code{"colour"}.}
 }
 \value{
 An object of class \code{figspec_report}, a data frame of one row per
@@ -50,15 +61,19 @@ requirement.
 }
 \description{
 Accepts either a ggplot object, checked before it is saved, or the path to
-a figure file that has already been written.
+a figure file that has already been written. With no specification it
+reports what can be measured without issuing pass or fail claims. A
+specification may come from the included registry, your own registry, or a
+named list supplied directly in R.
 }
 \details{
-Each requirement is reported with one of four outcomes. \code{pass} and \code{fail}
+Each requirement is reported with one of five outcomes. \code{pass} and \code{fail}
 mean what they say. \code{unspecified} means the publisher does not state that
 requirement, so nothing can be concluded. \code{unknown} means the requirement
 exists but this input cannot answer it, for example type size in a raster
-file. Only \code{fail} is a problem you must fix; \code{unspecified} and \code{unknown}
-are prompts to check by hand.
+file. \code{invalid} means the input is not a readable file of the type its name
+claims. A pass applies only to the individual row; an overall compliance
+claim requires every recorded requirement to pass or be explicitly absent.
 
 Type size is read back from PDF, EPS and SVG files, which record the size
 each string was set at. This is worth doing rather than trusting the plot
@@ -70,6 +85,25 @@ reported as \code{unknown} rather than estimated.
 }
 \examples{
 library(ggplot2)
-p <- ggplot(mtcars, aes(wt, mpg)) + geom_point()
-fig_check(p, "frontiers")
+p <- ggplot(ggplot2::mpg, aes(displ, hwy, colour = class)) + geom_point()
+p
+
+# Inspect first, without judging the plot against external requirements.
+fig_check(p)
+
+# Verify the same plot against project requirements supplied directly in R.
+report_spec <- list(
+  name = "Quarterly research report",
+  columns = list(full = 160),
+  dpi_min = 300,
+  formats = "png",
+  font_min_pt = 9
+)
+fig_check(p, report_spec, column = "full", height = 95,
+          dpi = 300, format = "png")
+}
+\seealso{
+\code{\link[=fig_save]{fig_save()}} to export and check in one step,
+\code{\link[=submission_check]{submission_check()}} to review several figures together, and
+\code{\link[=spec_get]{spec_get()}} for registry and project specifications.
 }

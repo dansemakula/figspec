@@ -27,46 +27,46 @@ test_that("a fill the layer never draws is not counted as a figure colour", {
 test_that("red and green together fails a journal that forbids it", {
   # Cell Press states red and green should not be used together, and
   # ggplot2's default three-colour palette is red, green and blue.
-  r <- check_colour_safety(scatter(), "cell_press")
+  r <- colour_safety_check(scatter(), "cell_press")
   expect_equal(r[r$check == "Colour pairs", ]$status, "fail")
 })
 
 test_that("a palette without a red/green pairing passes", {
-  r <- check_colour_safety(scatter(SAFE), "cell_press")
+  r <- colour_safety_check(scatter(SAFE), "cell_press")
   expect_equal(r[r$check == "Colour pairs", ]$status, "pass")
 })
 
 test_that("red/green is unspecified for a journal that does not state it", {
-  r <- check_colour_safety(scatter(), "frontiers")
+  r <- colour_safety_check(scatter(), "frontiers")
   expect_equal(r[r$check == "Colour pairs", ]$status, "unspecified")
 })
 
 test_that("greyscale merging fails a journal that prints in black and white", {
   # Three hues at deliberately similar lightness.
   same_light <- c("#D55E00", "#009E73", "#0072B2")
-  r <- check_colour_safety(scatter(same_light), "royal_society")
+  r <- colour_safety_check(scatter(same_light), "royal_society")
   expect_true(r[r$check == "Greyscale", ]$status %in% c("pass", "fail"))
 
-  merged <- check_colour_safety(scatter(c("#777777", "#7A7A7A", "#757575")),
+  merged <- colour_safety_check(scatter(c("#777777", "#7A7A7A", "#757575")),
                                 "royal_society")
   expect_equal(merged[merged$check == "Greyscale", ]$status, "fail")
 })
 
 test_that("greyscale is only a requirement where the publisher states it", {
-  r <- check_colour_safety(scatter(c("#777777", "#7A7A7A", "#757575")), "frontiers")
+  r <- colour_safety_check(scatter(c("#777777", "#7A7A7A", "#757575")), "frontiers")
   expect_equal(r[r$check == "Greyscale", ]$status, "unspecified")
 })
 
 test_that("colour vision deficiency is reported but never as a requirement", {
   skip_if_not_installed("colorspace")
-  r <- check_colour_safety(scatter(SAFE), "cell_press")
+  r <- colour_safety_check(scatter(SAFE), "cell_press")
   row <- r[r$check == "Colour vision", ]
   expect_equal(row$status, "unspecified")
   expect_match(row$actual, "separable under")
 })
 
 test_that("colour checks refuse a saved file rather than guessing", {
-  expect_error(check_colour_safety("fig.tiff", "cell_press"), "ggplot object")
+  expect_error(colour_safety_check("fig.tiff", "cell_press"), "ggplot object")
 })
 
 test_that("a recommended series maximum is reported but never graded", {
@@ -104,7 +104,7 @@ test_that("too many series still surfaces where no limit is stated", {
   p <- ggplot2::ggplot(many, ggplot2::aes(x, y, colour = g)) + ggplot2::geom_line()
   # PLOS ONE names no series limit, but an over-crowded figure still shows up
   # through colours that stop being separable.
-  r <- check_colour_safety(p, "plos_one")
+  r <- colour_safety_check(p, "plos_one")
   expect_match(r[r$check == "Greyscale", ]$actual, "merge in greyscale")
   expect_match(r[r$check == "Colour vision", ]$actual, "merge under")
 })
@@ -115,7 +115,7 @@ test_that("an ungrouped plot raises no series check", {
 })
 
 test_that("Sage's stated rules are recorded and its loose ones are not", {
-  s <- journal_spec("sage")
+  s <- spec_get("sage")
   expect_equal(s$dpi_min, 300)
   expect_equal(s$dpi_line_art, 800)
   expect_true(isTRUE(s$print_greyscale))
@@ -130,7 +130,7 @@ test_that("a long list of merged pairs is summarised, not dumped", {
   many <- data.frame(x = rep(1:5, 12), y = rep(1:12, each = 5),
                      g = factor(rep(LETTERS[1:12], each = 5)))
   p <- ggplot2::ggplot(many, ggplot2::aes(x, y, colour = g)) + ggplot2::geom_line()
-  r <- check_colour_safety(p, "royal_society")
+  r <- colour_safety_check(p, "royal_society")
   msg <- r[r$check == "Greyscale", ]$actual
   expect_match(msg, "^\\d+ pair\\(s\\) merge in greyscale")
   expect_match(msg, "more$")
@@ -140,8 +140,8 @@ test_that("a long list of merged pairs is summarised, not dumped", {
 test_that("a short list of merged pairs is shown in full", {
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg, colour = factor(cyl))) +
     ggplot2::geom_point()
-  msg <- check_colour_safety(p, "royal_society")[
-    check_colour_safety(p, "royal_society")$check == "Greyscale", ]$actual
+  msg <- colour_safety_check(p, "royal_society")[
+    colour_safety_check(p, "royal_society")$check == "Greyscale", ]$actual
   expect_false(grepl("more$", msg))
 })
 

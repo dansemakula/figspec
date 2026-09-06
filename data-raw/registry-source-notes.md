@@ -63,7 +63,7 @@ colour: NOT STATED
 filesize: NOT STATED
 
 ## cambridge — Cambridge University Press (all journals)
-source: https://www.cambridge.org/core/services/authors/journals/journals-artwork-guide
+source: https://www.cambridge.org/core/services/authors/journals-artwork-guide
 dpi_lineart: "a minimum of 1000 dpi"
 dpi_halftone: "Files should be saved at a minimum resolution of 300 dpi"
 dpi_combination: "Files should be saved at a minimum resolution of 600 dpi"
@@ -83,7 +83,7 @@ width: NOT STATED
 dpi: NOT STATED
 
 ## jss — Journal of Statistical Software
-source: https://www.jstatsoft.org/pages/view/style
+source: https://www.jstatsoft.org/style
 formats: "Vector graphics: .pdf; Raster graphics: .jpg or .png"
 raster_res: 'png(..., units = "in", res = 144)' with "higher resolutions may be needed for some graphics."
 font_size: "graphics annotation should be about the size of the figure caption or a little bit smaller"
@@ -411,7 +411,7 @@ NEW, and recorded:
     is not checked; figspec reads which tag level is used, not its styling.
   axes: "Axis lines and tick marks to be included" -> axis_lines_and_ticks. Worth noting that
     ggplot2's default theme draws tick marks but NOT an axis line, so a default plot fails this.
-    theme_journal now supplies both where a publisher requires them.
+    theme_spec now supplies both where a publisher requires them.
   text colour: "Avoid coloured text; keylines, keys, etc. should be used instead" ->
     avoid_coloured_text. A grey has equal RGB channels and is not treated as a hue.
 NEW, stated but NOT recorded:
@@ -428,6 +428,19 @@ dpi ambiguity: this page says "For images, minimum 450 dpi" in an export section
   "The maximum dpi of online proofs is 450 dpi". The latter describes Nature's rendering. dpi_min
   stays at the 300 that two Nature pages state for photographic images.
 widths: NOT STATED here, which is why source_url remains the initial-submission page.
+
+## nature — SUPPLEMENT 3: current final-artwork sizing
+sources: https://research-figure-guide.nature.com/figures/building-and-exporting-figure-panels/
+  and https://www.nature.com/nature/for-authors/final-submission
+harvested: 2026-09-03 from both live Nature-owned pages.
+width change: the current guide states "89 mm (single column)" and "183 mm (double column)".
+  These replace 90/180 from the older initial-submission page. Maximum figure height remains
+  170 mm. The registry now records the final-artwork figures and keeps the discrepancy visible.
+line: "Line weights and strokes should be set between 0.25 and 1 pt at the final size"; both bounds
+  are now checkable and recorded.
+provenance: Nature is the first migrated entry using field-level `sources`, so requirements drawn
+  from its initial, final, and dedicated figure-guide pages can each name the exact source and date
+  instead of being attributed to one umbrella URL.
 
 ## ieee — IEEE JOURNALS (distinct from ieee_magazines)
 source: https://journals.ieeeauthorcenter.ieee.org/create-your-ieee-journal-article/create-graphics-for-your-article/resolution-and-size/
@@ -559,3 +572,30 @@ WIDTHS WITHDRAWN. The earlier entry recorded 83 to 173.5 mm from a PDF under a 2
 
 CONFLICT WITH NATURE, worth knowing: BMJ says "In EPS files, text (if present) should be outlined."
   Nature says "Do not outline text". Directly opposite instructions for the same operation.
+
+## bmc — BioMed Central shared instructions
+source: https://link.springer.com/journal/12931/submission-guidelines
+harvested: 2026-09-03 from Springer Nature's live Respiratory Research page.
+scope: shared BioMed Central final-PDF figure instructions; journal-specific guidance overrides it.
+width/height: "width of 85 mm for half page width figure"; "width of 170 mm for full page width
+  figure"; "maximum height of 225 mm for figure and legend".
+dpi: "image resolution of approximately 300 dpi (dots per inch) at the final size". The
+  approximation remains visible in the registry quote.
+formats: EPS, PDF, Microsoft Word, PowerPoint, TIFF, JPEG, PNG, BMP and CDX are enumerated as
+  accepted types.
+file size: "Individual figure files should not exceed 10 MB."
+line: "All lines should be wider than 0.25 pt when constrained to standard figure widths."
+TIFF: "TIFF files should be saved with LZW compression, which is lossless".
+
+## jid — The Journal of Infectious Diseases
+source: https://academic.oup.com/jid/pages/author-guidelines
+harvested: 2026-09-03 from the live Oxford Academic journal page.
+scope: final publication files, not the looser initial-submission allowance.
+dpi: "Each final figure file should have a resolution of at least 300 DPI"; "Line drawings must
+  have a resolution of at least 600 DPI at their final size."
+formats/colour: "Save final figure files in .tiff or .eps format, using CMYK colors, with fonts
+  embedded."
+alpha: the journal's step-by-step conversion instructions say "Remove Alpha Channel" before TIFF
+  or EPS export.
+not yet checkable: embedded-font verification. This remains explicit in the notes rather than being
+  converted into a false pass.

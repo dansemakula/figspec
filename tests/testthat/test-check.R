@@ -1,4 +1,4 @@
-# fig_check() itself: reading measurements out of a plot, and the four outcomes
+# fig_check() itself: reading measurements out of a plot, and the five outcomes
 # a row can carry.
 
 make_plot <- function() {
@@ -22,7 +22,7 @@ test_that("a default plot breaches a journal ceiling and the theme repairs it", 
   type_row <- before[before$check == "Type size", ]
   expect_equal(type_row$status, "fail")
 
-  after <- fig_check(make_plot() + theme_journal("plos_one"), "plos_one")
+  after <- fig_check(make_plot() + theme_spec("plos_one"), "plos_one")
   expect_equal(after[after$check == "Type size", ]$status, "pass")
 })
 
@@ -96,15 +96,15 @@ test_that("resolution is judged against the rule for the stated art type", {
 
   # Cell Press states 300 dpi for colour, 500 for black and white and 1000 for
   # line art. 300 dpi passes as colour art and fails as line art.
-  expect_equal(fig_check(path, "cell_press", dpi = 300)[
-    fig_check(path, "cell_press", dpi = 300)$check == "Resolution", ]$status, "pass")
+  expect_equal(fig_check(path, "cell_press", dpi = 300, art_type = "colour")[
+    fig_check(path, "cell_press", dpi = 300, art_type = "colour")$check == "Resolution", ]$status, "pass")
   expect_equal(fig_check(path, "cell_press", dpi = 300, art_type = "line")[
     fig_check(path, "cell_press", dpi = 300, art_type = "line")$check == "Resolution", ]$status, "fail")
 })
 
 test_that("the other stated resolution thresholds are named, not hidden", {
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
-  r <- fig_check(p, "cell_press", dpi = 300)
+  r <- fig_check(p, "cell_press", dpi = 300, art_type = "colour")
   expect_match(r[r$check == "Resolution", ]$requirement, "line art 1000")
 })
 
@@ -214,7 +214,7 @@ test_that("a figure figspec saved at the requirement passes its own check", {
   out <- tempfile(fileext = ".png"); on.exit(unlink(out))
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
   suppressWarnings(suppressMessages(
-    fig_save(out, p, journal = "cell_press", column = "single", check = FALSE)))
+    fig_save(out, p, spec = "cell_press", column = "single", check = FALSE)))
 
   r <- fig_check(out, "cell_press", column = "single")
   expect_equal(r$status[r$check == "Resolution"], "pass")
@@ -229,7 +229,7 @@ test_that("the reported resolution and the verdict agree", {
   out <- tempfile(fileext = ".png"); on.exit(unlink(out))
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
   suppressWarnings(suppressMessages(
-    fig_save(out, p, journal = "frontiers", column = "single", check = FALSE)))
+    fig_save(out, p, spec = "frontiers", column = "single", check = FALSE)))
   r <- fig_check(out, "frontiers", column = "single")
   row <- r[r$check == "Resolution", ]
   shown <- as.numeric(sub(" dpi$", "", row$actual))
@@ -266,8 +266,8 @@ test_that("an unreadable file still reports what is knowable about it", {
   set.seed(1); writeBin(as.raw(sample(0:255, 3000, TRUE)), f)
   r <- suppressWarnings(fig_check(f, "cell_press"))
   # Format and size come from the file system, not from reading the image.
-  expect_equal(r$status[r$check == "File format"], "fail")
-  expect_equal(r$status[r$check == "File size"], "pass")
+  expect_equal(r$status[r$check == "File format"], "invalid")
+  expect_equal(r$status[r$check == "File size"], "invalid")
   # Nothing that depends on reading the image may be graded.
   expect_equal(r$status[r$check == "Width"], "unknown")
   expect_equal(r$status[r$check == "Resolution"], "unknown")

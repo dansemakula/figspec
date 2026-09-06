@@ -2,24 +2,32 @@
 % Please edit documentation in R/fit.R
 \name{scale_shape_figspec}
 \alias{scale_shape_figspec}
-\title{A discrete shape scale using shapes that stay legible at journal size}
+\title{Apply distinct shapes to categorical points}
 \usage{
 scale_shape_figspec(..., style = c("solid", "hollow", "filled"))
 }
 \arguments{
-\item{...}{Passed to \code{\link[ggplot2:discrete_scale]{ggplot2::discrete_scale()}}.}
+\item{...}{Additional settings for the discrete scale, such as its legend
+title, labels, limits, missing-value shape or guide. These are passed to
+\code{\link[ggplot2:discrete_scale]{ggplot2::discrete_scale()}}.}
 
-\item{style}{Passed to \code{\link[=figspec_shapes]{figspec_shapes()}}.}
+\item{style}{The kind of marks to use: \code{"solid"} for solid symbols,
+\code{"hollow"} for outlines, or \code{"filled"} for symbols whose interior and
+outline colours can be controlled separately. The available sets contain
+six solid, six hollow and five filled shapes.}
 }
 \value{
-A ggplot2 scale.
+A discrete ggplot2 shape scale to add to a plot.
 }
 \description{
-A discrete shape scale using shapes that stay legible at journal size
+Adds a discrete ggplot2 shape scale using the tested shape sets returned by
+\code{\link[=figspec_shapes]{figspec_shapes()}}. Shape can support colour as a second visual cue, helping
+readers distinguish groups when a figure is printed in greyscale or when
+colours appear similar.
 }
 \examples{
 library(ggplot2)
-ggplot(mtcars, aes(wt, mpg, shape = factor(cyl))) +
+ggplot(ggplot2::mpg, aes(displ, hwy, shape = drv)) +
   geom_point() +
   scale_shape_figspec()
 }

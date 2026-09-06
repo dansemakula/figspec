@@ -1,0 +1,4105 @@
+fig_save:
+  introduction: >-
+    These examples use all 234 rows of ggplot2's mpg data. Run the setup once,
+    then open an argument below to see how it changes the export. The setup
+    also defines a project specification to show the alternative to using a
+    bundled journal profile.
+  setup: |-
+    library(ggplot2)
+
+    p <- ggplot(mpg, aes(displ, hwy, colour = drv, shape = drv)) +
+      geom_point(alpha = 0.7) +
+      labs(
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy",
+        colour = "Drive type",
+        shape = "Drive type"
+      ) +
+      theme_minimal()
+
+    report_spec <- list(
+      name = "Research report",
+      columns = list(full = 160),
+      formats = "png",
+      dpi_min = 300,
+      dpi_line_art = 600
+    )
+  arguments:
+    filename:
+      prose: >-
+        Give the output file a name and extension. The extension selects the
+        file format; this example writes a PNG.
+      code: |-
+        fig_save(
+          filename = file.path(tempdir(), "fuel-economy.png"),
+          plot = p,
+          width = 85,
+          height = 60,
+          check = FALSE
+        )
+      result: A real 85 × 60 mm PNG is written in R's temporary directory.
+    plot:
+      prose: >-
+        Pass the ggplot object you want to export. Naming plot explicitly is
+        useful in scripts that create several figures.
+      code: |-
+        fig_save(
+          file.path(tempdir(), "explicit-plot.png"),
+          plot = p,
+          width = 85,
+          height = 60,
+          check = FALSE
+        )
+      result: The object stored as p is exported, regardless of which plot was displayed last.
+    spec:
+      prose: >-
+        Select a bundled journal or publisher profile by its registry id. This
+        example uses PNAS. You can also supply your own project or
+        organisational specification through this argument.
+      code: |-
+        fig_save(
+          file.path(tempdir(), "pnas-figure.tiff"),
+          p,
+          spec = "pnas",
+          column = "small",
+          check = FALSE
+        )
+
+        # To use your project specification instead:
+        # spec = report_spec,
+        # column = "full"
+      result: The figure uses the PNAS profile and is exported as a 90 mm TIFF at 300 dpi.
+    column:
+      prose: >-
+        Choose one of the widths named in the specification. The value must
+        match a name under columns in that specification.
+      code: |-
+        fig_save(
+          file.path(tempdir(), "large-pnas-figure.tiff"),
+          p,
+          spec = "pnas",
+          column = "large",
+          check = FALSE
+        )
+      result: The canvas is exported at the 180 mm large width recorded for PNAS.
+    width:
+      prose: >-
+        Set the width of the complete image. Use this when you already know
+        the required canvas width.
+      code: |-
+        fig_save(
+          file.path(tempdir(), "wide-figure.png"),
+          p,
+          width = 120,
+          height = 75,
+          check = FALSE
+        )
+      result: The complete image is 120 mm wide.
+    height:
+      prose: >-
+        Set the height of the complete image instead of accepting figspec's
+        default aspect ratio.
+      code: |-
+        fig_save(
+          file.path(tempdir(), "short-figure.png"),
+          p,
+          width = 85,
+          height = 50,
+          check = FALSE
+        )
+      result: The complete image is 50 mm high.
+    "panel_width, panel_height":
+      prose: >-
+        Set the physical size of the data panel. figspec measures the labels,
+        legend and margins, then makes the canvas large enough to contain them.
+      code: |-
+        fig_save(
+          file.path(tempdir(), "fixed-panel.png"),
+          p,
+          panel_width = 62,
+          panel_height = 45,
+          check = FALSE
+        )
+      result: The data panel is 62 × 45 mm; the canvas expands around it.
+    units:
+      prose: >-
+        State the units used by every width and height in the call. Millimetres
+        are the default; this example gives the same size in centimetres.
+      code: |-
+        fig_save(
+          file.path(tempdir(), "centimetre-size.png"),
+          p,
+          width = 8.5,
+          height = 6,
+          units = "cm",
+          check = FALSE
+        )
+      result: The 8.5 × 6 cm request is written as an 85 × 60 mm image.
+    dpi:
+      prose: >-
+        Set the raster resolution explicitly when a specification or project
+        requires more than the 300 dpi default.
+      code: |-
+        fig_save(
+          file.path(tempdir(), "high-resolution.png"),
+          p,
+          width = 85,
+          height = 60,
+          dpi = 600,
+          check = FALSE
+        )
+      result: The PNG is written at 600 dpi while keeping the requested physical size.
+    check:
+      prose: >-
+        Leave checking on to verify the saved file against the specification.
+        The report is attached to the returned path for later inspection.
+      code: |-
+        checked <- fig_save(
+          file.path(tempdir(), "checked-pnas-figure.tiff"),
+          p,
+          spec = "pnas",
+          column = "small",
+          art_type = "colour",
+          check = TRUE
+        )
+
+        attr(checked, "figspec_report")
+      result: The file is reopened and the report identifies the PNAS axis-origin requirement as unmet, so it can be corrected before submission.
+    art_type:
+      prose: >-
+        Tell figspec which resolution rule applies when the content type is
+        known. Line art often requires a higher resolution than colour images.
+      code: |-
+        fig_save(
+          file.path(tempdir(), "pnas-line-art.tiff"),
+          p,
+          spec = "pnas",
+          column = "small",
+          art_type = "line",
+          check = FALSE
+        )
+      result: The 1000 dpi line-art rule recorded for PNAS is used.
+    "...":
+      prose: >-
+        Pass additional graphics-device settings through to ggplot2::ggsave().
+        Here bg sets the exported image's background colour.
+      code: |-
+        fig_save(
+          file.path(tempdir(), "blue-background.png"),
+          p,
+          width = 85,
+          height = 60,
+          check = FALSE,
+          bg = "#EAF4F8"
+        )
+      result: The PNG is exported with a pale blue background.
+
+fig_check:
+  introduction: >-
+    These examples check the same real plot and a TIFF exported from it. Run
+    the setup once, then open an argument to see what figspec measures and how
+    it reports the result.
+  setup: |-
+    library(ggplot2)
+
+    p <- ggplot(mpg, aes(displ, hwy, colour = drv, shape = drv)) +
+      geom_point(alpha = 0.7) +
+      labs(
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy",
+        colour = "Drive type",
+        shape = "Drive type"
+      ) +
+      theme_minimal()
+
+    pnas_file <- fig_save(
+      file.path(tempdir(), "pnas-check-example.tiff"),
+      p,
+      spec = "pnas",
+      column = "small",
+      art_type = "colour",
+      check = FALSE
+    )
+
+    report_spec <- list(
+      name = "Research report",
+      columns = list(full = 160),
+      formats = "png",
+      dpi_min = 300
+    )
+  arguments:
+    x:
+      prose: >-
+        Check either a plot that is still editable or a finished figure file.
+        This example reopens the TIFF created in the setup and reads its saved
+        properties.
+      code: |-
+        fig_check(
+          x = pnas_file,
+          spec = "pnas",
+          column = "small",
+          art_type = "colour"
+        )
+      result: The saved TIFF is reopened; its validity, width, resolution and format all pass the PNAS checks.
+    spec:
+      prose: >-
+        Select the requirements to check against by using a bundled registry
+        id. The argument can also accept a project or organisational
+        specification.
+      code: |-
+        fig_check(
+          p,
+          spec = "pnas",
+          column = "small",
+          dpi = 300,
+          format = "tiff",
+          art_type = "colour"
+        )
+
+        # To check against your project requirements instead:
+        # spec = report_spec,
+        # column = "full"
+      result: The editable plot is assessed against the requirements recorded for PNAS.
+    column:
+      prose: >-
+        State which named publication width the figure must occupy. figspec
+        uses the corresponding physical width from the selected profile.
+      code: |-
+        fig_check(
+          p,
+          spec = "pnas",
+          column = "medium",
+          dpi = 300,
+          format = "tiff",
+          art_type = "colour"
+        )
+      result: The width check uses PNAS's recorded 110 mm medium figure width and passes.
+    "width, height":
+      prose: >-
+        Give the intended canvas dimensions when checking a plot before it is
+        exported. For a saved file, figspec reads the actual dimensions from
+        the file instead.
+      code: |-
+        fig_check(
+          p,
+          spec = "pnas",
+          width = 90,
+          height = 60,
+          units = "mm",
+          dpi = 300,
+          format = "tiff",
+          art_type = "colour"
+        )
+      result: The report evaluates the plot as a 90 × 60 mm figure; the width matches PNAS's small size.
+    units:
+      prose: >-
+        State the units used for width and height. This example supplies the
+        PNAS small width in centimetres.
+      code: |-
+        fig_check(
+          p,
+          spec = "pnas",
+          width = 9,
+          height = 6,
+          units = "cm",
+          dpi = 300,
+          format = "tiff",
+          art_type = "colour"
+        )
+      result: figspec converts 9 × 6 cm to 90 × 60 mm before applying the checks.
+    dpi:
+      prose: >-
+        Give the intended resolution when checking an editable plot. For a
+        saved raster, figspec normally reads the resolution from the file.
+      code: |-
+        fig_check(
+          p,
+          spec = "pnas",
+          column = "small",
+          dpi = 300,
+          format = "tiff",
+          art_type = "colour"
+        )
+      result: The 300 dpi value meets the PNAS minimum for a colour figure.
+    format:
+      prose: >-
+        State the format you intend to export when checking a live plot. This
+        example deliberately proposes JPEG so the report can identify a
+        format PNAS does not list.
+      code: |-
+        fig_check(
+          p,
+          spec = "pnas",
+          column = "small",
+          dpi = 300,
+          format = "jpeg",
+          art_type = "colour"
+        )
+      result: The file-format row fails and lists the formats accepted by PNAS.
+    colour_mode:
+      prose: >-
+        State the colour model planned for an editable figure. This example
+        uses RGB, which matches the Cell Press requirement.
+      code: |-
+        fig_check(
+          p,
+          spec = "cell_press",
+          column = "single",
+          dpi = 300,
+          format = "tiff",
+          colour_mode = "RGB",
+          art_type = "colour"
+        )
+      result: The colour-mode row passes because RGB is accepted by Cell Press.
+    color_mode:
+      prose: >-
+        Use color_mode if you prefer American spelling. It has the same effect
+        as colour_mode.
+      code: |-
+        fig_check(
+          p,
+          spec = "cell_press",
+          column = "single",
+          dpi = 300,
+          format = "tiff",
+          color_mode = "RGB",
+          art_type = "colour"
+        )
+      result: The American spelling produces the same passing RGB check.
+    art_type:
+      prose: >-
+        Choose the resolution rule that matches the figure's content. The
+        same 300 dpi file passes as colour artwork but fails the stricter PNAS
+        line-art requirement.
+      code: |-
+        colour_report <- fig_check(
+          pnas_file, "pnas",
+          column = "small",
+          art_type = "colour"
+        )
+
+        line_report <- fig_check(
+          pnas_file, "pnas",
+          column = "small",
+          art_type = "line"
+        )
+
+        rbind(
+          colour = colour_report[colour_report$check == "Resolution", ],
+          line = line_report[line_report$check == "Resolution", ]
+        )
+      result: The two rows show 300 dpi passing for colour artwork and failing against the 1000 dpi line-art rule.
+
+fig_geometry:
+  introduction: >-
+    fig_geometry() measures the panel and the complete canvas. Its plot()
+    method turns those measurements into a diagram, making it easier to see
+    how much room is used by labels, legends and margins.
+  setup: |-
+    library(ggplot2)
+
+    p <- ggplot(mpg, aes(displ, hwy, colour = drv, shape = drv)) +
+      geom_point(alpha = 0.7) +
+      labs(
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy",
+        colour = "Drive type",
+        shape = "Drive type"
+      ) +
+      theme_minimal()
+
+    sized <- fig_panel_size(p, width = 62, height = 45)
+    geometry <- fig_geometry(sized)
+
+    saved <- fig_save(
+      file.path(tempdir(), "measured-panel.png"),
+      p,
+      panel_width = 62,
+      panel_height = 45,
+      check = FALSE
+    )
+  arguments:
+    x:
+      prose: >-
+        Pass a plot, a panel-sized figure or the value returned by fig_save().
+        A panel-sized figure reports the space used on every side; a saved
+        value preserves the exact measurements calculated during export.
+      code: |-
+        geometry <- fig_geometry(x = sized)
+        saved_geometry <- fig_geometry(saved)
+
+        geometry
+        plot(geometry)
+
+        geometry
+      result: The report confirms a 62 × 45 mm data panel and shows the larger canvas needed for the axes, legend and margins.
+    "...":
+      prose: >-
+        You normally leave this empty. It is accepted because plot() is a
+        generic R function; additional values do not change figspec's geometry
+        diagram.
+      code: |-
+        plot(geometry)
+
+        # Extra values are accepted for compatibility and ignored:
+        plot(geometry, unused = TRUE)
+      result: Both calls return the same panel-and-canvas diagram.
+
+fig_apply_spec:
+  introduction: >-
+    The examples start with one plot so that each argument's effect is easy to
+    compare. fig_apply_spec() returns ggplot2 components, which are added to the
+    plot with + while it is still editable.
+  setup: |-
+    library(ggplot2)
+
+    base_plot <- ggplot(
+      mpg,
+      aes(displ, hwy, colour = drv, shape = drv)
+    ) +
+      geom_point(alpha = 0.75, size = 2) +
+      labs(
+        title = "Fuel economy by drive type",
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy",
+        colour = "Drive type",
+        shape = "Drive type"
+      )
+
+    manual_colours <- c(
+      "4" = "#375A7F",
+      "f" = "#2A9D8F",
+      "r" = "#C44E52"
+    )
+    manual_shapes <- c("4" = 15, "f" = 17, "r" = 18)
+
+    style_register(
+      "research_report",
+      theme_minimal() +
+        theme(
+          legend.position = "bottom",
+          panel.grid.minor = element_blank()
+        ),
+      description = "Minimal grid with the legend below the figure"
+    )
+
+    report_spec <- list(
+      name = "Research report",
+      font_min_pt = 10,
+      min_line_pt = 0.75,
+      print_greyscale = TRUE
+    )
+  arguments:
+    spec:
+      prose: >-
+        Select an included journal or publisher profile by its registry id.
+        You can also pass requirements defined for a project or organisation.
+      code: |-
+        fitted <- base_plot +
+          fig_apply_spec(spec = "cell_press")
+
+        fitted
+
+        # Or use the project requirements:
+        # base_plot +
+        #   fig_apply_spec(report_spec)
+      result: The plot receives Cell Press typography together with colour-safe colours and distinct point shapes.
+    colour:
+      prose: >-
+        Set colour to FALSE when the plot already has a palette you need to
+        keep. The specification's typography and shape scale still apply.
+      code: |-
+        own_colours <- base_plot +
+          scale_colour_manual(values = manual_colours) +
+          fig_apply_spec("cell_press", colour = FALSE)
+
+        own_colours
+      result: The three chosen colours are preserved while the other figspec components are applied.
+    shapes:
+      prose: >-
+        Set shapes to FALSE when the plot already uses meaningful point
+        symbols. Colour and typography continue to be fitted.
+      code: |-
+        own_shapes <- base_plot +
+          scale_shape_manual(values = manual_shapes) +
+          fig_apply_spec("cell_press", shapes = FALSE)
+
+        own_shapes
+      result: Shapes 15, 17 and 18 are preserved rather than replaced by the figspec shape scale.
+    style:
+      prose: >-
+        Add a registered house style for the visual choices shared by a team
+        or project. Publication requirements are applied after the style, so
+        the style cannot weaken them.
+      code: |-
+        styled <- base_plot +
+          fig_apply_spec(
+            "frontiers",
+            style = "research_report"
+          )
+
+        styled
+      result: The plot uses the project's minimal grid and lower legend while retaining Frontiers' required typography.
+    base_size:
+      prose: >-
+        Choose the base text size when the publication allows a range. figspec
+        still protects the recorded minimum and maximum sizes.
+      code: |-
+        larger_text <- base_plot +
+          fig_apply_spec("pnas", base_size = 10)
+
+        larger_text
+      result: General text and axis titles use 10 pt type, while the title is capped at PNAS's 12 pt maximum.
+    color:
+      prose: >-
+        Use color if you prefer American spelling. It has the same effect as
+        colour and takes precedence if both spellings are supplied.
+      code: |-
+        american_spelling <- base_plot +
+          fig_apply_spec("cell_press", color = TRUE)
+
+        american_spelling
+      result: The same colour-safe Cell Press plot is produced using the American argument name.
+
+fig_preview:
+  introduction: >-
+    A preview opens at the physical size the finished figure will occupy. This
+    lets you judge text, symbols and detail at their intended size while the
+    plot is still editable.
+  setup: |-
+    library(ggplot2)
+
+    p <- ggplot(mpg, aes(displ, hwy, colour = drv, shape = drv)) +
+      geom_point(alpha = 0.75, size = 2) +
+      scale_colour_manual(values = c(
+        "4" = "#375A7F",
+        "f" = "#2A9D8F",
+        "r" = "#C44E52"
+      )) +
+      labs(
+        title = "Fuel economy by drive type",
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy",
+        colour = "Drive type",
+        shape = "Drive type"
+      ) +
+      theme_minimal()
+
+    report_spec <- list(
+      name = "Research report",
+      columns = list(full = 160)
+    )
+  arguments:
+    plot:
+      prose: >-
+        Pass the plot you are currently refining. Naming it explicitly avoids
+        previewing a different plot that happened to be displayed most
+        recently.
+      code: |-
+        fig_preview(
+          plot = p,
+          spec = "pnas",
+          column = "small"
+        )
+      result: The plot opens in a 90 × 67.5 mm preview window, the recorded PNAS small size with the default height.
+    spec:
+      prose: >-
+        Select the profile that supplies the available widths. A project or
+        organisational specification with named widths can be used in the
+        same way.
+      code: |-
+        fig_preview(
+          p,
+          spec = "pnas",
+          column = "small"
+        )
+
+        # Or preview at a project width:
+        # fig_preview(
+        #   p, report_spec, "full"
+        # )
+      result: PNAS supplies the 90 mm small-figure width; the project alternative would use its 160 mm full width.
+    column:
+      prose: >-
+        Choose one of the named widths in the selected specification. This
+        example previews the large PNAS figure size.
+      code: |-
+        fig_preview(
+          p,
+          spec = "pnas",
+          column = "large"
+        )
+      result: The preview opens 180 mm wide instead of the 90 mm small-figure width.
+    height:
+      prose: >-
+        Set the preview height when the default three-to-four proportion does
+        not match the figure you plan to export.
+      code: |-
+        fig_preview(
+          p,
+          spec = "pnas",
+          column = "small",
+          height = 60
+        )
+      result: The preview uses the 90 mm PNAS width and the requested 60 mm height.
+    units:
+      prose: >-
+        State the units used for height. The width still comes from the named
+        specification entry.
+      code: |-
+        fig_preview(
+          p,
+          spec = "pnas",
+          column = "small",
+          height = 6,
+          units = "cm"
+        )
+      result: Six centimetres is converted to 60 mm, producing the same 90 × 60 mm preview.
+
+fig_panel_size:
+  introduction: >-
+    Set the physical size of the data panel instead of setting the outer image
+    size and accepting whatever room remains. For a faceted plot or a
+    multi-plot composition, the requested dimensions apply to every panel.
+  setup: |-
+    library(ggplot2)
+
+    p <- ggplot(mpg, aes(displ, hwy, colour = drv, shape = drv)) +
+      geom_point(alpha = 0.75, size = 2) +
+      scale_colour_manual(values = c(
+        "4" = "#375A7F",
+        "f" = "#2A9D8F",
+        "r" = "#C44E52"
+      )) +
+      labs(
+        title = "Fuel economy by drive type",
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy",
+        colour = "Drive type",
+        shape = "Drive type"
+      ) +
+      theme_minimal()
+
+    faceted <- p +
+      facet_wrap(~drv, nrow = 1) +
+      guides(colour = "none", shape = "none")
+  arguments:
+    plot:
+      prose: >-
+        Pass a single plot, a faceted plot or a patchwork composition. In this
+        three-facet example, figspec gives each data panel the requested
+        dimensions and allows the complete canvas to grow around them.
+      code: |-
+        three_panels <- fig_panel_size(
+          plot = faceted,
+          width = 28,
+          height = 40
+        )
+
+        fig_geometry(three_panels)
+      result: Each of the three data panels is 28 × 40 mm; labels, facet spacing and margins are added outside those panels.
+    width, height:
+      prose: >-
+        Set both values when the data area must have exact dimensions. You can
+        also supply only width or only height when the other dimension should
+        remain flexible.
+      code: |-
+        sized <- fig_panel_size(
+          p,
+          width = 62,
+          height = 45
+        )
+
+        fig_geometry(sized)
+      result: The data panel measures exactly 62 × 45 mm, and figspec reports the larger canvas required by the title, axes, legend and margins.
+    units:
+      prose: >-
+        State whether the panel dimensions are in millimetres, centimetres or
+        inches. Millimetres are used by default.
+      code: |-
+        sized_cm <- fig_panel_size(
+          p,
+          width = 6.2,
+          height = 4.5,
+          units = "cm"
+        )
+
+        fig_geometry(sized_cm)
+      result: The centimetre values are converted to the same 62 × 45 mm panel dimensions.
+
+fig_panel_width:
+  introduction: >-
+    Find the widest data panel that every figure in a set can use without
+    exceeding the available canvas width. Figures with longer labels or larger
+    legends receive more surrounding space while their data panels remain the
+    same width.
+  setup: |-
+    library(ggplot2)
+
+    base_plot <- ggplot(mpg, aes(displ, hwy, colour = drv, shape = drv)) +
+      geom_point(alpha = 0.75, size = 2) +
+      scale_colour_manual(values = c(
+        "4" = "#375A7F",
+        "f" = "#2A9D8F",
+        "r" = "#C44E52"
+      )) +
+      labs(
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy",
+        colour = "Drive type",
+        shape = "Drive type"
+      ) +
+      theme_minimal()
+
+    figs <- list(
+      numeric_labels = base_plot,
+      labels_with_units = base_plot +
+        scale_y_continuous(
+          labels = function(x) paste(x, "miles per gallon")
+        )
+    )
+
+    report_spec <- list(
+      name = "Research report",
+      columns = list(full = 150),
+      formats = "png"
+    )
+  arguments:
+    plots:
+      prose: >-
+        Supply the figures that need matching data areas. These two plots use
+        the same observations and scales, but the second uses much longer
+        y-axis tick labels and therefore has less room inside the same canvas.
+      code: |-
+        shared_width <- fig_panel_width(
+          plots = figs,
+          width = 150,
+          format = "png"
+        )
+
+        shared_width
+        attr(shared_width, "per_figure")
+      result: The plot with longer tick labels sets the shared width because it is the one with less room left for its data panel.
+    spec:
+      prose: >-
+        Select the specification that supplies the available canvas width. It
+        can come from figspec's registry or from a project or organisation.
+      code: |-
+        cell_press_width <- fig_panel_width(
+          figs,
+          spec = "cell_press",
+          column = "single",
+          format = "tiff"
+        )
+
+        # A project specification works in the same way:
+        # report_width <- fig_panel_width(
+        #   figs, report_spec, column = "full"
+        # )
+      result: The Cell Press profile provides an 85 mm single-column canvas; the project alternative would provide its 150 mm full width.
+    column:
+      prose: >-
+        Choose which named canvas width the complete figures must fit. A wider
+        publication column leaves more room for every data panel.
+      code: |-
+        double_column_width <- fig_panel_width(
+          figs,
+          spec = "cell_press",
+          column = "double",
+          format = "tiff"
+        )
+
+        double_column_width
+      result: The 174 mm Cell Press double-column canvas produces a wider shared panel than the 85 mm single-column canvas.
+    width:
+      prose: >-
+        Give the available canvas width directly for a report, thesis,
+        presentation or other project that does not use a registry profile.
+      code: |-
+        report_width <- fig_panel_width(
+          figs,
+          width = 150,
+          format = "png"
+        )
+
+        report_width
+      result: figspec returns the widest common panel that allows both complete figures to fit within a 150 mm canvas.
+    units:
+      prose: >-
+        State the units used for the canvas width. The shared panel width and
+        its per-figure values are returned in the same units.
+      code: |-
+        report_width_cm <- fig_panel_width(
+          figs,
+          width = 15,
+          units = "cm",
+          format = "png"
+        )
+
+        report_width_cm
+      result: The 15 cm canvas is treated as 150 mm, and the shared panel width is returned in centimetres.
+    format:
+      prose: >-
+        Measure text using the graphics format you will export. Different
+        devices can resolve fonts slightly differently, so using the intended
+        format keeps the calculation tied to the finished files.
+      code: |-
+        tiff_width <- fig_panel_width(
+          figs,
+          spec = "cell_press",
+          column = "single",
+          format = "tiff"
+        )
+
+        tiff_width
+      result: Labels, legends and margins are measured on the TIFF device before the common panel width is calculated.
+
+theme_spec:
+  introduction: >-
+    Apply the type sizes and other theme-level requirements recorded in a
+    specification while retaining control over the figure's overall visual
+    style. The specification may belong to a publication, project or
+    organisation.
+  setup: |-
+    library(ggplot2)
+
+    base_plot <- ggplot(mpg, aes(displ, hwy, colour = drv, shape = drv)) +
+      geom_point(alpha = 0.75, size = 2) +
+      scale_colour_manual(values = c(
+        "4" = "#375A7F",
+        "f" = "#2A9D8F",
+        "r" = "#C44E52"
+      )) +
+      labs(
+        title = "Fuel economy by drive type",
+        subtitle = "All 234 vehicles in ggplot2::mpg",
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy",
+        colour = "Drive type",
+        shape = "Drive type",
+        caption = "Source: ggplot2::mpg"
+      )
+
+    style_register(
+      "research_report",
+      theme_minimal() +
+        theme(
+          legend.position = "bottom",
+          panel.grid.minor = element_blank(),
+          axis.text = element_text(size = 6)
+        ),
+      description = "Project report style"
+    )
+
+    report_spec <- list(
+      name = "Research report",
+      font_min_pt = 10,
+      font_max_pt = 14
+    )
+  arguments:
+    spec:
+      prose: >-
+        Choose the specification whose typography rules should be applied. A
+        registry profile and a specification written for a project or
+        organisation are used in the same way.
+      code: |-
+        publication_plot <- base_plot +
+          theme_spec(spec = "plos_one")
+
+        # Project typography is also supported:
+        # project_plot <- base_plot +
+        #   theme_spec(report_spec)
+
+        publication_plot
+      result: Every text element in the publication plot is kept within PLOS ONE's recorded 8–12 pt range.
+    base:
+      prose: >-
+        Choose the ggplot2 theme that provides the starting appearance.
+        figspec preserves its visual choices, then applies the specification's
+        typography requirements.
+      code: |-
+        minimal_plot <- base_plot +
+          theme_spec(
+            "plos_one",
+            base = theme_minimal()
+          )
+
+        minimal_plot
+      result: The plot retains the open background and grid treatment of theme_minimal(), while its text remains within the required 8–12 pt range.
+    style:
+      prose: >-
+        Add a reusable project or organisational style. Visual choices that do
+        not conflict are retained; in this example, the 6 pt axis text is
+        raised to the publication's 8 pt minimum.
+      code: |-
+        styled_plot <- base_plot +
+          theme_spec(
+            "plos_one",
+            style = "research_report"
+          )
+
+        styled_plot
+      result: The legend remains below the plot and minor grid lines remain hidden, but the undersized axis text is corrected to 8 pt.
+    base_size:
+      prose: >-
+        Set the general text size when the specification allows a range.
+        figspec still enforces any recorded minimum and maximum.
+      code: |-
+        larger_plot <- base_plot +
+          theme_spec(
+            "pnas",
+            base_size = 10
+          )
+
+        larger_plot
+      result: General text uses 10 pt type and the title is limited to PNAS's recorded 12 pt maximum.
+    base_family:
+      prose: >-
+        Choose a font family that is available on the system used to render
+        the figure. Leaving this unset allows the graphics device to use its
+        default font.
+      code: |-
+        serif_plot <- base_plot +
+          theme_spec(
+            report_spec,
+            base_family = "serif"
+          )
+
+        serif_plot
+      result: The project figure uses the system's generic serif family while retaining the specification's 10 pt minimum text size.
+
+style_register:
+  introduction: >-
+    Give a reusable name to the visual choices shared by a project, team or
+    organisation. The registered style is available for the rest of the R
+    session and can be applied alongside any publication or project
+    specification.
+  setup: |-
+    library(ggplot2)
+
+    p <- ggplot(mpg, aes(displ, hwy, colour = drv, shape = drv)) +
+      geom_point(alpha = 0.75, size = 2) +
+      scale_colour_manual(values = c(
+        "4" = "#375A7F",
+        "f" = "#2A9D8F",
+        "r" = "#C44E52"
+      )) +
+      labs(
+        title = "Fuel economy by drive type",
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy",
+        colour = "Drive type",
+        shape = "Drive type"
+      )
+
+    report_spec <- list(
+      name = "Research report",
+      font_min_pt = 9,
+      font_max_pt = 14
+    )
+  arguments:
+    name:
+      prose: >-
+        Choose a short, memorable identifier. Use this name later in the style
+        argument of theme_spec() or fig_apply_spec().
+      code: |-
+        style_register(
+          name = "research_report",
+          theme = theme_minimal() +
+            theme(legend.position = "bottom"),
+          description = "Figures for research reports"
+        )
+
+        style_list()
+      result: research_report appears in the session's style list and can now be applied by name.
+    theme:
+      prose: >-
+        Supply the ggplot2 theme choices that should be reused. A function that
+        returns a theme is also accepted when the style needs to be created at
+        the time it is applied.
+      code: |-
+        style_register(
+          "presentation",
+          theme_classic() +
+            theme(
+              legend.position = "bottom",
+              panel.grid.major.y = element_line(
+                colour = "#D7E3E8",
+                linewidth = 0.3
+              ),
+              axis.text = element_text(size = 6),
+              plot.title = element_text(face = "bold")
+            )
+        )
+
+        presentation_plot <- p +
+          theme_spec(
+            report_spec,
+            style = "presentation"
+          )
+
+        presentation_plot
+      result: The plot uses the registered classic layout, lower legend, blue-grey grid lines and bold title; its 6 pt axis text is raised to the project's 9 pt minimum.
+    description:
+      prose: >-
+        Add a brief explanation so collaborators can tell where the style is
+        intended to be used when they view the registered styles.
+      code: |-
+        style_register(
+          "manuscript",
+          theme_bw(),
+          description = "Black-and-white manuscript figures"
+        )
+
+        style_list()
+      result: The style list shows manuscript together with its plain-language description.
+
+style_list:
+  introduction: >-
+    View the reusable visual styles currently available in the R session. The
+    returned table helps you find the name to pass to theme_spec() or
+    fig_apply_spec() and records what each style is intended for.
+  setup: |-
+    library(ggplot2)
+
+    style_register(
+      "research_report",
+      theme_minimal() +
+        theme(legend.position = "bottom"),
+      description = "Figures for research reports"
+    )
+
+    style_register(
+      "presentation",
+      theme_classic() +
+        theme(plot.title = element_text(face = "bold")),
+      description = "Figures for presentations"
+    )
+  example:
+    prose: >-
+      Call style_list() without any arguments. It returns one row for each
+      style registered in the current session.
+    code: |-
+      available_styles <- style_list()
+      available_styles
+    result: The table lists research_report and presentation together with their descriptions.
+
+style_remove:
+  introduction: >-
+    Remove a visual style that is no longer needed in the current R session.
+    Other registered styles remain available, and any RDS file previously used
+    to save the styles is left unchanged.
+  setup: |-
+    library(ggplot2)
+
+    style_register(
+      "research_report",
+      theme_minimal(),
+      description = "Figures for research reports"
+    )
+
+    style_register(
+      "presentation",
+      theme_classic(),
+      description = "Figures for presentations"
+    )
+  arguments:
+    name:
+      prose: >-
+        Use the exact style name shown by style_list(). figspec reports an
+        error if the name is invalid or is not registered, preventing a silent
+        no-op from being mistaken for a successful removal.
+      code: |-
+        before <- style_list()
+        removed <- style_remove(
+          name = "presentation"
+        )
+        after <- style_list()
+
+        list(
+          removed = removed,
+          before = before,
+          after = after
+        )
+      result: style_remove() returns TRUE, presentation disappears, and research_report remains registered.
+
+style_save:
+  introduction: >-
+    Save the visual styles registered in the current R session when you want
+    to reuse them later. The resulting RDS file can be loaded from a project
+    setup script or another session you control.
+  setup: |-
+    library(ggplot2)
+
+    style_register(
+      "research_report",
+      theme_minimal() +
+        theme(legend.position = "bottom"),
+      description = "Figures for research reports"
+    )
+
+    style_file <- tempfile(fileext = ".rds")
+  arguments:
+    path:
+      prose: >-
+        Choose where the RDS file should be written. Existing files at that
+        path are replaced, so use a project-controlled location.
+      code: |-
+        saved_path <- style_save(
+          path = style_file
+        )
+
+        file.info(saved_path)[, c("size", "isdir")]
+      result: The RDS file is created and contains the styles currently registered in the session.
+
+style_load:
+  introduction: >-
+    Restore visual styles saved in an earlier session. Loaded styles are added
+    to those already registered, allowing a project or organisation to keep a
+    consistent figure style without recreating it by hand.
+  setup: |-
+    library(ggplot2)
+
+    style_register(
+      "research_report",
+      theme_minimal(),
+      description = "Figures for research reports"
+    )
+    style_file <- tempfile(fileext = ".rds")
+    style_save(style_file)
+    style_remove("research_report")
+
+    style_register(
+      "dynamic_style",
+      function() theme_minimal() +
+        theme(legend.position = getOption(
+          "figspec.legend.position",
+          "bottom"
+        )),
+      description = "Style that reads a project option"
+    )
+    function_file <- tempfile(fileext = ".rds")
+    style_save(function_file)
+    style_remove("dynamic_style")
+  arguments:
+    path:
+      prose: >-
+        Load an RDS file created by style_save(). Use only files you
+        created or received through a source you trust.
+      code: |-
+        loaded_names <- style_load(
+          path = style_file
+        )
+
+        style_list()
+      result: research_report is restored and can again be applied by name in the current session.
+    allow_functions:
+      prose: >-
+        Leave this FALSE for ordinary saved themes. Set it to TRUE only when a
+        trusted file contains a theme function, because that function is
+        executable R code.
+      code: |-
+        # Without explicit permission, this file is refused:
+        # style_load(function_file)
+
+        loaded_functions <- style_load(
+          function_file,
+          allow_functions = TRUE
+        )
+
+        style_list()
+      result: dynamic_style is loaded only after executable theme functions are explicitly permitted.
+
+fig_tag_panels:
+  introduction: >-
+    Add clear, consistent labels to faceted plots and multi-plot compositions.
+    figspec can follow a recorded publication requirement or use a label style
+    chosen for a report, presentation or other project.
+  setup: |-
+    library(ggplot2)
+
+    base_plot <- ggplot(mpg, aes(displ, hwy, colour = drv, shape = drv)) +
+      geom_point(alpha = 0.75, size = 2) +
+      scale_colour_manual(values = c(
+        "4" = "#375A7F",
+        "f" = "#2A9D8F",
+        "r" = "#C44E52"
+      )) +
+      labs(
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy",
+        colour = "Drive type",
+        shape = "Drive type"
+      ) +
+      theme_minimal()
+
+    faceted <- base_plot +
+      facet_wrap(~drv, nrow = 1) +
+      guides(colour = "none", shape = "none")
+
+    city_plot <- ggplot(mpg, aes(displ, cty, colour = drv, shape = drv)) +
+      geom_point(alpha = 0.75, size = 2) +
+      labs(
+        title = "City driving",
+        x = "Engine displacement (litres)",
+        y = "City fuel economy"
+      ) +
+      theme_minimal() +
+      theme(legend.position = "none")
+
+    highway_plot <- base_plot +
+      labs(title = "Highway driving") +
+      theme(legend.position = "none")
+
+    composition <- patchwork::wrap_plots(
+      city_plot,
+      highway_plot,
+      ncol = 2
+    )
+
+    report_spec <- list(
+      name = "Research report",
+      panel_labels = "numbers"
+    )
+  arguments:
+    plot:
+      prose: >-
+        Pass a faceted plot or a composition made from separate plots. figspec
+        places one label on every visible part using the appropriate labelling
+        method for that kind of figure.
+      code: |-
+        labelled_composition <- fig_tag_panels(
+          plot = composition,
+          level = "A"
+        )
+
+        labelled_composition
+      result: The two plots in the composition are labelled (A) and (B) through patchwork's native tag system.
+    spec:
+      prose: >-
+        Select the specification that supplies the required label style. This
+        may be a registry profile or a specification created for a project or
+        organisation.
+      code: |-
+        cell_press_panels <- fig_tag_panels(
+          faceted,
+          spec = "cell_press"
+        )
+
+        fig_check(cell_press_panels, "cell_press")
+
+        # A project specification works in the same way:
+        # fig_tag_panels(faceted, report_spec)
+      result: The three facets receive capital labels and the Cell Press panel-label check passes.
+    level:
+      prose: >-
+        Choose capital letters, lower-case letters, numbers, or upper- or
+        lower-case Roman numerals. An explicit choice takes precedence over a
+        specification, and fig_check() reports any resulting conflict.
+      code: |-
+        numbered_panels <- fig_tag_panels(
+          faceted,
+          level = "1"
+        )
+
+        numbered_panels
+      result: The three facets are labelled (1), (2) and (3).
+    open, close:
+      prose: >-
+        Change the characters surrounding each label. Use empty strings when
+        no brackets are wanted.
+      code: |-
+        labels_with_stops <- fig_tag_panels(
+          faceted,
+          level = "a",
+          open = "",
+          close = "."
+        )
+
+        labels_with_stops
+      result: The labels appear as a., b. and c. instead of (a), (b) and (c).
+    strips:
+      prose: >-
+        Keep facet-strip headings when they convey information that the panel
+        labels do not replace. Facet strips are removed by default.
+      code: |-
+        panels_with_strips <- fig_tag_panels(
+          faceted,
+          level = "A",
+          strips = TRUE
+        )
+
+        panels_with_strips
+      result: The (A)–(C) labels are added while the original drive-type headings remain above the facets.
+    x, y, hjust, vjust:
+      prose: >-
+        Move labels within faceted panels. Infinite x and y values anchor them
+        to a panel edge, while hjust and vjust control the inset from that
+        edge.
+      code: |-
+        labels_at_top_right <- fig_tag_panels(
+          faceted,
+          level = "A",
+          x = Inf,
+          y = Inf,
+          hjust = 1.2,
+          vjust = 1.4
+        )
+
+        labels_at_top_right
+      result: Every label is placed just inside the upper-right corner of its data panel.
+    ...:
+      prose: >-
+        Pass additional text settings to ggplot2::geom_text() when the panel
+        labels need a particular size, weight, font or colour.
+      code: |-
+        emphasised_labels <- fig_tag_panels(
+          faceted,
+          level = "A",
+          size = 4,
+          fontface = "bold",
+          family = "sans",
+          colour = "#183A4A"
+        )
+
+        emphasised_labels
+      result: The panel labels are drawn in bold, 4 mm, dark blue-grey sans-serif text.
+
+spec_linewidth:
+  introduction: >-
+    Convert a minimum line weight recorded in points into the value expected by
+    ggplot2's linewidth argument. This prevents a direct point value from being
+    interpreted on the wrong scale and producing lines that are too thick or
+    too thin.
+  setup: |-
+    library(ggplot2)
+
+    line_plot <- ggplot(economics, aes(date, unemploy)) +
+      labs(
+        x = NULL,
+        y = "Number of unemployed people",
+        caption = "Source: ggplot2::economics"
+      ) +
+      theme_spec("frontiers", base = theme_minimal())
+
+    report_spec <- list(
+      name = "Annual report",
+      min_line_pt = 1.25
+    )
+  arguments:
+    spec:
+      prose: >-
+        Choose the specification that states the minimum line weight. A
+        registry profile and a project or organisational specification are
+        handled in the same way.
+      code: |-
+        required_width <- spec_linewidth(
+          spec = "frontiers"
+        )
+
+        before <- line_plot +
+          geom_line(
+            linewidth = 0.5,
+            colour = "#2A9D8F"
+          ) +
+          labs(title = "Before: ggplot2 linewidth 0.5")
+
+        after <- line_plot +
+          geom_line(
+            linewidth = required_width,
+            colour = "#2A9D8F"
+          ) +
+          labs(title = "After: Frontiers 2 pt minimum")
+
+        comparison <- patchwork::wrap_plots(
+          before,
+          after,
+          ncol = 2
+        )
+
+        comparison
+
+        # A project specification works as well:
+        # spec_linewidth(report_spec)
+      result: The first line measures about 1.07 pt and fails the Frontiers minimum; the second measures exactly 2 pt and passes.
+
+colour_safety_check:
+  introduction: >-
+    Examine the colours used to represent data before exporting the figure.
+    figspec checks any colour rules in the selected specification and also
+    reports whether the colours remain distinct in greyscale and under common
+    forms of colour-vision deficiency. When colour is not the only visual cue,
+    it records that as well.
+  setup: |-
+    library(ggplot2)
+
+    unsafe_plot <- ggplot(
+      mpg,
+      aes(displ, hwy, colour = drv)
+    ) +
+      geom_point(size = 2, alpha = 0.8) +
+      scale_colour_manual(values = c(
+        "4" = "#D62728",
+        "f" = "#2CA02C",
+        "r" = "#1F77B4"
+      )) +
+      labs(
+        title = "Colour is the only cue",
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy",
+        colour = "Drive type"
+      ) +
+      theme_minimal()
+
+    safer_plot <- ggplot(
+      mpg,
+      aes(displ, hwy, colour = drv, shape = drv)
+    ) +
+      geom_point(size = 2, alpha = 0.8) +
+      scale_colour_manual(values = c(
+        "4" = "#000000",
+        "f" = "#0072B2",
+        "r" = "#E69F00"
+      )) +
+      scale_shape_manual(values = c(
+        "4" = 16,
+        "f" = 17,
+        "r" = 15
+      )) +
+      labs(
+        title = "Colour and shape identify each group",
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy",
+        colour = "Drive type",
+        shape = "Drive type"
+      ) +
+      theme_minimal()
+
+    report_spec <- list(
+      name = "Research report",
+      avoid_colour_pairs = list(c("red", "green")),
+      print_greyscale = TRUE
+    )
+  arguments:
+    plot:
+      prose: >-
+        Supply the editable ggplot that you want to assess. The first example
+        relies on a red-green contrast; the second replaces that pairing and
+        also uses different shapes, so readers have another way to identify
+        the groups.
+      code: |-
+        unsafe_report <- colour_safety_check(
+          plot = unsafe_plot,
+          spec = "cell_press"
+        )
+
+        safer_report <- colour_safety_check(
+          plot = safer_plot,
+          spec = "cell_press"
+        )
+
+        patchwork::wrap_plots(
+          unsafe_plot,
+          safer_plot,
+          ncol = 2
+        )
+
+        unsafe_report
+        safer_report
+      result: The red-green plot fails the recorded Cell Press colour-pair rule; the revised plot passes it and uses shape as an additional cue.
+    spec:
+      prose: >-
+        Choose the publication, project or organisational specification whose
+        rules should be applied. The same colours can fail one specification
+        while remaining an advisory finding under another that does not state
+        that rule.
+      code: |-
+        cell_press_report <- colour_safety_check(
+          unsafe_plot,
+          spec = "cell_press"
+        )
+
+        frontiers_report <- colour_safety_check(
+          unsafe_plot,
+          spec = "frontiers"
+        )
+
+        project_report <- colour_safety_check(
+          unsafe_plot,
+          spec = report_spec
+        )
+
+        cell_press_report
+        frontiers_report
+        project_report
+      result: The red-green pairing is graded as a failure for Cell Press and the project specification; for Frontiers it is reported as unspecified because that profile records no such rule.
+    threshold:
+      prose: >-
+        Set how different two colours must appear before figspec treats them as
+        distinct. A higher value is stricter. This affects the colour analysis,
+        but it does not turn the chosen cutoff into a rule from the source.
+      code: |-
+        grey_plot <- ggplot(
+          mpg,
+          aes(displ, hwy, colour = drv)
+        ) +
+          geom_point(size = 2, alpha = 0.8) +
+          scale_colour_manual(values = c(
+            "4" = "#777777",
+            "f" = "#999999",
+            "r" = "#BBBBBB"
+          )) +
+          labs(
+            x = "Engine displacement (litres)",
+            y = "Highway fuel economy",
+            colour = "Drive type"
+          ) +
+          theme_minimal()
+
+        standard_cutoff <- colour_safety_check(
+          grey_plot,
+          spec = "royal_society",
+          threshold = 10
+        )
+
+        more_strict <- colour_safety_check(
+          grey_plot,
+          spec = "royal_society",
+          threshold = 15
+        )
+
+        standard_cutoff
+        more_strict
+      result: At 10, one pair of greys is too similar; at 15, two pairs are too similar. Both fail the Royal Society greyscale requirement, while the stricter cutoff identifies the additional close pair.
+
+figspec_palettes:
+  introduction: >-
+    See which palettes figspec provides before choosing one for a plot. The
+    catalogue distinguishes palettes for separate categories from palettes for
+    ordered values, explains where each works best and records its source.
+    These are optional design tools rather than publication requirements.
+  setup: |-
+    library(ggplot2)
+  example:
+    prose: >-
+      Print the catalogue to compare the palettes, then draw their colours as
+      swatches. Eight colours are shown for the fixed Okabe-Ito palette and for
+      each sequential ramp so that their different structures are visible.
+    code: |-
+      available_palettes <- figspec_palettes()
+      available_palettes
+
+      swatches <- do.call(
+        rbind,
+        lapply(seq_len(nrow(available_palettes)), function(i) {
+          palette_id <- available_palettes$id[[i]]
+          data.frame(
+            palette = available_palettes$name[[i]],
+            position = seq_len(8),
+            colour = figspec_palette(palette_id, 8)
+          )
+        })
+      )
+
+      ggplot(swatches, aes(position, 1, fill = colour)) +
+        geom_tile(width = 0.96, height = 0.8) +
+        facet_wrap(~palette, ncol = 1) +
+        scale_fill_identity() +
+        scale_x_continuous(breaks = seq_len(8)) +
+        coord_cartesian(expand = FALSE) +
+        labs(x = "Colour position") +
+        theme_void() +
+        theme(
+          strip.text = element_text(size = 11, face = "bold"),
+          axis.title.x = element_text(size = 9),
+          axis.text.x = element_text(size = 8),
+          panel.spacing.y = grid::unit(4, "mm")
+        )
+    result: The catalogue lists one fixed eight-colour qualitative palette and two sequential palettes that can generate any requested number of colours; the swatches show the colours and lightness progression in each.
+
+figspec_palette:
+  introduction: >-
+    Retrieve the colours from one of figspec's palettes as hexadecimal values.
+    The returned vector can be used in a ggplot2 manual scale, a base R plot or
+    any other function that accepts R colours.
+  setup: |-
+    library(ggplot2)
+
+    mpg_six_classes <- subset(
+      mpg,
+      class != "2seater"
+    )
+
+    base_plot <- ggplot(
+      mpg_six_classes,
+      aes(displ, hwy)
+    ) +
+      labs(
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy"
+      ) +
+      theme_minimal()
+  arguments:
+    palette:
+      prose: >-
+        Select a palette by its id from figspec_palettes(). Okabe-Ito is used
+        here because vehicle class is a set of separate categories rather than
+        an ordered measurement.
+      code: |-
+        class_colours <- figspec_palette(
+          palette = "okabe_ito",
+          n = length(unique(mpg_six_classes$class))
+        )
+
+        class_plot <- base_plot +
+          geom_point(
+            aes(colour = class, shape = class),
+            size = 2,
+            alpha = 0.8
+          ) +
+          scale_colour_manual(values = class_colours) +
+          labs(
+            title = "Fuel economy by vehicle class",
+            colour = "Vehicle class",
+            shape = "Vehicle class"
+          )
+
+        class_plot
+      result: Six Okabe-Ito colours are returned and applied to six vehicle classes; shape provides a second way to identify them.
+    "n":
+      prose: >-
+        Ask for exactly as many colours as the data needs. Sequential palettes
+        such as Cividis and Viridis generate the requested number, while a
+        fixed palette stops with a clear error if the request exceeds its
+        capacity instead of silently reusing colours.
+      code: |-
+        displacement_band <- cut(
+          mpg_six_classes$displ,
+          breaks = seq(1, 7, by = 1),
+          include.lowest = TRUE,
+          ordered_result = TRUE
+        )
+        number_of_bands <- nlevels(displacement_band)
+        band_colours <- figspec_palette(
+          "cividis",
+          n = number_of_bands
+        )
+
+        band_plot <- base_plot +
+          geom_point(
+            aes(colour = displacement_band),
+            size = 2,
+            alpha = 0.8
+          ) +
+          scale_colour_manual(values = band_colours) +
+          labs(
+            title = "An ordered Cividis ramp",
+            colour = "Displacement band"
+          )
+
+        band_plot
+
+        # A fixed palette is never recycled:
+        # figspec_palette("okabe_ito", n = 9)
+      result: Six distinct colours are generated for the six ordered displacement bands. Asking Okabe-Ito for nine colours would stop because that fixed palette contains eight.
+
+scale_colour_figspec:
+  introduction: >-
+    Add a figspec palette directly to the colour scale of a ggplot. This affects
+    the colour of points, lines and outlines; it does not control the interiors
+    of bars or other filled shapes.
+  setup: |-
+    library(ggplot2)
+
+    mpg_six_classes <- subset(
+      mpg,
+      class != "2seater"
+    )
+
+    colour_base <- ggplot(
+      mpg_six_classes,
+      aes(displ, hwy)
+    ) +
+      labs(
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy"
+      ) +
+      theme_minimal()
+  arguments:
+    palette:
+      prose: >-
+        Choose a palette by its id. The example maps six vehicle classes
+        to the qualitative Okabe-Ito palette and also uses shape so that colour
+        is not the only way to identify a class.
+      code: |-
+        class_plot <- colour_base +
+          geom_point(
+            aes(colour = class, shape = class),
+            size = 2,
+            alpha = 0.8
+          ) +
+          scale_colour_figspec(
+            palette = "okabe_ito"
+          ) +
+          labs(
+            title = "Fuel economy by vehicle class",
+            colour = "Vehicle class",
+            shape = "Vehicle class"
+          )
+
+        class_plot
+      result: The scale requests six colours from Okabe-Ito and applies one to each vehicle class; the colour and shape legends describe the same groups.
+    ...:
+      prose: >-
+        Pass ordinary ggplot2 scale settings to change the legend title and
+        labels, control their order or set the appearance of missing values.
+        The palette still supplies the colours.
+      code: |-
+        labelled_plot <- colour_base +
+          geom_point(
+            aes(colour = drv),
+            size = 2,
+            alpha = 0.8
+          ) +
+          scale_colour_figspec(
+            palette = "okabe_ito",
+            name = "Drive layout",
+            breaks = c("f", "r", "4"),
+            labels = c(
+              "Front-wheel drive",
+              "Rear-wheel drive",
+              "Four-wheel drive"
+            ),
+            na.value = "#777777"
+          ) +
+          labs(title = "A publication-ready legend")
+
+        labelled_plot
+      result: The plot keeps the Okabe-Ito colours while showing a clearly titled legend with the three drive types written out and placed in the requested order.
+
+scale_fill_figspec:
+  introduction: >-
+    Add a figspec palette to the fill scale of a ggplot. Use it for the
+    interiors of bars, boxes, areas and filled point shapes; use
+    scale_colour_figspec() for points, lines and outlines.
+  setup: |-
+    library(ggplot2)
+
+    fill_base <- ggplot(
+      mpg,
+      aes(class, fill = drv)
+    ) +
+      geom_bar() +
+      labs(
+        x = "Vehicle class",
+        y = "Number of models"
+      ) +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 35, hjust = 1))
+  arguments:
+    palette:
+      prose: >-
+        Choose the palette used inside the bars or other filled shapes. This
+        example uses three Okabe-Ito colours for the three vehicle drive types.
+      code: |-
+        filled_bars <- fill_base +
+          scale_fill_figspec(
+            palette = "okabe_ito"
+          ) +
+          labs(
+            title = "Drive layouts within each vehicle class",
+            fill = "Drive type"
+          )
+
+        filled_bars
+      result: Every bar segment receives the Okabe-Ito colour associated with its drive type, using all 234 observations in mpg.
+    ...:
+      prose: >-
+        Pass ordinary ggplot2 scale settings to control the fill legend. Here
+        the drive types are ordered deliberately and their abbreviated data
+        values are replaced with labels readers can understand.
+      code: |-
+        labelled_bars <- fill_base +
+          scale_fill_figspec(
+            palette = "okabe_ito",
+            name = "Drive layout",
+            breaks = c("f", "r", "4"),
+            labels = c(
+              "Front-wheel drive",
+              "Rear-wheel drive",
+              "Four-wheel drive"
+            ),
+            na.value = "#777777"
+          ) +
+          labs(title = "A clearly labelled fill scale")
+
+        labelled_bars
+      result: The fill colours are unchanged, while the legend uses the requested order and replaces the data abbreviations with plain-language labels.
+
+scale_shape_figspec:
+  introduction: >-
+    Add a tested set of distinct point shapes to a ggplot. Shape can reinforce
+    colour so that groups remain identifiable when colours are difficult to
+    distinguish or the figure is reproduced in greyscale.
+  setup: |-
+    library(ggplot2)
+
+    shape_base <- ggplot(
+      mpg,
+      aes(displ, hwy, shape = drv, fill = drv)
+    ) +
+      geom_point(
+        size = 2.6,
+        colour = "#243642",
+        stroke = 0.8,
+        alpha = 0.85
+      ) +
+      scale_fill_figspec("okabe_ito") +
+      labs(
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy",
+        shape = "Drive type",
+        fill = "Drive type"
+      ) +
+      theme_minimal()
+  arguments:
+    ...:
+      prose: >-
+        Pass ordinary ggplot2 scale settings to replace coded values with
+        reader-friendly legend labels, control their order or change the symbol
+        used for missing values.
+      code: |-
+        labelled_shapes <- ggplot(
+          mpg,
+          aes(displ, hwy, shape = drv)
+        ) +
+          geom_point(
+            size = 2.6,
+            colour = "#0072B2",
+            alpha = 0.8
+          ) +
+          scale_shape_figspec(
+            name = "Drive layout",
+            breaks = c("f", "r", "4"),
+            labels = c(
+              "Front-wheel drive",
+              "Rear-wheel drive",
+              "Four-wheel drive"
+            ),
+            na.value = 4
+          ) +
+          labs(
+            title = "Shapes with a readable legend",
+            x = "Engine displacement (litres)",
+            y = "Highway fuel economy"
+          ) +
+          theme_minimal()
+
+        labelled_shapes
+      result: The three drive types use distinct symbols, and the legend replaces their abbreviated data values with the requested plain-language labels.
+    style:
+      prose: >-
+        Choose solid marks, hollow outlines or shapes with separately
+        controlled fills and outlines. The most distinct shapes are used first
+        within each set.
+      code: |-
+        solid_plot <- shape_base +
+          scale_shape_figspec(style = "solid") +
+          labs(title = "Solid")
+
+        hollow_plot <- shape_base +
+          scale_shape_figspec(style = "hollow") +
+          labs(title = "Hollow")
+
+        filled_plot <- shape_base +
+          scale_shape_figspec(style = "filled") +
+          labs(title = "Filled with outline")
+
+        shape_comparison <- patchwork::wrap_plots(
+          solid_plot,
+          hollow_plot,
+          filled_plot,
+          ncol = 3,
+          guides = "collect"
+        ) &
+          theme(legend.position = "bottom")
+
+        shape_comparison
+      result: >-
+        The same 234 observations are drawn with each shape family: codes 16,
+        17 and 15 for solid; 1, 2 and 0 for hollow; and 21, 24 and 22 for
+        separately filled and outlined marks.
+
+figspec_shapes:
+  introduction: >-
+    Retrieve distinct ggplot2 shape codes for a manual scale or another plotting
+    function. figspec supplies a short, deliberate set and stops instead of
+    recycling symbols when more shapes are requested than readers can reliably
+    distinguish.
+  setup: |-
+    library(ggplot2)
+
+    shape_plot <- function(shape_values, title) {
+      ggplot(
+        mpg,
+        aes(displ, hwy, shape = drv, fill = drv)
+      ) +
+        geom_point(
+          size = 2.6,
+          colour = "#243642",
+          stroke = 0.8,
+          alpha = 0.85
+        ) +
+        scale_shape_manual(values = shape_values) +
+        scale_fill_figspec("okabe_ito") +
+        labs(
+          title = title,
+          x = "Engine displacement (litres)",
+          y = "Highway fuel economy",
+          shape = "Drive type",
+          fill = "Drive type"
+        ) +
+        theme_minimal()
+    }
+  arguments:
+    "n":
+      prose: >-
+        Request one shape for each group in the data. Deriving the number from
+        the data keeps the manual scale complete if the set of groups changes.
+      code: |-
+        number_of_drive_types <- length(unique(mpg$drv))
+        drive_shapes <- figspec_shapes(
+          n = number_of_drive_types
+        )
+
+        drive_plot <- shape_plot(
+          drive_shapes,
+          "One distinct shape per drive type"
+        )
+
+        drive_shapes
+        drive_plot
+      result: Three groups produce the shape codes 16, 17 and 15, which are applied to all 234 observations without recycling a symbol.
+    style:
+      prose: >-
+        Choose solid marks, hollow outlines or symbols with separately
+        controlled fills and outlines. The comparison uses the same data,
+        dimensions and colours so that only the shape family changes.
+      code: |-
+        solid_shapes <- figspec_shapes(3, style = "solid")
+        hollow_shapes <- figspec_shapes(3, style = "hollow")
+        filled_shapes <- figspec_shapes(3, style = "filled")
+
+        solid_plot <- shape_plot(solid_shapes, "Solid")
+        hollow_plot <- shape_plot(hollow_shapes, "Hollow")
+        filled_plot <- shape_plot(filled_shapes, "Filled with outline")
+
+        style_comparison <- patchwork::wrap_plots(
+          solid_plot,
+          hollow_plot,
+          filled_plot,
+          ncol = 3,
+          guides = "collect"
+        ) &
+          theme(legend.position = "bottom")
+
+        style_comparison
+
+        # Requests beyond a set's capacity stop with guidance:
+        # figspec_shapes(7, style = "solid")
+      result: The comparison uses codes 16, 17 and 15 for solid marks; 1, 2 and 0 for hollow marks; and 21, 24 and 22 for marks with separately controlled fills and outlines.
+
+figspec_linetypes:
+  introduction: >-
+    Retrieve distinct line patterns for a manual scale. Adding line type to
+    colour gives readers a second way to follow each series when the figure is
+    reproduced in greyscale or two colours appear similar.
+  setup: |-
+    library(ggplot2)
+
+    economic_series <- economics_long
+    number_of_series <- length(unique(economic_series$variable))
+
+    line_base <- ggplot(
+      economic_series,
+      aes(date, value01, group = variable)
+    ) +
+      labs(
+        x = NULL,
+        y = "Value, rescaled within each series",
+        caption = "Source: ggplot2::economics_long"
+      ) +
+      theme_minimal() +
+      theme(legend.position = "bottom")
+  arguments:
+    "n":
+      prose: >-
+        Request one line type for each series in the data. The before plot uses
+        colour alone; the after plot applies the returned patterns to the same
+        2,870 observations without changing the data, scales or colours.
+      code: |-
+        line_patterns <- figspec_linetypes(
+          n = number_of_series
+        )
+
+        before <- line_base +
+          geom_line(
+            aes(colour = variable),
+            linewidth = 0.7
+          ) +
+          scale_colour_figspec("okabe_ito") +
+          labs(
+            title = "Before: colour is the only cue",
+            colour = "Economic series"
+          )
+
+        after <- line_base +
+          geom_line(
+            aes(colour = variable, linetype = variable),
+            linewidth = 0.7
+          ) +
+          scale_colour_figspec("okabe_ito") +
+          scale_linetype_manual(values = line_patterns) +
+          labs(
+            title = "After: colour and line type",
+            colour = "Economic series",
+            linetype = "Economic series"
+          )
+
+        before_report <- colour_safety_check(
+          before,
+          "royal_society"
+        )
+        after_report <- colour_safety_check(
+          after,
+          "royal_society"
+        )
+
+        line_comparison <- patchwork::wrap_plots(
+          before,
+          after,
+          ncol = 2,
+          guides = "collect"
+        ) &
+          theme(legend.position = "bottom")
+
+        line_patterns
+        line_comparison
+        before_report[before_report$check == "Redundant coding", ]
+        after_report[after_report$check == "Redundant coding", ]
+
+        # More than six patterns stops with guidance:
+        # figspec_linetypes(7)
+      result: The five series receive solid, dashed, dotted, dot-dash and long-dash lines. The colour-safety report changes from colour being the only cue to confirming that line types still distinguish the series.
+
+spec_style_palette:
+  introduction: >-
+    Retrieve an optional palette recorded as part of a specification's house
+    style. This may describe a publication, project or organisation. A recorded
+    palette is a visual preference rather than a requirement, and figspec does
+    not invent one when the specification contains none.
+  setup: |-
+    library(ggplot2)
+
+    report_spec <- list(
+      name = "Annual research report",
+      house_style = list(
+        palette = c(
+          "Four-wheel drive" = "#1D3557",
+          "Front-wheel drive" = "#2A9D8F",
+          "Rear-wheel drive" = "#E76F51"
+        )
+      )
+    )
+  arguments:
+    spec:
+      prose: >-
+        Supply a registry profile or your own specification. The project
+        specification below returns its three recorded colours; PLOS ONE
+        demonstrates the explicit no-palette response from a bundled profile.
+      code: |-
+        no_recorded_palette <- spec_style_palette(
+          "plos_one"
+        )
+
+        report_palette <- spec_style_palette(
+          spec = report_spec
+        )
+
+        names(report_palette) <- c("4", "f", "r")
+
+        house_style_plot <- ggplot(
+          mpg,
+          aes(displ, hwy, colour = drv, shape = drv)
+        ) +
+          geom_point(size = 2.2, alpha = 0.8) +
+          scale_colour_manual(
+            values = report_palette,
+            breaks = c("f", "r", "4"),
+            labels = c(
+              "Front-wheel drive",
+              "Rear-wheel drive",
+              "Four-wheel drive"
+            )
+          ) +
+          scale_shape_figspec(
+            breaks = c("f", "r", "4"),
+            labels = c(
+              "Front-wheel drive",
+              "Rear-wheel drive",
+              "Four-wheel drive"
+            )
+          ) +
+          labs(
+            title = "A project's recorded house style",
+            x = "Engine displacement (litres)",
+            y = "Highway fuel economy",
+            colour = "Drive layout",
+            shape = "Drive layout"
+          ) +
+          theme_minimal()
+
+        report_palette
+        house_style_plot
+      result: The project specification returns its three named colours and applies them to the 234 observations. PLOS ONE returns NULL with a message because no house-style palette is recorded for that profile.
+
+spec_list:
+  introduction: >-
+    Browse the specification profiles available to figspec. Most bundled
+    profiles apply across a publisher's journal portfolio, while others record
+    requirements for an individual journal or publication type, so the table
+    reaches substantially more publications than its row count suggests.
+  setup: |-
+    all_profiles <- spec_list()
+  arguments:
+    discipline:
+      prose: >-
+        Leave the filter as NULL to see every profile, or supply one or more
+        discipline tags. Matching is case-insensitive, and a profile is kept
+        when it has at least one of the requested tags.
+      code: |-
+        all_profiles <- spec_list(
+          discipline = NULL
+        )
+
+        physics_profiles <- spec_list(
+          discipline = "physics"
+        )
+
+        health_profiles <- spec_list(
+          discipline = c("health", "medicine")
+        )
+
+        all_profiles[, c(
+          "id", "name", "publisher", "disciplines",
+          "single_mm", "double_mm", "dpi_min",
+          "verified_on", "origin"
+        )]
+        physics_profiles[, c("id", "name", "disciplines")]
+        health_profiles[, c("id", "name", "disciplines")]
+      result: The bundled registry contains 29 profiles. Filtering returns the two physics profiles and five profiles tagged for health or medicine without changing the registry itself.
+
+spec_get:
+  introduction: >-
+    Retrieve a specification from figspec's registry or create one from a named
+    list maintained by your project or organisation. The resulting object works
+    with the same building, exporting and verification functions regardless of
+    where its requirements came from.
+  setup: |-
+    library(ggplot2)
+
+    project_requirements <- list(
+      name = "Clinical research report",
+      columns = list(single = 80, full = 160),
+      dpi_min = 300,
+      formats = c("png", "pdf"),
+      font_min_pt = 9
+    )
+  arguments:
+    spec:
+      prose: >-
+        Supply a registry id, an existing specification object or your own
+        named list. The example retrieves Cell Press guidance, confirms that an
+        existing object passes through unchanged, and applies a project
+        specification to a real plot.
+      code: |-
+        publisher_spec <- spec_get(
+          "cell_press"
+        )
+
+        same_spec <- spec_get(
+          publisher_spec
+        )
+
+        project_spec <- spec_get(
+          project_requirements
+        )
+
+        project_plot <- ggplot(
+          mpg,
+          aes(displ, hwy, colour = drv, shape = drv)
+        ) +
+          geom_point(size = 2.2, alpha = 0.8) +
+          labs(
+            title = "Clinical research report figure",
+            x = "Engine displacement (litres)",
+            y = "Highway fuel economy",
+            colour = "Drive layout",
+            shape = "Drive layout"
+          ) +
+          fig_apply_spec(
+            project_spec,
+            base_size = 12
+          )
+
+        project_report <- fig_check(
+          project_plot,
+          spec = project_spec,
+          column = "full",
+          height = 95,
+          dpi = 300,
+          format = "png"
+        )
+
+        publisher_spec
+        identical(same_spec, publisher_spec)
+        project_spec
+        project_plot
+        project_report
+      result: Cell Press is retrieved with its recorded source and review date; the existing object is unchanged; and the project list becomes a specification whose width, resolution, format and type-size checks pass on the real plot.
+
+fig_width:
+  introduction: >-
+    Retrieve a figure width from a publication, project or organisational
+    specification. Using the recorded value keeps the figure's dimensions tied
+    to the same specification used to build, export and verify it.
+  setup: |-
+    library(ggplot2)
+
+    cell_press_spec <- spec_get("cell_press")
+    report_spec <- spec_get(list(
+      name = "Clinical research report",
+      columns = list(half = 80, full = 160),
+      formats = "png",
+      dpi_min = 300
+    ))
+
+    width_plot <- ggplot(
+      mpg,
+      aes(displ, hwy, colour = drv, shape = drv)
+    ) +
+      geom_point(size = 2.2, alpha = 0.8) +
+      labs(
+        title = "Fuel economy by engine size",
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy",
+        colour = "Drive layout",
+        shape = "Drive layout"
+      ) +
+      fig_apply_spec(cell_press_spec, base_size = 10)
+  arguments:
+    spec:
+      prose: >-
+        Supply a registry id, an existing specification object or a named list
+        of requirements. The example retrieves one width from Cell Press and
+        another from a project specification created in R.
+      code: |-
+        publisher_width <- fig_width(
+          "cell_press",
+          column = "single"
+        )
+
+        project_width <- fig_width(
+          report_spec,
+          column = "full"
+        )
+
+        publisher_width
+        project_width
+      result: The Cell Press single-column width is 85 mm. The project specification returns its recorded full width of 160 mm.
+    column:
+      prose: >-
+        Choose one of the width names recorded in the specification. Here the
+        Cell Press single-column width is used to export a real figure, and the
+        saved TIFF is reopened to confirm that its physical width passes the
+        same requirement.
+      code: |-
+        fig_columns(cell_press_spec)
+
+        output_file <- file.path(
+          tempdir(),
+          "cell-press-single-width.tiff"
+        )
+
+        saved_file <- fig_save(
+          output_file,
+          width_plot,
+          spec = cell_press_spec,
+          column = "single",
+          height = 70,
+          dpi = 300,
+          check = FALSE
+        )
+
+        saved_check <- fig_check(
+          saved_file,
+          spec = cell_press_spec,
+          column = "single",
+          dpi = 300
+        )
+
+        saved_check[
+          saved_check$check == "Width",
+          c("requirement", "actual", "status")
+        ]
+      result: Cell Press records widths of 85, 114 and 174 mm. The exported image targets the 85 mm single-column width, and its saved-file width check passes.
+    units:
+      prose: >-
+        Request the result in millimetres, centimetres or inches. Only the unit
+        changes; all three values below describe the same physical width.
+      code: |-
+        equivalent_widths <- c(
+          mm = fig_width(cell_press_spec, "single", "mm"),
+          cm = fig_width(cell_press_spec, "single", "cm"),
+          inches = fig_width(cell_press_spec, "single", "in")
+        )
+
+        equivalent_widths
+      result: The same Cell Press width is returned as 85 mm, 8.5 cm or approximately 3.35 inches.
+
+fig_columns:
+  introduction: >-
+    See which named figure widths a specification provides before choosing one
+    for a plot. The names are not universal: some sources use single and
+    double, others add choices such as onehalf, triple, half or full.
+  setup: |-
+    library(ggplot2)
+
+    cell_press_spec <- spec_get("cell_press")
+    report_spec <- spec_get(list(
+      name = "Clinical research report",
+      columns = list(half = 80, full = 160),
+      formats = "png",
+      dpi_min = 300
+    ))
+
+    columns_plot <- ggplot(
+      mpg,
+      aes(displ, hwy, colour = drv, shape = drv)
+    ) +
+      geom_point(size = 2.2, alpha = 0.8) +
+      labs(
+        title = "Fuel economy by engine size",
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy",
+        colour = "Drive layout",
+        shape = "Drive layout"
+      ) +
+      fig_apply_spec(cell_press_spec, base_size = 10)
+  arguments:
+    spec:
+      prose: >-
+        Supply a registry id, an existing specification or a named list. The
+        example lists widths from both Cell Press and a project specification,
+        then uses Cell Press's one-and-a-half-column choice to export and check
+        a real figure.
+      code: |-
+        publisher_columns <- fig_columns(
+          "cell_press"
+        )
+
+        project_columns <- fig_columns(
+          report_spec
+        )
+
+        selected_column <- names(
+          publisher_columns
+        )[2]
+
+        output_file <- file.path(
+          tempdir(),
+          "cell-press-onehalf-width.tiff"
+        )
+
+        saved_file <- fig_save(
+          output_file,
+          columns_plot,
+          spec = cell_press_spec,
+          column = selected_column,
+          height = 80,
+          dpi = 300,
+          check = FALSE
+        )
+
+        saved_check <- fig_check(
+          saved_file,
+          spec = cell_press_spec,
+          column = selected_column,
+          dpi = 300
+        )
+
+        publisher_columns
+        project_columns
+        saved_check[
+          saved_check$check == "Width",
+          c("requirement", "actual", "status")
+        ]
+      result: Cell Press lists single, onehalf and double widths of 85, 114 and 174 mm. The project lists half and full widths of 80 and 160 mm. The TIFF exported with the onehalf choice passes its 114 mm saved-width check.
+
+spec_register:
+  introduction: >-
+    Add a publication specification that is not bundled with figspec. The new
+    entry is available throughout the current R session and is marked as
+    user-supplied whenever the registry is listed.
+  setup: |-
+    library(ggplot2)
+
+    registered_spec <- spec_register(
+      id = "research_methods_review",
+      name = "Research Methods Review",
+      source_url = "internal:author-guidelines-v2",
+      verified_on = Sys.Date(),
+      requirements = list(
+        columns = list(single = 85, full = 170),
+        height_max_mm = 220,
+        dpi_min = 300,
+        formats = c("png", "pdf"),
+        font_min_pt = 9,
+        font_max_pt = 12,
+        colour_mode = "RGB",
+        max_file_mb = 20
+      ),
+      not_stated = c(
+        "font_families", "min_line_pt", "max_line_pt",
+        "avoid_colour_pairs", "print_greyscale"
+      ),
+      house_style = list(
+        palette = c("#1B4965", "#CA6702", "#5C677D")
+      ),
+      publisher = "Example Research Society",
+      disciplines = c("health", "statistics"),
+      publication_stage = "all",
+      notes = "Example requirements for demonstrating a user entry."
+    )
+  arguments:
+    id:
+      prose: >-
+        Choose a short identifier that begins with a lower-case letter and uses
+        only lower-case letters, numbers and underscores. This is the name used
+        in later figspec calls. An id already used by a bundled profile is
+        rejected so that a local entry cannot silently hide it.
+      code: |-
+        registered_spec$id
+
+        same_entry <- spec_get(
+          "research_methods_review"
+        )
+
+        identical(
+          same_entry,
+          registered_spec
+        )
+      result: The entry can be retrieved with research_methods_review, and the retrieved specification is identical to the one returned when it was registered.
+    name:
+      prose: >-
+        Give the publication its full readable name. figspec uses this text in
+        check reports and messages, while id remains the shorter name used in
+        code.
+      code: |-
+        c(
+          id = registered_spec$id,
+          name = registered_spec$name
+        )
+      result: Reports identify the specification as Research Methods Review while R code can continue to use its shorter id.
+    source_url:
+      prose: >-
+        Record where the requirements came from. Use the public HTTP or HTTPS
+        guidance page when available; use a file: URI or an internal: label for
+        a private handbook or organisational decision.
+      code: |-
+        registered_spec$source_url
+      result: The example records internal:author-guidelines-v2, making clear that this source is maintained by the user rather than bundled by figspec.
+    verified_on:
+      prose: >-
+        Record when the source was last checked. Supply a Date or a real date in
+        YYYY-MM-DD form. figspec rejects invalid dates and dates in the future.
+      code: |-
+        registered_spec$verified_on
+      result: The entry stores today's date in YYYY-MM-DD form as its most recent source check.
+    requirements:
+      prose: >-
+        Include only rules stated by the source. Common fields cover figure
+        widths, maximum height, resolution, formats, type size, line weight,
+        colour mode and file size. The example applies these requirements to
+        all 234 mpg observations, exports a real PNG and checks the saved file.
+      code: |-
+        registered_plot <- ggplot(
+          mpg,
+          aes(displ, hwy, colour = drv, shape = drv)
+        ) +
+          geom_point(size = 2.2, alpha = 0.8) +
+          labs(
+            title = "Fuel economy by engine size",
+            x = "Engine displacement (litres)",
+            y = "Highway fuel economy",
+            colour = "Drive layout",
+            shape = "Drive layout"
+          ) +
+          fig_apply_spec(
+            "research_methods_review",
+            base_size = 10
+          )
+
+        output_file <- file.path(
+          tempdir(),
+          "registered-publication-figure.png"
+        )
+
+        saved_file <- fig_save(
+          output_file,
+          registered_plot,
+          spec = "research_methods_review",
+          column = "single",
+          height = 90,
+          dpi = 300
+        )
+
+        saved_report <- attr(
+          saved_file,
+          "figspec_report"
+        )
+
+        registered_plot
+        saved_report[
+          saved_report$check %in% c(
+            "Width", "Resolution", "File format", "Type size"
+          ),
+          c("check", "requirement", "actual", "status")
+        ]
+      result: The plot is built with the registered type and line rules, saved at the 85 mm single width and 300 dpi, and passes the saved-file checks for width, resolution, PNG format and type size.
+    house_style:
+      prose: >-
+        Store optional visual preferences separately from requirements. A
+        palette can identify the publication without being treated as a rule
+        that determines compliance. Invalid colours and requirement fields are
+        rejected here.
+      code: |-
+        publication_colours <- spec_style_palette(
+          "research_methods_review"
+        )
+
+        house_style_plot <- ggplot(
+          mpg,
+          aes(displ, hwy, colour = drv, shape = drv)
+        ) +
+          geom_point(size = 2.2, alpha = 0.8) +
+          scale_colour_manual(
+            values = publication_colours
+          ) +
+          labs(
+            title = "The publication's optional palette",
+            x = "Engine displacement (litres)",
+            y = "Highway fuel economy",
+            colour = "Drive layout",
+            shape = "Drive layout"
+          ) +
+          theme_minimal()
+
+        publication_colours
+        house_style_plot
+      result: The three recorded colours are applied to the three drive layouts. The palette remains a design choice and is not counted as a publication requirement by fig_check().
+    "...":
+      prose: >-
+        Add useful context such as the publisher, disciplines, publication
+        stage, notes, table rules or media rules. These fields make the entry
+        easier to find and interpret without changing the figure requirements.
+      code: |-
+        profile_row <- spec_list()
+        profile_row <- profile_row[
+          profile_row$id == "research_methods_review",
+          c(
+            "id", "name", "publisher", "disciplines",
+            "publication_stage", "origin"
+          )
+        ]
+
+        profile_row
+      result: The registry listing shows the publication name, publisher, health and statistics disciplines, all-stage scope and user origin recorded by the additional fields.
+
+spec_load:
+  introduction: >-
+    Load one or more reusable specifications from a YAML file maintained by a
+    publication, project or organisation. Loaded entries remain separate from
+    figspec's bundled profiles and last for the current R session.
+  setup: |-
+    library(ggplot2)
+
+    registry_file <- file.path(
+      tempdir(),
+      "research-unit-specifications.yml"
+    )
+
+    yaml::write_yaml(
+      list(
+        journals = list(
+          list(
+            id = "research_unit_report",
+            name = "Research Unit Report",
+            publisher = "Example Research Unit",
+            disciplines = c("health", "economics"),
+            source_url = "internal:report-guide-v4",
+            verified_on = as.character(Sys.Date()),
+            requirements = list(
+              columns = list(half = 80, full = 160),
+              height_max_mm = 120,
+              dpi_min = 300,
+              formats = c("png", "pdf"),
+              font_min_pt = 9,
+              font_max_pt = 12,
+              colour_mode = "RGB",
+              max_file_mb = 20
+            ),
+            not_stated = c(
+              "font_families", "min_line_pt", "max_line_pt",
+              "avoid_colour_pairs", "print_greyscale"
+            ),
+            house_style = list(
+              palette = c("#1B4965", "#CA6702", "#5C677D")
+            )
+          )
+        )
+      ),
+      registry_file
+    )
+  arguments:
+    path:
+      prose: >-
+        Supply the path to a YAML registry. The entire file is validated before
+        anything is added. The example loads one specification, applies it to
+        all 574 observations in ggplot2's economics data, exports a real PNG
+        and verifies the result.
+      code: |-
+        loaded_ids <- spec_load(
+          registry_file
+        )
+
+        loaded_spec <- spec_get(
+          "research_unit_report"
+        )
+
+        loaded_plot <- ggplot(
+          economics,
+          aes(date, unemploy)
+        ) +
+          geom_line(
+            colour = "#1B4965",
+            linewidth = 0.8
+          ) +
+          labs(
+            title = "Unemployment over time",
+            subtitle = "A 574-month example using a loaded specification",
+            x = NULL,
+            y = "People unemployed (thousands)",
+            caption = "Source: ggplot2::economics"
+          ) +
+          fig_apply_spec(
+            loaded_spec,
+            colour = FALSE,
+            shapes = FALSE,
+            base_size = 10
+          )
+
+        output_file <- file.path(
+          tempdir(),
+          "research-unit-report-figure.png"
+        )
+
+        saved_file <- fig_save(
+          output_file,
+          loaded_plot,
+          spec = loaded_spec,
+          column = "full",
+          height = 90,
+          dpi = 300
+        )
+
+        saved_report <- attr(
+          saved_file,
+          "figspec_report"
+        )
+
+        loaded_ids
+        spec_list()[
+          spec_list()$id %in% loaded_ids,
+          c("id", "name", "publisher", "origin")
+        ]
+        loaded_plot
+        saved_report[
+          saved_report$check %in% c(
+            "Width", "Resolution", "File format", "Type size"
+          ),
+          c("check", "requirement", "actual", "status")
+        ]
+      result: The YAML file adds research_unit_report as a user-supplied profile. Its 160 mm full width, 300 dpi resolution, PNG format and 9–12 pt type range all pass on the exported time-series figure.
+
+submission_check:
+  introduction: >-
+    Review a collection of figures in one operation. A concise summary shows
+    which figures pass, fail or still need information, while the complete
+    report for every figure remains available for closer inspection.
+  setup: |-
+    library(ggplot2)
+
+    submission_spec <- spec_get(list(
+      name = "Research report figure set",
+      columns = list(single = 85, double = 170),
+      height_max_mm = 220,
+      dpi_min = 300,
+      formats = "png",
+      font_min_pt = 9,
+      font_max_pt = 12,
+      colour_mode = "RGB",
+      max_file_mb = 20,
+      not_stated = c(
+        "font_families", "min_line_pt", "max_line_pt",
+        "avoid_colour_pairs", "print_greyscale"
+      )
+    ))
+
+    vehicles_plot <- ggplot(
+      mpg,
+      aes(displ, hwy, colour = drv, shape = drv)
+    ) +
+      geom_point(size = 2.2, alpha = 0.8) +
+      labs(
+        title = "Vehicle fuel economy",
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy",
+        colour = "Drive layout",
+        shape = "Drive layout"
+      ) +
+      fig_apply_spec(submission_spec, base_size = 10)
+
+    economy_plot <- ggplot(
+      economics,
+      aes(date, unemploy)
+    ) +
+      geom_line(colour = "#1B4965", linewidth = 0.8) +
+      labs(
+        title = "Unemployment over time",
+        x = NULL,
+        y = "People unemployed (thousands)"
+      ) +
+      fig_apply_spec(
+        submission_spec,
+        colour = FALSE,
+        shapes = FALSE,
+        base_size = 10
+      )
+
+    diamonds_plot <- ggplot(
+      diamonds,
+      aes(carat, fill = cut)
+    ) +
+      geom_histogram(binwidth = 0.1, position = "identity", alpha = 0.7) +
+      labs(
+        title = "Distribution of diamond size",
+        x = "Carat",
+        y = "Number of diamonds",
+        fill = "Cut"
+      ) +
+      fig_apply_spec(submission_spec, base_size = 10)
+
+    figures <- list(
+      vehicles = vehicles_plot,
+      economy = economy_plot,
+      diamonds = diamonds_plot
+    )
+    column_map <- c(
+      vehicles = "single",
+      economy = "double",
+      diamonds = "double"
+    )
+    file_column_map <- setNames(
+      unname(column_map),
+      paste0(names(column_map), ".png")
+    )
+
+    example_root <- tempfile("figspec-submission-")
+    dir.create(example_root)
+
+    save_figure_set <- function(directory) {
+      dir.create(directory, recursive = TRUE, showWarnings = FALSE)
+      paths <- vapply(names(figures), function(figure_name) {
+        fig_save(
+          file.path(directory, paste0(figure_name, ".png")),
+          figures[[figure_name]],
+          spec = submission_spec,
+          column = unname(column_map[[figure_name]]),
+          height = if (figure_name == "vehicles") 75 else 95,
+          dpi = 300,
+          check = FALSE
+        )
+      }, character(1))
+      unname(paths)
+    }
+  arguments:
+    x:
+      prose: >-
+        Supply a named list of live plots, one directory, or a character vector
+        of saved-file paths. The example checks three plots containing 234,
+        574 and 53,940 observations, exports them at their assigned widths and
+        then checks the written files as a second, complementary review.
+      code: |-
+        plot_review <- submission_check(
+          figures,
+          spec = submission_spec,
+          column = column_map,
+          dpi = 300
+        )
+
+        submission_directory <- file.path(
+          example_root,
+          "complete-set"
+        )
+        saved_files <- save_figure_set(
+          submission_directory
+        )
+
+        file_review <- submission_check(
+          saved_files,
+          spec = submission_spec,
+          column = file_column_map
+        )
+
+        plot_review
+        file_review
+      result: Both reviews contain one row for each of the three figures. The plot review can assess typography, colour and panel geometry; the file review confirms the actual dimensions, resolution, PNG format, validity and file size.
+    spec:
+      prose: >-
+        Supply a bundled registry id, an existing specification or a named list
+        of requirements. Leave it as NULL when you only want an inventory of
+        measurable properties and do not want pass or fail decisions.
+      code: |-
+        specified_review <- submission_check(
+          figures,
+          spec = submission_spec,
+          column = column_map,
+          dpi = 300
+        )
+
+        inspection_only <- submission_check(
+          figures
+        )
+
+        list(
+          against_specification = specified_review,
+          inspection_only = inspection_only
+        )
+      result: The first review compares every figure with the project specification. The second reports what figspec can measure without claiming that anything passes or fails.
+    column:
+      prose: >-
+        Use one width name when every figure has the same target, or provide a
+        named character vector when figures occupy different widths. Every name
+        must match a figure exactly so a typo cannot silently assign the wrong
+        width.
+      code: |-
+        one_width_review <- submission_check(
+          figures,
+          spec = submission_spec,
+          column = "double",
+          dpi = 300
+        )
+
+        mapped_width_review <- submission_check(
+          figures,
+          spec = submission_spec,
+          column = column_map,
+          dpi = 300
+        )
+
+        one_width_review[, c("file", "column")]
+        mapped_width_review[, c("file", "column")]
+      result: The first review assigns double to all three figures. The named mapping assigns single to vehicles and double to economy and diamonds.
+    dpi:
+      prose: >-
+        Provide the shared resolution when a saved raster does not record it.
+        figspec uses the supplied value to convert pixels into physical size;
+        it does not rewrite or resample the file.
+      code: |-
+        png_without_dpi <- file.path(
+          example_root,
+          "pixels-without-resolution.png"
+        )
+        grDevices::png(
+          png_without_dpi,
+          width = round(85 / 25.4 * 300),
+          height = 800
+        )
+        print(vehicles_plot)
+        grDevices::dev.off()
+
+        unresolved_dpi <- submission_check(
+          png_without_dpi,
+          spec = submission_spec,
+          column = "single"
+        )
+        supplied_dpi <- submission_check(
+          png_without_dpi,
+          spec = submission_spec,
+          column = "single",
+          dpi = 300
+        )
+
+        list(
+          without_dpi = submission_detail(
+            unresolved_dpi,
+            basename(png_without_dpi)
+          ),
+          with_dpi = submission_detail(
+            supplied_dpi,
+            basename(png_without_dpi)
+          )
+        )
+      result: Without a recorded or supplied resolution, the file's physical width and resolution remain unresolved. Supplying 300 dpi allows its 1,004 pixels to be interpreted as approximately 85 mm and both checks pass.
+    pattern:
+      prose: >-
+        When x is a directory, use a regular expression to select the files to
+        check. Matching is case-insensitive. Files that do not match remain
+        untouched and are not included in the result.
+      code: |-
+        pattern_directory <- file.path(
+          example_root,
+          "pattern-selection"
+        )
+        save_figure_set(pattern_directory)
+        writeLines(
+          "Supporting notes",
+          file.path(pattern_directory, "README.txt")
+        )
+
+        pattern_review <- submission_check(
+          pattern_directory,
+          spec = submission_spec,
+          column = "single",
+          pattern = "^vehicles[.]png$"
+        )
+
+        pattern_review[, c("file", "column", "result")]
+      result: Only vehicles.png is selected. The other PNG figures and README.txt remain in the directory but are not checked.
+    recursive:
+      prose: >-
+        Set recursive to TRUE when figures are organised in subdirectories.
+        FALSE checks only the selected directory itself; TRUE also checks
+        matching files below it.
+      code: |-
+        recursive_directory <- file.path(
+          example_root,
+          "recursive-selection"
+        )
+        nested_directory <- file.path(
+          recursive_directory,
+          "supplement"
+        )
+        dir.create(
+          nested_directory,
+          recursive = TRUE
+        )
+
+        fig_save(
+          file.path(recursive_directory, "main.png"),
+          vehicles_plot,
+          spec = submission_spec,
+          column = "single",
+          height = 75,
+          dpi = 300,
+          check = FALSE
+        )
+        fig_save(
+          file.path(nested_directory, "supplement.png"),
+          economy_plot,
+          spec = submission_spec,
+          column = "single",
+          height = 75,
+          dpi = 300,
+          check = FALSE
+        )
+
+        top_level_only <- submission_check(
+          recursive_directory,
+          spec = submission_spec,
+          column = "single",
+          recursive = FALSE
+        )
+        including_nested <- submission_check(
+          recursive_directory,
+          spec = submission_spec,
+          column = "single",
+          recursive = TRUE
+        )
+
+        list(
+          top_level_only = top_level_only,
+          including_nested = including_nested
+        )
+      result: The non-recursive review contains main.png only. The recursive review contains both main.png and the supplementary figure stored one directory below it.
+    art_type:
+      prose: >-
+        Choose which resolution rule applies when the artwork type is already
+        known. Auto examines live plots; an explicit value is useful when the
+        same visual content will be delivered as colour artwork, black and
+        white artwork, line art or a combination.
+      code: |-
+        cell_plot <- ggplot(
+          mpg,
+          aes(displ, hwy, colour = drv, shape = drv)
+        ) +
+          geom_point(size = 2.2) +
+          fig_apply_spec("cell_press")
+
+        colour_review <- submission_check(
+          list(figure = cell_plot),
+          spec = "cell_press",
+          column = "single",
+          dpi = 300,
+          art_type = "colour"
+        )
+        line_art_review <- submission_check(
+          list(figure = cell_plot),
+          spec = "cell_press",
+          column = "single",
+          dpi = 300,
+          art_type = "line"
+        )
+
+        colour_resolution <- submission_detail(
+          colour_review,
+          "figure"
+        )
+        colour_resolution <- colour_resolution[
+          colour_resolution$check == "Resolution",
+        ]
+        line_resolution <- submission_detail(
+          line_art_review,
+          "figure"
+        )
+        line_resolution <- line_resolution[
+          line_resolution$check == "Resolution",
+        ]
+
+        rbind(
+          colour = colour_resolution,
+          line_art = line_resolution
+        )
+      result: At 300 dpi the colour interpretation passes Cell Press's 300 dpi rule, while the line-art interpretation fails its stricter 1,000 dpi rule.
+
+submission_detail:
+  introduction: >-
+    A collection review is intentionally brief. Open one figure's full report
+    when you need to see why it failed, which values were measured or which
+    requirements could not be assessed. This example checks two plots made
+    from all 234 rows of ggplot2's mpg data. The second plot deliberately uses
+    text below the project's minimum so there is a real problem to diagnose.
+  setup: |-
+    library(ggplot2)
+
+    detail_spec <- spec_get(list(
+      name = "Research report",
+      columns = list(single = 85),
+      dpi_min = 300,
+      formats = "png",
+      font_min_pt = 9,
+      font_max_pt = 12,
+      colour_mode = "RGB",
+      not_stated = c(
+        "font_families", "min_line_pt", "max_line_pt",
+        "avoid_colour_pairs", "print_greyscale"
+      )
+    ))
+
+    ready_plot <- ggplot(
+      mpg,
+      aes(displ, hwy, colour = drv, shape = drv)
+    ) +
+      geom_point(size = 2.2, alpha = 0.8) +
+      labs(
+        title = "Vehicle fuel economy",
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy",
+        colour = "Drive layout",
+        shape = "Drive layout"
+      ) +
+      fig_apply_spec(detail_spec, base_size = 10)
+
+    small_text_plot <- ready_plot +
+      theme(
+        text = element_text(size = 7),
+        axis.text = element_text(size = 7),
+        plot.title = element_text(size = 7)
+      )
+
+    detail_review <- submission_check(
+      list(
+        ready = ready_plot,
+        text_too_small = small_text_plot
+      ),
+      spec = detail_spec,
+      column = "single",
+      dpi = 300
+    )
+  arguments:
+    x:
+      prose: >-
+        Pass the complete result from submission_check(). Keep that object
+        intact: it contains the short summary you can see and the full report
+        stored for each figure.
+      code: |-
+        ready_detail <- submission_detail(
+          x = detail_review,
+          file = "ready"
+        )
+
+        ready_detail
+      result: The full report for ready lists every requirement that figspec assessed, including width, resolution, typography, colour and panel geometry.
+    file:
+      prose: >-
+        Choose one name exactly as it appears in the summary's file column.
+        For a named list of plots this is the list name; for saved figures it
+        is the displayed file name.
+      code: |-
+        problem_detail <- submission_detail(
+          detail_review,
+          file = "text_too_small"
+        )
+
+        problem_detail[
+          problem_detail$status == "fail",
+          c("check", "requirement", "actual", "status")
+        ]
+      result: The detailed report identifies Type size as the failed check, records the required 9–12 pt range and shows that the smallest text is 7 pt.
+
+fig_suggest_art_type:
+  introduction: >-
+    Resolution requirements depend on the kind of artwork being exported. Run
+    the setup once, then use these examples to see how figspec classifies a
+    real plot and how a publication or project specification supplies the
+    thresholds needed to make the final choice.
+  setup: |-
+    library(ggplot2)
+
+    colour_plot <- ggplot(
+      mpg,
+      aes(displ, hwy, colour = drv, shape = drv)
+    ) +
+      geom_point(size = 2.2, alpha = 0.8) +
+      scale_colour_figspec("okabe_ito") +
+      labs(
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy",
+        colour = "Drive layout",
+        shape = "Drive layout"
+      ) +
+      theme_minimal()
+
+    resolution_spec <- list(
+      name = "Research report",
+      dpi_min = 300,
+      dpi_bw = 600,
+      dpi_line_art = 1000,
+      dpi_combination = 600
+    )
+  arguments:
+    plot:
+      prose: >-
+        Pass the ggplot object before exporting it. figspec examines the marks,
+        fills and colours that the plot will draw; it does not infer the
+        category from the function names used to build the plot.
+      code: |-
+        suggested_type <- fig_suggest_art_type(
+          plot = colour_plot
+        )
+
+        suggested_type
+      result: The function returns "colour" because the plot uses coloured points. That value can be passed to fig_check() or fig_save() as art_type = "colour".
+    spec:
+      prose: >-
+        Supply a bundled registry id or your own specification when you also
+        want to see the available resolution thresholds. The argument keeps
+        its original name for compatibility and is not limited to journals.
+      code: |-
+        suggested_with_rules <- fig_suggest_art_type(
+          colour_plot,
+          spec = resolution_spec
+        )
+
+        # A bundled profile works in the same position:
+        # fig_suggest_art_type(colour_plot, spec = "cell_press")
+
+        suggested_with_rules
+      result: The plot is still classified as colour, and the report also shows the project's 300 dpi colour, 600 dpi greyscale and combination, and 1,000 dpi line-art thresholds.
+
+fig_refit:
+  introduction: >-
+    Use this function when a complete set of editable plots must be prepared
+    for a new destination. The examples use 234 vehicle observations and 574
+    monthly economic observations, export real files and then inspect the
+    resulting submission report. The destination can be a journal, report,
+    organisation or any other recorded specification.
+  setup: |-
+    library(ggplot2)
+
+    vehicle_plot <- ggplot(
+      mpg,
+      aes(displ, hwy, colour = drv, shape = drv)
+    ) +
+      geom_point(size = 2.2, alpha = 0.8) +
+      scale_colour_figspec("okabe_ito") +
+      labs(
+        title = "Vehicle fuel economy",
+        x = "Engine displacement (litres)",
+        y = "Highway fuel economy",
+        colour = "Drive layout",
+        shape = "Drive layout"
+      ) +
+      theme_minimal(base_size = 14)
+
+    economy_plot <- ggplot(
+      economics,
+      aes(date, unemploy)
+    ) +
+      geom_line(colour = "#1B4965", linewidth = 0.8) +
+      labs(
+        title = "Unemployment over time",
+        x = NULL,
+        y = "People unemployed (thousands)"
+      ) +
+      theme_minimal(base_size = 14)
+
+    refit_plots <- list(
+      vehicles = vehicle_plot,
+      economy = economy_plot
+    )
+
+    handoff_spec <- list(
+      name = "Research report",
+      columns = list(compact = 85, full = 170),
+      dpi_min = 300,
+      formats = c("png", "tiff"),
+      font_min_pt = 9,
+      font_max_pt = 12,
+      colour_mode = "RGB",
+      not_stated = c(
+        "font_families", "min_line_pt", "max_line_pt",
+        "avoid_colour_pairs", "print_greyscale"
+      )
+    )
+
+    refit_root <- tempfile("figspec-refit-")
+    dir.create(refit_root)
+  arguments:
+    plots:
+      prose: >-
+        Supply a named list of live plots. The names become file names, while
+        keeping the plots editable allows figspec to adjust typography before
+        creating new files.
+      code: |-
+        plot_set_review <- fig_refit(
+          plots = refit_plots,
+          spec = handoff_spec,
+          output_dir = file.path(refit_root, "plot-set"),
+          column = "full",
+          format = "png"
+        )
+
+        plot_set_review
+      result: Two checked PNG files, vehicles.png and economy.png, are written from the original plot objects at the specification's 170 mm full width.
+    spec:
+      prose: >-
+        Select the new destination by registry id or pass a project or
+        organisational specification directly. The same specification is used
+        to retheme, size, export and check every plot.
+      code: |-
+        project_review <- fig_refit(
+          list(vehicles = vehicle_plot),
+          spec = handoff_spec,
+          output_dir = file.path(refit_root, "project-specification"),
+          column = "compact",
+          format = "png"
+        )
+
+        # A bundled profile works in the same position:
+        # spec = "pnas"
+
+        project_review
+      result: The figure is prepared against the supplied Research report specification rather than a bundled journal profile.
+    output_dir:
+      prose: >-
+        Choose a dedicated output directory for the new figure set. figspec
+        creates it when necessary and writes each plot under its list name.
+      code: |-
+        new_directory <- file.path(
+          refit_root,
+          "report-ready"
+        )
+        directory_review <- fig_refit(
+          list(vehicles = vehicle_plot),
+          handoff_spec,
+          output_dir = new_directory,
+          column = "compact",
+          format = "png"
+        )
+
+        list(
+          review = directory_review,
+          files = list.files(new_directory)
+        )
+      result: The new directory contains vehicles.png, and the returned review records the checks performed on that exact file.
+    column:
+      prose: >-
+        Use one width name for every plot or provide a named mapping when the
+        figures occupy different amounts of space. Every mapping name must
+        match a plot name exactly.
+      code: |-
+        mapped_review <- fig_refit(
+          refit_plots,
+          handoff_spec,
+          output_dir = file.path(refit_root, "mixed-widths"),
+          column = c(
+            vehicles = "compact",
+            economy = "full"
+          ),
+          format = "png"
+        )
+
+        mapped_review[, c("file", "column", "result")]
+      result: vehicles.png is exported at the 85 mm compact width and economy.png at the 170 mm full width; the returned rows preserve that mapping.
+    retheme:
+      prose: >-
+        Leave this TRUE to apply the new specification's typography before
+        export. Set it to FALSE only when the plots have already been styled
+        correctly and you want figspec to preserve that styling unchanged.
+      code: |-
+        themed_review <- fig_refit(
+          list(vehicles = vehicle_plot),
+          handoff_spec,
+          output_dir = file.path(refit_root, "with-retheming"),
+          column = "compact",
+          retheme = TRUE,
+          format = "png"
+        )
+        unchanged_review <- suppressWarnings(
+          fig_refit(
+            list(vehicles = vehicle_plot),
+            handoff_spec,
+            output_dir = file.path(refit_root, "without-retheming"),
+            column = "compact",
+            retheme = FALSE,
+            format = "png"
+          )
+        )
+
+        themed_type <- submission_detail(
+          themed_review,
+          "vehicles.png"
+        )
+        themed_type <- themed_type[
+          themed_type$check == "Type size",
+        ]
+        unchanged_type <- submission_detail(
+          unchanged_review,
+          "vehicles.png"
+        )
+        unchanged_type <- unchanged_type[
+          unchanged_type$check == "Type size",
+        ]
+
+        rbind(
+          rethemed = themed_type,
+          unchanged = unchanged_type
+        )[, c("check", "requirement", "actual", "status")]
+      result: Retheming brings the plot into the required 9–12 pt range. Preserving the original 14 pt theme leaves a Type size failure visible in the second report.
+    format:
+      prose: >-
+        Supply a file extension without a dot when you need a particular
+        accepted format. If it is omitted, figspec chooses the first format in
+        the specification that R can write reliably.
+      code: |-
+        png_review <- fig_refit(
+          list(economy = economy_plot),
+          handoff_spec,
+          output_dir = file.path(refit_root, "explicit-format"),
+          column = "full",
+          format = "png"
+        )
+
+        png_review[, c("file", "result")]
+      result: The exported file is named economy.png and its detailed report confirms that PNG is accepted by the specification.
+
+table_spec:
+  introduction: >-
+    Table instructions are usually editorial rather than measurements that can
+    be verified automatically. This lookup keeps them beside the figure
+    requirements so the same source and review date remain visible while a
+    manuscript, report or presentation is being prepared.
+  setup: |-
+    custom_table_spec <- list(
+      name = "Annual research report",
+      source_url = "internal:report-style-guide",
+      verified_on = as.character(Sys.Date()),
+      tables = list(
+        orientation = "portrait",
+        title_style = "Short title above the table",
+        notes = "Define abbreviations below the table"
+      )
+    )
+  arguments:
+    spec:
+      prose: >-
+        Supply a bundled registry id or a specification maintained by your
+        project or organisation. The returned object contains only the table
+        instructions, together with their source and review date.
+      code: |-
+        nature_table_rules <- table_spec(
+          spec = "nature"
+        )
+        report_table_rules <- table_spec(
+          spec = custom_table_spec
+        )
+
+        list(
+          publication = nature_table_rules,
+          project = report_table_rules
+        )
+      result: The publication lookup returns Nature's recorded table instructions, while the project lookup returns the portrait orientation, title placement and abbreviation note defined in the local specification.
+
+media_spec:
+  introduction: >-
+    Video and audio files have requirements that ordinary figure checks cannot
+    assess. Use this lookup to see the accepted containers, frame limits,
+    codec, bit rate and file-size rules recorded for a publication or project.
+  setup: |-
+    project_media_spec <- list(
+      name = "Research media handoff",
+      source_url = "internal:media-guide",
+      verified_on = as.character(Sys.Date()),
+      media = list(
+        video_formats = "mp4",
+        video_codec = "h264",
+        frame_max = list(width = 1280, height = 720),
+        max_file_mb = 5
+      )
+    )
+  arguments:
+    spec:
+      prose: >-
+        Supply a bundled registry id or your own specification. If no media
+        rules are recorded, figspec says so instead of treating the absence of
+        data as permission to use any format.
+      code: |-
+        science_media_rules <- media_spec(
+          spec = "science"
+        )
+        project_media_rules <- media_spec(
+          spec = project_media_spec
+        )
+
+        list(
+          publication = science_media_rules,
+          project = project_media_rules
+        )
+      result: The two lookups return their stated formats, frame limits and other media rules, each with the specification name, source and date last checked.
+
+media_check:
+  introduction: >-
+    These examples create a real 640 × 360 pixel MP4, read it back from disk
+    and compare its saved properties with a media specification. ffprobe adds
+    codec and bit-rate inspection when it is installed; properties that cannot
+    be read are reported as unknown rather than guessed.
+  setup: |-
+    ffmpeg <- Sys.which("ffmpeg")
+    if (!nzchar(ffmpeg)) {
+      stop("This example requires FFmpeg.")
+    }
+
+    media_file <- tempfile(fileext = ".mp4")
+    ffmpeg_output <- system2(
+      ffmpeg,
+      c(
+        "-loglevel", "error", "-y",
+        "-f", "lavfi", "-i",
+        "color=c=0x1B4965:s=640x360:d=0.5",
+        "-c:v", "libx264",
+        "-pix_fmt", "yuv420p",
+        media_file
+      ),
+      stdout = TRUE,
+      stderr = TRUE
+    )
+    if (!is.null(attr(ffmpeg_output, "status"))) {
+      stop("FFmpeg could not create the example video.")
+    }
+
+    video_spec <- list(
+      name = "Research media handoff",
+      source_url = "internal:media-guide",
+      verified_on = as.character(Sys.Date()),
+      media = list(
+        video_formats = "mp4",
+        video_codec = "h264",
+        frame_max = list(width = 1280, height = 720),
+        max_file_mb = 5
+      )
+    )
+  arguments:
+    path:
+      prose: >-
+        Pass one existing media file. figspec inspects the actual file rather
+        than trusting its extension, so a damaged or incorrectly named file is
+        reported as invalid.
+      code: |-
+        media_report <- media_check(
+          path = media_file,
+          spec = video_spec
+        )
+
+        media_report
+      result: The saved MP4 is opened and reported as a valid 640 × 360 H.264 file below the 1,280 × 720 frame limit and 5 MB size limit.
+    spec:
+      prose: >-
+        Select the media requirements by registry id or pass a project or
+        organisational specification. Only the media part of the specification
+        is used for this check.
+      code: |-
+        project_media_report <- media_check(
+          media_file,
+          spec = video_spec
+        )
+
+        # A bundled profile works in the same position:
+        science_media_report <- media_check(
+          media_file,
+          spec = "science"
+        )
+
+        list(
+          project = project_media_report,
+          publication = science_media_report
+        )
+      result: Both reports inspect the same real file, but each applies the formats, codec, frame limit and file-size rule recorded by its own specification.
+
+graphical_abstract_spec:
+  introduction: >-
+    A graphical abstract may have a different canvas, resolution, format and
+    text limit from the figures inside the article or report. This function
+    retrieves those separate requirements without mixing them into an ordinary
+    figure check.
+  setup: |-
+    project_abstract_spec <- list(
+      name = "Research summary card",
+      source_url = "internal:summary-card-guide",
+      verified_on = as.character(Sys.Date()),
+      graphical_abstract = list(
+        width_mm = 120,
+        height_mm = 70,
+        dpi_min = 300,
+        formats = "png",
+        max_characters = 180
+      )
+    )
+  arguments:
+    spec:
+      prose: >-
+        Supply a bundled registry id or your own specification. If the selected
+        profile has no graphical-abstract rules on record, figspec reports the
+        gap instead of borrowing ordinary figure dimensions.
+      code: |-
+        rsc_abstract_rules <- graphical_abstract_spec(
+          spec = "rsc"
+        )
+        project_abstract_rules <- graphical_abstract_spec(
+          spec = project_abstract_spec
+        )
+
+        list(
+          publication = rsc_abstract_rules,
+          project = project_abstract_rules
+        )
+      result: The RSC profile returns its 80 × 40 mm graphical-abstract size and 250-character limit; the project profile returns its separate 120 × 70 mm PNG specification.
+
+figspec_knitr_options:
+  introduction: >-
+    Figures created inside R Markdown or Quarto need the same deliberate size
+    and resolution as figures saved from an R script. These examples translate
+    a specification into the four settings knitr uses: figure width, figure
+    height, resolution and graphics device.
+  setup: |-
+    report_chunk_spec <- list(
+      name = "Research report",
+      columns = list(compact = 85, full = 170),
+      formats = "png",
+      dpi_min = 300,
+      dpi_line_art = 600
+    )
+
+    slide_chunk_spec <- list(
+      name = "Presentation slide",
+      formats = "png",
+      dpi_min = 192
+    )
+  arguments:
+    spec:
+      prose: >-
+        Supply a bundled registry id or your own project or organisational
+        specification. The returned settings can be applied to one chunk or to
+        the whole document.
+      code: |-
+        report_options <- figspec_knitr_options(
+          spec = report_chunk_spec,
+          column = "full"
+        )
+
+        # A bundled profile works in the same position:
+        publication_options <- figspec_knitr_options(
+          spec = "plos_one",
+          column = "single"
+        )
+
+        list(
+          project = report_options,
+          publication = publication_options
+        )
+      result: Each specification produces its own width, height, resolution and graphics device settings, ready to pass to knitr.
+    column:
+      prose: >-
+        Choose one of the widths named in the specification. figspec converts
+        the recorded millimetres to inches because that is the unit knitr uses
+        for fig.width and fig.height.
+      code: |-
+        compact_options <- figspec_knitr_options(
+          report_chunk_spec,
+          column = "compact"
+        )
+        full_options <- figspec_knitr_options(
+          report_chunk_spec,
+          column = "full"
+        )
+
+        c(
+          compact_width_in = compact_options$fig.width,
+          full_width_in = full_options$fig.width
+        )
+      result: The 85 mm compact width becomes approximately 3.35 inches and the 170 mm full width becomes approximately 6.69 inches.
+    height:
+      prose: >-
+        Set the intended figure height when the default three-quarter aspect
+        ratio is not suitable. The value uses the unit selected by units.
+      code: |-
+        short_options <- figspec_knitr_options(
+          report_chunk_spec,
+          column = "full",
+          height = 90,
+          units = "mm"
+        )
+
+        short_options[c("fig.width", "fig.height")]
+      result: The figure remains 170 mm wide and is set to exactly 90 mm high, expressed to knitr as approximately 6.69 × 3.54 inches.
+    units:
+      prose: >-
+        State whether explicit width and height values are millimetres,
+        centimetres or inches. The returned chunk dimensions are always in
+        inches because knitr requires them that way.
+      code: |-
+        centimetre_options <- figspec_knitr_options(
+          slide_chunk_spec,
+          width = 16,
+          height = 9,
+          units = "cm"
+        )
+
+        centimetre_options[c("fig.width", "fig.height")]
+      result: A 16 × 9 cm request becomes approximately 6.30 × 3.54 inches without changing the intended physical size.
+    width:
+      prose: >-
+        Supply an explicit width when a specification has no named columns or
+        when the output format uses a project-specific canvas. Do not combine
+        width with column.
+      code: |-
+        slide_options <- figspec_knitr_options(
+          slide_chunk_spec,
+          width = 12,
+          height = 6.75,
+          units = "in"
+        )
+
+        slide_options
+      result: The presentation figure is configured as a 12 × 6.75 inch PNG at the project's recorded 192 dpi.
+    art_type:
+      prose: >-
+        Choose the resolution category when the document setup already knows
+        what kind of artwork its chunks will produce. With "auto", no plot is
+        available yet, so figspec uses the strictest recorded threshold.
+      code: |-
+        colour_options <- figspec_knitr_options(
+          report_chunk_spec,
+          column = "full",
+          art_type = "colour"
+        )
+        line_options <- figspec_knitr_options(
+          report_chunk_spec,
+          column = "full",
+          art_type = "line"
+        )
+
+        c(
+          colour_dpi = colour_options$dpi,
+          line_dpi = line_options$dpi
+        )
+      result: Colour output uses the recorded 300 dpi minimum, while line art uses the stricter 600 dpi requirement.
+
+figspec_knitr_setup:
+  introduction: >-
+    Use this function once in a document's setup chunk to make the chosen
+    figure settings the defaults for later chunks. Each example applies the
+    settings and then reads them back from knitr so the effect is visible.
+  setup: |-
+    if (!requireNamespace("knitr", quietly = TRUE)) {
+      stop("This example requires knitr.")
+    }
+
+    document_spec <- list(
+      name = "Research report",
+      columns = list(compact = 85, full = 170),
+      formats = "png",
+      dpi_min = 300,
+      dpi_line_art = 600
+    )
+
+    presentation_spec <- list(
+      name = "Presentation slide",
+      formats = "png",
+      dpi_min = 192
+    )
+  arguments:
+    spec:
+      prose: >-
+        Supply the publication, project or organisational specification that
+        should govern figures in the document. The argument retains its
+        original name for compatibility.
+      code: |-
+        figspec_knitr_setup(
+          spec = document_spec,
+          column = "full"
+        )
+
+        knitr::opts_chunk$get(
+          c("fig.width", "fig.height", "dpi", "dev")
+        )
+      result: The current knitr session now uses the Research report's full width, strictest recorded resolution and PNG device as its defaults.
+    column:
+      prose: >-
+        Choose which named width later chunks should use by default. Changing
+        this value updates the physical figure width for the whole document.
+      code: |-
+        figspec_knitr_setup(
+          document_spec,
+          column = "compact"
+        )
+        compact_width <- knitr::opts_chunk$get("fig.width")
+
+        figspec_knitr_setup(
+          document_spec,
+          column = "full"
+        )
+        full_width <- knitr::opts_chunk$get("fig.width")
+
+        c(compact = compact_width, full = full_width)
+      result: The defaults change from approximately 3.35 inches for compact figures to 6.69 inches for full-width figures.
+    height:
+      prose: >-
+        Set a document-wide figure height when the default aspect ratio is not
+        appropriate for the report or presentation layout.
+      code: |-
+        figspec_knitr_setup(
+          document_spec,
+          column = "full",
+          height = 90,
+          units = "mm"
+        )
+
+        knitr::opts_chunk$get(
+          c("fig.width", "fig.height")
+        )
+      result: Later chunks default to figures measuring 170 × 90 mm, represented internally by knitr in inches.
+    units:
+      prose: >-
+        State the unit used by explicit width and height values. This lets a
+        presentation use inches while a report specification continues to use
+        millimetres or centimetres.
+      code: |-
+        figspec_knitr_setup(
+          presentation_spec,
+          width = 12,
+          height = 6.75,
+          units = "in"
+        )
+
+        knitr::opts_chunk$get(
+          c("fig.width", "fig.height")
+        )
+      result: The active defaults become exactly 12 × 6.75 inches.
+    width:
+      prose: >-
+        Set an explicit document-wide width when the specification does not
+        provide named columns. Leave column unset when using this argument.
+      code: |-
+        figspec_knitr_setup(
+          presentation_spec,
+          width = 10,
+          height = 5.625,
+          units = "in"
+        )
+
+        knitr::opts_chunk$get(
+          c("fig.width", "fig.height", "dpi")
+        )
+      result: Later chunks use a 10 × 5.625 inch canvas at the presentation specification's 192 dpi.
+    art_type:
+      prose: >-
+        Select the resolution category that should apply to later chunks. Use
+        an explicit category when all figures in the document share that kind
+        of artwork; otherwise set it on individual chunks as needed.
+      code: |-
+        figspec_knitr_setup(
+          document_spec,
+          column = "full",
+          art_type = "colour"
+        )
+        colour_dpi <- knitr::opts_chunk$get("dpi")
+
+        figspec_knitr_setup(
+          document_spec,
+          column = "full",
+          art_type = "line"
+        )
+        line_dpi <- knitr::opts_chunk$get("dpi")
+
+        c(colour = colour_dpi, line = line_dpi)
+      result: The document default changes from 300 dpi for colour figures to 600 dpi for line art.
+
+registry_status:
+  introduction: >-
+    Use this summary to see when every specification was last checked and how
+    much of its field list has been reviewed. It distinguishes a requirement
+    recorded from the source, a field reviewed but not stated, and a field
+    that still needs review.
+  setup: |-
+    today <- Sys.Date()
+  arguments:
+    max_age_days:
+      prose: >-
+        Choose how old a review may be before it is flagged. This changes only
+        the stale indicator; it does not remove or alter any specification.
+      code: |-
+        annual_review_status <- registry_status(
+          max_age_days = 365,
+          as_of = today
+        )
+
+        annual_review_status[
+          order(annual_review_status$age_days, decreasing = TRUE),
+          c("id", "verified_on", "age_days", "stale")
+        ]
+      result: Every registry profile is listed with its review date and age, and profiles older than 365 days are marked for attention.
+    as_of:
+      prose: >-
+        Supply the date from which ages should be calculated. The default is
+        today; an explicit date is useful for reproducible reports and tests.
+      code: |-
+        dated_status <- registry_status(
+          max_age_days = 365,
+          as_of = as.Date("2026-09-05")
+        )
+
+        dated_status[
+          , c(
+            "id", "verified_on", "age_days", "stale",
+            "stated", "confirmed_absent", "unharvested"
+          )
+        ]
+      result: The age and stale columns are calculated as they stood on 5 September 2026, while the three coverage columns account for every supported requirement field.
+
+registry_stale_entries:
+  introduction: >-
+    Use this focused check when you want the ids of specifications whose source
+    pages are due to be reviewed again. It reports the entries and returns
+    their ids so they can be passed into an updating workflow.
+  setup: |-
+    today <- Sys.Date()
+  arguments:
+    max_age_days:
+      prose: >-
+        Set the maximum acceptable age in days. A shorter interval produces a
+        larger review list; a longer interval limits the result to older
+        records.
+      code: |-
+        due_for_quarterly_review <- registry_stale_entries(
+          max_age_days = 90,
+          as_of = today
+        )
+
+        due_for_quarterly_review
+      result: The function reports profiles more than 90 days old and invisibly returns their registry ids for follow-up.
+    as_of:
+      prose: >-
+        Set the date against which review ages are measured. Using an explicit
+        date makes a maintenance report reproducible.
+      code: |-
+        due_on_review_date <- registry_stale_entries(
+          max_age_days = 90,
+          as_of = as.Date("2026-09-05")
+        )
+
+        due_on_review_date
+      result: The returned ids are those whose last review was more than 90 days before 5 September 2026.
+
+registry_check_sources:
+  introduction: >-
+    A stored source address can stop working even when the registry file itself
+    has not changed. This function asks the selected pages whether they still
+    respond and separates missing pages from temporary failures, redirects and
+    sites that block automated requests. It requires an internet connection.
+  setup: |-
+    # No setup is required. The examples make live network requests.
+  arguments:
+    ids:
+      prose: >-
+        Supply one or more registry ids when you want to check selected source
+        pages. Leave this NULL to review every bundled profile.
+      code: |-
+        selected_sources <- registry_check_sources(
+          ids = c("plos_one", "cell_press"),
+          timeout = 10
+        )
+
+        selected_sources
+      result: One row is returned for each selected profile, with the original address, HTTP status, verdict and any final address reached after redirection.
+    timeout:
+      prose: >-
+        Set how many seconds each source request may take. A larger value can
+        help with slow publisher sites but also makes a full registry review
+        take longer.
+      code: |-
+        patient_source_check <- registry_check_sources(
+          ids = "plos_one",
+          timeout = 20
+        )
+
+        patient_source_check
+      result: The PLOS ONE source is given up to 20 seconds to respond; an unanswered request is reported as unreachable rather than being called a broken page.
+
+registry_entry_template:
+  introduction: >-
+    Start a new specification with a complete YAML template instead of trying
+    to remember the registry schema. The template separates requirements that
+    are stated, requirements confirmed as absent and fields that have not yet
+    been reviewed.
+  setup: |-
+    # No setup is required.
+  arguments:
+    id:
+      prose: >-
+        Choose a short stable id that begins with a lower-case letter and uses
+        only lower-case letters, numbers and underscores. Users will type this
+        id when selecting the specification.
+      code: |-
+        template_by_id <- registry_entry_template(
+          id = "example_research_report",
+          name = "Example research report",
+          source_url = "internal:report-style-guide"
+        )
+
+        template_by_id
+      result: A YAML entry beginning with example_research_report is printed and returned as text, ready to complete and validate.
+    name:
+      prose: >-
+        Use the full human-readable name of the publication, project or
+        organisation. It is shown in reports, while the shorter id is used in
+        code.
+      code: |-
+        named_template <- registry_entry_template(
+          id = "global_health_report",
+          name = "Global Health Research Report",
+          source_url = "internal:global-health-style"
+        )
+
+        named_template
+      result: The generated entry keeps the full report name for user-facing summaries and the shorter id for function calls.
+    source_url:
+      prose: >-
+        Record the page or internal document from which the requirements will
+        be taken. Keeping it in the template makes later checking and updating
+        possible.
+      code: |-
+        sourced_template <- registry_entry_template(
+          id = "example_journal",
+          name = "Example Journal",
+          source_url = "https://example.org/author-guidance"
+        )
+
+        sourced_template
+      result: The source address is written into the template alongside today's review date so future maintainers can trace and revisit it.
+
+registry_validate_file:
+  introduction: >-
+    Validate a registry file before loading or contributing it. The check reads
+    the actual YAML and reports all detected problems together, including
+    missing provenance, invalid dates, unsupported fields and impossible
+    numeric values.
+  setup: |-
+    valid_registry_file <- tempfile(fileext = ".yml")
+    writeLines(
+      c(
+        "journals:",
+        "- id: research_report",
+        "  name: Research report",
+        "  source_url: internal:report-guide",
+        paste0("  verified_on: '", Sys.Date(), "'"),
+        "  requirements:",
+        "    columns: {compact: 85, full: 170}",
+        "    dpi_min: 300",
+        "    formats: [png]"
+      ),
+      valid_registry_file
+    )
+
+    invalid_registry_file <- tempfile(fileext = ".yml")
+    writeLines(
+      c(
+        "journals:",
+        "- id: Invalid ID",
+        "  name: Broken example",
+        "  verified_on: yesterday",
+        "  requirements:",
+        "    dpi_min: -10",
+        "    invented_field: true"
+      ),
+      invalid_registry_file
+    )
+  arguments:
+    path:
+      prose: >-
+        Pass one YAML file in figspec registry format. Validation does not add
+        its entries to the current session, so you can correct problems before
+        calling spec_load().
+      code: |-
+        validation_results <- c(
+          valid = registry_validate_file(
+            path = valid_registry_file
+          ),
+          invalid = registry_validate_file(
+            path = invalid_registry_file
+          )
+        )
+
+        validation_results
+      result: The valid file returns TRUE. The invalid file returns FALSE and reports its malformed id, missing source, invalid date, negative resolution and unsupported field together.

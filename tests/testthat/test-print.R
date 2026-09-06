@@ -43,7 +43,7 @@ test_that("no printed report line exceeds the console width, URLs aside", {
     ggplot2::geom_point() +
     ggplot2::labs(title = "Fuel economy", colour = "Cylinders")
   withr::with_options(list(width = 80, cli.width = 80), {
-    for (j in journals()$id) {
+    for (j in spec_list()$id) {
       out <- capture.output(print(fig_check(p, j)), type = "message")
       # A bare URL is one unbreakable token; wrapping it would break the link.
       out <- out[!grepl("https?://", out)]
@@ -59,6 +59,18 @@ test_that("braces in registry text are not read as cli templates", {
   r <- report_row("Font", "could not determine", "Arial {or} Helvetica",
                   width = 200, lab_w = 12)
   expect_no_error(cli::cli_alert_info("{r$head}"))
+})
+
+test_that("an unknown row cannot print a success-style overall conclusion", {
+  r <- structure(
+    data.frame(check = "Type size", requirement = "min 8 pt",
+               actual = "could not determine", status = "unknown"),
+    spec_name = "Example", input = "figure.tiff",
+    class = c("figspec_report", "data.frame")
+  )
+  out <- capture.output(print(r), type = "message")
+  expect_true(any(grepl("assessment is incomplete", out, fixed = TRUE)))
+  expect_false(any(grepl("Every recorded requirement", out, fixed = TRUE)))
 })
 
 test_that("long prose alerts wrap instead of running off the screen", {

@@ -6,21 +6,22 @@
 # their own and never folded into a figure report, because a figure that meets
 # the article's requirements has not thereby met the abstract's.
 
-#' Graphical abstract requirements for a journal
+#' Look up graphical abstract requirements
 #'
-#' Many journals ask for a graphical abstract, or table-of-contents entry, and
-#' set separate rules for it: usually a much smaller canvas than a figure, and
-#' sometimes a character limit on the accompanying text. These are not figure
-#' requirements and are not checked by [fig_check()].
+#' A publication or project may require a graphical abstract or
+#' table-of-contents image with its own dimensions, resolution, format and text
+#' limit. These requirements are separate from ordinary figures and are not
+#' checked by [fig_check()].
 #'
-#' @param journal Registry id, for example `"rsc"`.
+#' @param spec A registry id such as `"rsc"`, a `figspec_spec`, or a named
+#'   list containing graphical-abstract requirements.
 #' @return A list of the stated requirements, or `NULL` with a message when the
-#'   registry records none for that journal.
+#'   selected specification records none.
 #' @examples
 #' graphical_abstract_spec("rsc")
 #' @export
-graphical_abstract_spec <- function(journal) {
-  spec <- journal_spec(journal)
+graphical_abstract_spec <- function(spec) {
+  spec <- spec_get(spec)
   if (is.null(spec$graphical_abstract)) {
     msg_wrap("No graphical abstract requirements are recorded for '", spec$name,
             "'. See ", spec$source_url)
@@ -28,7 +29,7 @@ graphical_abstract_spec <- function(journal) {
   }
   structure(
     c(spec$graphical_abstract,
-      list(journal = spec$name, source_url = spec$source_url,
+      list(spec_name = spec$name, source_url = spec$source_url,
            verified_on = spec$verified_on)),
     class = c("figspec_abstract_spec", "list")
   )
@@ -36,7 +37,7 @@ graphical_abstract_spec <- function(journal) {
 
 #' @export
 print.figspec_abstract_spec <- function(x, ...) {
-  cli::cli_h1("{x$journal} - graphical abstract")
+  cli::cli_h1("{x$spec_name} - graphical abstract")
   line <- function(label, v, unit = "") {
     if (is.null(v)) return(invisible(NULL))
     cli::cli_li("{.strong {label}:} {paste(unlist(v), collapse = ', ')}{unit}")

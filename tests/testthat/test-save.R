@@ -4,13 +4,13 @@
 plot_for_save <- function(journal) {
   ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
     ggplot2::geom_point() +
-    theme_journal(journal)
+    theme_spec(journal)
 }
 
 test_that("a saved TIFF comes back at the journal's width and resolution", {
   skip_if_not_installed("ragg")
   path <- withr::local_tempfile(fileext = ".tiff")
-  suppressWarnings(fig_save(path, plot_for_save("plos_one"), journal = "plos_one",
+  suppressWarnings(fig_save(path, plot_for_save("plos_one"), spec = "plos_one",
                                   column = "single", check = FALSE))
   expect_true(file.exists(path))
 
@@ -23,7 +23,7 @@ test_that("a saved TIFF comes back at the journal's width and resolution", {
 test_that("the saved file passes the checks it is measurable against", {
   skip_if_not_installed("ragg")
   path <- withr::local_tempfile(fileext = ".tiff")
-  suppressWarnings(fig_save(path, plot_for_save("frontiers"), journal = "frontiers",
+  suppressWarnings(fig_save(path, plot_for_save("frontiers"), spec = "frontiers",
                                   column = "double", check = FALSE))
   r <- fig_check(path, "frontiers", column = "double")
   expect_false(any(r$status == "fail"))
@@ -37,7 +37,7 @@ test_that("saving in a format the journal does not accept warns", {
   path <- withr::local_tempfile(fileext = ".png")
   # PLOS ONE accepts TIFF or EPS only.
   expect_warning(
-    fig_save(path, plot_for_save("plos_one"), journal = "plos_one", check = FALSE),
+    fig_save(path, plot_for_save("plos_one"), spec = "plos_one", check = FALSE),
     "accepted formats"
   )
 })
@@ -46,7 +46,7 @@ test_that("a missing extension takes the journal's first accepted format", {
   skip_if_not_installed("ragg")
   dir <- withr::local_tempdir()
   stem <- file.path(dir, "figure_1")
-  suppressWarnings(fig_save(stem, plot_for_save("plos_one"), journal = "plos_one",
+  suppressWarnings(fig_save(stem, plot_for_save("plos_one"), spec = "plos_one",
                                   check = FALSE))
   expect_true(file.exists(paste0(stem, ".tiff")))
 })
@@ -55,7 +55,7 @@ test_that("a height beyond the journal maximum warns", {
   skip_if_not_installed("ragg")
   path <- withr::local_tempfile(fileext = ".tiff")
   expect_warning(
-    fig_save(path, plot_for_save("plos_one"), journal = "plos_one",
+    fig_save(path, plot_for_save("plos_one"), spec = "plos_one",
                    height = 300, units = "mm", check = FALSE),
     "exceeds"
   )
@@ -73,9 +73,9 @@ test_that("vector formats are reported as resolution independent", {
 test_that("a default format is one R can actually write", {
   # Nature lists .ai first, which is Adobe Illustrator. R has no device for it,
   # so taking the first listed format produced "Unknown graphics device".
-  fmts <- tolower(unlist(journal_spec("nature")$formats))
+  fmts <- tolower(unlist(spec_get("nature")$formats))
   expect_equal(fmts[[1]], "ai")
-  expect_equal(default_format(journal_spec("nature")), "eps")
+  expect_equal(default_format(spec_get("nature")), "eps")
 
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
   dir <- withr::local_tempdir()
@@ -85,16 +85,16 @@ test_that("a default format is one R can actually write", {
   expect_true(file.exists(file.path(dir, "no_extension.eps")))
 })
 
-test_that("refit_journal picks a writable format too", {
+test_that("fig_refit picks a writable format too", {
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
   dir <- withr::local_tempdir()
-  res <- suppressWarnings(suppressMessages(refit_journal(list(fig1 = p), "nature", dir)))
+  res <- suppressWarnings(suppressMessages(fig_refit(list(fig1 = p), "nature", dir)))
   expect_equal(res$file, "fig1.eps")
 })
 
 test_that("a journal listing only unwritable formats fails with a usable message", {
-  withr::defer(.figspec_cache$user_journals <- NULL)
-  register_journal("only_ai", "Only AI", "handbook", "2026-08-22",
+  withr::defer(.figspec_cache$user_specs <- NULL)
+  spec_register("only_ai", "Only AI", "internal:handbook", "2026-08-22",
                    requirements = list(columns = list(single = 90),
                                        formats = list("ai", "psd")))
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
@@ -111,7 +111,7 @@ test_that("column and width cannot both set the canvas", {
   out <- tempfile(fileext = ".png"); on.exit(unlink(out))
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
   err <- tryCatch(
-    fig_save(out, p, journal = "frontiers", column = "single", width = 120),
+    fig_save(out, p, spec = "frontiers", column = "single", width = 120),
     error = function(e) e)
   expect_s3_class(err, "figspec_error")
   expect_match(conditionMessage(err), "120")
@@ -124,10 +124,10 @@ test_that("a specification stating no resolution gets a default that is announce
   out <- tempfile(fileext = ".png"); on.exit(unlink(out))
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
   msg <- capture.output(
-    suppressWarnings(fig_save(out, p, journal = list(name = "House", columns = list(single = 85)),
+    suppressWarnings(fig_save(out, p, spec = list(name = "House", columns = list(single = 85)),
                               check = FALSE)),
     type = "message")
-  expect_match(paste(msg, collapse = " "), "not a requirement")
+  expect_match(paste(msg, collapse = " "), "not a recorded requirement")
 })
 
 # Font-failure recovery -------------------------------------------------------
@@ -155,6 +155,28 @@ capture_warnings <- function(expr) {
     warning = function(x) { w <<- c(w, conditionMessage(x)); invokeRestart("muffleWarning") })
   w
 }
+
+test_that("the Cairo capability probe preserves the caller's graphics device", {
+  skip_if_not(isTRUE(capabilities("cairo")))
+  caller_file <- tempfile(fileext = ".pdf")
+  on.exit(unlink(caller_file), add = TRUE)
+  previous_cache <- .figspec_cache$cairo_ok
+  on.exit(.figspec_cache$cairo_ok <- previous_cache, add = TRUE)
+
+  grDevices::pdf(caller_file)
+  caller_device <- grDevices::dev.cur()
+  on.exit({
+    devices <- grDevices::dev.list()
+    if (!is.null(devices) && caller_device %in% unname(devices)) {
+      grDevices::dev.off(which = caller_device)
+    }
+  }, add = TRUE)
+
+  .figspec_cache$cairo_ok <- NULL
+  expect_type(cairo_ok(), "logical")
+  expect_equal(grDevices::dev.cur(), caller_device)
+  expect_true(caller_device %in% unname(grDevices::dev.list()))
+})
 
 test_that("a font the device cannot resolve still produces a file", {
   skip_if_not_installed("ggplot2")

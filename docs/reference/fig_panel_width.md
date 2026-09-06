@@ -1,4 +1,4 @@
-# The panel width a set of figures can share
+# Find one panel width that fits every figure
 
 Works out the widest plot area that every figure in a set can use while
 still fitting the canvas. Pass the answer to
@@ -11,7 +11,7 @@ them look like a set on the page.
 ``` r
 fig_panel_width(
   plots,
-  journal = NULL,
+  spec = NULL,
   column = NULL,
   width = NULL,
   units = c("mm", "cm", "in"),
@@ -23,30 +23,32 @@ fig_panel_width(
 
 - plots:
 
-  A list of plots, or one plot.
+  The plot or list of plots that should share a panel width.
 
-- journal:
+- spec:
 
-  Registry id. Supplies the canvas width.
+  A registry id, a `figspec_spec`, or a named list containing the
+  available canvas widths.
 
 - column:
 
-  Which of the journal's stated column widths to fit.
+  Which named width in the selected specification the figures must fit.
 
 - width:
 
-  Canvas width, if you are not sizing to a journal.
+  The available canvas width when you are not using a named
+  specification.
 
 - units:
 
-  Units for `width` and for the returned value.
+  The units used for `width` and for the returned panel width.
 
 - format:
 
   File format the figures will be written in, for example `"tiff"`. Text
   is measured in the font the device resolves, so measuring on the
   device you will actually save with is what makes the answer exact.
-  Defaults to the journal's first accepted format.
+  Defaults to the specification's first accepted format.
 
 ## Value
 
@@ -70,14 +72,17 @@ the width the others have to meet. That is what this measures.
 ## Examples
 
 ``` r
+# \donttest{
 library(ggplot2)
 figs <- list(
-  a = ggplot(mtcars, aes(wt, mpg)) + geom_point(),
-  b = ggplot(mtcars, aes(wt, mpg)) + geom_point() + labs(y = "A much longer label")
+  vehicles = ggplot(ggplot2::mpg, aes(displ, hwy)) + geom_point(),
+  economy = ggplot(ggplot2::economics, aes(date, unemploy)) +
+    geom_line() + labs(y = "Number of unemployed people")
 )
-fig_panel_width(figs, journal = "frontiers")
-#> [1] 71.33381
+fig_panel_width(figs, width = 160)
+#> [1] 141.1546
 #> attr(,"per_figure")
-#>        a        b 
-#> 71.33381 71.33381 
+#> vehicles  economy
+#> 146.3338 141.1546
+# }
 ```

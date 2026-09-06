@@ -2,21 +2,32 @@
 % Please edit documentation in R/palette.R
 \name{figspec_palette}
 \alias{figspec_palette}
-\title{The colours in a figspec palette}
+\title{Get colours from a figspec palette}
 \usage{
 figspec_palette(palette = "okabe_ito", n = NULL)
 }
 \arguments{
-\item{palette}{Palette id, from \code{\link[=figspec_palettes]{figspec_palettes()}}.}
+\item{palette}{The id of the palette to use, as listed by
+\code{\link[=figspec_palettes]{figspec_palettes()}}.}
 
-\item{n}{Number of colours to return. Defaults to all of them.}
+\item{n}{The number of colours to return. When omitted, a sequential palette
+returns five colours and a fixed palette returns all of its colours.
+Cividis and Viridis can generate any requested number; a fixed palette
+returns an error rather than recycling a colour for two groups.}
 }
 \value{
 A character vector of hex colours.
 }
 \description{
-The colours in a figspec palette
+Returns a vector of hexadecimal colours that can be passed to a ggplot2
+manual scale or used anywhere else R accepts colours. Use
+\code{\link[=figspec_palettes]{figspec_palettes()}} to compare the available palettes and their recommended
+uses.
 }
 \examples{
-figspec_palette("okabe_ito", 3)
+library(ggplot2)
+colours <- figspec_palette("okabe_ito", 7)
+ggplot(ggplot2::mpg, aes(displ, hwy, colour = class)) +
+  geom_point() +
+  scale_colour_manual(values = colours)
 }

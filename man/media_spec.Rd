@@ -2,21 +2,22 @@
 % Please edit documentation in R/media.R
 \name{media_spec}
 \alias{media_spec}
-\title{Supplementary media requirements for a journal}
+\title{Look up supplementary media requirements}
 \usage{
-media_spec(journal)
+media_spec(spec)
 }
 \arguments{
-\item{journal}{Registry id, for example \code{"science"}.}
+\item{spec}{A registry id such as \code{"science"}, a \code{figspec_spec}, or a
+named list of requirements.}
 }
 \value{
 A list of the stated media requirements, or \code{NULL} with a message
-when the registry records none for that journal.
+when the selected specification records none.
 }
 \description{
-Journals publish separate rules for video and audio submitted as
-supplementary material: container format, codec, frame size and file size.
-These are not figure requirements and are not checked by \code{\link[=fig_check]{fig_check()}}.
+Publications and projects may set separate rules for video and audio:
+container format, codec, frame size, bit rate and file size. These are not
+figure requirements and are therefore kept separate from \code{\link[=fig_check]{fig_check()}}.
 }
 \examples{
 media_spec("science")

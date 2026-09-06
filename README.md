@@ -19,546 +19,285 @@
      Needs a Zenodo deposit of a tagged release:
 [![DOI](https://zenodo.org/badge/DOI/PLACEHOLDER.svg)](https://doi.org/PLACEHOLDER)
 -->
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-f59331?style=flat-square&labelColor=8fa3ac)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![Coverage](https://img.shields.io/badge/coverage-91%25-1f9254?style=flat-square)](https://github.com/dansemakula/figspec)
-[![Journals](https://img.shields.io/badge/journals-27-2b7fd4?style=flat-square)](https://dansemakula.github.io/figspec/articles/journals.html)
-[![Licence](https://img.shields.io/badge/licence-MIT-7b8b93?style=flat-square)](https://github.com/dansemakula/figspec/blob/main/LICENSE.md)
+[![Status: actively maintained](https://img.shields.io/badge/status-actively%20maintained-1f9254?style=flat-square)](https://github.com/dansemakula/figspec)
+[![Coverage](https://img.shields.io/badge/coverage-89%25-1f9254?style=flat-square)](https://github.com/dansemakula/figspec)
+[![Profiles](https://img.shields.io/badge/profiles-29-2b7fd4?style=flat-square)](https://dansemakula.github.io/figspec/articles/journals.html)
+[![Licence: GPL-3.0-or-later](https://img.shields.io/badge/licence-GPLv3%2B-7b8b93?style=flat-square)](https://github.com/dansemakula/figspec/blob/main/LICENSE.md)
 <!-- badges: end -->
 
-figspec builds a figure to a specification, exports it at exactly that size and
-resolution, and then checks the result and tells you where it falls short.
+**figspec enables researchers and other R users to build, export and verify
+figures against the specifications their work must meet.** It brings those
+requirements into R, reducing the time spent searching through guidance,
+interpreting rules and applying them by hand. The specification can come from
+a journal, a house style or the needs of a particular project. figspec can
+work with one figure or a complete set, and it can also retrieve recorded
+requirements for tables, graphical abstracts and supplementary video or
+audio.
 
-It does two jobs.
+It addresses two common needs.
 
-**Figures to a journal's requirements.** Journals publish precise rules for the
-figures you submit: column widths to the millimetre, minimum resolution, which
-file formats they take, how small type is allowed to get. The rules are real,
-they differ between publishers, and they are scattered across author-guideline
-pages that are easy to skim past. Most people find out they got one wrong at
-the production stage, after acceptance. figspec brings the requirements of 27
-publishers into your R session as data, and every requirement records the page
-it came from and the date it was read.
+**The need for figures that meet journal requirements.** Journals set detailed
+rules for submitted figures, including column widths, minimum resolution,
+accepted formats, text sizes, line weights, colour use and panel labels. These
+rules differ between publishers and are often scattered across several pages
+of author guidance. A figure prepared for one journal may therefore need
+substantial changes when a paper is submitted elsewhere, or resubmitted after
+rejection.
 
-```r
-ggplot(mtcars, aes(wt, mpg)) + geom_point() + fit_journal("cell_press")
+figspec brings these requirements into R, where they can be applied while the
+figure is still editable. Its registry currently contains 29 carefully sourced
+profiles: 22 cover publisher-wide guidance and seven cover individual journals
+with their own requirements. The publisher-wide profiles apply across large
+journal portfolios, including those of Elsevier, Springer, Wiley, Taylor &
+Francis, Oxford University Press, Cambridge University Press, Cell Press, BMJ,
+Frontiers, IEEE and other major publishers, so the registry reaches far beyond
+29 individual titles. Journal-specific rules can be added where they differ
+from the publisher default.
 
-fig_save("figure_1.tiff", journal = "cell_press")
-```
+Every recorded requirement is linked to the publisher's guidance and includes
+the date it was verified. figspec does not fill gaps with guesses: when a
+publisher does not state a requirement, or a field has not yet been reviewed,
+the package says so.
 
-**Figures at an exact panel size.** You can tell R how big the image file is.
-You cannot normally tell it how big the *plot area* is — so a figure with long
-axis labels ends up with a smaller plot area than one with short labels, even
-at the same width, and a set of them looks uneven on the page. figspec sizes by
-the panel and works the canvas out for you.
+Figure preparation rarely stops at one plot. `submission_check()` can review
+a directory of finished files or a named collection of plots together, give
+each figure a concise result and retain the detailed report for every item.
+For related publication assets, `table_spec()`, `graphical_abstract_spec()` and
+`media_spec()` surface their separate requirements without mixing them into a
+figure report. `media_check()` can then inspect an actual video or audio file
+for properties such as its format, frame size, file size, codec and audio bit
+rate, reporting anything it cannot determine rather than guessing.
 
-```r
-fig_save("figure_1.png", p, panel_width = 62)      # plot area is 62 mm, exactly
+**The need for figures with consistent panel sizes.** R can set the overall
+dimensions of an image, but it does not normally control the exact size of the
+plot area inside it. As a result, a figure with long axis labels or a large
+legend can have a smaller plotting area than a simpler figure saved at the same
+width. Place those figures together in a paper, report or presentation, and
+their axes and data panels may no longer align.
 
-pw <- fig_panel_width(figs, journal = "cell_press") # the width a set can share
-```
+figspec can size the plot panel directly and calculate the canvas needed around
+it. A set of figures can therefore share the same plotting area even when their
+titles, labels, legends and margins differ. This is useful for journal
+submissions, but also for reports, presentations and any project where figures
+need to be produced consistently.
 
-No journal is needed for the second job, and a journal is only one place a
-specification can come from — you can write your own, or register a house
-style. See `vignette("panels")` for panel sizing and `vignette("journals")` for
-the registry.
+Together, these tools make figure preparation more deliberate, consistent and
+reproducible: define the result you need, build the figure to that
+specification, and verify the finished output before it leaves R.
 
 ## Installation
 
+Until the first CRAN release, install figspec from GitHub:
+
 ```r
-# install.packages("pak")
+install.packages("pak")
 pak::pak("dansemakula/figspec")
 ```
 
-figspec is **experimental**: the registry is roughly a fifth populated against
-the full field grid, and the API may still change. `registry_status()` reports
-exactly how much of each entry has been harvested.
+Once figspec is available on CRAN, it can be installed with:
 
-## Where this fits in your workflow
+```r
+install.packages("figspec")
+```
 
-Draw your plot the way you always do. Once you know where you are submitting,
-bring the journal into the plot and figspec takes care of the requirements, or
-hand it a figure you have already finished and it will tell you where that
-figure stands.
+figspec is ready for practical use and is being improved continuously.
+Publisher guidance is rechecked as it changes, and new profiles and
+requirements are added through a documented review process.
+`registry_status()` shows what has been verified, confirmed absent or not yet
+reviewed for every profile.
 
-### 1. Bring the journal in while you are plotting
+## Quick start
 
-Add the journal the same way you would add a colour scale, and the figure comes
-out built to specification.
+Start with an ordinary ggplot:
 
 ```r
 library(ggplot2)
 library(figspec)
 
-ggplot(mtcars, aes(wt, mpg, colour = factor(cyl), shape = factor(cyl))) +
+p <- ggplot(
+  mtcars,
+  aes(wt, mpg, colour = factor(cyl), shape = factor(cyl))
+) +
   geom_point() +
-  fit_journal("cell_press")
+  labs(
+    x = "Weight (1000 lbs)",
+    y = "Miles per gallon",
+    colour = "Cylinders",
+    shape = "Cylinders"
+  )
 ```
 
-That one line carries the journal's typography, its stated line weights, its
-structural rules such as axis lines and tick marks, and colours and shapes
-chosen to survive whatever that journal does to a figure in production. Where a
-publisher prints in black and white, the palette shifts to one that keeps its
-colours apart in greyscale.
+### 1. Apply a specification
 
-Add it last, and keep your own palette if you have already chosen one:
+Add a journal profile as you would add another ggplot2 component:
 
 ```r
-  scale_colour_viridis_d() +
-  fit_journal("plos_one", colour = FALSE)
+fitted <- p + fig_apply_spec("cell_press")
 ```
 
-Line widths inside a geom live on the layer, so pass those through directly:
+`fig_apply_spec()` applies the requirements that can be expressed in the plot,
+including typography, line settings, structural rules, colours and shapes.
+You can keep a palette or other design choice you have already made by turning
+off the corresponding adjustment.
+
+### 2. Verify the figure
 
 ```r
-  geom_line(linewidth = figspec_linewidth("cell_press"))
+report <- fig_check(fitted, "cell_press", column = "single")
+report
 ```
 
-### 2. Check whether a plot meets a journal's requirements
+`fig_check()` returns one result for each relevant requirement. It identifies
+what meets the specification, what needs to change and what cannot be
+determined from the available input. Checking the plot object is important:
+properties such as text size, line weight and colour relationships cannot be
+reliably recovered after a figure has been converted to raster pixels.
 
-Pass the plot and the journal, and you get one row per requirement.
+### 3. Export and check the finished file
 
 ```r
-p <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
-  geom_point() +
-  labs(title = "Fuel economy")
-
-fig_check(p, "cell_press", column = "single")
-#> ✔ Width         85 mm                       (requires: single 85 | double 174 mm)
-#> ✖ Type size     smallest 8.8, largest 13.2 pt   (requires: min 6 pt, max 8 pt)
-#> ✖ Colour pairs  red and green both used         (requires: not used together)
+fig_save(
+  "figure_1.tiff",
+  fitted,
+  spec = "cell_press",
+  column = "single"
+)
 ```
 
-Two failures in an ordinary ggplot, both from defaults nobody thinks about.
-ggplot2 runs 8.8 to 13.2 pt where Cell Press allows 6 to 8, and its default
-palette pairs a red with a green.
+`fig_save()` takes the final width and resolution from the specification,
+uses an appropriate graphics device and checks the file it writes. Exporting
+at the intended publication size matters because resizing later also changes
+the apparent size of text and lines.
 
-Check the plot object while you still have it. Type size, line width and colour
-all disappear into pixels once a figure is written to a TIFF.
+## Size the panel, not just the image
 
-### 3. Export at exactly the stated size and resolution
+Two image files can have the same width while leaving different amounts of
+space for the data. A long axis title, a legend or a multi-line label reduces
+the plotting area inside the image.
 
 ```r
-fig_save("figure_1.tiff", p, journal = "cell_press", column = "single")
+fig_save(
+  "figure_1.png",
+  p,
+  panel_width = 62,
+  units = "mm",
+  dpi = 300
+)
 ```
 
-This takes the width from the registry, defaults the resolution to the
-journal's minimum, chooses a device that can render the required font, and
-re-checks the file it has just written.
+Here, the plot panel—not the complete image—is 62 mm wide. figspec measures the
+labels, legends and margins and calculates the canvas needed around it.
+`fig_panel_width()` can also determine a shared panel width for a collection
+of figures. See
+[Sizing figures by panel, not by canvas](https://dansemakula.github.io/figspec/articles/panels.html)
+for worked examples.
 
-Saving at the journal's real column width is what keeps a compliant figure
-compliant. Type size is absolute: an 8 pt label stays 8 pt, so a figure drawn
-at 180 mm and dropped into an 85 mm column takes that label down to 3.8 pt.
+## Understanding verification results
 
-### 4. Look up what a journal requires
-
-```r
-journals(discipline = "physics")     # browse by field
-journal_spec("cell_press")           # the full specification, with its source
-fig_columns("science")               # single 57, double 121, triple 184
-fig_width("frontiers", "double")     # 180
-```
-
-### 5. Check a whole submission
-
-```r
-check_submission("figures/", "cell_press")
-#> ✔ Figure_1.tiff  single  all requirements met
-#> ✖ Figure_2.tiff  double  failed: Resolution, File format
-```
-
-### 6. Move a figure set to a different journal
-
-Rejected, and the next journal's rules clash with the last one's? Cell Press
-allows type between 6 and 8 pt; PLOS ONE wants 8 to 12.
-
-```r
-refit_journal(my_plots, journal = "plos_one", outdir = "figures_plos/")
-```
-
-This re-themes and re-exports the whole set. It works from plot objects, since
-type size cannot be recovered once a figure has been written to a file.
-
-### 7. Use it in Quarto or R Markdown
-
-Where figure size comes from chunk options:
-
-```r
-figspec_knitr_setup("cell_press", column = "double")
-```
-
-### 8. Add your own style, or your own journal
-
-```r
-register_house_style("mylab", theme_minimal())
-p + fit_journal("frontiers", style = "mylab")
-
-register_journal("lab_report", "Our lab format",
-                 source_url = "internal handbook v3", verified_on = "2026-08-22",
-                 requirements = list(columns = list(single = 100, double = 170),
-                                     font_min_pt = 9))
-```
-
-Your style is applied underneath the journal's requirements, so it can shape
-how a figure looks while the journal keeps the final word on anything it has
-specified.
-
-### 9. Find out which resolution rule applies
-
-Publishers hold line art to three or four times the general minimum, and line
-art means monochrome.
-
-```r
-suggest_art_type(p, "bmj")
-```
-
-## Journals covered
-
-**27 entries**, 21 of them covering a publisher's whole portfolio, across 20 disciplines.
-
-American Chemical Society journals · American Geophysical Union journals · American Physical Society journals · BMJ journals · Cambridge University Press journals · Cell Press journals · Copernicus Publications journals · Elsevier journals · Frontiers journals · IEEE journals · IEEE magazines · IOP Publishing journals · Journal of Statistical Software · MDPI journals · Nature · Oxford University Press journals · PLOS ONE · PNAS · Royal Society journals · Royal Society of Chemistry books · Royal Society of Chemistry journals · Sage journals · Science · Springer journals · STAR Protocols · Taylor & Francis and Routledge journals · Wiley journals
-
-<details>
-<summary><strong>Full table</strong> — ids, coverage, and how much has been harvested</summary>
-
-| Journal or publisher | `id` | Covers | Fields |
-|---|---|---|---|
-| American Chemical Society journals | `acs` | all its journals | 7 |
-| American Geophysical Union journals | `agu` | all its journals | 2 |
-| American Physical Society journals | `aps` | all its journals | 2 |
-| BMJ journals | `bmj` | all its journals | 4 |
-| Cambridge University Press journals | `cambridge` | all its journals | 7 |
-| Cell Press journals | `cell_press` | all its journals | 15 |
-| Copernicus Publications journals | `copernicus` | all its journals | 4 |
-| Elsevier journals | `elsevier` | all its journals | 6 |
-| Frontiers journals | `frontiers` | all its journals | 6 |
-| IEEE journals | `ieee` | all its journals | 4 |
-| IEEE magazines | `ieee_magazines` | all its journals | 4 |
-| IOP Publishing journals | `iop` | all its journals | 5 |
-| Journal of Statistical Software | `jss` | this journal | 1 |
-| MDPI journals | `mdpi` | all its journals | 2 |
-| Nature | `nature` | this journal | 14 |
-| Oxford University Press journals | `oup` | all its journals | 7 |
-| PLOS ONE | `plos_one` | this journal | 11 |
-| PNAS | `pnas` | this journal | 10 |
-| Royal Society journals | `royal_society` | all its journals | 6 |
-| Royal Society of Chemistry books | `rsc_books` | all its journals | 5 |
-| Royal Society of Chemistry journals | `rsc` | all its journals | 4 |
-| Sage journals | `sage` | all its journals | 4 |
-| Science | `science` | this journal | 3 |
-| Springer journals | `springer` | all its journals | 11 |
-| STAR Protocols | `star_protocols` | this journal | 3 |
-| Taylor & Francis and Routledge journals | `taylor_francis` | all its journals | 8 |
-| Wiley journals | `wiley` | all its journals | 5 |
-
-`Fields` counts the requirements harvested so far for that entry.
-
-</details>
-
-[The full table of widths, resolutions and type sizes](https://dansemakula.github.io/figspec/articles/journals.html)
-is generated from the registry, as is
-[the reference to every function and option](https://dansemakula.github.io/figspec/articles/options.html).
-Use `journal_spec(id)` for any entry's full specification and its source.
-
-## Looking things up
-
-```r
-journals()
-journals(discipline = "physics")
-journal_spec("cell_press")
-fig_width("frontiers", "double", units = "in")
-```
-
-## What the four outcomes mean
+figspec uses five outcomes so that missing information is never mistaken for
+compliance:
 
 | Outcome | Meaning |
 |---|---|
-| <span class="fs-status fs-pass">pass</span> | Meets the requirement. |
-| <span class="fs-status fs-fail">fail</span> | Breaches it. Fix this. |
-| <span class="fs-status fs-unspecified">unspecified</span> | **The publisher does not state this requirement.** Nothing can be concluded. |
-| <span class="fs-status fs-unknown">unknown</span> | The requirement exists, but this input cannot answer it — type size in a raster file, for example. |
+| <span class="fs-status fs-pass">pass</span> | The figure meets the stated requirement. |
+| <span class="fs-status fs-fail">fail</span> | The figure does not meet the requirement and needs attention. |
+| <span class="fs-status fs-unspecified">unspecified</span> | The specification does not state a requirement for this property. |
+| <span class="fs-status fs-unknown">unknown</span> | figspec cannot determine the answer from this input. |
+| <span class="fs-status fs-fail">invalid</span> | The file is corrupt or does not match its stated format. |
 
-When a publisher is silent on maximum height, figspec tells you so and leaves
-the judgement with you. Silence gets reported as silence.
+From a plot object, figspec can examine typography, line and point weights,
+colour relationships, panel labels, axis rules and other visual properties.
+From an exported file, it can verify properties such as dimensions,
+resolution, format, file size and selected format-specific requirements.
+Where a property cannot be recovered reliably, the result is `unknown`
+rather than an unsupported conclusion.
 
-## Colour, line weight and the rest
+## Journal and publisher profiles
 
-figspec covers every property a journal states and that can be read from your
-figure:
-
-| Property | From a plot object | From a saved file |
-|---|---|---|
-| Width, height | yes | yes |
-| Resolution | yes | yes (TIFF, PNG, JPEG, PDF) |
-| File format, file size | yes | yes |
-| Type size, font | **yes** | no — points do not survive into a raster |
-| Line width | **yes** | no |
-| Colour mode | yes | yes (TIFF, PNG) |
-| Red/green pairing, greyscale, colour vision | **yes** | no |
-| Panel labels, text case | **yes** | no |
-| Video format, frame size, file size | n/a | yes, via `check_media()` |
+The built-in registry contains **29 profiles across 21 disciplines**. Twenty-two
+profiles cover publisher-wide guidance and therefore apply across complete
+journal portfolios; seven represent journals with their own requirements.
+Publisher-wide profiles act as defaults, and journal-specific guidance should
+take precedence whenever a title states a different rule.
 
 ```r
-p <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) + geom_point()
-check_colour_safety(p, "cell_press")
-#> ✖ Colour pairs  red and green both used (#F8766D, #00BA38)
-#>                 (requires: red and green not used together)
-#> ℹ Greyscale     3 pair(s) merge in greyscale
-#> ℹ Colour vision colours merge under deuteranopia (1), protanopia (1)
+spec_list(discipline = "physics")
+spec_get("cell_press")
+fig_columns("science")
+registry_status()
 ```
 
-ggplot2's default three-colour palette is red, green and blue — which is
-precisely what Cell Press states you should not do. Swap in a palette designed
-for it and all three clear:
+Every recorded requirement includes its publisher source and verification
+date. The registry distinguishes requirements that have been verified,
+requirements that a publisher explicitly does not state and fields that have
+not yet been reviewed. This prevents incomplete information from being
+presented as a pass.
+
+Browse the
+[complete profile table](https://dansemakula.github.io/figspec/articles/journals.html)
+or read
+[how the registry is reviewed and maintained](https://dansemakula.github.io/figspec/articles/registry.html).
+
+## Use your own requirements and style
+
+figspec is not limited to its built-in journal profiles. You can supply your
+own requirements, register an internal publication format or reuse a house
+style across projects.
 
 ```r
-p + scale_colour_manual(values = c("#000000", "#0072B2", "#E69F00"))
-#> ✔ Colour pairs  no red/green pairing
-#> ✔ Greyscale     all colours separable in greyscale
-#> ℹ Colour vision separable under deuteranopia, protanopia and tritanopia
-```
-
-Note the outcomes. Red/green is a **requirement** for Cell Press because Cell
-Press states it, so it can fail. Greyscale is a requirement for the Royal
-Society, which prints in black and white by default. Colour-vision safety is
-reported for every journal but is always `unspecified`, because it is good
-practice, so figspec shows you the finding and leaves it as advice.
-
-Line weights are checked too, against the range the publisher states:
-
-```r
-ggplot(economics, aes(date, unemploy)) +
-  geom_line(linewidth = figspec_linewidth("frontiers")) +   # Frontiers states 2 pt
-  theme_journal("frontiers")
-```
-
-## Beyond the figure itself
-
-**Panel labels.** Cell Press states that panels are labelled with capital
-letters. figspec counts the panels in a patchwork composition and checks how
-they are tagged:
-
-```r
-fig_check((p1 | p2) / p3, "cell_press")
-#> ✖ Panel labels  3 panels, none labelled  (requires: panels labelled with uppercase letters)
-```
-
-Add `plot_annotation(tag_levels = "A")` and it passes; `tag_levels = "1"` still
-fails, because Cell Press asked for letters.
-
-**Text case.** Nature states that lettering should be lower-case with the first
-letter capitalised and no full stop:
-
-```r
-p + labs(title = "Fuel economy.", y = "Miles Per Gallon")
-#> ✖ Text case  ends with a full stop: 'Fuel economy.'; uses Title Case: 'Miles Per Gallon'
-```
-
-The Title Case test is deliberately conservative. It ignores acronyms and short
-words, so `"Body mass index (BMI)"` and `"CO2 emissions per capita"` pass while
-`"Miles Per Gallon"` does not.
-
-**Graphical abstracts and supplementary media.** Both have their own rules,
-separate from figures. A graphical abstract is usually a far smaller canvas
-than a figure, and often carries a character limit on its text:
-
-```r
-graphical_abstract_spec("rsc")
-#> Maximum size: 80 x 40 mm    Resolution: 600 dpi
-#> Formats: TIFF               Text limit: 250 characters
-
-media_spec("science")
-#> Video formats: MP4, MOV      Video codec: H.264
-#> Maximum frame size: 1920 x 1080
-#> Preferred frame sizes: 640 x 480 or 1280 x 720
-#> Maximum file size: 50 MB
-
-check_media("movie_s1.mp4", "science")
-```
-
-Frame size is read from the MP4/MOV `tkhd` box or the GIF header. Codec and bit
-rate are recorded in the registry but reported as **not inspected** — reading
-them needs a media library, and a guess would be worse than nothing.
-
-## Bring your own style
-
-figspec deliberately has no aesthetic opinion. Register your own look and
-apply it to any journal:
-
-```r
-register_house_style(
+style_register(
   "mylab",
   theme_minimal() + theme(panel.grid.minor = element_blank()),
-  description = "Our group's look"
+  description = "Our group's figure style"
 )
 
-p + theme_journal("frontiers", style = "mylab")
+p + fig_apply_spec("frontiers", style = "mylab")
 ```
 
-Styles persist if you save them:
+Your house style controls the appearance of the figure wherever the
+specification is silent. If a style setting conflicts with a stated
+requirement—for example, 6 pt text when the minimum is 8 pt—figspec applies
+the required value and leaves the rest of the design unchanged.
 
-```r
-save_house_styles("~/.figspec-styles.rds")   # once
-load_house_styles("~/.figspec-styles.rds")   # from .Rprofile or a setup chunk
-```
+Custom specifications can be kept under version control and loaded when a
+project starts. User-defined profiles are clearly marked so they cannot be
+confused with the registry maintained by figspec.
 
-**A style can never make a figure non-compliant.** Styles are applied
-underneath the journal's requirements, so if your style sets 5 pt type and the
-journal states a floor of 8 pt, the journal wins and figspec tells you which
-elements it had to override:
+## More publication workflows
 
-```
-'PLOS ONE' requires type between 8 and 12 pt, so the journal's sizes
-override your style for: axis.text.
-```
+The same specification can be used throughout a project:
 
-Everything in your style that does not conflict is kept.
+- `submission_check()` reviews a directory or named collection of figure
+  files and summarizes what needs attention.
+- `fig_refit()` adapts and re-exports saved plot objects when a manuscript
+  moves to a journal with different requirements.
+- `figspec_knitr_setup()` applies dimensions and resolution consistently in
+  Quarto and R Markdown documents.
+- `graphical_abstract_spec()`, `media_spec()` and `media_check()` surface
+  separate requirements for graphical abstracts, video and audio.
+- `fig_suggest_art_type()` helps identify which resolution rule is relevant when
+  a publisher distinguishes colour, grayscale, line and combination artwork.
 
-## Bring your own journal
+These functions report what they can establish and identify anything that
+still requires judgement. They do not infer requirements that a publisher has
+not stated.
 
-For a journal figspec does not ship yet, or an internal format of your own:
+## Learn more
 
-```r
-register_journal(
-  id = "lab_report",
-  name = "Our lab report format",
-  source_url = "internal handbook v3",
-  verified_on = "2026-08-22",
-  requirements = list(columns = list(single = 100, double = 170),
-                      font_min_pt = 9, formats = list("pdf"))
-)
-```
-
-`journals()` marks these as `origin = "user"`, so it stays obvious which
-entries figspec stands behind. Keep a set under version control and load it
-with `load_journals("my-journals.yaml")`.
-
-## How the registry is sourced
-
-Every entry records the publisher page it came from and the date it was read:
-
-```r
-journal_spec("frontiers")$source_url
-#> "https://www.frontiersin.org/guidelines/author-guidelines"
-```
-
-### The three states of a field
-
-A blank field means one of two different things, and conflating them puts a
-claim in figspec's mouth that nobody earned:
-
-| In the entry | Reported as | Means |
-|---|---|---|
-| Value in `requirements:` | graded `pass` / `fail` | The publisher states it |
-| Field listed in `not_stated:` | `not specified by publisher` | Somebody read the page and confirmed the rule is absent |
-| Field in neither | `not yet harvested for this journal` | **Nobody has looked yet** |
-
-### How hedged wording is recorded
-
-Publishers hedge constantly. What decides is the **main verb of the sentence
-stating the rule**:
-
-| Publisher's wording | Recorded as |
-|---|---|
-| OUP: whole guide is *"tips rather than strict rules"*, then *"at least 300dpi"* | **Requirement** — the hedge is about achieving the target, and the target still applies |
-| Elsevier: *"a rule-of-thumb rather than a strict rule"*, then *"no smaller than 6 pt"* | **Requirement** |
-| MDPI: *"should be ... preferably no less than 600 dpi"* | **Requirement** — the verb is *should* |
-| Sage: *"We recommend having no more than 7 series"* | **Advisory** — the verb is *recommend*. Reported, never graded |
-| ACS: *"Helvetica or Arial fonts work well"* | **Not recorded** — excludes nothing |
-| PLOS: *"Use only Arial, Times, or Symbol font"* | **Requirement** — a closed set |
-
-When in doubt, don't grade. An unrecorded rule costs a user a check. A wrongly
-graded one tells them they broke a rule that does not exist.
-
-The first two are facts about the publisher. The third is a fact about this
-registry, and saying so is the difference between a registry you can trust and
-one that is confidently wrong. Listing a field in both places is a load-time
-error.
-
-Fields a publisher does not state are **omitted**, never filled in from a
-sibling journal or from a plausible guess. The registry lives in a single
-readable file, [`inst/extdata/journals.yaml`](inst/extdata/journals.yaml), and
-load-bearing numbers carry the publisher's own wording alongside them so an
-entry can be audited without leaving the file.
-
-Each entry keeps two things strictly apart:
-
-| Block | What it holds | Checked? |
-|---|---|---|
-| `requirements:` | What the publisher **states** in its guidelines | Yes — this is the only thing `pass`/`fail` refers to |
-| `house_style:` | What a journal's figures **look like**. A matter of taste | Never |
-
-Putting a requirement field inside `house_style` is a load-time error. That
-line is what makes a `pass` mean something.
-
-Where a journal is silent and figspec has to supply a working default, it says
-so, and marks the value as its own.
-
-Guidelines change. Check the `verified_on` date, and treat the publisher's
-current page as the authority.
-
-## Maintaining the registry
-
-Author guidelines change, and an entry read two years ago reads exactly like
-one read yesterday unless something says so:
-
-```r
-registry_status()
-#>          id verified_on age_days stated confirmed_absent unharvested
-#>      nature  2026-08-21        1      2                0          15
-#>  cell_press  2026-08-21        1     13                0           4
-
-stale_entries(max_age_days = 365)
-```
-
-`stated` / `confirmed_absent` / `unharvested` are the three states below, and
-they always sum to the full field list, so a half-finished entry cannot pass
-as a complete one.
-
-## Contributing a journal
-
-```r
-new_journal_entry("plos_biology", "PLOS Biology",
-                  "https://journals.plos.org/plosbiology/s/figures")
-```
-
-prints a skeleton naming every field figspec understands. Fill in what the
-page states, list what you confirmed absent under `not_stated`, and leave the
-rest alone — an untouched field reports as not yet harvested, which is true.
-
-```r
-validate_registry_file("my-journals.yaml")   # before you open a pull request
-load_journals("my-journals.yaml")            # to use it in this session
-```
-
-The package refuses to load an entry with no provenance, one that puts a
-requirement in `house_style`, or one that claims a field is both stated and
-absent.
-
-`data-raw/harvest.R` holds a toolkit for collecting entries at scale: journal
-discovery through the DOAJ API, fetching, extraction of the publisher's own
-specification sentences, and emission of reviewable candidates. It never
-writes to the registry — auto-populating it would destroy the one property
-that makes it worth trusting.
+- [Getting started with figspec](https://dansemakula.github.io/figspec/articles/figspec.html)
+- [Sizing figures by panel, not by canvas](https://dansemakula.github.io/figspec/articles/panels.html)
+- [Journal and publisher profiles](https://dansemakula.github.io/figspec/articles/journals.html)
+- [Every function and its options](https://dansemakula.github.io/figspec/articles/options.html)
+- [Registry provenance and maintenance](https://dansemakula.github.io/figspec/articles/registry.html)
+- [Contributing to figspec](CONTRIBUTING.md)
 
 ## Licence
 
-The package code is released under the MIT licence. `LICENSE` carries the
-copyright line CRAN reads; `LICENSE.md` carries the full text.
+figspec is released under the
+[GNU General Public License version 3 or later](LICENSE.md). Registry entries
+include short quotations from publisher guidance for verification and
+attribution. Publishers retain any rights they hold in their original wording.
 
-The registry needs a word of its own, because it is not code.
-
-What it records are **facts about published requirements** — that Cell Press
-asks for 85 mm, that BMJ asks 1200 dpi of line art. Facts are not anyone's
-property, and figspec states them freely.
-
-Load-bearing numbers also carry a **short verbatim quotation** of the sentence
-the publisher wrote, in the `source_quote_*` fields, so an entry can be audited
-without leaving the file. Those sentences are the publishers' own words,
-quoted for verification and attribution and kept to the length that job needs.
-Every one names the page it came from and the date it was read. Publishers
-retain whatever rights they hold in their own wording, and nothing here grants
-you a licence to reproduce their guidelines at length.
-
-If you need to rely on a requirement, cite the publisher's page as well as
-figspec. `journal_spec(<id>)$source_url` gives you the page and
-`$verified_on` the date it was read.
+When relying on a requirement, consult the linked publisher guidance as the
+authoritative source. `spec_get(<id>)$source_url` provides that link and
+`$verified_on` records when it was reviewed.

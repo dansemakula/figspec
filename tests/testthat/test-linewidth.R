@@ -9,11 +9,11 @@ test_that("points convert to ggplot2 linewidth and back", {
   # one linewidth unit renders at .pt / 96 * 72 points.
   expect_equal(ggplot_linewidth_to_pt(1), 72.27 / 25.4 * 0.75, tolerance = 1e-9)
   expect_equal(ggplot_linewidth_to_pt(pt_to_ggplot_linewidth(2)), 2, tolerance = 1e-9)
-  expect_equal(figspec_linewidth("frontiers"), pt_to_ggplot_linewidth(2), tolerance = 1e-9)
+  expect_equal(spec_linewidth("frontiers"), pt_to_ggplot_linewidth(2), tolerance = 1e-9)
 })
 
 test_that("a line drawn at the journal minimum measures at the journal minimum", {
-  lw <- figspec_linewidth("frontiers")   # Frontiers states 2 pt
+  lw <- spec_linewidth("frontiers")   # Frontiers states 2 pt
   p <- ggplot2::ggplot(ggplot2::economics, ggplot2::aes(date, unemploy)) +
     ggplot2::geom_line(linewidth = lw)
   expect_equal(max(plot_linewidths(p)), 2, tolerance = 1e-6)

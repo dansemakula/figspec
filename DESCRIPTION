@@ -19,7 +19,7 @@ Description: Sets the size, resolution, typography and colour of a figure
     registry requirement records the publisher page it was taken from and the
     date it was read; a requirement that is not stated is reported as
     unspecified rather than assumed to pass.
-License: MIT + file LICENSE
+License: GPL (>= 3)
 Encoding: UTF-8
 Depends: 
     R (>= 4.1)
@@ -48,6 +48,8 @@ Suggests:
     systemfonts,
     testthat (>= 3.0.0),
     withr
+SystemRequirements: FFmpeg (optional, for inspecting supplementary media
+    codecs and bit rates)
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
 VignetteBuilder: knitr

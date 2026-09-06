@@ -45,6 +45,14 @@ library(jsonlite)
 
 UA <- paste("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36")
+MAX_DOCUMENT_BYTES <- 25 * 1024^2
+
+safe_source_url <- function(url) {
+  is.character(url) && length(url) == 1L &&
+    grepl("^https?://", url, ignore.case = TRUE) &&
+    !grepl("^https?://(localhost|127\\.|0\\.|10\\.|192\\.168\\.|169\\.254\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.|\\[?::1\\]?)",
+           url, ignore.case = TRUE)
+}
 
 # Discovery ---------------------------------------------------------------
 
@@ -115,11 +123,13 @@ wayback_discover <- function(domain_pattern, keyword = "artwork|figure|graphic|i
 }
 
 fetch_wayback <- function(url, timeout = 60) {
+  stopifnot(safe_source_url(url))
   snap <- wayback_latest(url)
   if (is.null(snap)) {
     return(list(ok = FALSE, status = NA, reason = "no Archive snapshot"))
   }
-  h <- curl::new_handle(useragent = UA, timeout = timeout, followlocation = TRUE)
+  h <- curl::new_handle(useragent = UA, timeout = timeout, followlocation = TRUE,
+                        maxfilesize_large = MAX_DOCUMENT_BYTES)
   curl::handle_setheaders(h, "Accept-Encoding" = "gzip")
   res <- tryCatch(curl::curl_fetch_memory(snap$url, handle = h), error = function(e) NULL)
   if (is.null(res) || res$status_code != 200L) {
@@ -139,7 +149,11 @@ fetch_wayback <- function(url, timeout = 60) {
 }
 
 fetch_page <- function(url, timeout = 30) {
-  h <- curl::new_handle(useragent = UA, timeout = timeout, followlocation = TRUE)
+  if (!safe_source_url(url)) {
+    return(list(ok = FALSE, status = NA, reason = "unsafe or unsupported source URL"))
+  }
+  h <- curl::new_handle(useragent = UA, timeout = timeout, followlocation = TRUE,
+                        maxfilesize_large = MAX_DOCUMENT_BYTES)
   res <- tryCatch(curl::curl_fetch_memory(url, handle = h), error = function(e) NULL)
   if (is.null(res)) return(list(ok = FALSE, status = NA, reason = "connection failed"))
   if (res$status_code != 200L) {
@@ -148,14 +162,44 @@ fetch_page <- function(url, timeout = 30) {
                   "blocked - needs lane 3 (browser)" else "http error"))
   }
   ct <- unlist(curl::parse_headers_list(res$headers)[["content-type"]])
-  body <- rawToChar(res$content)
   if (grepl("pdf", ct %||% "", ignore.case = TRUE)) {
-    return(list(ok = FALSE, status = 200L, reason = "PDF - use lane 2"))
+    return(extract_pdf_response(res$content, url))
   }
+  body <- rawToChar(res$content)
   txt <- gsub("<script.*?</script>|<style.*?</style>", " ", body, perl = TRUE)
   txt <- gsub("<[^>]+>", " ", txt)
   txt <- gsub("&nbsp;|&amp;|&#39;|&quot;", " ", txt)
-  list(ok = TRUE, status = 200L, text = gsub("\\s+", " ", txt))
+  list(ok = TRUE, status = 200L, text = gsub("\\s+", " ", txt),
+       content_type = ct %||% "text/html", final_url = res$url)
+}
+
+# Lane 2: publisher PDF guides are often more stable and more complete than
+# their surrounding landing pages. Extract all pages, but retain the original
+# bytes' checksum so a later reviewer can tell whether the guide changed at
+# the same URL.
+extract_pdf_response <- function(bytes, url) {
+  if (!requireNamespace("pdftools", quietly = TRUE)) {
+    return(list(ok = FALSE, status = 200L,
+                reason = "PDF source needs the pdftools package"))
+  }
+  f <- tempfile(fileext = ".pdf")
+  on.exit(unlink(f), add = TRUE)
+  writeBin(bytes, f)
+  pages <- tryCatch(pdftools::pdf_text(f), error = function(e) NULL)
+  if (is.null(pages)) {
+    return(list(ok = FALSE, status = 200L, reason = "PDF could not be parsed"))
+  }
+  list(ok = TRUE, status = 200L,
+       text = gsub("\\s+", " ", paste(pages, collapse = " ")),
+       content_type = "application/pdf", final_url = url,
+       content_md5 = unname(tools::md5sum(f)))
+}
+
+text_md5 <- function(text) {
+  f <- tempfile(fileext = ".txt")
+  on.exit(unlink(f), add = TRUE)
+  writeLines(enc2utf8(text), f, useBytes = TRUE)
+  unname(tools::md5sum(f))
 }
 
 # Extraction --------------------------------------------------------------
@@ -189,7 +233,8 @@ extract_spec_sentences <- function(text, max_per_field = 4) {
 # Produces an entry a reviewer fills in, with the source sentences beside it.
 # Every field starts unharvested, which is the honest default.
 candidate_entry <- function(id, name, url, sentences, publisher = "",
-                            via = NULL, snapshot_date = NULL) {
+                            via = NULL, snapshot_date = NULL,
+                            archive_url = NULL, content_md5 = NULL) {
   q <- function(field) {
     s <- sentences[[field]]
     if (!length(s)) return(paste0("    # ", field, ": nothing found - confirm absent, then add to not_stated\n"))
@@ -207,6 +252,8 @@ candidate_entry <- function(id, name, url, sentences, publisher = "",
     else "set to the date YOU read it",
     "\n",
     if (!is.null(via)) paste0("  # SOURCE: retrieved from the Internet Archive, not the live page.\n") else "",
+    if (!is.null(archive_url)) paste0("  source_archive_url: ", archive_url, "\n") else "",
+    if (!is.null(content_md5)) paste0("  source_content_md5: ", content_md5, "\n") else "",
     "  requirements:\n",
     "    # ---- candidate sentences from the page, for you to turn into fields ----\n",
     paste0(vapply(names(SPEC_PATTERNS), q, character(1)), collapse = ""),
@@ -217,14 +264,16 @@ candidate_entry <- function(id, name, url, sentences, publisher = "",
 # Pipeline ----------------------------------------------------------------
 
 harvest <- function(targets, outfile = "data-raw/candidates.yaml",
-                    blockedfile = "data-raw/blocked-worklist.csv") {
+                    blockedfile = "data-raw/blocked-worklist.csv",
+                    reviewfile = "data-raw/candidate-evidence.csv") {
   candidates <- character(0)
   blocked <- list()
+  evidence <- list()
   for (i in seq_len(nrow(targets))) {
     tg <- targets[i, ]
     message(sprintf("[%d/%d] %s", i, nrow(targets), substr(tg$title, 1, 50)))
     res <- fetch_page(tg$url)
-    if (!isTRUE(res$ok) && grepl("blocked|http error|connection", res$reason)) {
+    if (!isTRUE(res$ok) && grepl("blocked|http error|connection", res$reason %||% "")) {
       message("      direct fetch ", res$reason, " - trying the Internet Archive")
       res <- fetch_wayback(tg$url)
     }
@@ -244,14 +293,33 @@ harvest <- function(targets, outfile = "data-raw/candidates.yaml",
       next
     }
     id <- tolower(gsub("[^a-z0-9]+", "_", tolower(tg$title)))
+    checksum <- res$content_md5 %||% text_md5(res$text)
+    for (field in names(sentences)) {
+      for (excerpt in sentences[[field]]) {
+        evidence[[length(evidence) + 1L]] <- data.frame(
+          id = id, field = field, exact_excerpt = excerpt,
+          live_url = tg$url,
+          archived_url = res$snapshot_url %||% NA_character_,
+          retrieved_on = as.character(res$snapshot_date %||% Sys.Date()),
+          content_md5 = checksum, decision = "unreviewed",
+          stringsAsFactors = FALSE
+        )
+      }
+    }
     candidates <- c(candidates,
                     candidate_entry(id, tg$title, tg$url, sentences, tg$publisher,
-                                    via = res$via, snapshot_date = res$snapshot_date))
+                                    via = res$via, snapshot_date = res$snapshot_date,
+                                    archive_url = res$snapshot_url,
+                                    content_md5 = checksum))
   }
   if (length(candidates)) writeLines(c("journals:", candidates), outfile)
   if (length(blocked)) utils::write.csv(do.call(rbind, blocked), blockedfile, row.names = FALSE)
+  if (length(evidence)) utils::write.csv(do.call(rbind, evidence), reviewfile, row.names = FALSE)
   message(sprintf("\n%d candidate(s) written to %s", length(candidates), outfile))
+  message(sprintf("%d exact candidate excerpt(s) written to %s for human review",
+                  length(evidence), reviewfile))
   message(sprintf("%d target(s) need lane 3 (browser); worklist at %s",
                   length(blocked), blockedfile))
-  invisible(list(candidates = length(candidates), blocked = length(blocked)))
+  invisible(list(candidates = length(candidates), blocked = length(blocked),
+                 evidence = length(evidence)))
 }

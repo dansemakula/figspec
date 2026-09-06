@@ -1,8 +1,9 @@
-# Line types that stay distinct in print
+# Get a set of distinct line types
 
-Line type is the other cue that survives black-and-white reproduction.
-As with shapes, no publisher in the registry states which to use, so
-this is a recommendation.
+Returns line types that can distinguish a small number of series without
+relying on colour alone. Use them in a manual linetype scale so that a
+plot remains readable when it is reproduced in greyscale or when two
+colours are difficult to tell apart.
 
 ## Usage
 
@@ -14,15 +15,29 @@ figspec_linetypes(n)
 
 - n:
 
-  How many line types are needed.
+  The number of line types needed, usually the number of series in the
+  data. Up to six are available.
 
 ## Value
 
-A character vector of line types.
+A character vector containing one ggplot2 line type per series.
+
+## Details
+
+These patterns are design recommendations, not requirements taken from a
+publication or project specification. figspec provides six and returns
+an error instead of recycling a pattern when more are requested.
 
 ## Examples
 
 ``` r
-figspec_linetypes(3)
-#> [1] "solid"  "dashed" "dotted"
+library(ggplot2)
+series <- subset(
+  ggplot2::economics_long,
+  variable %in% c("psavert", "uempmed", "unemploy")
+)
+ggplot(series, aes(date, value01, linetype = variable)) +
+  geom_line(linewidth = 0.7) +
+  scale_linetype_manual(values = figspec_linetypes(3)) +
+  labs(x = NULL, y = "Value, rescaled to 0–1", linetype = "Series")
 ```

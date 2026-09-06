@@ -15,7 +15,7 @@ afterwards.
 fig_save(
   filename,
   plot = ggplot2::last_plot(),
-  journal = NULL,
+  spec = NULL,
   column = NULL,
   width = NULL,
   height = NULL,
@@ -24,6 +24,7 @@ fig_save(
   units = c("mm", "cm", "in"),
   dpi = NULL,
   check = TRUE,
+  art_type = c("auto", "colour", "bw", "line", "combination"),
   ...
 )
 ```
@@ -40,15 +41,16 @@ fig_save(
   Plot to save: a ggplot, a patchwork composition, or a `gtable`.
   Defaults to the last plot displayed.
 
-- journal:
+- spec:
 
-  Registry id, for example `"cell_press"`. Optional. When given, it
+  Optional specification: a registry id such as `"cell_press"`, a
+  `figspec_spec`, or a named list of requirements. When given, it
   supplies the canvas width, resolution, format and font.
 
 - column:
 
   Which of the journal's stated column widths to fit. Only meaningful
-  with `journal`; defaults to `"single"` when one is given.
+  with `spec`; defaults to `"single"` when one is given.
 
 - width:
 
@@ -77,6 +79,11 @@ fig_save(
 
   Whether to check the result and report failures as a warning. Only
   checks against a journal when one is given.
+
+- art_type:
+
+  Resolution category. `"auto"` classifies the live plot; explicit
+  choices are `"colour"`, `"bw"`, `"line"`, and `"combination"`.
 
 - ...:
 
@@ -133,7 +140,7 @@ to see what a journal offers, and
 for one value.
 
 `column` is a lookup into a journal's own layout, so it means nothing
-without `journal`. Sizing without a journal is what `width` is for.
+without `spec`. Sizing without a specification is what `width` is for.
 
 ## See also
 
@@ -146,17 +153,38 @@ for a journal's stated widths.
 
 ``` r
 library(ggplot2)
-p <- ggplot(mtcars, aes(wt, mpg)) + geom_point()
+p <- ggplot(ggplot2::mpg, aes(displ, hwy, colour = class)) + geom_point()
 
 # To a journal's requirements, saved in a format that journal accepts
 out <- file.path(tempdir(), "figure_1.tiff")
-fig_save(out, p + theme_journal("frontiers"), journal = "frontiers")
+styled <- p + theme_spec("frontiers")
+styled
+
+fig_save(out, styled, spec = "frontiers")
+#> Warning: Saved figure could not be certified against 1 recorded requirement(s) of 'Frontiers journals': Line width.
 unlink(out)
 
 # To an exact panel size, no journal involved
 panelled <- file.path(tempdir(), "figure_2.png")
 fig_save(panelled, p, panel_width = 62)
 unlink(panelled)
+
+# \donttest{
+# To a project specification supplied directly in R. This opens a second
+# graphics device, so it remains a worked website example without slowing
+# CRAN's ordinary example pass.
+report_spec <- list(
+  name = "Quarterly research report",
+  columns = list(full = 160),
+  formats = "png",
+  dpi_min = 300,
+  font_min_pt = 9
+)
+report_file <- file.path(tempdir(), "report-figure.png")
+fig_save(report_file, p + theme_spec(report_spec),
+         spec = report_spec, column = "full")
+unlink(report_file)
+# }
 
 # Working the canvas out from the panel means opening a device to measure
 # the decoration on, which is slow enough that the rest of the tour is kept
@@ -165,16 +193,22 @@ unlink(panelled)
 widest <- file.path(tempdir(), "figure_3.tiff")
 
 # The widest panel that still fits the column
-fig_save(widest, p, journal = "frontiers", panel_width = "max")
+fig_save(widest, p, spec = "frontiers", panel_width = "max")
+#> Warning: Saved figure could not be certified against 1 recorded requirement(s) of 'Frontiers journals': Line width.
 unlink(widest)
 
 # Where the space in a figure went
 measured <- file.path(tempdir(), "figure_4.png")
 fig_geometry(fig_save(measured, p, panel_width = 62))
-#>   canvas_width_mm canvas_height_mm panel_width_mm panel_height_mm
-#> 1           75.67            56.75             62           43.66
-#>   decoration_width_mm decoration_height_mm panels_across panels_down
-#> 1               13.67                13.09             1           1
+#>
+#> ── Figure geometry ─────────────────────────────────────────────────────────────
+#>   canvas  108.2 x 81.1 mm
+#>   panel   62 x 68 mm
+#>
+#> Decoration - where the rest of the space goes
+#>   46.2 mm across, 13.1 mm down   (sides are not separable for a composition)
+#>
+#> ℹ `plot()` this to see it.
 unlink(measured)
 # }
 ```

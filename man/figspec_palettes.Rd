@@ -2,18 +2,30 @@
 % Please edit documentation in R/palette.R
 \name{figspec_palettes}
 \alias{figspec_palettes}
-\title{Colour palettes that survive print and colour-blind readers}
+\title{List the colour palettes included with figspec}
 \usage{
 figspec_palettes()
 }
 \value{
-A data frame of palette names, sizes and sources.
+A data frame containing the palette id, display name, type, maximum
+number of colours, recommended use, source and source URL. An infinite
+maximum means that the sequential palette can generate any requested
+number of colours.
 }
 \description{
-Lists the palettes figspec ships. None is a journal requirement: no
-publisher in the registry states which colours to use. They are provided
-because they pass the checks in \code{\link[=check_colour_safety]{check_colour_safety()}}, and each records
-where it came from.
+Shows the palettes available through \code{\link[=figspec_palette]{figspec_palette()}} and the figspec
+colour scales. The catalogue explains whether each palette is intended for
+separate categories or ordered values, how many colours it can provide, and
+when it is most useful. Each palette also records its published source.
+}
+\details{
+These palettes are optional design tools, not requirements taken from a
+publication. Each was selected for documented accessibility or perceptual
+properties, but not every palette suits every output. In particular,
+Okabe-Ito distinguishes categories for readers with common forms of
+colour-vision deficiency but is not intended for greyscale reproduction;
+Cividis and Viridis use an ordered lightness ramp that remains legible in
+greyscale.
 }
 \examples{
 figspec_palettes()

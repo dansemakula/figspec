@@ -13,15 +13,16 @@
 # Neither input answers everything, which is why a requirement that cannot be
 # assessed is reported rather than skipped.
 #
-# Every row of a report is one of four outcomes, and keeping them apart is the
+# Every row of a report is one of five outcomes, and keeping them apart is the
 # point of the whole file:
 #
 #   pass / fail   the specification states the rule and the figure was measured
 #   unspecified   nothing states the rule, so there is nothing to meet
 #   unknown       the rule exists, but this input cannot answer it
+#   invalid       the input is not a readable instance of its claimed format
 #
 # new_row() enforces that, so a pass can never be reported against a rule
-# nobody stated. Its four wordings are defined under "Report assembly" below.
+# nobody stated. Its status wordings are defined under "Report assembly" below.
 
 # Text size introspection ------------------------------------------------
 
@@ -100,27 +101,43 @@ collect_text_sizes <- function(plot) {
 read_png_info <- function(path) {
   con <- file(path, "rb")
   on.exit(close(con), add = TRUE)
+  total <- file.size(path)
   sig <- as.integer(readBin(con, "raw", 8L))
   if (!identical(sig, c(137L, 80L, 78L, 71L, 13L, 10L, 26L, 10L))) return(NULL)
   be <- function(r) sum(as.integer(r) * c(16777216, 65536, 256, 1))
   info <- list()
+  saw_end <- FALSE
   repeat {
     len_raw <- readBin(con, "raw", 4L)
     if (length(len_raw) < 4L) break
     len <- be(len_raw)
-    type <- rawToChar(readBin(con, "raw", 4L))
-    data <- readBin(con, "raw", len)
-    readBin(con, "raw", 4L)
+    type_raw <- readBin(con, "raw", 4L)
+    if (length(type_raw) != 4L) return(NULL)
+    type <- rawToChar(type_raw)
+    # A chunk length comes from untrusted input. Never allocate from it until
+    # it has been checked against both the file and a modest parser ceiling.
+    left <- total - seek(con)
+    if (!is.finite(len) || len < 0 || len > left - 4 || len > 64 * 1024^2) {
+      return(NULL)
+    }
+    if (type %in% c("IHDR", "pHYs", "IEND")) {
+      data <- readBin(con, "raw", len)
+    } else {
+      seek(con, where = len, origin = "current")
+      data <- raw(0)
+    }
+    if (length(readBin(con, "raw", 4L)) != 4L) return(NULL)
     if (type == "IHDR" && length(data) >= 8L) {
       info$width_px <- be(data[1:4])
       info$height_px <- be(data[5:8])
     } else if (type == "pHYs" && length(data) >= 9L) {
       if (as.integer(data[9]) == 1L) info$dpi <- be(data[1:4]) * 0.0254
     } else if (type == "IEND") {
+      saw_end <- TRUE
       break
     }
   }
-  info
+  if (!saw_end || is.null(info$width_px) || is.null(info$height_px)) NULL else info
 }
 
 # Page size from a PDF.
@@ -136,7 +153,30 @@ read_png_info <- function(path) {
 #   /MediaBox was found.
 read_pdf_info <- function(path) {
   n <- file.size(path)
-  raw <- readBin(path, "raw", n)
+  if (!is.finite(n) || n < 8L) return(NULL)
+  sig <- readBin(path, "raw", 5L)
+  if (length(sig) < 5L || rawToChar(sig) != "%PDF-") return(NULL)
+  # Page dictionaries are normally near the front. Bound the fallback reader
+  # so a hostile or simply enormous PDF cannot make fig_check allocate the
+  # whole file. pdftools, when present, remains the more complete parser.
+  if (has_package("pdftools")) {
+    parsed <- with_r_fontconfig(
+      tryCatch(pdftools::pdf_info(path), error = function(e) NULL)
+    )
+    if (!is.null(parsed) && length(parsed$pages) && parsed$pages > 0) {
+      size <- with_r_fontconfig(
+        tryCatch(pdftools::pdf_pagesize(path)[1, ], error = function(e) NULL)
+      )
+      if (!is.null(size) && all(c("width", "height") %in% names(size))) {
+        return(list(width_mm = as.numeric(size[["width"]]) / 72 * MM_PER_IN,
+                    height_mm = as.numeric(size[["height"]]) / 72 * MM_PER_IN,
+                    vector = TRUE,
+                    contains_raster = pdf_contains_raster(path),
+                    colour_mode = pdf_colour_mode(path)))
+      }
+    }
+  }
+  raw <- readBin(path, "raw", min(n, 16 * 1024^2))
   raw[raw == as.raw(0L)] <- as.raw(32L)
   txt <- rawToChar(raw)
   m <- regexpr(
@@ -151,8 +191,27 @@ read_pdf_info <- function(path) {
   list(
     width_mm = (nums[3] - nums[1]) / 72 * MM_PER_IN,
     height_mm = (nums[4] - nums[2]) / 72 * MM_PER_IN,
-    vector = TRUE
+    vector = TRUE,
+    contains_raster = grepl("/Subtype[[:space:]]*/Image", txt, useBytes = TRUE),
+    colour_mode = if (grepl("/DeviceCMYK", txt, fixed = TRUE, useBytes = TRUE)) "CMYK" else NULL
   )
+}
+
+pdf_contains_raster <- function(path) {
+  n <- file.size(path)
+  raw <- readBin(path, "raw", min(n, 16 * 1024^2))
+  if (!length(raw)) return(NA)
+  raw[raw == as.raw(0L)] <- as.raw(32L)
+  grepl("/Subtype[[:space:]]*/Image", rawToChar(raw), useBytes = TRUE)
+}
+
+pdf_colour_mode <- function(path) {
+  n <- file.size(path)
+  raw <- readBin(path, "raw", min(n, 16 * 1024^2))
+  if (!length(raw)) return(NULL)
+  raw[raw == as.raw(0L)] <- as.raw(32L)
+  txt <- rawToChar(raw)
+  if (grepl("/DeviceCMYK", txt, fixed = TRUE, useBytes = TRUE)) "CMYK" else NULL
 }
 
 
@@ -198,8 +257,10 @@ read_tiff_info <- function(path) {
   # so seek to it rather than assuming it is near the start of the file.
   ifd <- rd(4L, 4L)
   if (is.na(ifd)) return(NULL)
+  total <- file.size(path)
   count <- rd(ifd, 2L)
   if (is.na(count) || count < 1 || count > 4096) return(NULL)
+  if (ifd < 8 || ifd + 2 + count * 12 + 4 > total) return(NULL)
 
   vals <- list()
   for (i in seq_len(count)) {
@@ -222,6 +283,8 @@ read_tiff_info <- function(path) {
   }
 
   photometric <- vals[["262"]]
+  compression_code <- vals[["259"]]
+  extra_samples <- vals[["338"]]
   xres <- vals[["282"]]
   unit <- vals[["296"]]
   if (is.null(unit) || is.na(unit)) unit <- 2
@@ -230,9 +293,72 @@ read_tiff_info <- function(path) {
     switch(as.character(photometric), "0" = "grayscale", "1" = "grayscale",
            "2" = "RGB", "5" = "CMYK", NULL)
   }
+  compression <- if (is.null(compression_code) || is.na(compression_code)) NULL else {
+    switch(as.character(compression_code), "1" = "none", "5" = "lzw",
+           "7" = "jpeg", "8" = "deflate", "32946" = "deflate",
+           paste0("code ", compression_code))
+  }
+  pages <- 1L
+  next_ifd <- rd(ifd + 2 + count * 12, 4L)
+  seen <- ifd
+  while (!is.na(next_ifd) && next_ifd > 0 && pages < 100L &&
+         next_ifd + 2 <= total && !next_ifd %in% seen) {
+    seen <- c(seen, next_ifd)
+    next_count <- rd(next_ifd, 2L)
+    if (is.na(next_count) || next_count < 1 || next_count > 4096 ||
+        next_ifd + 2 + next_count * 12 + 4 > total) break
+    pages <- pages + 1L
+    next_ifd <- rd(next_ifd + 2 + next_count * 12, 4L)
+  }
+  if (is.null(vals[["256"]]) || is.null(vals[["257"]])) return(NULL)
   out <- list(width_px = vals[["256"]], height_px = vals[["257"]], dpi = dpi,
-              colour_mode = colour_mode)
+              colour_mode = colour_mode, compression = compression,
+              has_alpha = !is.null(extra_samples) && !is.na(extra_samples),
+              flattened = is.null(vals[["37724"]]), pages = pages)
   out[!vapply(out, function(v) is.null(v) || (length(v) == 1L && is.na(v)), logical(1))]
+}
+
+# Dimensions and structural validity from SVG and PostScript-family files.
+read_svg_info <- function(path) {
+  n <- file.size(path)
+  if (!is.finite(n) || n < 5L) return(NULL)
+  raw <- readBin(path, "raw", min(n, 4 * 1024^2))
+  txt <- rawToChar(raw)
+  if (!grepl("<svg(?:[[:space:]>])", txt, ignore.case = TRUE, perl = TRUE)) return(NULL)
+  if (!grepl("</svg[[:space:]]*>", txt, ignore.case = TRUE, perl = TRUE)) return(NULL)
+  root <- regmatches(txt, regexpr("<svg[^>]*>", txt, ignore.case = TRUE, perl = TRUE))
+  if (!length(root) || !nzchar(root)) return(NULL)
+  length_mm <- function(name) {
+    m <- regexec(paste0(name, "[[:space:]]*=[[:space:]]*['\"]([0-9.]+)(mm|cm|in|pt|px)?['\"]"),
+                 root, ignore.case = TRUE, perl = TRUE)
+    z <- regmatches(root, m)[[1]]
+    if (length(z) < 2L) return(NULL)
+    v <- as.numeric(z[2]); u <- tolower(z[3] %||% "")
+    switch(u, mm = v, cm = v * 10, `in` = v * MM_PER_IN,
+           pt = v / 72 * MM_PER_IN, px = v / 96 * MM_PER_IN,
+           v / 96 * MM_PER_IN)
+  }
+  list(width_mm = length_mm("width"), height_mm = length_mm("height"),
+       vector = TRUE,
+       contains_raster = grepl("<image(?:[[:space:]>])", txt,
+                               ignore.case = TRUE, perl = TRUE))
+}
+
+read_postscript_info <- function(path) {
+  n <- file.size(path)
+  if (!is.finite(n) || n < 4L) return(NULL)
+  txt <- rawToChar(readBin(path, "raw", min(n, 4 * 1024^2)))
+  if (!startsWith(txt, "%!PS")) return(NULL)
+  m <- regexec("%%(?:HiRes)?BoundingBox:[[:space:]]+([-0-9.]+)[[:space:]]+([-0-9.]+)[[:space:]]+([-0-9.]+)[[:space:]]+([-0-9.]+)",
+               txt, perl = TRUE)
+  z <- regmatches(txt, m)[[1]]
+  dims <- if (length(z) == 5L) as.numeric(z[2:5]) else NULL
+  list(width_mm = if (is.null(dims)) NULL else (dims[3] - dims[1]) / 72 * MM_PER_IN,
+       height_mm = if (is.null(dims)) NULL else (dims[4] - dims[2]) / 72 * MM_PER_IN,
+       vector = TRUE,
+       colour_mode = if (grepl("setcmykcolor", txt, fixed = TRUE)) "CMYK" else NULL,
+       contains_raster = grepl("(^|[^[:alpha:]])(colorimage|image)([^[:alpha:]]|$)",
+                               txt, ignore.case = TRUE, perl = TRUE))
 }
 
 # Dimensions and resolution from a JPEG header.
@@ -254,6 +380,14 @@ read_jpeg_info <- function(path) {
   n <- file.size(path)
   raw <- readBin(path, "raw", min(n, 1048576L))
   if (length(raw) < 4L || !identical(as.integer(raw[1:2]), c(255L, 216L))) return(NULL)
+  con <- file(path, "rb")
+  on.exit(close(con), add = TRUE)
+  tail_n <- min(n, 65536L)
+  seek(con, where = n - tail_n, origin = "start")
+  tail <- readBin(con, "raw", tail_n)
+  if (length(tail) < 2L || !any(
+    as.integer(tail[-length(tail)]) == 255L & as.integer(tail[-1L]) == 217L
+  )) return(NULL)
   be <- function(i) as.integer(raw[i]) * 256L + as.integer(raw[i + 1L])
   i <- 3L
   info <- list()
@@ -261,7 +395,9 @@ read_jpeg_info <- function(path) {
     if (as.integer(raw[i]) != 255L) { i <- i + 1L; next }
     marker <- as.integer(raw[i + 1L])
     if (marker %in% c(216L, 217L)) { i <- i + 2L; next }
+    if (i + 3L > length(raw)) return(NULL)
     len <- be(i + 2L)
+    if (!is.finite(len) || len < 2L) return(NULL)
     if (marker == 224L && i + 13L <= length(raw)) {
       # JFIF: identifier and version, then a units byte at offset 11 and the
       # horizontal density at 12. Units 1 and 2 are per-inch and
@@ -281,9 +417,11 @@ read_jpeg_info <- function(path) {
       info$width_px <- be(i + 7L)
       break
     }
-    i <- i + 2L + len
+    next_i <- i + 2L + len
+    if (next_i <= i || next_i > length(raw) + 1L) return(NULL)
+    i <- next_i
   }
-  info
+  if (is.null(info$width_px) || is.null(info$height_px)) NULL else info
 }
 
 # Everything that can be established about a figure file without rendering it.
@@ -300,10 +438,11 @@ read_jpeg_info <- function(path) {
 #   `vector` the format could supply.
 inspect_file <- function(path) {
   ext <- tolower(tools::file_ext(path))
-  info <- list(format = ext, size_mb = file.size(path) / 1024^2)
+  info <- list(format = ext, size_mb = file.size(path) / 1024^2, valid = NA)
   if (ext == "png") {
     png <- read_png_info(path)
     if (!is.null(png)) {
+      info$valid <- TRUE
       info$colour_mode <- "RGB"
       info$width_px <- png$width_px
       info$height_px <- png$height_px
@@ -312,29 +451,37 @@ inspect_file <- function(path) {
         info$width_mm <- png$width_px / png$dpi * MM_PER_IN
         info$height_mm <- png$height_px / png$dpi * MM_PER_IN
       }
-    }
+    } else info$valid <- FALSE
   } else if (ext == "pdf") {
     pdf <- read_pdf_info(path)
     if (!is.null(pdf)) {
+      info$valid <- TRUE
       info$width_mm <- pdf$width_mm
       info$height_mm <- pdf$height_mm
       info$vector <- TRUE
-    }
+      info$contains_raster <- pdf$contains_raster
+    } else info$valid <- FALSE
   } else if (ext %in% c("tiff", "tif")) {
     tif <- read_tiff_info(path)
     if (!is.null(tif)) {
+      info$valid <- TRUE
       info$width_px <- tif$width_px
       info$height_px <- tif$height_px
       info$dpi <- tif$dpi
       info$colour_mode <- tif$colour_mode
+      info$compression <- tif$compression
+      info$has_alpha <- tif$has_alpha
+      info$flattened <- tif$flattened
+      info$pages <- tif$pages
       if (!is.null(tif$dpi) && !is.null(tif$width_px)) {
         info$width_mm <- tif$width_px / tif$dpi * MM_PER_IN
         info$height_mm <- tif$height_px / tif$dpi * MM_PER_IN
       }
-    }
+    } else info$valid <- FALSE
   } else if (ext %in% c("jpeg", "jpg")) {
     jpg <- read_jpeg_info(path)
     if (!is.null(jpg)) {
+      info$valid <- TRUE
       info$width_px <- jpg$width_px
       info$height_px <- jpg$height_px
       info$dpi <- jpg$dpi
@@ -342,9 +489,17 @@ inspect_file <- function(path) {
         info$width_mm <- jpg$width_px / jpg$dpi * MM_PER_IN
         info$height_mm <- jpg$height_px / jpg$dpi * MM_PER_IN
       }
-    }
+    } else info$valid <- FALSE
   } else if (ext %in% c("eps", "ps", "svg")) {
-    info$vector <- TRUE
+    vec <- if (ext == "svg") read_svg_info(path) else read_postscript_info(path)
+    if (!is.null(vec)) {
+      info$valid <- TRUE
+      info$vector <- TRUE
+      info$width_mm <- vec$width_mm
+      info$height_mm <- vec$height_mm
+      info$contains_raster <- vec$contains_raster
+      info$colour_mode <- vec$colour_mode
+    } else info$valid <- FALSE
   }
   info
 }
@@ -367,13 +522,7 @@ inspect_file <- function(path) {
 # @return Nothing; warns as a side effect.
 warn_if_unreadable <- function(path, info) {
   fmt <- info$format %||% ""
-  unreadable <- if (fmt %in% c("png", "tiff", "tif", "jpeg", "jpg")) {
-    is.null(info$width_px)
-  } else if (fmt == "pdf") {
-    is.null(info$width_mm)
-  } else {
-    FALSE
-  }
+  unreadable <- identical(info$valid, FALSE)
   if (!unreadable) return(invisible(NULL))
   cli::cli_warn(
     c("{.file {basename(path)}} could not be read as {toupper(fmt)}.",
@@ -404,12 +553,26 @@ warn_if_unreadable <- function(path, info) {
 # @param actual Measured dots per inch.
 # @param required Stated minimum.
 # @return TRUE if the figure meets the requirement.
-meets_dpi <- function(actual, required) {
-  round(as.numeric(actual)) >= round(as.numeric(required))
+meets_dpi <- function(actual, required, inclusive = TRUE) {
+  actual <- round(as.numeric(actual))
+  required <- round(as.numeric(required))
+  if (isTRUE(inclusive)) actual >= required else actual > required
+}
+
+meets_resolution <- function(actual, minimum = NULL, maximum = NULL,
+                             min_inclusive = TRUE, max_inclusive = TRUE) {
+  actual <- round(as.numeric(actual))
+  lo <- is.null(minimum) || if (isTRUE(min_inclusive)) {
+    actual >= round(as.numeric(minimum))
+  } else actual > round(as.numeric(minimum))
+  hi <- is.null(maximum) || if (isTRUE(max_inclusive)) {
+    actual <= round(as.numeric(maximum))
+  } else actual < round(as.numeric(maximum))
+  isTRUE(lo) && isTRUE(hi)
 }
 
 UNSTATED <- "not specified by publisher"
-UNHARVESTED <- "not yet harvested for this journal"
+UNHARVESTED <- "not yet reviewed for this specification"
 # A third case, distinct from both. "Not specified by publisher" is a fact
 # about a publisher and "not yet harvested" is a fact about the registry;
 # neither is true when the caller simply did not give a specification. Saying
@@ -432,6 +595,7 @@ new_row <- function(check, requirement, actual, status) {
   if (identical(requirement, UNHARVESTED) && status %in% c("pass", "fail")) {
     status <- "unknown"
   }
+  status <- match.arg(status, c("pass", "fail", "unspecified", "unknown", "invalid"))
   data.frame(
     check = check, requirement = requirement, actual = actual,
     status = status, stringsAsFactors = FALSE
@@ -458,17 +622,21 @@ graded <- function(check, requirement, actual, ok, spec = NULL, fields = NULL) {
   new_row(check, requirement, actual, if (isTRUE(ok)) "pass" else "fail")
 }
 
-#' Check a figure against a journal's requirements
+#' Inspect a figure and verify it against a specification
 #'
 #' Accepts either a ggplot object, checked before it is saved, or the path to
-#' a figure file that has already been written.
+#' a figure file that has already been written. With no specification it
+#' reports what can be measured without issuing pass or fail claims. A
+#' specification may come from the included registry, your own registry, or a
+#' named list supplied directly in R.
 #'
-#' Each requirement is reported with one of four outcomes. `pass` and `fail`
+#' Each requirement is reported with one of five outcomes. `pass` and `fail`
 #' mean what they say. `unspecified` means the publisher does not state that
 #' requirement, so nothing can be concluded. `unknown` means the requirement
 #' exists but this input cannot answer it, for example type size in a raster
-#' file. Only `fail` is a problem you must fix; `unspecified` and `unknown`
-#' are prompts to check by hand.
+#' file. `invalid` means the input is not a readable file of the type its name
+#' claims. A pass applies only to the individual row; an overall compliance
+#' claim requires every recorded requirement to pass or be explicitly absent.
 #'
 #' Type size is read back from PDF, EPS and SVG files, which record the size
 #' each string was set at. This is worth doing rather than trusting the plot
@@ -479,7 +647,8 @@ graded <- function(check, requirement, actual, ok, spec = NULL, fields = NULL) {
 #' reported as `unknown` rather than estimated.
 #'
 #' @param x A ggplot object, or a path to a figure file.
-#' @param journal Registry id, for example `"frontiers"`.
+#' @param spec Optional specification: a registry id such as `"frontiers"`,
+#'   a `figspec_spec`, or a named list of requirements.
 #' @param column Which column width the figure is intended for. One of
 #'   `"single"`, `"onehalf"` or `"double"`.
 #' @param width,height Intended output size. Defaults to the journal's width
@@ -491,31 +660,57 @@ graded <- function(check, requirement, actual, ok, spec = NULL, fields = NULL) {
 #'   `png()` and `tiff()` devices do not, whereas ragg does.
 #' @param format Output format, for example `"tiff"`. Only used when `x` is a
 #'   ggplot object.
+#' @param colour_mode Intended output colour model for a ggplot object. Defaults
+#'   to `"RGB"`; [fig_save()] supplies `"CMYK"` when it selects a CMYK-capable
+#'   vector device.
+#' @param color_mode American spelling of `colour_mode`. Takes precedence when
+#'   supplied.
 #' @param art_type Which resolution rule applies. Publishers set different
 #'   minimums for different kinds of artwork: Cell Press asks 300 dpi for
 #'   colour or greyscale, 500 for black and white, and 1000 for line art.
-#'   figspec cannot tell which one your figure is, so it checks against
-#'   `"colour"` by default and names the other thresholds in the report rather
-#'   than quietly applying the most lenient one. `"color"` is accepted too.
+#'   `"auto"` classifies a plot from what it actually draws. For a saved file,
+#'   where that evidence has been lost, it applies the strictest stated rule so
+#'   that an ambiguous file cannot pass under the most lenient interpretation.
+#'   `"color"` is accepted as an alias for `"colour"`.
 #' @return An object of class `figspec_report`, a data frame of one row per
 #'   requirement.
+#' @seealso [fig_save()] to export and check in one step,
+#'   [submission_check()] to review several figures together, and
+#'   [spec_get()] for registry and project specifications.
 #' @examples
 #' library(ggplot2)
-#' p <- ggplot(mtcars, aes(wt, mpg)) + geom_point()
-#' fig_check(p, "frontiers")
+#' p <- ggplot(ggplot2::mpg, aes(displ, hwy, colour = class)) + geom_point()
+#' p
+#'
+#' # Inspect first, without judging the plot against external requirements.
+#' fig_check(p)
+#'
+#' # Verify the same plot against project requirements supplied directly in R.
+#' report_spec <- list(
+#'   name = "Quarterly research report",
+#'   columns = list(full = 160),
+#'   dpi_min = 300,
+#'   formats = "png",
+#'   font_min_pt = 9
+#' )
+#' fig_check(p, report_spec, column = "full", height = 95,
+#'           dpi = 300, format = "png")
 #' @export
-fig_check <- function(x, journal = NULL, column = "single",
+fig_check <- function(x, spec = NULL, column = NULL,
                           width = NULL, height = NULL,
                           units = c("mm", "cm", "in"),
                           dpi = NULL, format = NULL,
-                          art_type = c("colour", "bw", "line", "combination")) {
-  art_type_given <- !missing(art_type)
+                          colour_mode = NULL,
+                          color_mode = NULL,
+                          art_type = c("auto", "colour", "bw", "line", "combination")) {
   units <- match.arg(units)
+  if (!is.null(color_mode)) colour_mode <- color_mode
   # match.arg() reads its choices from the formal, so it needs a bare symbol;
   # the spelling is normalised into the variable before the call rather than
   # wrapped around it.
   art_type <- british_spelling(art_type)
   art_type <- match.arg(art_type)
+  art_type_was_auto <- identical(art_type, "auto")
   # With no specification there is nothing to judge against, so the report
   # becomes an inspection: it says what the figure is and states plainly that
   # no requirement was supplied. An empty spec produces exactly that, because
@@ -535,13 +730,14 @@ fig_check <- function(x, journal = NULL, column = "single",
     }
     x <- src
   }
-  no_spec <- is.null(journal)
-  from_registry <- !no_spec && is.character(journal) && length(journal) == 1L
+  no_spec <- is.null(spec)
+  from_registry <- !no_spec && is.character(spec) && length(spec) == 1L
   spec <- if (no_spec) {
     structure(list(name = "no specification"), class = c("figspec_spec", "list"))
   } else {
-    journal_spec(journal)
+    spec_get(spec)
   }
+  if (is.null(column)) column <- default_column(spec)
   rows <- list()
   info <- list()
 
@@ -564,10 +760,10 @@ fig_check <- function(x, journal = NULL, column = "single",
     } else NULL
     # A vector file still records the size each string was set at, so type
     # size is answerable here even though a raster's text is only pixels.
-    text_sizes <- vector_text_sizes(x, actual_format)
+    text_sizes <- if (isTRUE(info$valid)) vector_text_sizes(x, actual_format) else NULL
   } else if (is_ggplot_object(x)) {
     if (is.null(width)) {
-      width <- tryCatch(fig_width(journal, column, "mm"), error = function(e) NULL)
+      width <- tryCatch(fig_width(spec, column, "mm"), error = function(e) NULL)
     } else {
       width <- convert_length(width, units, "mm")
     }
@@ -585,11 +781,34 @@ fig_check <- function(x, journal = NULL, column = "single",
       "bad_input")
   }
 
+  if (identical(art_type, "auto")) {
+    art_type <- if (is_file) strictest_art_type(spec) else infer_art_type(x)
+  }
+
+  if (is_file) {
+    rows[[length(rows) + 1L]] <- if (identical(info$valid, FALSE)) {
+      new_row("File validity", "valid, readable file",
+              paste0("not a readable ", toupper(info$format), " file"), "invalid")
+    } else if (isTRUE(info$valid)) {
+      new_row("File validity", "valid, readable file", "valid", "pass")
+    } else {
+      new_row("File validity", "valid, readable file",
+              "format is not structurally inspected", "unknown")
+    }
+  }
+
   # Width -----------------------------------------------------------------
   if (!is.null(spec$columns)) {
     allowed <- unlist(spec$columns)
-    req <- paste0(paste0(names(allowed), " ", allowed, " mm", collapse = " | "))
-    ok <- !is.null(actual_w) && any(abs(actual_w - allowed) <= 0.5)
+    if (!column %in% names(allowed)) {
+      figspec_abort(
+        c("Unknown column {.val {column}} for {spec$name}.",
+          "i" = "Available: {.val {names(allowed)}}."),
+        "bad_input", column = column)
+    }
+    target <- as.numeric(allowed[[column]])
+    req <- paste0(column, " ", target, " mm")
+    ok <- !is.null(actual_w) && abs(actual_w - target) <= 0.5
   } else if (!is.null(spec$width_min_mm) || !is.null(spec$width_max_mm)) {
     lo <- spec$width_min_mm %||% -Inf
     hi <- spec$width_max_mm %||% Inf
@@ -624,22 +843,47 @@ fig_check <- function(x, journal = NULL, column = "single",
   )
 
   # Resolution ------------------------------------------------------------
+  required_dpi <- switch(art_type,
+    colour = spec$dpi_min,
+    bw = spec$dpi_bw %||% spec$dpi_min,
+    line = spec$dpi_line_art %||% spec$dpi_min,
+    combination = spec$dpi_combination %||% spec$dpi_min
+  )
+  maximum_dpi <- spec$dpi_max
+  min_inclusive <- spec$dpi_min_inclusive %||% TRUE
+  max_inclusive <- spec$dpi_max_inclusive %||% TRUE
+  min_op <- if (isTRUE(min_inclusive)) "min " else "> "
+  max_op <- if (isTRUE(max_inclusive)) "max " else "< "
+  req_dpi_txt <- if (is.null(required_dpi) && is.null(maximum_dpi)) NULL else {
+    paste0(
+      if (!is.null(required_dpi)) paste0(min_op, required_dpi, " dpi for ", art_type),
+      if (!is.null(required_dpi) && !is.null(maximum_dpi)) ", ",
+      if (!is.null(maximum_dpi)) paste0(max_op, maximum_dpi, " dpi")
+    )
+  }
+  # Preserve the reason for applying the unusually high line-art threshold.
+  # This is both a useful warning to a person reading the report and a guard
+  # against silently treating an inferred classification as user-supplied.
+  if (art_type_was_auto && !is_file && identical(art_type, "line") &&
+      !is.null(spec$dpi_line_art) && !is.null(req_dpi_txt)) {
+    req_dpi_txt <- paste0(req_dpi_txt, " (inferred from pure black and white artwork)")
+  }
   is_vector_fmt <- isTRUE(info$vector) ||
     (!is.null(actual_format) && actual_format %in% c("pdf", "eps", "ps", "svg"))
   if (is_file && isTRUE(is_vector_fmt)) {
-    rows[[length(rows) + 1L]] <- new_row(
-      "Resolution",
-      if (!is.null(spec$dpi_min)) paste0("min ", spec$dpi_min, " dpi") else UNSTATED,
-      "vector format, resolution independent",
-      if (!is.null(spec$dpi_min)) "pass" else "unspecified"
-    )
+    if (isTRUE(info$contains_raster)) {
+      rows[[length(rows) + 1L]] <- new_row(
+        "Resolution", req_dpi_txt %||% UNHARVESTED,
+        "vector container includes raster image(s); effective dpi could not be determined",
+        if (is.null(req_dpi_txt)) "unknown" else "unknown")
+    } else {
+      rows[[length(rows) + 1L]] <- new_row(
+        "Resolution", req_dpi_txt %||% UNSTATED,
+        "pure vector artwork, resolution independent",
+        if (!is.null(req_dpi_txt)) "pass" else "unspecified"
+      )
+    }
   } else {
-    required_dpi <- switch(art_type,
-      colour = spec$dpi_min,
-      bw = spec$dpi_bw %||% spec$dpi_min,
-      line = spec$dpi_line_art %||% spec$dpi_min,
-      combination = spec$dpi_combination %||% spec$dpi_min
-    )
     # Name every threshold the publisher states. A figure judged as colour art
     # must not look compliant when it is really line art held to a higher bar.
     others <- c(
@@ -647,32 +891,17 @@ fig_check <- function(x, journal = NULL, column = "single",
       if (!is.null(spec$dpi_line_art) && art_type != "line") paste0("line art ", spec$dpi_line_art),
       if (!is.null(spec$dpi_combination) && art_type != "combination") paste0("combination ", spec$dpi_combination)
     )
-    # Where the caller did not choose an art type, figspec checks against the
-    # general minimum. Most statistical plots are line art in the sense
-    # publishers mean, and several hold line art to three or four times the
-    # general minimum, so say so rather than let a lenient default pass
-    # silently. The verdict is not changed: the choice stays the caller's.
-    line_art_warning <- NULL
-    if (!art_type_given && !is_file && !is.null(spec$dpi_line_art) &&
-        !is.null(required_dpi) &&
-        as.numeric(spec$dpi_line_art) > as.numeric(required_dpi) &&
-        identical(classify_tone(x), "bitonal")) {
-      line_art_warning <- paste0(
-        "; this plot is pure black and white, which this journal holds to ",
-        spec$dpi_line_art, " dpi - see suggest_art_type()"
-      )
-    }
-    req_dpi_txt <- if (is.null(required_dpi)) NULL else {
-      paste0("min ", required_dpi, " dpi for ", art_type,
-             if (length(others)) paste0("; also states ", paste(others, collapse = ", "), " dpi") else "",
-             line_art_warning %||% "")
+    if (!is.null(req_dpi_txt) && length(others)) {
+      req_dpi_txt <- paste0(req_dpi_txt, "; also states ",
+                            paste(others, collapse = ", "), " dpi")
     }
     rows[[length(rows) + 1L]] <- graded(
       "Resolution", req_dpi_txt,
       if (!is.null(actual_dpi)) paste0(fmt_num(actual_dpi, 0), " dpi") else NULL,
-      !is.null(actual_dpi) && !is.null(required_dpi) &&
-        meets_dpi(actual_dpi, required_dpi),
-      spec, "dpi_min"
+      !is.null(actual_dpi) && (!is.null(required_dpi) || !is.null(maximum_dpi)) &&
+        meets_resolution(actual_dpi, required_dpi, maximum_dpi,
+                         min_inclusive, max_inclusive),
+      spec, c("dpi_min", "dpi_max")
     )
   }
 
@@ -685,6 +914,42 @@ fig_check <- function(x, journal = NULL, column = "single",
       tolower(actual_format) %in% tolower(unlist(spec$formats)),
     spec, "formats"
   )
+
+  if (is_file && actual_format %in% c("tiff", "tif")) {
+    rows[[length(rows) + 1L]] <- graded(
+      "TIFF compression",
+      if (!is.null(spec$tiff_compression)) toupper(spec$tiff_compression) else NULL,
+      if (!is.null(info$compression)) toupper(info$compression) else NULL,
+      !is.null(info$compression) && !is.null(spec$tiff_compression) &&
+        identical(tolower(info$compression), tolower(spec$tiff_compression)),
+      spec, "tiff_compression"
+    )
+    rows[[length(rows) + 1L]] <- graded(
+      "Transparency",
+      if (identical(spec$allow_alpha, FALSE)) "no alpha channel" else NULL,
+      if (!is.null(info$has_alpha)) {
+        if (isTRUE(info$has_alpha)) "alpha channel present" else "opaque"
+      } else NULL,
+      !is.null(info$has_alpha) && identical(spec$allow_alpha, FALSE) && !info$has_alpha,
+      spec, "allow_alpha"
+    )
+    rows[[length(rows) + 1L]] <- graded(
+      "Pages",
+      if (!is.null(spec$max_pages)) paste0("max ", spec$max_pages) else NULL,
+      if (!is.null(info$pages)) as.character(info$pages) else NULL,
+      !is.null(info$pages) && !is.null(spec$max_pages) && info$pages <= spec$max_pages,
+      spec, "max_pages"
+    )
+    rows[[length(rows) + 1L]] <- graded(
+      "Layers",
+      if (isTRUE(spec$flattened)) "flattened, no editable layers" else NULL,
+      if (!is.null(info$flattened)) {
+        if (isTRUE(info$flattened)) "flattened" else "layer data present"
+      } else NULL,
+      !is.null(info$flattened) && isTRUE(spec$flattened) && info$flattened,
+      spec, "flattened"
+    )
+  }
 
   # Type size -------------------------------------------------------------
   if (!is.null(text_sizes) && nrow(text_sizes) > 0) {
@@ -715,14 +980,25 @@ fig_check <- function(x, journal = NULL, column = "single",
     f <- tryCatch(x$theme$text$family, error = function(e) NULL)
     if (is.null(f) || !nzchar(f)) NULL else f
   } else NULL
-  rows[[length(rows) + 1L]] <- graded(
-    "Font",
-    if (!is.null(spec$font_families)) paste(unlist(spec$font_families), collapse = ", ") else NULL,
-    actual_family,
-    !is.null(actual_family) && !is.null(spec$font_families) &&
-      tolower(actual_family) %in% tolower(unlist(spec$font_families)),
-    spec, "font_families"
-  )
+  font_req <- if (!is.null(spec$font_families)) {
+    paste(unlist(spec$font_families), collapse = ", ")
+  } else NULL
+  if (!is_file && !is.null(actual_family) && has_package("systemfonts")) {
+    fonts <- tryCatch(systemfonts::system_fonts(), error = function(e) NULL)
+    installed <- !is.null(fonts) && any(tolower(actual_family) %in%
+      tolower(c(fonts$family, fonts$name)))
+    actual_font <- paste0(actual_family, if (!installed) " (not installed)" else "")
+    font_ok <- installed && !is.null(spec$font_families) &&
+      tolower(actual_family) %in% tolower(unlist(spec$font_families))
+    rows[[length(rows) + 1L]] <- graded(
+      "Font", font_req, actual_font, font_ok, spec, "font_families")
+  } else {
+    rows[[length(rows) + 1L]] <- graded(
+      "Font", font_req, actual_family,
+      !is.null(actual_family) && !is.null(spec$font_families) &&
+        tolower(actual_family) %in% tolower(unlist(spec$font_families)),
+      spec, "font_families")
+  }
 
   # Line width ------------------------------------------------------------
   line_pts <- if (!is_file) plot_linewidths(x) else numeric(0)
@@ -758,7 +1034,7 @@ fig_check <- function(x, journal = NULL, column = "single",
   }
 
   # Colour mode -----------------------------------------------------------
-  actual_mode <- if (is_file) info$colour_mode else "RGB"
+  actual_mode <- if (is_file) info$colour_mode else colour_mode %||% "RGB"
   rows[[length(rows) + 1L]] <- graded(
     "Colour mode",
     if (!is.null(spec$colour_mode)) paste(unlist(spec$colour_mode), collapse = " or ") else NULL,
@@ -788,6 +1064,10 @@ fig_check <- function(x, journal = NULL, column = "single",
 
   out <- do.call(rbind, rows)
   rownames(out) <- NULL
+  if (is_file && identical(info$valid, FALSE)) {
+    judged <- out$check != "File validity" & out$status %in% c("pass", "fail")
+    out$status[judged] <- "invalid"
+  }
   if (no_spec) {
     # Not "unspecified by the publisher" and not "not yet harvested": there is
     # no publisher and no registry entry in play. Say the third thing.
@@ -805,10 +1085,11 @@ fig_check <- function(x, journal = NULL, column = "single",
   structure(
     out,
     no_spec = no_spec,
-    journal = if (no_spec) NULL else spec$name,
-    journal_id = spec$id,
+    spec_name = if (no_spec) NULL else spec$name,
+    spec_id = spec$id,
     source_url = spec$source_url,
     verified_on = spec$verified_on,
+    publication_stage = spec$publication_stage,
     input = if (is_file) x else "ggplot object",
     class = c("figspec_report", "data.frame")
   )
@@ -816,7 +1097,7 @@ fig_check <- function(x, journal = NULL, column = "single",
 
 # Subsetting a report yields a plain data frame.
 #
-# A report carries the journal, the source URL and the date it was read as
+# A report carries the specification name, source URL and review date as
 # attributes, and its print method presents them as the provenance of the whole
 # report. A subset is no longer that report - `r[r$status == "fail", ]` is a
 # selection the user made - so the attributes and the class are dropped rather
@@ -826,7 +1107,8 @@ fig_check <- function(x, journal = NULL, column = "single",
 `[.figspec_report` <- function(x, ...) {
   out <- NextMethod()
   if (is.data.frame(out)) {
-    attributes(out)[c("journal", "journal_id", "source_url", "verified_on", "input")] <- NULL
+    attributes(out)[c("spec_name", "spec_id", "source_url", "verified_on",
+                      "publication_stage", "input")] <- NULL
     class(out) <- "data.frame"
   }
   out
@@ -866,7 +1148,7 @@ report_row <- function(check, actual, requirement, width, lab_w = 12L) {
 
 #' @export
 print.figspec_report <- function(x, ...) {
-  cli::cli_h1("{attr(x, 'journal') %||% 'Figure inspection'}")
+  cli::cli_h1("{attr(x, 'spec_name') %||% 'Figure inspection'}")
   cli::cli_text("{.emph checked: {attr(x, 'input')}}")
   cli::cli_text("")
   w <- max(cli::console_width(), 50L)
@@ -877,31 +1159,40 @@ print.figspec_report <- function(x, ...) {
     switch(r$status,
       pass = cli::cli_alert_success("{ln$head}"),
       fail = cli::cli_alert_danger("{ln$head}"),
+      invalid = cli::cli_alert_danger("{ln$head}"),
       unspecified = cli::cli_alert_info("{ln$head}"),
       unknown = cli::cli_alert_warning("{ln$head}")
     )
     if (length(ln$rest)) cli::cli_verbatim(ln$rest)
   }
   fails <- sum(x$status == "fail")
+  invalid <- sum(x$status == "invalid")
   cli::cli_text("")
   # With no specification there is nothing to have failed, and saying "no
   # failures" would read as a clean bill of health that nothing was checked
   # for. Report the absence instead.
   if (isTRUE(attr(x, "no_spec"))) {
-    cli::cli_alert_info(
-      "Nothing was checked: no specification was given. Pass a journal id, or ",
-      "a specification of your own, to have these judged."
-    )
+    alert_wrap(paste0(
+      "Nothing was checked: no specification was given. Pass a registry id or ",
+      "a named list of requirements to have these judged."
+    ), "info")
+  } else if (invalid > 0) {
+    alert_wrap("The input is invalid; no compliance conclusion is possible.", "danger")
+  } else if (fails == 0 && !any(x$status == "unknown")) {
+    alert_wrap("Every recorded requirement that applies was met.", "success")
   } else if (fails == 0) {
-    cli::cli_alert_success("No failures against the requirements on record.")
+    alert_wrap("No failures were found, but this assessment is incomplete.", "warning")
   } else {
-    cli::cli_alert_danger("{fails} requirement{?s} not met.")
+    alert_wrap(paste0(fails, " requirement", if (fails == 1L) "" else "s", " not met."),
+               "danger")
   }
-  n_open <- sum(x$status %in% c("unspecified", "unknown"))
+  n_open <- sum(x$status == "unknown")
   if (n_open > 0 && !isTRUE(attr(x, "no_spec"))) {
-    cli::cli_alert_info(
-      "{n_open} requirement{?s} could not be judged automatically - check by hand."
-    )
+    alert_wrap(paste0(
+      n_open, " requirement", if (n_open == 1L) "" else "s",
+      " or registry field", if (n_open == 1L) "" else "s",
+      " could not be judged automatically - check by hand."
+    ), "info")
   }
   # A source line with nothing in it reads as a missing citation rather than as
   # an absent one, so print it only when there is a source to cite.
@@ -912,6 +1203,10 @@ print.figspec_report <- function(x, ...) {
       "{.strong Source:} {.url {src}}",
       if (!is.null(seen) && nzchar(seen)) " (verified {seen})" else ""
     )
+  }
+  stage <- attr(x, "publication_stage")
+  if (!is.null(stage) && nzchar(stage)) {
+    cli::cli_text("{.strong Applies at:} {stage} submission")
   }
   invisible(x)
 }

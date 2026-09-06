@@ -1,134 +1,249 @@
-# The registry: provenance, and adding your own
+# Choose, Verify and Add Specifications
 
 [`library`](https://rdrr.io/r/base/library.html)`(`[`figspec`](https://dansemakula.github.io/figspec/)`)`
 
-figspec’s code is small. The registry is the part that makes it worth
-trusting, and it is built so that growing it cannot quietly corrupt it.
-This vignette covers how it is organised, and how to add to it.
+## Why figspec keeps a specification registry
 
-## Every entry names its source
+Requirements for figures may come from a publisher, an individual
+journal, an organisation or a project. These requirements might change
+from time to time. As such they may need to be updated. Additionally,
+the number of journals grows and more need to be added.
 
-`spec`` ``<-`` `[`journal_spec`](https://dansemakula.github.io/figspec/reference/journal_spec.md)`(``"elsevier"``)`` ``spec``$``source_url`` ``#> [1] "https://www.elsevier.com/about/policies-and-standards/author/artwork-and-media-instructions/artwork-sizing"`` ``spec``$``verified_on`` ``#> [1] "2026-08-22"`
+figspec keeps these requirements in a registry to make it easy to reuse
+a specification without needing to look up changes to every specific
+requirement everytime you build figures in R. The registry also keeps
+the source and review date with the specification, making it possible to
+see what figspec is applying and to update the record when the guidance
+changes.
 
-The package **refuses to load** an entry without both. That is a
-load-time error, which stops the load outright.
+## Choose the right specification
 
-Load-bearing numbers also carry the publisher’s own wording, so an entry
-can be audited without leaving the file:
+Start with the specification that most closely matches the work you are
+preparing. If the registry contains an entry for the individual journal,
+use that entry. If it does not, a publisher-wide entry may be
+appropriate when the journal directs authors to the publisher’s general
+guidance.
+
+Publisher-wide guidance does not necessarily cover every requirement for
+every journal in the publisher’s portfolio. An individual journal may
+use different page dimensions, accept different file formats or add
+instructions of its own. Check the journal’s guidance before relying on
+a publisher-wide profile.
+
+[`spec_list()`](https://dansemakula.github.io/figspec/reference/spec_list.md)
+lists the specifications currently available. This example shows one
+publisher-wide profile and one journal-specific profile:
+
+`available`` ``<-`` `[`spec_list`](https://dansemakula.github.io/figspec/reference/spec_list.md)`(``)`` ``available``[`` `` `[`match`](https://rdrr.io/r/base/match.html)`(`[`c`](https://rdrr.io/r/base/c.html)`(``"elsevier"``, ``"jid"``)``, ``available``$``id``)``,`` `` `[`c`](https://rdrr.io/r/base/c.html)`(``"id"``, ``"name"``, ``"publisher"``, ``"origin"``)`` ``]`` ``#> id name publisher origin`` ``#> 14 elsevier Elsevier journals Elsevier figspec`` ``#> 29 jid The Journal of Infectious Diseases Oxford University Press figspec`
+
+If no suitable profile exists, you can add a specification for a
+publication, organisation or project. figspec does not automatically
+join a publisher-wide profile to separate journal instructions. When
+both apply, add a specification that records the combined requirements
+and the sources from which they came.
+
+## Check where a specification came from
+
+Every specification included with figspec records the page from which
+its requirements were taken and the date that page was last checked. You
+can see both with
+[`spec_get()`](https://dansemakula.github.io/figspec/reference/spec_get.md):
+
+`spec`` ``<-`` `[`spec_get`](https://dansemakula.github.io/figspec/reference/spec_get.md)`(``"elsevier"``)`` ``spec``$``source_url`` ``#> [1] "https://www.elsevier.com/about/policies-and-standards/author/artwork-and-media-instructions/artwork-sizing"`` ``spec``$``verified_on`` ``#> [1] "2026-08-22"`
+
+The source link lets you read the original guidance and confirm that it
+applies to the work you are preparing. The review date tells you when
+the registry entry was last compared with that guidance. It does not
+mean that the source has remained unchanged since that date or that
+every statement has been interpreted correctly.
+
+When the guidance gives a numerical requirement, the specification can
+also keep the passage that supports the recorded value. For example, the
+widths in the Elsevier profile are accompanied by the wording from its
+guidance:
 
 [`writeLines`](https://rdrr.io/r/base/writeLines.html)`(`[`strwrap`](https://rdrr.io/r/base/strwrap.html)`(``spec``$``source_quote_width``)``)`` ``#> Minimal size 30 mm | Single column 90 mm | 1.5 column 140 mm | Double`` ``#> column (full width) 190 mm`
 
-## The three states of a field
+Some publications place their requirements on several pages. A
+specification can therefore record more than one source and show which
+page supports each requirement. This is useful when dimensions,
+resolution and text requirements are documented separately.
 
-A blank field means one of two different things, and conflating them
-puts a claim in figspec’s mouth that nobody earned.
+## Understand what is included and what is missing
 
-| In the entry | Reported as | Means |
+Publications do not always state a requirement for every aspect of a
+figure. When a value is missing from a specification, the source may
+have been checked without finding that requirement, or that part of the
+source may not have been reviewed yet. The difference matters: a
+requirement that was not found is not the same as a requirement that
+nobody has looked for.
+
+figspec keeps these situations separate and reports them as follows:
+
+| What was found | What it means | How figspec reports it |
 |----|----|----|
-| A value in `requirements:` | graded `pass` / `fail` | The publisher states it |
-| Listed in `not_stated:` | *not specified by publisher* | Someone read the page and confirmed it is absent |
-| In neither | *not yet harvested* | **Nobody has looked yet** |
+| The reviewed guidance states a requirement | The requirement is recorded and can be checked when the figure or file provides enough information | `pass`, `fail` or `unknown` |
+| The relevant guidance was checked but does not state a requirement | No requirement was found in the sources reviewed for that specification | Not specified by the source |
+| The requirement has not yet been reviewed | figspec does not yet know whether the source states it | Not yet harvested |
 
-`status`` ``<-`` `[`registry_status`](https://dansemakula.github.io/figspec/reference/registry_status.md)`(``)`` ``status``[``status``$``id`` `[`%in%`](https://rdrr.io/r/base/match.html)` `[`c`](https://rdrr.io/r/base/c.html)`(``"cell_press"``, ``"aps"``)``,`` `` `[`c`](https://rdrr.io/r/base/c.html)`(``"id"``, ``"stated"``, ``"confirmed_absent"``, ``"unharvested"``)``]`` ``#> id stated confirmed_absent unharvested`` ``#> 13 aps 2 0 26`` ``#> 3 cell_press 15 0 13`
+[`registry_status()`](https://dansemakula.github.io/figspec/reference/registry_status.md)
+shows how many requirements fall into each group for every profile. This
+example compares two profiles in the registry:
 
-The three always sum to the full field list, so a half-finished entry
-cannot pass as a complete one. Listing a field in both `requirements:`
-and `not_stated:` is a load-time error.
+`status`` ``<-`` `[`registry_status`](https://dansemakula.github.io/figspec/reference/registry_status.md)`(``)`` ``status``[`` `` ``status``$``id`` `[`%in%`](https://rdrr.io/r/base/match.html)` `[`c`](https://rdrr.io/r/base/c.html)`(``"cell_press"``, ``"aps"``)``,`` `` `[`c`](https://rdrr.io/r/base/c.html)`(``"id"``, ``"stated"``, ``"confirmed_absent"``, ``"unharvested"``)`` ``]`` ``#> id stated confirmed_absent unharvested`` ``#> 13 aps 2 0 33`` ``#> 3 cell_press 15 0 20`
 
-## Hedged wording
+These counts describe how much of each profile has been reviewed. They
+do not describe how many requirements a publisher ought to have.
+*Confirmed absent* means only that the sources checked for that
+specification did not state the requirement. Another page or a later
+version of the guidance may still contain it.
 
-Publishers hedge constantly. What decides how a rule is recorded is the
-**main verb of the sentence stating it**.
+## Add your own specification
 
-| Wording | Recorded as |
-|----|----|
-| OUP: whole guide is *“tips rather than strict rules”*, then *“at least 300dpi”* | Requirement. The hedge is about achieving the target, and the target still applies |
-| Elsevier: *“a rule-of-thumb rather than a strict rule”*, then *“no smaller than 6 pt”* | Requirement |
-| MDPI: *“should be … preferably no less than 600 dpi”* | Requirement. The verb is *should* |
-| Sage: *“We recommend having no more than 7 series”* | Advisory. The verb is *recommend*: reported, never graded |
-| PLOS: *“Use only Arial, Times, or Symbol font”* | Requirement. A closed set |
-| ACS: *“Helvetica or Arial fonts work well”* | Not recorded. It excludes nothing |
+If the registry does not include the specification you need, you can add
+it. The method depends on whether you need the specification only for
+your current work, want to reuse it in other projects, or want to
+propose it for inclusion with figspec.
 
-The tie-breaker for anything that rule does not settle: **do not
-grade**. An unrecorded rule costs a user a check. A wrongly graded one
-tells them they broke a rule that does not exist.
+| What you want to do | Function | How long the specification remains available |
+|----|----|----|
+| Use a specification in the current R session | [`spec_register()`](https://dansemakula.github.io/figspec/reference/spec_register.md) | Until the R session ends |
+| Keep a specification for a project or organisation | [`spec_load()`](https://dansemakula.github.io/figspec/reference/spec_load.md) | Whenever its YAML file is loaded |
+| Propose a specification for a future figspec release | [`registry_entry_template()`](https://dansemakula.github.io/figspec/reference/registry_entry_template.md) | After it has been reviewed and accepted into the package |
 
-## Publisher-wide entries are defaults
+The function names still use *journal* because they were introduced when
+the registry focused on journal requirements. The specifications
+themselves are not limited to journals. They can describe a publisher,
+report, thesis, presentation or another type of project.
 
-Most entries cover a whole portfolio, but publishers say plainly that
-individual journals override them. Elsevier’s own page:
+### Add a specification for the current session
 
-> some of our publications have special instructions beyond the common
-> guidelines given here. Please check the journal-specific guide for
-> authors
+Use
+[`spec_register()`](https://dansemakula.github.io/figspec/reference/spec_register.md)
+to define a specification directly in R. This example adds the
+requirements for an internal report and then retrieves its 170 mm
+double-width value:
 
-Roughly a third of publishers decline to state column widths centrally
-at all, because widths depend on a journal’s page layout. Taylor &
-Francis, Sage, AGU and MDPI all state resolution and formats but send
-you to the journal for size.
+[`spec_register`](https://dansemakula.github.io/figspec/reference/spec_register.md)`(`` `` id ``=`` ``"lab_report"``,`` `` name ``=`` ``"Our lab report format"``,`` `` source_url ``=`` ``"internal:handbook-v3"``,`` `` verified_on ``=`` ``"2026-09-04"``,`` `` requirements ``=`` `[`list`](https://rdrr.io/r/base/list.html)`(`` `` columns ``=`` `[`list`](https://rdrr.io/r/base/list.html)`(``single ``=`` ``100``, double ``=`` ``170``)``,`` `` font_min_pt ``=`` ``9``,`` `` formats ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``"png"``, ``"pdf"``)`` `` ``)`` ``)`` `` `[`fig_width`](https://dansemakula.github.io/figspec/reference/fig_width.md)`(``"lab_report"``, ``"double"``)`` ``#> [1] 170`` `[`spec_list`](https://dansemakula.github.io/figspec/reference/spec_list.md)`(``)``[`[`spec_list`](https://dansemakula.github.io/figspec/reference/spec_list.md)`(``)``$``id`` ``==`` ``"lab_report"``, `[`c`](https://rdrr.io/r/base/c.html)`(``"id"``, ``"name"``, ``"origin"``)``]`` ``#> id name origin`` ``#> 30 lab_report Our lab report format user`
 
-[`fig_columns`](https://dansemakula.github.io/figspec/reference/fig_columns.md)`(``"taylor_francis"``)`` ``#> 'Taylor & Francis and Routledge journals' states a width range rather than`` ``#> named columns: ? to ? mm.`
+The result is marked with the origin `user` because it was added during
+the R session rather than supplied with figspec. This label identifies
+where the entry came from; it is not a rating of its quality.
 
-## Guidelines change
+### Save a specification for reuse
 
-An entry read two years ago reads exactly like one read yesterday unless
-something says otherwise, and a confidently wrong registry is worse than
-no registry.
+To reuse a specification, keep it in a YAML registry file that can be
+stored with the project or shared by an organisation.
+[`registry_entry_template()`](https://dansemakula.github.io/figspec/reference/registry_entry_template.md)
+prints a template containing the information that figspec can record.
+This example runs the function and shows the beginning of that template:
 
-[`stale_entries`](https://dansemakula.github.io/figspec/reference/stale_entries.md)`(``max_age_days ``=`` ``365``)`` ``#> ``✔`` No registry entry is older than 365 days.`
+`template`` ``<-`` `[`capture.output`](https://rdrr.io/r/utils/capture.output.html)`(`[`registry_entry_template`](https://dansemakula.github.io/figspec/reference/registry_entry_template.md)`(`` `` ``"plos_biology"``,`` `` ``"PLOS Biology"``,`` `` ``"https://journals.plos.org/plosbiology/s/figures"`` ``)``)`` `[`writeLines`](https://rdrr.io/r/base/writeLines.html)`(`[`c`](https://rdrr.io/r/base/c.html)`(``template``[``1``:``12``]``, ``" ..."``)``)`` ``#> - id: plos_biology`` ``#> name: 'PLOS Biology'`` ``#> publisher: `` ``#> disciplines: [ ]`` ``#> source_url: 'https://journals.plos.org/plosbiology/s/figures'`` ``#> verified_on: '2026-09-05'`` ``#> requirements:`` ``#> # Fill in ONLY what the page states. Quote the wording for any number.`` ``#> # columns: {single: , onehalf: , double: }`` ``#> # width_min_mm: `` ``#> # width_max_mm: `` ``#> # height_max_mm: `` ``#> ...`
 
-## Adding a journal
+Add a requirement only when it is supported by the source. List it under
+`not_stated:` only when the relevant guidance has been checked and does
+not state that requirement. Leave it out of both places when it has not
+yet been reviewed.
 
-[`new_journal_entry`](https://dansemakula.github.io/figspec/reference/new_journal_entry.md)`(``"plos_biology"``, ``"PLOS Biology"``,`` `` ``"https://journals.plos.org/plosbiology/s/figures"``)`
+The following example writes a real temporary registry file, checks it,
+loads it and retrieves the width recorded in it:
 
-That prints a skeleton naming every field figspec understands. Fill in
-what the page states, list what you confirmed absent under
-`not_stated:`, and leave the rest alone — an untouched field reports as
-not yet harvested, which is true.
+`registry_file`` ``<-`` `[`tempfile`](https://rdrr.io/r/base/tempfile.html)`(``fileext ``=`` ``".yaml"``)`` `[`writeLines`](https://rdrr.io/r/base/writeLines.html)`(`[`c`](https://rdrr.io/r/base/c.html)`(`` `` ``"schema_version: 2"``,`` `` ``"journals:"``,`` `` ``"- id: team_report"``,`` `` ``" name: Research team report"``,`` `` ``" publisher: Internal"``,`` `` ``" disciplines: [research]"``,`` `` ``" source_url: internal:report-handbook-v4"``,`` `` ``" verified_on: '2026-09-04'"``,`` `` ``" requirements:"``,`` `` ``" columns: {full: 160}"``,`` `` ``" source_quote_width: Figures occupy the 160 mm report content width."``,`` `` ``" dpi_min: 300"``,`` `` ``" source_quote_dpi: Export raster figures at 300 dpi or higher."``,`` `` ``" formats: [png, pdf]"``,`` `` ``" font_min_pt: 9"``,`` `` ``" source_quote_font: Figure text must be at least 9 pt."``,`` `` ``" not_stated: [height_max_mm]"`` ``)``, ``registry_file``)`` `` `[`registry_validate_file`](https://dansemakula.github.io/figspec/reference/registry_validate_file.md)`(``registry_file``)`` ``#> ``✔`` 1 entry, no problems found.`` ``loaded_ids`` ``<-`` `[`spec_load`](https://dansemakula.github.io/figspec/reference/spec_load.md)`(``registry_file``)`` ``loaded_ids`` ``#> [1] "team_report"`` `[`fig_width`](https://dansemakula.github.io/figspec/reference/fig_width.md)`(``"team_report"``, ``"full"``)`` ``#> [1] 160`` `[`spec_list`](https://dansemakula.github.io/figspec/reference/spec_list.md)`(``)``[`` `` `[`spec_list`](https://dansemakula.github.io/figspec/reference/spec_list.md)`(``)``$``id`` ``==`` ``"team_report"``,`` `` `[`c`](https://rdrr.io/r/base/c.html)`(``"id"``, ``"name"``, ``"dpi_min"``, ``"origin"``)`` ``]`` ``#> id name dpi_min origin`` ``#> 31 team_report Research team report 300 user`
 
-Then validate before opening a pull request:
+Validation checks that the file can be read and that its entries use the
+expected structure and values. It cannot confirm that the source was
+interpreted correctly. That still needs to be reviewed by a person.
 
-[`validate_registry_file`](https://dansemakula.github.io/figspec/reference/validate_registry_file.md)`(``"my-journals.yaml"``)`` `[`load_journals`](https://dansemakula.github.io/figspec/reference/load_journals.md)`(``"my-journals.yaml"``)`
+### Propose a specification for figspec
 
-Validation reports every problem it finds in one pass, and refuses
-entries with no provenance, entries putting a requirement inside
-`house_style:`, and entries claiming a field is both stated and absent.
+To propose a specification for inclusion with figspec, begin with the
+same template, include the source wording that supports each requirement
+and check the completed file with
+[`registry_validate_file()`](https://dansemakula.github.io/figspec/reference/registry_validate_file.md).
+A maintainer can then review the source and the values before deciding
+whether to include the profile in a future release.
 
-For a journal figspec does not ship, or an internal format of your own:
+## Keep specifications current
 
-[`register_journal`](https://dansemakula.github.io/figspec/reference/register_journal.md)`(`` `` id ``=`` ``"lab_report"``, name ``=`` ``"Our lab format"``,`` `` source_url ``=`` ``"internal handbook v3"``, verified_on ``=`` ``"2026-08-22"``,`` `` requirements ``=`` `[`list`](https://rdrr.io/r/base/list.html)`(``columns ``=`` `[`list`](https://rdrr.io/r/base/list.html)`(``single ``=`` ``100``, double ``=`` ``170``)``,`` `` font_min_pt ``=`` ``9``)`` ``)`` `[`fig_width`](https://dansemakula.github.io/figspec/reference/fig_width.md)`(``"lab_report"``, ``"double"``)`` ``#> [1] 170`
+Requirements can change after a specification has been added to the
+registry. The `verified_on` date shows when its source was last checked.
+Use
+[`registry_stale_entries()`](https://dansemakula.github.io/figspec/reference/registry_stale_entries.md)
+to find specifications that have not been checked within a period you
+choose:
 
-[`journals()`](https://dansemakula.github.io/figspec/reference/journals.md)
-marks these `origin = "user"`, so it stays visible which entries figspec
-stands behind. Provenance is required here too: if the requirements came
-from you rather than a publisher, say so in `source_url`.
+[`registry_stale_entries`](https://dansemakula.github.io/figspec/reference/registry_stale_entries.md)`(``max_age_days ``=`` ``365``)`` ``#> ``✔`` No registry entry is older than 365 days.`
 
-## Style is separate from compliance
+A specification listed by this function is not necessarily wrong. It is
+due for another comparison with its source. If the guidance has changed,
+update the recorded requirements, the passages that support them and the
+review date together.
 
-A house style is the visual half of a figure, and it is applied
-**underneath** the journal’s requirements so it can never make a figure
-non-compliant.
+[`registry_check_sources()`](https://dansemakula.github.io/figspec/reference/registry_check_sources.md)
+checks whether the web links recorded in the registry still respond. It
+is not run while this page is built because it requires an internet
+connection and some publisher websites block automated requests. A
+working link shows only that the page can be reached. Someone still
+needs to read the page and check whether its guidance has changed.
 
-[`library`](https://rdrr.io/r/base/library.html)`(`[`ggplot2`](https://ggplot2.tidyverse.org)`)`` `[`register_house_style`](https://dansemakula.github.io/figspec/reference/register_house_style.md)`(`` `` ``"mylab"``,`` `` `[`theme_minimal`](https://ggplot2.tidyverse.org/reference/ggtheme.html)`(``)`` ``+`` `[`theme`](https://ggplot2.tidyverse.org/reference/theme.html)`(``panel.grid.minor ``=`` `[`element_blank`](https://ggplot2.tidyverse.org/reference/element.html)`(``)``,`` `` axis.text ``=`` `[`element_text`](https://ggplot2.tidyverse.org/reference/element.html)`(``size ``=`` ``5``)``)`` ``)`` ``th`` ``<-`` `[`theme_journal`](https://dansemakula.github.io/figspec/reference/theme_journal.md)`(``"plos_one"``, style ``=`` ``"mylab"``)`` ``#> 'PLOS ONE' requires type between 8 and 12 pt, so the journal's sizes override`` ``#> your style for: axis.text.`
+## Contribute to the bundled registry
 
-The style asked for 5 pt axis text; PLOS ONE states a floor of 8. The
-journal wins, figspec says which elements it overrode, and everything in
-the style that does not conflict is kept:
+The bundled registry is included with figspec and is available to
+everyone who installs the package. A new or revised profile may
+therefore affect many users. Each contribution needs to identify the
+source, record when it was last checked and include the wording that
+supports important requirements.
 
-[`class`](https://rdrr.io/r/base/class.html)`(``th``$``panel.grid.minor``)`` ``#> [1] "ggplot2::element_blank" "element_blank" "ggplot2::element" `` ``#> [4] "S7_object" "element"`
+### Decide whether the guidance states a requirement
 
-Registry entries may also carry a `house_style:` block, which is never
-checked and never enforced. Putting a requirement field inside one is a
-load-time error. That line is what makes a `pass` mean something.
+Publication guidance often combines instructions, preferences and
+general advice. Not every useful statement should become a requirement
+that figspec uses to pass or fail a figure.
 
-## Collecting entries at scale
+| Example wording | How it is recorded | Why |
+|----|----|----|
+| PLOS: “Use only Arial, Times, or Symbol font” | Requirement | The instruction allows only the named fonts |
+| OUP: “at least 300 dpi” within a guide described as tips | Requirement | The statement gives a measurable minimum |
+| Elsevier: “no smaller than 6 pt” | Requirement | The statement gives a minimum text size |
+| Sage: “We recommend having no more than 7 series” | Recommendation | The advice is useful but is not stated as mandatory |
+| ACS: “Helvetica or Arial fonts work well” | Not recorded as a font restriction | The statement does not say that other fonts are prohibited |
 
-`data-raw/harvest.R` in the package sources holds a toolkit: journal
-discovery through the DOAJ API, direct and archived fetch lanes,
-extraction of the publisher’s own specification sentences, and emission
-of reviewable candidates.
+Read the complete instruction and its surrounding explanation before
+deciding how to record it. If the wording does not clearly require the
+author to meet a condition, do not turn it into a checkable requirement.
 
-It never writes to the registry. It produces candidates with the
-publisher’s wording attached, for a human to accept, correct or discard.
-Auto-populating the registry would destroy the one property that makes
-it worth trusting, which is that every value in it was read by somebody.
+Keep personal or organisational design preferences in a house style
+rather than recording them as publication requirements. A preferred
+grid, background or spacing choice is not a requirement unless the cited
+source states that it is.
+
+### Validate and review the entry
+
+Run
+[`registry_validate_file()`](https://dansemakula.github.io/figspec/reference/registry_validate_file.md)
+before submitting a new or revised registry file. It checks that the
+file contains the required information, that values use the expected
+formats and that the same item has not been recorded as both stated and
+not stated.
+
+Passing validation does not prove that the correct source was used or
+that its wording was interpreted correctly. A maintainer must still
+compare the entry with the cited guidance and review the supporting
+passages.
+
+### Use harvesting tools as a starting point
+
+The GitHub repository contains a
+[`data-raw/harvest.R`](https://github.com/dansemakula/figspec/blob/HEAD/data-raw/harvest.R)
+toolkit that can help maintainers find publication pages, retrieve
+current or archived guidance and identify statements that may contain
+requirements. It is a development tool and is not installed with the
+CRAN package.
+
+The toolkit does not add requirements to the registry automatically. A
+person must confirm that the page applies to the intended publication,
+read the guidance in context, keep the wording that supports each value
+and decide what is stated, not stated or still unreviewed. The completed
+entry can then be validated and submitted for review by following the
+[contribution
+guide](https://github.com/dansemakula/figspec/blob/HEAD/CONTRIBUTING.md).
