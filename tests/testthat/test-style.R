@@ -147,6 +147,11 @@ test_that("style files refuse symbolic links without changing their targets", {
   link <- file.path(root, "linked-styles.rds")
   made <- file.symlink(target, link)
   skip_if_not(made, "symbolic links are unavailable on this platform")
+  link_target <- Sys.readlink(link)
+  skip_if_not(
+    length(link_target) == 1L && !is.na(link_target) && nzchar(link_target),
+    "the platform reported success but did not create a symbolic link"
+  )
 
   expect_error(style_load(link), "symbolic link", class = "figspec_bad_input")
   expect_error(style_save(link), "symbolic link", class = "figspec_bad_input")
