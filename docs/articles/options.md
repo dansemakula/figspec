@@ -1077,7 +1077,7 @@ Run the example setup
 
 library(ggplot2)
 
-cell_press_spec <- spec_get("cell_press")
+elsevier_spec <- spec_get("elsevier")
 report_spec <- spec_get(list(
   name = "Clinical research report",
   columns = list(half = 80, full = 160),
@@ -1097,7 +1097,7 @@ width_plot <- ggplot(
     colour = "Drive layout",
     shape = "Drive layout"
   ) +
-  fig_apply_spec(cell_press_spec, base_size = 10)
+  fig_apply_spec(elsevier_spec, base_size = 10)
 ```
 
 [TABLE]
@@ -1116,7 +1116,7 @@ Run the example setup
 
 library(ggplot2)
 
-cell_press_spec <- spec_get("cell_press")
+elsevier_spec <- spec_get("elsevier")
 report_spec <- spec_get(list(
   name = "Clinical research report",
   columns = list(half = 80, full = 160),
@@ -1136,7 +1136,7 @@ columns_plot <- ggplot(
     colour = "Drive layout",
     shape = "Drive layout"
   ) +
-  fig_apply_spec(cell_press_spec, base_size = 10)
+  fig_apply_spec(elsevier_spec, base_size = 10)
 ```
 
 [TABLE]

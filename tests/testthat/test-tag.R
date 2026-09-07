@@ -128,7 +128,8 @@ test_that("more panels than letters is refused, with the way out", {
 test_that("a labelled figure still saves and measures", {
   out <- tempfile(fileext = ".png"); on.exit(unlink(out))
   g <- attr(suppressWarnings(
-    fig_save(out, fig_tag_panels(pf(), "cell_press"), spec = "cell_press",
+    fig_save(out, fig_tag_panels(pf(), "cell_press"),
+             spec = font_neutral_spec("cell_press"),
              panel_width = 22)
   ), "figspec_geometry")
   expect_true(file.exists(out))

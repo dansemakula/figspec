@@ -501,10 +501,11 @@ knitr rather than through
 dimensions and resolution therefore come from chunk options such as
 `fig.width` and `dpi`.
 
-[`figspec_knitr_options`](https://dansemakula.github.io/figspec/reference/figspec_knitr_options.md)`(``"cell_press"``, ``"double"``)`` ``#> $fig.width`` ``#> [1] 6.850394`` ``#> `` ``#> $fig.height`` ``#> [1] 5.137795`` ``#> `` ``#> $dpi`` ``#> [1] 1000`` ``#> `` ``#> $dev`` ``#> [1] "tiff"`
+[`figspec_knitr_options`](https://dansemakula.github.io/figspec/reference/figspec_knitr_options.md)`(``"frontiers"``, ``"double"``)`` ``#> $fig.width`` ``#> [1] 7.086614`` ``#> `` ``#> $fig.height`` ``#> [1] 5.314961`` ``#> `` ``#> $dpi`` ``#> [1] 300`` ``#> `` ``#> $dev`` ``#> [1] "tiff"`
 
-Use `figspec_knitr_setup("cell_press", "double")` in the setup chunk to
-apply the journal’s size and resolution to every figure in the document.
+Use `figspec_knitr_setup("frontiers", "double")` in the setup chunk to
+apply the publication’s size and resolution to every figure in the
+document.
 
 The project specification created at the start works here too:
 
@@ -539,7 +540,7 @@ apply to which file.
 
 The same table can be exported and checked in one call:
 
-`table_path`` ``<-`` `[`file.path`](https://rdrr.io/r/base/file.path.html)`(`[`tempdir`](https://rdrr.io/r/base/tempfile.html)`(``)``, ``"vehicle-summary.html"``)`` ``saved_table`` ``<-`` `[`table_save`](https://dansemakula.github.io/figspec/reference/table_save.md)`(`` `` ``table_path``,`` `` ``summary_table``,`` `` ``table_report_spec``,`` `` transform ``=`` ``FALSE`` ``)`` `[`attr`](https://rdrr.io/r/base/attr.html)`(``saved_table``, ``"figspec_table_report"``)`` ``#> `` ``#> ``──`` ``Quarterly outcomes report`` ``───────────────────────────────────────────────────`` ``#> ``checked:`` ``#> ``/var/folders/nr/p09jj77n7jn9606qt_2m77nc0000gn/T//RtmpwH7yBS/vehicle-summary.html`` ``#> `` ``#> ``✔`` File validity valid requires: readable table object`` ``#> ``✔`` Minimum type size 9 requires: 9`` ``#> ``✔`` Bold header TRUE requires: TRUE`` ``#> ``✔`` Vertical rules FALSE requires: FALSE`` ``#> ``✔`` File format html requires: HTML, DOCX`` ``#> `` ``#> ``✔`` Every recorded requirement that applies was met.`
+`table_path`` ``<-`` `[`file.path`](https://rdrr.io/r/base/file.path.html)`(`[`tempdir`](https://rdrr.io/r/base/tempfile.html)`(``)``, ``"vehicle-summary.html"``)`` ``saved_table`` ``<-`` `[`table_save`](https://dansemakula.github.io/figspec/reference/table_save.md)`(`` `` ``table_path``,`` `` ``summary_table``,`` `` ``table_report_spec``,`` `` transform ``=`` ``FALSE`` ``)`` `[`attr`](https://rdrr.io/r/base/attr.html)`(``saved_table``, ``"figspec_table_report"``)`` ``#> `` ``#> ``──`` ``Quarterly outcomes report`` ``───────────────────────────────────────────────────`` ``#> ``checked:`` ``#> ``/var/folders/nr/p09jj77n7jn9606qt_2m77nc0000gn/T//RtmpJjh1dm/vehicle-summary.html`` ``#> `` ``#> ``✔`` File validity valid requires: readable table object`` ``#> ``✔`` Minimum type size 9 requires: 9`` ``#> ``✔`` Bold header TRUE requires: TRUE`` ``#> ``✔`` Vertical rules FALSE requires: FALSE`` ``#> ``✔`` File format html requires: HTML, DOCX`` ``#> `` ``#> ``✔`` Every recorded requirement that applies was met.`
 
 [`table_apply_spec()`](https://dansemakula.github.io/figspec/reference/table_apply_spec.md)
 also accepts existing gt, flextable, kableExtra and grid tables. Read

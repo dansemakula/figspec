@@ -2,10 +2,10 @@
 # substituted is announced rather than passed off as the journal's.
 
 test_that("chunk options carry the journal's own size and resolution", {
-  o <- figspec_knitr_options("plos_one", "single")
+  o <- figspec_knitr_options("frontiers", "single")
   expect_named(o, c("fig.width", "fig.height", "dpi", "dev"))
-  # PLOS ONE states a 66.8 mm minimum width and 300 dpi.
-  expect_equal(o$fig.width, 66.8 / 25.4, tolerance = 1e-6)
+  # Frontiers states an 85 mm single-column width and 300 dpi.
+  expect_equal(o$fig.width, 85 / 25.4, tolerance = 1e-6)
   expect_equal(o$dpi, 300)
   expect_equal(o$dev, "tiff")
 })
@@ -38,7 +38,7 @@ test_that("a substituted default is announced, not passed off as a requirement",
 })
 
 test_that("no message is emitted when the journal states the values", {
-  expect_silent(figspec_knitr_options("plos_one", "single"))
+  expect_silent(figspec_knitr_options("frontiers", "single"))
 })
 
 test_that("the setup wrapper applies the options and returns the previous ones", {
@@ -46,9 +46,9 @@ test_that("the setup wrapper applies the options and returns the previous ones",
   before <- knitr::opts_chunk$get(c("fig.width", "fig.height"))
   on.exit(do.call(knitr::opts_chunk$set, before), add = TRUE)
 
-  old <- figspec_knitr_setup("cell_press", "single")
+  old <- figspec_knitr_setup("frontiers", "single")
   now <- knitr::opts_chunk$get(c("fig.width", "fig.height", "dpi"))
-  wanted <- figspec_knitr_options("cell_press", "single")
+  wanted <- figspec_knitr_options("frontiers", "single")
 
   expect_equal(now$fig.width, wanted$fig.width)
   expect_equal(now$dpi, wanted$dpi)

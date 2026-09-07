@@ -42,7 +42,7 @@ test_that("a journal pins the canvas even when a panel size is given", {
   out <- png_out(); on.exit(unlink(out))
   col <- fig_width("cell_press", "single", "mm")
   g <- geom_of(suppressWarnings(
-    fig_save(out, p_plain(), spec = "cell_press", panel_width = 50)
+    fig_save(out, p_plain(), spec = font_neutral_spec("cell_press"), panel_width = 50)
   ))
   expect_equal(g$canvas_width_mm, col, tolerance = 0.05)
   expect_equal(g$panel_width_mm, 50, tolerance = 0.05)
@@ -50,7 +50,9 @@ test_that("a journal pins the canvas even when a panel size is given", {
 
 test_that("journal-only sizing is unchanged", {
   out <- png_out(); on.exit(unlink(out))
-  g <- geom_of(suppressWarnings(fig_save(out, p_plain(), spec = "cell_press")))
+  g <- geom_of(suppressWarnings(
+    fig_save(out, p_plain(), spec = font_neutral_spec("cell_press"))
+  ))
   expect_equal(g$canvas_width_mm, fig_width("cell_press", "single", "mm"),
                tolerance = 0.05)
 })
@@ -76,7 +78,7 @@ test_that("an impossible canvas and panel pair reports both escape values", {
 test_that("a panel too wide for the column is refused, with the width that fits", {
   out <- png_out(); on.exit(unlink(out))
   err <- tryCatch(
-    suppressWarnings(fig_save(out, p_plain(), spec = "cell_press",
+    suppressWarnings(fig_save(out, p_plain(), spec = font_neutral_spec("cell_press"),
                               panel_width = 200)),
     error = conditionMessage
   )
@@ -106,11 +108,12 @@ test_that("fig_panel_width takes the narrowest figure as the constraint", {
 test_that("a shared panel width makes a set match at one canvas", {
   out <- png_out(); on.exit(unlink(out))
   figs <- list(plain = p_plain(), wordy = p_wordy())
-  pw <- fig_panel_width(figs, spec = "cell_press", format = "png")
+  cell_press <- font_neutral_spec("cell_press")
+  pw <- fig_panel_width(figs, spec = cell_press, format = "png")
 
   got <- vapply(figs, function(f) {
     geom_of(suppressWarnings(
-      fig_save(out, f, spec = "cell_press", panel_width = pw)
+      fig_save(out, f, spec = cell_press, panel_width = pw)
     ))$panel_width_mm
   }, numeric(1))
 
@@ -132,7 +135,7 @@ test_that("panel size applies to each panel of a faceted plot", {
 test_that("panel_width = \"max\" fills the column it is given", {
   out <- png_out(); on.exit(unlink(out))
   g <- geom_of(suppressWarnings(
-    fig_save(out, p_plain(), spec = "cell_press", panel_width = "max")
+    fig_save(out, p_plain(), spec = font_neutral_spec("cell_press"), panel_width = "max")
   ))
   expect_equal(g$canvas_width_mm, g$panel_width_mm + g$decoration_width_mm,
                tolerance = 0.05)
@@ -169,8 +172,9 @@ test_that("units are respected", {
 test_that("fig_save still works and matches fig_save", {
   out1 <- png_out(); out2 <- png_out()
   on.exit(unlink(c(out1, out2)))
-  a <- geom_of(suppressWarnings(fig_save(out1, p_plain(), spec = "cell_press")))
-  b <- geom_of(suppressWarnings(fig_save(out2, p_plain(), spec = "cell_press")))
+  cell_press <- font_neutral_spec("cell_press")
+  a <- geom_of(suppressWarnings(fig_save(out1, p_plain(), spec = cell_press)))
+  b <- geom_of(suppressWarnings(fig_save(out2, p_plain(), spec = cell_press)))
   expect_equal(a$canvas_width_mm, b$canvas_width_mm)
   expect_equal(a$panel_width_mm, b$panel_width_mm)
 })

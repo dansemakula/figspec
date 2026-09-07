@@ -52,12 +52,13 @@ test_that("a selected column is the only width that can pass", {
   skip_if_not_installed("ragg")
   out <- tempfile(fileext = ".tiff"); on.exit(unlink(out))
   p <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
-  suppressWarnings(fig_save(out, p, "cell_press", column = "double",
+  cell_press <- font_neutral_spec("cell_press")
+  suppressWarnings(fig_save(out, p, cell_press, column = "double",
                             art_type = "colour", check = FALSE))
-  expect_equal(fig_check(out, "cell_press", column = "double", art_type = "colour")$status[
-    fig_check(out, "cell_press", column = "double", art_type = "colour")$check == "Width"], "pass")
-  expect_equal(fig_check(out, "cell_press", column = "single", art_type = "colour")$status[
-    fig_check(out, "cell_press", column = "single", art_type = "colour")$check == "Width"], "fail")
+  expect_equal(fig_check(out, cell_press, column = "double", art_type = "colour")$status[
+    fig_check(out, cell_press, column = "double", art_type = "colour")$check == "Width"], "pass")
+  expect_equal(fig_check(out, cell_press, column = "single", art_type = "colour")$status[
+    fig_check(out, cell_press, column = "single", art_type = "colour")$check == "Width"], "fail")
 })
 
 test_that("minimum, maximum, and strict resolution bounds are enforced", {
@@ -94,9 +95,10 @@ test_that("fig_save transforms by default and can verify without transforming", 
   transformed_out <- tempfile(fileext = ".tiff")
   unchanged_out <- tempfile(fileext = ".tiff")
   on.exit(unlink(c(transformed_out, unchanged_out)))
+  cell_press <- font_neutral_spec("cell_press")
 
   transformed <- suppressWarnings(fig_save(
-    transformed_out, p, "cell_press", column = "single",
+    transformed_out, p, cell_press, column = "single",
     art_type = "colour", check = TRUE
   ))
   transformed_report <- attr(transformed, "figspec_report")
@@ -111,7 +113,7 @@ test_that("fig_save transforms by default and can verify without transforming", 
   )
 
   unchanged <- suppressWarnings(fig_save(
-    unchanged_out, p, "cell_press", column = "single",
+    unchanged_out, p, cell_press, column = "single",
     art_type = "colour", transform = FALSE, check = TRUE
   ))
   unchanged_report <- attr(unchanged, "figspec_report")
@@ -131,7 +133,7 @@ test_that("PLOS TIFF export satisfies format-specific requirements", {
   p <- ggplot2::ggplot(datasets::mtcars, ggplot2::aes(wt, mpg)) +
     ggplot2::geom_point() + theme_spec("plos_one")
   out <- tempfile(fileext = ".tiff"); on.exit(unlink(out))
-  suppressWarnings(fig_save(out, p, "plos_one", column = "single",
+  suppressWarnings(fig_save(out, p, font_neutral_spec("plos_one"), column = "single",
                             art_type = "colour", check = FALSE))
   info <- inspect_file(out)
   expect_equal(info$compression, "lzw")

@@ -67,8 +67,8 @@ test_that("fig_check rejects inputs it cannot handle", {
 
 test_that("an unmeasurable width is unknown, never a failure", {
   path <- withr::local_tempfile(fileext = ".png")
-  # Base R's png() does not record resolution in the file.
-  grDevices::png(path, width = 85, height = 60, units = "mm", res = 300)
+  # Pixel dimensions without a resolution do not define a physical width.
+  grDevices::png(path, width = 1000, height = 700)
   plot(mtcars$wt, mtcars$mpg)
   grDevices::dev.off()
 
@@ -213,10 +213,11 @@ test_that("a figure figspec saved at the requirement passes its own check", {
   skip_if_not_installed("ragg")
   out <- tempfile(fileext = ".png"); on.exit(unlink(out))
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  cell_press <- font_neutral_spec("cell_press")
   suppressWarnings(suppressMessages(
-    fig_save(out, p, spec = "cell_press", column = "single", check = FALSE)))
+    fig_save(out, p, spec = cell_press, column = "single", check = FALSE)))
 
-  r <- fig_check(out, "cell_press", column = "single")
+  r <- fig_check(out, cell_press, column = "single")
   expect_equal(r$status[r$check == "Resolution"], "pass")
   expect_equal(r$status[r$check == "Width"], "pass")
 })

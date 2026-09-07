@@ -1989,7 +1989,7 @@ Retrieve a figure width from a publication, project or organisational specificat
 <div class="fs-argument-example-body"><pre><code class="language-r">
 library(ggplot2)
 
-cell_press_spec &lt;- spec_get(&quot;cell_press&quot;)
+elsevier_spec &lt;- spec_get(&quot;elsevier&quot;)
 report_spec &lt;- spec_get(list(
   name = &quot;Clinical research report&quot;,
   columns = list(half = 80, full = 160),
@@ -2009,15 +2009,15 @@ width_plot &lt;- ggplot(
     colour = &quot;Drive layout&quot;,
     shape = &quot;Drive layout&quot;
   ) +
-  fig_apply_spec(cell_press_spec, base_size = 10)
+  fig_apply_spec(elsevier_spec, base_size = 10)
 </code></pre></div></details>
 
 <table class="table fs-options-table">
 <colgroup><col style="width:26%"><col style="width:74%"></colgroup>
 <thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
 <tbody>
-<tr><td><code>spec</code></td><td>The specification to use: a registry id such as &quot;cell_press&quot;, a figspec_spec, or a named list of requirements.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a registry id, an existing specification object or a named list of requirements. The example retrieves one width from Cell Press and another from a project specification created in R.</p><pre><code class="language-r">publisher_width &lt;- fig_width(
-  &quot;cell_press&quot;,
+<tr><td><code>spec</code></td><td>The specification to use: a registry id such as &quot;cell_press&quot;, a figspec_spec, or a named list of requirements.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a registry id, an existing specification object or a named list of requirements. The example retrieves one width from Elsevier and another from a project specification created in R.</p><pre><code class="language-r">publisher_width &lt;- fig_width(
+  &quot;elsevier&quot;,
   column = &quot;single&quot;
 )
 
@@ -2027,18 +2027,18 @@ project_width &lt;- fig_width(
 )
 
 publisher_width
-project_width</code></pre><p class="fs-example-result"><strong>Result:</strong> The Cell Press single-column width is 85 mm. The project specification returns its recorded full width of 160 mm.</p></div></details></td></tr>
-<tr><td><code>column</code></td><td>Name of the required width, such as &quot;single&quot;, &quot;double&quot; or &quot;triple&quot;. The available names come from the specification.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Choose one of the width names recorded in the specification. Here the Cell Press single-column width is used to export a real figure, and the saved TIFF is reopened to confirm that its physical width passes the same requirement.</p><pre><code class="language-r">fig_columns(cell_press_spec)
+project_width</code></pre><p class="fs-example-result"><strong>Result:</strong> The Elsevier single-column width is 90 mm. The project specification returns its recorded full width of 160 mm.</p></div></details></td></tr>
+<tr><td><code>column</code></td><td>Name of the required width, such as &quot;single&quot;, &quot;double&quot; or &quot;triple&quot;. The available names come from the specification.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Choose one of the width names recorded in the specification. Here the Elsevier single-column width is used to export a real figure, and the saved TIFF is reopened to confirm that its physical width passes the same requirement.</p><pre><code class="language-r">fig_columns(elsevier_spec)
 
 output_file &lt;- file.path(
   tempdir(),
-  &quot;cell-press-single-width.tiff&quot;
+  &quot;elsevier-single-width.tiff&quot;
 )
 
 saved_file &lt;- fig_save(
   output_file,
   width_plot,
-  spec = cell_press_spec,
+  spec = elsevier_spec,
   column = &quot;single&quot;,
   height = 70,
   dpi = 300,
@@ -2047,7 +2047,7 @@ saved_file &lt;- fig_save(
 
 saved_check &lt;- fig_check(
   saved_file,
-  spec = cell_press_spec,
+  spec = elsevier_spec,
   column = &quot;single&quot;,
   dpi = 300
 )
@@ -2055,14 +2055,14 @@ saved_check &lt;- fig_check(
 saved_check[
   saved_check$check == &quot;Width&quot;,
   c(&quot;requirement&quot;, &quot;actual&quot;, &quot;status&quot;)
-]</code></pre><p class="fs-example-result"><strong>Result:</strong> Cell Press records widths of 85, 114 and 174 mm. The exported image targets the 85 mm single-column width, and its saved-file width check passes.</p></div></details></td></tr>
+]</code></pre><p class="fs-example-result"><strong>Result:</strong> Elsevier records widths of 90, 140 and 190 mm. The exported image targets the 90 mm single-column width, and its saved-file width check passes.</p></div></details></td></tr>
 <tr><td><code>units</code></td><td>Unit for the returned width: &quot;mm&quot;, &quot;cm&quot; or &quot;in&quot;.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Request the result in millimetres, centimetres or inches. Only the unit changes; all three values below describe the same physical width.</p><pre><code class="language-r">equivalent_widths &lt;- c(
-  mm = fig_width(cell_press_spec, &quot;single&quot;, &quot;mm&quot;),
-  cm = fig_width(cell_press_spec, &quot;single&quot;, &quot;cm&quot;),
-  inches = fig_width(cell_press_spec, &quot;single&quot;, &quot;in&quot;)
+  mm = fig_width(elsevier_spec, &quot;single&quot;, &quot;mm&quot;),
+  cm = fig_width(elsevier_spec, &quot;single&quot;, &quot;cm&quot;),
+  inches = fig_width(elsevier_spec, &quot;single&quot;, &quot;in&quot;)
 )
 
-equivalent_widths</code></pre><p class="fs-example-result"><strong>Result:</strong> The same Cell Press width is returned as 85 mm, 8.5 cm or approximately 3.35 inches.</p></div></details></td></tr>
+equivalent_widths</code></pre><p class="fs-example-result"><strong>Result:</strong> The same Elsevier width is returned as 90 mm, 9 cm or approximately 3.54 inches.</p></div></details></td></tr>
 </tbody></table>
 
 ### `fig_columns()`
@@ -2075,7 +2075,7 @@ See which named figure widths a specification provides before choosing one for a
 <div class="fs-argument-example-body"><pre><code class="language-r">
 library(ggplot2)
 
-cell_press_spec &lt;- spec_get(&quot;cell_press&quot;)
+elsevier_spec &lt;- spec_get(&quot;elsevier&quot;)
 report_spec &lt;- spec_get(list(
   name = &quot;Clinical research report&quot;,
   columns = list(half = 80, full = 160),
@@ -2095,15 +2095,15 @@ columns_plot &lt;- ggplot(
     colour = &quot;Drive layout&quot;,
     shape = &quot;Drive layout&quot;
   ) +
-  fig_apply_spec(cell_press_spec, base_size = 10)
+  fig_apply_spec(elsevier_spec, base_size = 10)
 </code></pre></div></details>
 
 <table class="table fs-options-table">
 <colgroup><col style="width:26%"><col style="width:74%"></colgroup>
 <thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
 <tbody>
-<tr><td><code>spec</code></td><td>The specification to inspect: a registry id, a figspec_spec, or a named list of requirements.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a registry id, an existing specification or a named list. The example lists widths from both Cell Press and a project specification, then uses Cell Press's one-and-a-half-column choice to export and check a real figure.</p><pre><code class="language-r">publisher_columns &lt;- fig_columns(
-  &quot;cell_press&quot;
+<tr><td><code>spec</code></td><td>The specification to inspect: a registry id, a figspec_spec, or a named list of requirements.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a registry id, an existing specification or a named list. The example lists widths from both Elsevier and a project specification, then uses Elsevier's one-and-a-half-column choice to export and check a real figure.</p><pre><code class="language-r">publisher_columns &lt;- fig_columns(
+  &quot;elsevier&quot;
 )
 
 project_columns &lt;- fig_columns(
@@ -2116,13 +2116,13 @@ selected_column &lt;- names(
 
 output_file &lt;- file.path(
   tempdir(),
-  &quot;cell-press-onehalf-width.tiff&quot;
+  &quot;elsevier-onehalf-width.tiff&quot;
 )
 
 saved_file &lt;- fig_save(
   output_file,
   columns_plot,
-  spec = cell_press_spec,
+  spec = elsevier_spec,
   column = selected_column,
   height = 80,
   dpi = 300,
@@ -2131,7 +2131,7 @@ saved_file &lt;- fig_save(
 
 saved_check &lt;- fig_check(
   saved_file,
-  spec = cell_press_spec,
+  spec = elsevier_spec,
   column = selected_column,
   dpi = 300
 )
@@ -2141,7 +2141,7 @@ project_columns
 saved_check[
   saved_check$check == &quot;Width&quot;,
   c(&quot;requirement&quot;, &quot;actual&quot;, &quot;status&quot;)
-]</code></pre><p class="fs-example-result"><strong>Result:</strong> Cell Press lists single, onehalf and double widths of 85, 114 and 174 mm. The project lists half and full widths of 80 and 160 mm. The TIFF exported with the onehalf choice passes its 114 mm saved-width check.</p></div></details></td></tr>
+]</code></pre><p class="fs-example-result"><strong>Result:</strong> Elsevier lists single, onehalf and double widths of 90, 140 and 190 mm. The project lists half and full widths of 80 and 160 mm. The TIFF exported with the onehalf choice passes its 140 mm saved-width check.</p></div></details></td></tr>
 </tbody></table>
 
 ### `spec_register()`
@@ -3584,7 +3584,7 @@ slide_chunk_spec &lt;- list(
 
 # A bundled profile works in the same position:
 publication_options &lt;- figspec_knitr_options(
-  spec = &quot;plos_one&quot;,
+  spec = &quot;frontiers&quot;,
   column = &quot;single&quot;
 )
 

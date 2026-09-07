@@ -41,7 +41,7 @@ registry_entry_template("plos_biology", "PLOS Biology",
 #>   publisher:
 #>   disciplines: [ ]
 #>   source_url: 'https://journals.plos.org/plosbiology/s/figures'
-#>   verified_on: '2026-09-06'
+#>   verified_on: '2026-09-07'
 #>   requirements:
 #>     # Fill in ONLY what the page states. Quote the wording for any number.
 #>     # columns: {single: , onehalf: , double: }

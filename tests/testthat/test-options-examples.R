@@ -1756,7 +1756,7 @@ test_that("fig_width examples retrieve, convert, export and check a real width",
   spec_example <- examples$arguments$spec
   expect_true(all(nzchar(unlist(spec_example))))
   project_width <- eval(parse(text = spec_example$code), envir = example_env)
-  expect_equal(example_env$publisher_width, 85)
+  expect_equal(example_env$publisher_width, 90)
   expect_equal(project_width, 160)
 
   column_example <- examples$arguments$column
@@ -1773,12 +1773,12 @@ test_that("fig_width examples retrieve, convert, export and check a real width",
   expect_identical(width_check$status, "pass")
   saved_geometry <- attr(example_env$saved_file, "figspec_geometry")
   expect_s3_class(saved_geometry, "figspec_geometry")
-  expect_equal(saved_geometry$canvas_width_mm, 85, tolerance = 0.1)
+  expect_equal(saved_geometry$canvas_width_mm, 90, tolerance = 0.1)
 
   units_example <- examples$arguments$units
   expect_true(all(nzchar(unlist(units_example))))
   equivalent_widths <- eval(parse(text = units_example$code), envir = example_env)
-  expect_equal(unname(equivalent_widths), c(85, 8.5, 85 / 25.4))
+  expect_equal(unname(equivalent_widths), c(90, 9, 90 / 25.4))
 })
 
 test_that("fig_columns example lists real choices and uses one for export", {
@@ -1802,7 +1802,7 @@ test_that("fig_columns example lists real choices and uses one for export", {
 
   expect_equal(
     example_env$publisher_columns,
-    c(single = 85, onehalf = 114, double = 174)
+    c(single = 90, onehalf = 140, double = 190)
   )
   expect_equal(example_env$project_columns, c(half = 80, full = 160))
   expect_identical(example_env$selected_column, "onehalf")
@@ -1811,10 +1811,10 @@ test_that("fig_columns example lists real choices and uses one for export", {
   expect_s3_class(example_env$saved_check, "figspec_report")
   expect_equal(nrow(width_check), 1L)
   expect_identical(width_check$status, "pass")
-  expect_match(width_check$requirement, "114 mm", fixed = TRUE)
+  expect_match(width_check$requirement, "140 mm", fixed = TRUE)
   saved_geometry <- attr(example_env$saved_file, "figspec_geometry")
   expect_s3_class(saved_geometry, "figspec_geometry")
-  expect_equal(saved_geometry$canvas_width_mm, 114, tolerance = 0.1)
+  expect_equal(saved_geometry$canvas_width_mm, 140, tolerance = 0.1)
 })
 
 test_that("spec_register example registers, applies and verifies a specification", {
