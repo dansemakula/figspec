@@ -23,9 +23,8 @@
 #'
 #' Shows when each bundled specification was last checked and how its fields are
 #' accounted for. A field may contain a stated requirement, be recorded as not
-#' stated by the source, or remain to be reviewed. The result makes older and
-#' less complete profiles easy to identify without implying that a missing
-#' field has no requirement.
+#' stated by the source, or remain to be reviewed. The result makes profiles
+#' due for further work easy to identify and explains every missing value.
 #'
 #' @param max_age_days Age beyond which an entry is flagged for rechecking.
 #'   Defaults to 365.
@@ -105,11 +104,10 @@ registry_stale_entries <- function(max_age_days = 365, as_of = Sys.Date()) {
 
 #' Create a registry-entry template
 #'
-#' Prints a YAML template with every field figspec understands, so a
-#' contributor is told what to look for rather than having to guess the schema.
-#' Fill in what the publisher states, list the rest under `not_stated`, and
-#' delete nothing: a field left in neither place is reported to users as not
-#' yet harvested, which is the honest default.
+#' Prints a YAML template containing every field figspec understands. Fill in
+#' the requirements stated by the source, list reviewed but unstated fields
+#' under `not_stated`, and leave unreviewed fields in place. figspec can then
+#' report the review status of every field accurately.
 #'
 #' @param id Short identifier beginning with a lower-case letter and containing
 #'   only lower-case letters, numbers and underscores.
@@ -191,8 +189,8 @@ registry_entry_template <- function(id, name, source_url) {
 
 #' Check a registry file before loading it
 #'
-#' Runs the same checks [spec_load()] runs, but reports everything wrong
-#' rather than stopping at the first problem.
+#' Runs the same checks as [spec_load()] and returns the complete set of
+#' problems in one report, making the file easier to correct in a single pass.
 #'
 #' @param path Path to a YAML file in registry format.
 #' @return `TRUE` invisibly if the file is valid; otherwise the problems are
@@ -284,8 +282,9 @@ fetch_status <- function(url, timeout) {
 #' `403` while the page opens normally in a browser, so those are reported as
 #' *blocked* and are not failures. Only `404` and `410` are read as dead.
 #'
-#' This reaches the network, so it is for maintainers rather than for use
-#' inside anything that has to run offline.
+#' Run this during registry maintenance when an internet connection is
+#' available. Offline package checks can use [registry_status()] to review the
+#' stored sources and dates.
 #'
 #' @param ids Character vector of registry ids to check. Defaults to all of
 #'   them.
@@ -390,7 +389,7 @@ print.figspec_sources <- function(x, ...) {
   cli::cli_text("{ok} source{?s} answered successfully.")
   if (nrow(blocked)) {
     cli::cli_text(
-      "{nrow(blocked)} blocked the request. This is not a failure because the response does not say that the page is gone."
+      "{nrow(blocked)} source{?s} blocked the automated request. Open the affected pages in a browser to complete the link check."
     )
   }
   invisible(x)

@@ -19,11 +19,10 @@ be taken. HTTP(S), \verb{file:} and \verb{internal:} addresses are accepted.}
 The template, invisibly, as a character string.
 }
 \description{
-Prints a YAML template with every field figspec understands, so a
-contributor is told what to look for rather than having to guess the schema.
-Fill in what the publisher states, list the rest under \code{not_stated}, and
-delete nothing: a field left in neither place is reported to users as not
-yet harvested, which is the honest default.
+Prints a YAML template containing every field figspec understands. Fill in
+the requirements stated by the source, list reviewed but unstated fields
+under \code{not_stated}, and leave unreviewed fields in place. figspec can then
+report the review status of every field accurately.
 }
 \examples{
 registry_entry_template("plos_biology", "PLOS Biology",

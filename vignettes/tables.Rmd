@@ -62,8 +62,9 @@ spec_save(report_spec, table_spec_file, id = "clinical_research_report")
 spec_load(table_spec_file)
 ```
 
-The saved entry retains both table and figure requirements. Loading it does not
-modify figspec; it adds the project specification to the current R session.
+The saved entry retains both table and figure requirements. Loading it makes
+the project specification available in the current R session while leaving
+the installed package unchanged.
 
 Bundled publication profiles can be used in the same way when their table
 requirements have been reviewed. `registry_status()` shows table coverage
@@ -101,8 +102,9 @@ written:
 table_check(styled_table, report_spec)
 ```
 
-The future file format remains unresolved at this point because there is no
-file yet. That is expected, not a failure.
+At this stage, the live-table report covers the styling and structure that can
+already be inspected. The file format is checked after export, when a completed
+file is available.
 
 ## Export and check the completed file
 
@@ -133,7 +135,7 @@ table_save(word_path, vehicle_table, report_spec)
 
 ## Use the table system you already work with
 
-figspec does not ask every user to adopt one table package. It accepts:
+Continue using the table system that suits your work. figspec accepts:
 
 * data frames and matrices, which become gt tables;
 * existing gt tables;
@@ -159,9 +161,10 @@ The output formats still depend on the table system:
 | HTML or LaTeX kable | its native format, PDF, PNG or JPEG |
 | grid table | PDF, PNG or JPEG |
 
-Browser rendering is needed for HTML-to-PDF or image conversion, and LaTeX is
-needed for LaTeX-to-PDF or image conversion. figspec reports an unsupported
-combination instead of writing one kind of file with another extension.
+HTML-to-PDF or image conversion uses a local browser, while LaTeX-to-PDF or
+image conversion uses a local LaTeX installation. figspec checks that the
+required renderer and output combination are available before writing the
+file, so the extension always matches its contents.
 
 ## Review figures and tables together
 
@@ -198,14 +201,13 @@ mixed_review[, c("file", "asset", "result")]
 The summary labels each item as a figure or table. `submission_detail()` opens
 the full report for either one.
 
-## What still needs a person
+## Complete the editorial review
 
 Some requirements are measurements: file format, page orientation, width,
 font size, header emphasis or the presence of vertical rules. figspec can
 apply or inspect those when the table system exposes reliable evidence.
 
-Other requirements ask whether a title is sufficiently short, whether every
-abbreviation is defined or whether a footnote is clear. Those questions
-require reading the table in context. figspec keeps them in the report as
-unresolved so that they remain visible without pretending software has made an
-editorial decision.
+Other requirements ask whether a title is sufficiently short, every
+abbreviation is defined or a footnote is clear. Read those parts of the table
+in the context of the surrounding report or manuscript. figspec keeps each one
+in the report so the editorial review can be completed before delivery.

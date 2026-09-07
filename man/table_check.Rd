@@ -21,9 +21,9 @@ live-object checks can also use styling evidence that an image or PDF no
 longer preserves.
 }
 \details{
-Requirements that need a person to read the table, such as whether its title
-is concise or every abbreviation is defined, are reported as unresolved.
-figspec does not convert their absence into a pass.
+Requirements that depend on meaning, such as whether a title is concise or
+every abbreviation is defined, are gathered under unresolved items. Read
+these parts in context to complete the review.
 }
 \examples{
 table_check(head(mtcars), list(

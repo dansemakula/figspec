@@ -412,10 +412,10 @@ test_that("the geometry prints as a summary, not as a wide data frame", {
   expect_match(out, "Decoration")
 })
 
-test_that("an unsized figure says so rather than printing a fake canvas", {
+test_that("an unsized figure explains how panel space will be determined", {
   out <- paste(capture.output(print(fig_geometry(p_plain())), type = "message"),
                collapse = " ")
-  expect_match(out, "no size of their own")
+  expect_match(out, "canvas will determine the available panel space")
 })
 
 test_that("the geometry can be drawn, and refuses when there is nothing to draw", {

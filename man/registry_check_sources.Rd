@@ -29,8 +29,9 @@ publishers sit behind bot protection and answer a scripted request with
 \code{403} while the page opens normally in a browser, so those are reported as
 \emph{blocked} and are not failures. Only \code{404} and \code{410} are read as dead.
 
-This reaches the network, so it is for maintainers rather than for use
-inside anything that has to run offline.
+Run this during registry maintenance when an internet connection is
+available. Offline package checks can use \code{\link[=registry_status]{registry_status()}} to review the
+stored sources and dates.
 }
 \examples{
 # Reaches the network, so it is not run here.

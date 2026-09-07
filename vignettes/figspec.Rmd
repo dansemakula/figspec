@@ -257,7 +257,7 @@ knitr::kable(report[, c("check", "actual", "status")], row.names = FALSE)
 theme can control. It also uses accessible colours and, when the plot maps a
 variable to shape, shapes designed to remain distinguishable in print.
 
-### What figspec changes
+### Before and after applying the specification
 
 The two figures below use the same data, variables and labels. Both are drawn
 on a Cell Press single-column canvas, which is 85 mm wide. The website displays
@@ -295,7 +295,7 @@ red-green pairing and remains distinguishable for people with common forms of
 colour-vision deficiency. Each series also has its own shape, so the figure
 still works in black and white. The data have not changed.
 
-## Checking a figure you have already drawn
+## Checking a figure you have already created
 
 Check the plot before saving whenever possible. At that stage, R still knows
 the text sizes, colours, layers and theme settings. In a finished TIFF, text is
@@ -336,12 +336,12 @@ knitr::kable(
 )
 ```
 
-Frontiers does not publish a file-size limit in the guidance that was reviewed,
-so figspec reports *not specified by publisher*. A maximum figure height has
-not yet been entered in the registry, so it reports *not yet harvested for this
-journal*. The first describes the publisher's guidance; the second describes
-the current state of the registry. Keeping them separate prevents missing data
-from being mistaken for confirmation that no rule exists.
+The reviewed Frontiers guidance gives no file-size limit, so figspec reports
+*not specified by publisher*. Its maximum figure height is still awaiting
+review and is reported as *not yet harvested for this journal*. The first
+result describes the published guidance; the second shows where the registry
+still needs work. Together they tell the user whether to proceed or check the
+source for an update.
 
 ## Fixing what failed
 
@@ -380,9 +380,8 @@ knitr::kable(
 Cell Press states that red and green should not be used together, so figspec
 treats that combination as a failed requirement. The Royal Society publishes
 in black and white by default, so figspec checks whether its colours remain
-distinct in greyscale. When a publisher does not state either rule, figspec
-still reports the relevant result but labels it `unspecified` instead of
-presenting it as a requirement.
+distinct in greyscale. For a publisher that gives no such rule, the same
+analysis appears as general guidance with an `unspecified` status.
 
 Colour does not have to carry all the information. Giving each series a
 different point shape or line type provides a second way to identify it if two
@@ -554,8 +553,8 @@ fig_suggest_art_type(ggplot(ggplot2::mpg, aes(class)) + geom_bar())
 
 `fig_check()` can classify a live plot from its layers and colours and then use
 the matching resolution rule. A saved file may no longer reveal how the plot
-was constructed, so `"auto"` uses the strictest recorded threshold rather than
-risk approving a file with too little resolution.
+was constructed. In that case, `"auto"` uses the strictest recorded threshold
+and clearly shows which resolution standard was applied.
 
 ## Checking a whole submission
 
@@ -616,11 +615,9 @@ submission_figures$vehicle_class
 submission_check(submission_figures, report_spec, column = "full")
 ```
 
-This first report checks everything that can be inspected while the plots are
-still editable. Properties that belong to the finished files, such as the
-saved format, resolution and file size, cannot be confirmed yet and remain
-incomplete. After export, run `submission_check()` on the saved files to
-verify those properties as well.
+This first report checks the properties available while the plots are still
+editable. After export, run `submission_check()` on the saved files to add the
+final format, resolution and file-size evidence to the review.
 
 The same function accepts a directory or a vector of saved file paths. It can
 check those files for dimensions, format, resolution and file size, but it can
@@ -651,8 +648,9 @@ figspec_knitr_options(report_spec, "full", height = 100, units = "mm")
 
 A figure set may move to a new journal, report or production system. The new
 requirements can be incompatible with the old ones: Cell Press wants type
-between 6 and 8 pt, whereas PLOS ONE asks for 8 to 12 pt. Rather than redraw
-the set by hand, re-export the plot objects against the new specification.
+between 6 and 8 pt, whereas PLOS ONE asks for 8 to 12 pt. Use the original plot
+objects to apply the new requirements and export the set again in one
+operation.
 
 ```{r, eval = FALSE}
 fig_refit(my_plots, spec = "plos_one", output_dir = "figures_plos/")
@@ -717,25 +715,26 @@ media_spec("science")
 
 `media_check()` inspects an actual supplementary video or audio file. It
 compares the file format, frame dimensions, file size, codec and audio bit rate
-with the recorded requirements. Anything it cannot determine is identified
-for manual review.
+with the recorded requirements. The report lists the properties it verifies
+and gathers any remaining items for manual review.
 
-## When manual review is still needed
+## Complete the checks that need your judgement
 
-Some requirements cannot be checked automatically. If guidance gives
-dimensions in pixels but no resolution for converting them, figspec keeps the
-dimensions in pixels rather than guessing a physical size. If the guidance
-does not state a rule, the report says that it is unspecified. To check text
-size, provide the original plot because a saved raster image no longer records
-the text's point size. The report lists each item that still needs manual
-review. For tables, instructions about whether a title is concise, a footnote
-is clear or every abbreviation is defined also remain for a person to assess.
+Some requirements depend on information that a finished file does not contain
+or on an editorial decision that software cannot make. When guidance gives
+dimensions in pixels without a resolution, figspec reports the pixel
+dimensions and asks for the resolution needed to calculate physical size. When
+a source gives no rule, the report marks that property as unspecified. Check
+text size from the editable plot, where the original point sizes are still
+available. For tables, read the title, footnotes and abbreviations in context.
+The report gathers these items in one place so you know exactly what to review
+before delivery.
 
-figspec also measures differences between plotting-panel sizes without calling
-them a failure. No publisher profile in the registry currently requires every
-panel to have the same dimensions. You can use the measurements to align a set
-when your report, presentation or figure layout needs it, without presenting a
-design preference as a publisher requirement.
+figspec also measures differences between plotting-panel sizes. No publisher
+profile in the registry currently requires every panel to have the same
+dimensions, so this measurement is presented as layout information. Use it to
+align a set for a report, presentation or composite figure while keeping the
+publisher checks separate.
 
 ## Where to go next
 

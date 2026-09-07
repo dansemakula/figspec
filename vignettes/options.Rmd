@@ -48,7 +48,7 @@ report_spec &lt;- list(
 <colgroup><col style="width:26%"><col style="width:74%"></colgroup>
 <thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
 <tbody>
-<tr><td><code>filename</code></td><td>Output path. The extension selects the format. With a journal and no extension, the journal's first accepted format is used.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Give the output file a name and extension. The extension selects the file format; this example writes a PNG.</p><pre><code class="language-r">fig_save(
+<tr><td><code>filename</code></td><td>Output path. The extension selects the format. With a specification and no extension, its first accepted format is used.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Give the output file a name and extension. The extension selects the file format; this example writes a PNG.</p><pre><code class="language-r">fig_save(
   filename = file.path(tempdir(), &quot;fuel-economy.png&quot;),
   plot = p,
   width = 85,
@@ -73,21 +73,21 @@ report_spec &lt;- list(
 # To use your project specification instead:
 # spec = report_spec,
 # column = &quot;full&quot;</code></pre><p class="fs-example-result"><strong>Result:</strong> The figure uses the PNAS profile and is exported as a 90 mm TIFF at 300 dpi.</p></div></details></td></tr>
-<tr><td><code>column</code></td><td>Which of the journal's stated column widths to fit. Only meaningful with spec; defaults to &quot;single&quot; when one is given.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Choose one of the widths named in the specification. The value must match a name under columns in that specification.</p><pre><code class="language-r">fig_save(
+<tr><td><code>column</code></td><td>Which named width in the specification to fit. Only meaningful with spec; defaults to &quot;single&quot; when one is given.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Choose one of the widths named in the specification. The value must match a name under columns in that specification.</p><pre><code class="language-r">fig_save(
   file.path(tempdir(), &quot;large-pnas-figure.tiff&quot;),
   p,
   spec = &quot;pnas&quot;,
   column = &quot;large&quot;,
   check = FALSE
 )</code></pre><p class="fs-example-result"><strong>Result:</strong> The canvas is exported at the 180 mm large width recorded for PNAS.</p></div></details></td></tr>
-<tr><td><code>width</code></td><td>Canvas width. Overrides the journal's column width.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Set the width of the complete image. Use this when you already know the required canvas width.</p><pre><code class="language-r">fig_save(
+<tr><td><code>width</code></td><td>Canvas width. Overrides the width selected by column.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Set the width of the complete image. Use this when you already know the required canvas width.</p><pre><code class="language-r">fig_save(
   file.path(tempdir(), &quot;wide-figure.png&quot;),
   p,
   width = 120,
   height = 75,
   check = FALSE
 )</code></pre><p class="fs-example-result"><strong>Result:</strong> The complete image is 120 mm wide.</p></div></details></td></tr>
-<tr><td><code>height</code></td><td>Canvas height. Defaults to three quarters of the canvas width, which is a convenience, not a journal requirement.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Set the height of the complete image instead of accepting figspec's default aspect ratio.</p><pre><code class="language-r">fig_save(
+<tr><td><code>height</code></td><td>Canvas height. Defaults to three quarters of the canvas width, which is a convenience, not a journal requirement.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Set the exact height of the complete image when your layout requires a different aspect ratio.</p><pre><code class="language-r">fig_save(
   file.path(tempdir(), &quot;short-figure.png&quot;),
   p,
   width = 85,
@@ -109,7 +109,7 @@ report_spec &lt;- list(
   units = &quot;cm&quot;,
   check = FALSE
 )</code></pre><p class="fs-example-result"><strong>Result:</strong> The 8.5 × 6 cm request is written as an 85 × 60 mm image.</p></div></details></td></tr>
-<tr><td><code>dpi</code></td><td>Resolution. Defaults to the journal's stated minimum, or 300.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Set the raster resolution explicitly when a specification or project requires more than the 300 dpi default.</p><pre><code class="language-r">fig_save(
+<tr><td><code>dpi</code></td><td>Resolution. Defaults to the specification's stated minimum, or 300 when none is recorded.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Set the raster resolution explicitly when a specification or project requires more than the 300 dpi default.</p><pre><code class="language-r">fig_save(
   file.path(tempdir(), &quot;high-resolution.png&quot;),
   p,
   width = 85,
@@ -117,7 +117,7 @@ report_spec &lt;- list(
   dpi = 600,
   check = FALSE
 )</code></pre><p class="fs-example-result"><strong>Result:</strong> The PNG is written at 600 dpi while keeping the requested physical size.</p></div></details></td></tr>
-<tr><td><code>transform</code></td><td>Whether to apply the specification's reachable visual requirements before export. For ggplot2 and lattice this includes typography and line rules together with accessible colour and shape defaults; Plotly receives the corresponding layout and trace settings; base graphics functions and grid grobs receive specification-aware defaults. A completed recorded plot cannot be restyled and is reported as such. Set to FALSE to preserve the plot exactly as supplied.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Keep transformation on to apply the parts of the specification that the plotting system exposes. Set it to FALSE when you need to preserve the supplied appearance and use figspec only for export and checking.</p><pre><code class="language-r">preserved &lt;- fig_save(
+<tr><td><code>transform</code></td><td>Whether to apply the specification's reachable visual requirements before export. For ggplot2 and lattice this includes typography and line rules together with accessible colour and shape defaults; Plotly receives the corresponding layout and trace settings; base graphics functions and grid grobs receive specification-aware defaults. A completed recorded plot is exported with its existing styling; supply the original drawing function when you want defaults applied. Set to FALSE to preserve any supported plot exactly as supplied.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Keep transformation on to apply the parts of the specification that the plotting system exposes. Set it to FALSE when you need to preserve the supplied appearance and use figspec only for export and checking.</p><pre><code class="language-r">preserved &lt;- fig_save(
   file.path(tempdir(), &quot;preserved-figure.png&quot;),
   p,
   spec = report_spec,
@@ -231,7 +231,7 @@ report_spec &lt;- list(
   format = &quot;tiff&quot;,
   art_type = &quot;colour&quot;
 )</code></pre><p class="fs-example-result"><strong>Result:</strong> The width check uses PNAS's recorded 110 mm medium figure width and passes.</p></div></details></td></tr>
-<tr><td><code>width, height</code></td><td>Intended output size. Defaults to the journal's width for column. Ignored when x is a file, whose real size is measured.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Give the intended canvas dimensions when checking a plot before it is exported. For a saved file, figspec reads the actual dimensions from the file instead.</p><pre><code class="language-r">fig_check(
+<tr><td><code>width, height</code></td><td>Intended output size. Defaults to the width selected by column in the specification. Ignored when x is a file, whose real size is measured.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Give the intended canvas dimensions when checking a plot before it is exported. For a saved file, figspec reads the actual dimensions from the file instead.</p><pre><code class="language-r">fig_check(
   p,
   spec = &quot;pnas&quot;,
   width = 90,
@@ -251,7 +251,7 @@ report_spec &lt;- list(
   format = &quot;tiff&quot;,
   art_type = &quot;colour&quot;
 )</code></pre><p class="fs-example-result"><strong>Result:</strong> figspec converts 9 × 6 cm to 90 × 60 mm before applying the checks.</p></div></details></td></tr>
-<tr><td><code>dpi</code></td><td>Resolution. For a live figure, the resolution you intend to save at. For a file, the resolution it was written at, which lets figspec judge physical size for files that do not record it themselves - base R's png() and tiff() devices do not, whereas ragg does.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Give the intended resolution when checking an editable plot. For a saved raster, figspec normally reads the resolution from the file.</p><pre><code class="language-r">fig_check(
+<tr><td><code>dpi</code></td><td>Resolution. For a live figure, the resolution you intend to save at. For a file, the resolution it was written at. Supply this value when a raster lacks embedded resolution metadata, as files written by base R's png() and tiff() devices often do; figspec can then calculate its physical size from the pixel dimensions.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Give the intended resolution when checking an editable plot. For a saved raster, figspec normally reads the resolution from the file.</p><pre><code class="language-r">fig_check(
   p,
   spec = &quot;pnas&quot;,
   column = &quot;small&quot;,
@@ -285,7 +285,7 @@ report_spec &lt;- list(
   color_mode = &quot;RGB&quot;,
   art_type = &quot;colour&quot;
 )</code></pre><p class="fs-example-result"><strong>Result:</strong> The American spelling produces the same passing RGB check.</p></div></details></td></tr>
-<tr><td><code>art_type</code></td><td>Which resolution rule applies. Publishers set different minimums for different kinds of artwork: Cell Press asks 300 dpi for colour or greyscale, 500 for black and white, and 1000 for line art. &quot;auto&quot; classifies a plot from what it actually draws. For a saved file, where that evidence has been lost, it applies the strictest stated rule so that an ambiguous file cannot pass under the most lenient interpretation. &quot;color&quot; is accepted as an alias for &quot;colour&quot;.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Choose the resolution rule that matches the figure's content. The same 300 dpi file passes as colour artwork but fails the stricter PNAS line-art requirement.</p><pre><code class="language-r">colour_report &lt;- fig_check(
+<tr><td><code>art_type</code></td><td>Which resolution rule applies. Publishers set different minimums for different kinds of artwork: Cell Press asks 300 dpi for colour or greyscale, 500 for black and white, and 1000 for line art. &quot;auto&quot; classifies a plot from what it actually draws. For a saved file that no longer contains that evidence, it applies the strictest stated rule and records the category used in the report. &quot;color&quot; is accepted as an alias for &quot;colour&quot;.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Choose the resolution rule that matches the figure's content. The same 300 dpi file passes as colour artwork but fails the stricter PNAS line-art requirement.</p><pre><code class="language-r">colour_report &lt;- fig_check(
   pnas_file, &quot;pnas&quot;,
   column = &quot;small&quot;,
   art_type = &quot;colour&quot;
@@ -421,8 +421,8 @@ own_colours</code></pre><p class="fs-example-result"><strong>Result:</strong> Th
   scale_shape_manual(values = manual_shapes) +
   fig_apply_spec(&quot;cell_press&quot;, shapes = FALSE)
 
-own_shapes</code></pre><p class="fs-example-result"><strong>Result:</strong> Shapes 15, 17 and 18 are preserved rather than replaced by the figspec shape scale.</p></div></details></td></tr>
-<tr><td><code>style</code></td><td>A house style registered with style_register(), applied underneath the journal's requirements.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Add a registered house style for the visual choices shared by a team or project. Publication requirements are applied after the style, so the style cannot weaken them.</p><pre><code class="language-r">styled &lt;- base_plot +
+own_shapes</code></pre><p class="fs-example-result"><strong>Result:</strong> Shapes 15, 17 and 18 remain exactly as supplied.</p></div></details></td></tr>
+<tr><td><code>style</code></td><td>A house style registered with style_register(). Visual choices are applied first, followed by any overlapping requirements in the specification.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Add a registered house style for the visual choices shared by a team or project. Stated publication requirements take precedence wherever the two settings overlap.</p><pre><code class="language-r">styled &lt;- base_plot +
   fig_apply_spec(
     &quot;frontiers&quot;,
     style = &quot;research_report&quot;
@@ -516,7 +516,7 @@ report_spec &lt;- list(
 
 Set exact dimensions for every data panel
 
-Set the physical size of the data panel instead of setting the outer image size and accepting whatever room remains. For a faceted plot or a multi-plot composition, the requested dimensions apply to every panel.
+Set the physical size of the data panel and let figspec calculate the outer image around it. For a faceted plot or a multi-plot composition, the requested dimensions apply to every panel.
 
 <details class="fs-function-setup"><summary>Run the example setup</summary>
 <div class="fs-argument-example-body"><pre><code class="language-r">
@@ -733,21 +733,21 @@ publication_plot</code></pre><p class="fs-example-result"><strong>Result:</stron
   )
 
 minimal_plot</code></pre><p class="fs-example-result"><strong>Result:</strong> The plot retains the open background and grid treatment of theme_minimal(), while its text remains within the required 8–12 pt range.</p></div></details></td></tr>
-<tr><td><code>style</code></td><td>A house style to apply: a name registered with style_register(), a ggplot2 theme, or a function returning one. Styles are applied underneath the journal's requirements and can never override them.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Add a reusable project or organisational style. Visual choices that do not conflict are retained; in this example, the 6 pt axis text is raised to the publication's 8 pt minimum.</p><pre><code class="language-r">styled_plot &lt;- base_plot +
+<tr><td><code>style</code></td><td>A house style to apply: a name registered with style_register(), a ggplot2 theme, or a function returning one. Visual choices are applied first, followed by any overlapping requirements in the specification.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Add a reusable project or organisational style. Visual choices that do not conflict are retained; in this example, the 6 pt axis text is raised to the publication's 8 pt minimum.</p><pre><code class="language-r">styled_plot &lt;- base_plot +
   theme_spec(
     &quot;plos_one&quot;,
     style = &quot;research_report&quot;
   )
 
 styled_plot</code></pre><p class="fs-example-result"><strong>Result:</strong> The legend remains below the plot and minor grid lines remain hidden, but the undersized axis text is corrected to 8 pt.</p></div></details></td></tr>
-<tr><td><code>base_size</code></td><td>Base type size in points. Defaults to the journal's stated minimum, or 9 pt when the journal states none.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Set the general text size when the specification allows a range. figspec still enforces any recorded minimum and maximum.</p><pre><code class="language-r">larger_plot &lt;- base_plot +
+<tr><td><code>base_size</code></td><td>Base type size in points. Defaults to the specification's stated minimum, or 9 pt when none is recorded.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Set the general text size when the specification allows a range. figspec still enforces any recorded minimum and maximum.</p><pre><code class="language-r">larger_plot &lt;- base_plot +
   theme_spec(
     &quot;pnas&quot;,
     base_size = 10
   )
 
 larger_plot</code></pre><p class="fs-example-result"><strong>Result:</strong> General text uses 10 pt type and the title is limited to PNAS's recorded 12 pt maximum.</p></div></details></td></tr>
-<tr><td><code>base_family</code></td><td>Font family. Defaults to the graphics device's own font. The journal's named font is not forced here, because a family the current device cannot resolve makes the plot fail to render at all. fig_save() applies the journal's font at save time, where the device is known. Pass a family explicitly to override.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Choose a font family that is available on the system used to render the figure. Leaving this unset allows the graphics device to use its default font.</p><pre><code class="language-r">serif_plot &lt;- base_plot +
+<tr><td><code>base_family</code></td><td>Font family. Defaults to the graphics device's own font. fig_save() resolves a font named by the specification when it selects the output device. Pass a family here when you already know which installed font the current device should use.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Choose a font family that is available on the system used to render the figure. Leaving this unset allows the graphics device to use its default font.</p><pre><code class="language-r">serif_plot &lt;- base_plot +
   theme_spec(
     report_spec,
     base_family = &quot;serif&quot;
@@ -1260,7 +1260,7 @@ project_report &lt;- colour_safety_check(
 cell_press_report
 frontiers_report
 project_report</code></pre><p class="fs-example-result"><strong>Result:</strong> The red-green pairing is graded as a failure for Cell Press and the project specification; for Frontiers it is reported as unspecified because that profile records no such rule.</p></div></details></td></tr>
-<tr><td><code>threshold</code></td><td>The smallest perceptual difference that figspec will accept between two colours, measured as CIE Delta-E 2000. The default is 10; raising it makes the distinction test stricter. This setting controls the analysis and does not create a publication requirement that the selected specification does not state.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Set how different two colours must appear before figspec treats them as distinct. A higher value is stricter. This affects the colour analysis, but it does not turn the chosen cutoff into a rule from the source.</p><pre><code class="language-r">grey_plot &lt;- ggplot(
+<tr><td><code>threshold</code></td><td>The smallest perceptual difference that figspec will accept between two colours, measured as CIE Delta-E 2000. The default is 10; raising it makes the distinction test stricter. This setting controls the accessibility analysis; pass-or-fail publication results continue to use the rules recorded in the selected specification.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Set how different two colours must appear before figspec treats them as distinct. A higher value is stricter. This setting controls the colour analysis. Publication grades continue to use the rules recorded in the selected specification.</p><pre><code class="language-r">grey_plot &lt;- ggplot(
   mpg,
   aes(displ, hwy, colour = drv)
 ) +
@@ -1303,13 +1303,13 @@ The same function as `colour_safety_check()`, under the other spelling. Its opti
 |:--------------------------|:--------------------------------------------------------------------------|
 | `plot` | A ggplot object. Use the editable plot rather than an exported file so that figspec can inspect the colours actually mapped to data. |
 | `spec` | The specification to check against. Supply a registry id, a figspec_spec, or a named list containing the colour and reproduction requirements for a publication, project or organisation. |
-| `threshold` | The smallest perceptual difference that figspec will accept between two colours, measured as CIE Delta-E 2000. The default is 10; raising it makes the distinction test stricter. This setting controls the analysis and does not create a publication requirement that the selected specification does not state. |
+| `threshold` | The smallest perceptual difference that figspec will accept between two colours, measured as CIE Delta-E 2000. The default is 10; raising it makes the distinction test stricter. This setting controls the accessibility analysis; pass-or-fail publication results continue to use the rules recorded in the selected specification. |
 
 ### `figspec_palettes()`
 
 List the colour palettes included with figspec
 
-See which palettes figspec provides before choosing one for a plot. The catalogue distinguishes palettes for separate categories from palettes for ordered values, explains where each works best and records its source. These are optional design tools rather than publication requirements.
+See which palettes figspec provides before choosing one for a plot. The catalogue distinguishes palettes for separate categories from palettes for ordered values, explains where each works best and records its source. These are optional design tools, kept separate from publication requirements and their pass-or-fail checks.
 
 _This function has no arguments._
 
@@ -1397,7 +1397,7 @@ class_plot &lt;- base_plot +
   )
 
 class_plot</code></pre><p class="fs-example-result"><strong>Result:</strong> Six Okabe-Ito colours are returned and applied to six vehicle classes; shape provides a second way to identify them.</p></div></details></td></tr>
-<tr><td><code>n</code></td><td>The number of colours to return. When omitted, a sequential palette returns five colours and a fixed palette returns all of its colours. Cividis and Viridis can generate any requested number; a fixed palette returns an error rather than recycling a colour for two groups.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Ask for exactly as many colours as the data needs. Sequential palettes such as Cividis and Viridis generate the requested number, while a fixed palette stops with a clear error if the request exceeds its capacity instead of silently reusing colours.</p><pre><code class="language-r">displacement_band &lt;- cut(
+<tr><td><code>n</code></td><td>The number of colours to return. When omitted, a sequential palette returns five colours and a fixed palette returns all of its colours. Cividis and Viridis can generate any requested number. A fixed palette reports its capacity when more colours are requested, allowing you to choose a suitable alternative.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Ask for exactly as many colours as the data needs. Sequential palettes such as Cividis and Viridis generate the requested number, while a fixed palette reports its capacity when more colours are requested, allowing the user to choose a suitable alternative.</p><pre><code class="language-r">displacement_band &lt;- cut(
   mpg_six_classes$displ,
   breaks = seq(1, 7, by = 1),
   include.lowest = TRUE,
@@ -1649,7 +1649,7 @@ shape_comparison</code></pre><p class="fs-example-result"><strong>Result:</stron
 
 Get a set of distinct point shapes
 
-Retrieve distinct ggplot2 shape codes for a manual scale or another plotting function. figspec supplies a short, deliberate set and stops instead of recycling symbols when more shapes are requested than readers can reliably distinguish.
+Retrieve distinct ggplot2 shape codes for a manual scale or another plotting function. figspec supplies a short, deliberate set and reports its capacity when more shapes are requested than readers can reliably distinguish.
 
 <details class="fs-function-setup"><summary>Run the example setup</summary>
 <div class="fs-argument-example-body"><pre><code class="language-r">
@@ -1806,7 +1806,7 @@ after_report[after_report$check == &quot;Redundant coding&quot;, ]
 
 Retrieve a recorded house-style palette
 
-Retrieve an optional palette recorded as part of a specification's house style. This may describe a publication, project or organisation. A recorded palette is a visual preference rather than a requirement, and figspec does not invent one when the specification contains none.
+Retrieve an optional palette recorded as part of a specification's house style. This may describe a publication, project or organisation. A recorded palette records a visual preference and remains separate from requirements. When none is recorded, the plotting system's existing colours stay in use.
 
 <details class="fs-function-setup"><summary>Run the example setup</summary>
 <div class="fs-argument-example-body"><pre><code class="language-r">
@@ -1934,7 +1934,7 @@ project_requirements &lt;- list(
 <colgroup><col style="width:26%"><col style="width:74%"></colgroup>
 <thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
 <tbody>
-<tr><td><code>spec</code></td><td>The specification to use: a registry id such as &quot;plos_one&quot;, an existing figspec_spec, or a named list containing at least a non-empty name. Use spec_list() to browse the available registry ids. The specification does not have to describe a journal.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a registry id, an existing specification object or your own named list. The example retrieves Cell Press guidance, confirms that an existing object passes through unchanged, and applies a project specification to a real plot.</p><pre><code class="language-r">publisher_spec &lt;- spec_get(
+<tr><td><code>spec</code></td><td>The specification to use: a registry id such as &quot;plos_one&quot;, an existing figspec_spec, or a named list containing at least a non-empty name. Use spec_list() to browse the available registry ids. Project, report and organisational specifications are accepted in the same form as publication profiles.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a registry id, an existing specification object or your own named list. The example retrieves Cell Press guidance, confirms that an existing object passes through unchanged, and applies a project specification to a real plot.</p><pre><code class="language-r">publisher_spec &lt;- spec_get(
   &quot;cell_press&quot;
 )
 
@@ -2187,7 +2187,7 @@ registered_spec &lt;- spec_register(
 <colgroup><col style="width:26%"><col style="width:74%"></colgroup>
 <thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
 <tbody>
-<tr><td><code>id</code></td><td>A short, unique identifier beginning with a lower-case letter and containing only lower-case letters, numbers and underscores. This is the value supplied to functions such as fig_save(spec = &quot;my_journal&quot;).<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Choose a short identifier that begins with a lower-case letter and uses only lower-case letters, numbers and underscores. This is the name used in later figspec calls. An id already used by a bundled profile is rejected so that a local entry cannot silently hide it.</p><pre><code class="language-r">registered_spec$id
+<tr><td><code>id</code></td><td>A short, unique identifier beginning with a lower-case letter and containing only lower-case letters, numbers and underscores. This is the value supplied to functions such as fig_save(spec = &quot;my_journal&quot;).<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Choose a short identifier that begins with a lower-case letter and uses only lower-case letters, numbers and underscores. This is the name used in later figspec calls. Bundled profile ids are reserved, keeping local entries clearly identified and easy to trace.</p><pre><code class="language-r">registered_spec$id
 
 same_entry &lt;- spec_get(
   &quot;research_methods_review&quot;
@@ -2201,7 +2201,7 @@ identical(
   id = registered_spec$id,
   name = registered_spec$name
 )</code></pre><p class="fs-example-result"><strong>Result:</strong> Reports identify the specification as Research Methods Review while R code can continue to use its shorter id.</p></div></details></td></tr>
-<tr><td><code>source_url</code></td><td>Where the requirements came from: an HTTP(S) page, a file: URI or an internal: identifier.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Record where the requirements came from. Use the public HTTP or HTTPS guidance page when available; use a file: URI or an internal: label for a private handbook or organisational decision.</p><pre><code class="language-r">registered_spec$source_url</code></pre><p class="fs-example-result"><strong>Result:</strong> The example records internal:author-guidelines-v2, making clear that this source is maintained by the user rather than bundled by figspec.</p></div></details></td></tr>
+<tr><td><code>source_url</code></td><td>Where the requirements came from: an HTTP(S) page, a file: URI or an internal: identifier.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Record where the requirements came from. Use the public HTTP or HTTPS guidance page when available; use a file: URI or an internal: label for a private handbook or organisational decision.</p><pre><code class="language-r">registered_spec$source_url</code></pre><p class="fs-example-result"><strong>Result:</strong> The example records internal:author-guidelines-v2, clearly identifying the user-maintained source.</p></div></details></td></tr>
 <tr><td><code>verified_on</code></td><td>Date the source was last checked, as &quot;YYYY-MM-DD&quot; or a Date. Future and invalid dates are rejected.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Record when the source was last checked. Supply a Date or a real date in YYYY-MM-DD form. figspec rejects invalid dates and dates in the future.</p><pre><code class="language-r">registered_spec$verified_on</code></pre><p class="fs-example-result"><strong>Result:</strong> The entry stores today's date in YYYY-MM-DD form as its most recent source check.</p></div></details></td></tr>
 <tr><td><code>requirements</code></td><td>A named list containing only requirements stated by the source, such as columns, dpi_min, formats, font_min_pt or min_line_pt. Values are validated before the entry is registered.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Include only rules stated by the source. Common fields cover figure widths, maximum height, resolution, formats, type size, line weight, colour mode and file size. The example applies these requirements to all 234 mpg observations, exports a real PNG and checks the saved file.</p><pre><code class="language-r">registered_plot &lt;- ggplot(
   mpg,
@@ -2367,7 +2367,7 @@ spec_save(
 yaml::read_yaml(
   source_file,
   eval.expr = FALSE
-)$specifications[[1]]$source_url</code></pre><p class="fs-example-result"><strong>Result:</strong> The reusable entry records internal:methods-handbook-v3 instead of implying that its requirements came from a publisher.</p></div></details></td></tr>
+)$specifications[[1]]$source_url</code></pre><p class="fs-example-result"><strong>Result:</strong> The reusable entry identifies internal:methods-handbook-v3 as the source of its requirements.</p></div></details></td></tr>
 <tr><td><code>verified_on</code></td><td>Date the source or internal requirements were last checked, as &quot;YYYY-MM-DD&quot; or a Date. When omitted, an existing value in spec is kept; otherwise today's date is recorded.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Record when the source or internal requirements were last checked. Use a Date or a real date in YYYY-MM-DD form. If it is omitted everywhere, figspec records the day the specification is saved.</p><pre><code class="language-r">dated_file &lt;- file.path(spec_output_dir, &quot;dated-example.yml&quot;)
 review_date &lt;- Sys.Date() - 30
 spec_save(
@@ -2674,7 +2674,7 @@ list(
   against_specification = specified_review,
   inspection_only = inspection_only
 )</code></pre><p class="fs-example-result"><strong>Result:</strong> The first review compares every figure with the project specification. The second reports what figspec can measure without claiming that anything passes or fails.</p></div></details></td></tr>
-<tr><td><code>column</code></td><td>Which named width each figure targets. Supply one non-empty name for the whole set, or a uniquely named character vector covering every figure name in x.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Use one width name when every figure has the same target, or provide a named character vector when figures occupy different widths. Every name must match a figure exactly so a typo cannot silently assign the wrong width.</p><pre><code class="language-r">one_width_review &lt;- submission_check(
+<tr><td><code>column</code></td><td>Which named width each figure targets. Supply one non-empty name for the whole set, or a uniquely named character vector covering every figure name in x.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Use one width name when every figure has the same target, or provide a named character vector when figures occupy different widths. Every name must match a figure exactly; figspec reports any unmatched or missing name before checking the set.</p><pre><code class="language-r">one_width_review &lt;- submission_check(
   figures,
   spec = submission_spec,
   column = &quot;double&quot;,
@@ -2690,7 +2690,7 @@ mapped_width_review &lt;- submission_check(
 
 one_width_review[, c(&quot;file&quot;, &quot;column&quot;)]
 mapped_width_review[, c(&quot;file&quot;, &quot;column&quot;)]</code></pre><p class="fs-example-result"><strong>Result:</strong> The first review assigns double to all three figures. The named mapping assigns single to vehicles and double to economy and diamonds.</p></div></details></td></tr>
-<tr><td><code>dpi</code></td><td>The shared resolution of files that do not record it themselves. It is also the intended export resolution when x contains live plots.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Provide the shared resolution when a saved raster does not record it. figspec uses the supplied value to convert pixels into physical size; it does not rewrite or resample the file.</p><pre><code class="language-r">png_without_dpi &lt;- file.path(
+<tr><td><code>dpi</code></td><td>The shared resolution of files that do not record it themselves. It is also the intended export resolution when x contains live plots.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Provide the shared resolution when a saved raster lacks that metadata. figspec uses the value to convert pixels into physical size while leaving the original file unchanged.</p><pre><code class="language-r">png_without_dpi &lt;- file.path(
   example_root,
   &quot;pixels-without-resolution.png&quot;
 )
@@ -2969,7 +2969,7 @@ resolution_spec &lt;- list(
 <colgroup><col style="width:26%"><col style="width:74%"></colgroup>
 <thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
 <tbody>
-<tr><td><code>plot</code></td><td>A ggplot object.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Pass the ggplot object before exporting it. figspec examines the marks, fills and colours that the plot will draw; it does not infer the category from the function names used to build the plot.</p><pre><code class="language-r">suggested_type &lt;- fig_suggest_art_type(
+<tr><td><code>plot</code></td><td>A ggplot object.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Pass the ggplot object before exporting it. figspec examines the marks, fills and colours that will appear in the figure and bases the suggested category on that visible content.</p><pre><code class="language-r">suggested_type &lt;- fig_suggest_art_type(
   plot = colour_plot
 )
 
@@ -3069,7 +3069,7 @@ plot_set_review</code></pre><p class="fs-example-result"><strong>Result:</strong
 # A bundled profile works in the same position:
 # spec = &quot;pnas&quot;
 
-project_review</code></pre><p class="fs-example-result"><strong>Result:</strong> The figure is prepared against the supplied Research report specification rather than a bundled journal profile.</p></div></details></td></tr>
+project_review</code></pre><p class="fs-example-result"><strong>Result:</strong> The figure is prepared against the user-supplied Research report specification.</p></div></details></td></tr>
 <tr><td><code>output_dir</code></td><td>One directory to write into. It is created if necessary.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Choose a dedicated output directory for the new figure set. figspec creates it when necessary and writes each plot under its list name.</p><pre><code class="language-r">new_directory &lt;- file.path(
   refit_root,
   &quot;report-ready&quot;
@@ -3151,7 +3151,7 @@ png_review[, c(&quot;file&quot;, &quot;result&quot;)]</code></pre><p class="fs-e
 
 Look up supplementary media requirements
 
-Video and audio files have requirements that ordinary figure checks cannot assess. Use this lookup to see the accepted containers, frame limits, codec, bit rate and file-size rules recorded for a publication or project.
+Video and audio use their own technical requirements. This lookup shows the accepted containers, frame limits, codec, bit rate and file-size rules recorded for a publication or project.
 
 <details class="fs-function-setup"><summary>Run the example setup</summary>
 <div class="fs-argument-example-body"><pre><code class="language-r">
@@ -3172,7 +3172,7 @@ project_media_spec &lt;- list(
 <colgroup><col style="width:26%"><col style="width:74%"></colgroup>
 <thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
 <tbody>
-<tr><td><code>spec</code></td><td>A registry id such as &quot;science&quot;, a figspec_spec, or a named list of requirements.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a bundled registry id or your own specification. If no media rules are recorded, figspec says so instead of treating the absence of data as permission to use any format.</p><pre><code class="language-r">science_media_rules &lt;- media_spec(
+<tr><td><code>spec</code></td><td>A registry id such as &quot;science&quot;, a figspec_spec, or a named list of requirements.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a bundled registry id or your own specification. If no media rules are recorded, the result identifies the missing section and directs the user to the source guidance.</p><pre><code class="language-r">science_media_rules &lt;- media_spec(
   spec = &quot;science&quot;
 )
 project_media_rules &lt;- media_spec(
@@ -3189,7 +3189,7 @@ list(
 
 Verify a supplementary media file
 
-These examples create a real 640 × 360 pixel MP4, read it back from disk and compare its saved properties with a media specification. ffprobe adds codec and bit-rate inspection when it is installed; properties that cannot be read are reported as unknown rather than guessed.
+These examples create a real 640 × 360 pixel MP4, read it back from disk and compare its saved properties with a media specification. ffprobe adds codec and bit-rate inspection when it is installed. The report marks any property without reliable file evidence as unknown and ready for review.
 
 <details class="fs-function-setup"><summary>Run the example setup</summary>
 <div class="fs-argument-example-body"><pre><code class="language-r">
@@ -3282,7 +3282,7 @@ project_abstract_spec &lt;- list(
 <colgroup><col style="width:26%"><col style="width:74%"></colgroup>
 <thead><tr><th scope="col">Option</th><th scope="col">What it does</th></tr></thead>
 <tbody>
-<tr><td><code>spec</code></td><td>A registry id such as &quot;rsc&quot;, a figspec_spec, or a named list containing graphical-abstract requirements.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a bundled registry id or your own specification. If the selected profile has no graphical-abstract rules on record, figspec reports the gap instead of borrowing ordinary figure dimensions.</p><pre><code class="language-r">rsc_abstract_rules &lt;- graphical_abstract_spec(
+<tr><td><code>spec</code></td><td>A registry id such as &quot;rsc&quot;, a figspec_spec, or a named list containing graphical-abstract requirements.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply a bundled registry id or your own specification. If the selected profile has no graphical-abstract rules on record, figspec identifies the missing section and directs the user to the source guidance.</p><pre><code class="language-r">rsc_abstract_rules &lt;- graphical_abstract_spec(
   spec = &quot;rsc&quot;
 )
 project_abstract_rules &lt;- graphical_abstract_spec(
@@ -3423,7 +3423,7 @@ saved_html_table &lt;- table_save(
 )
 
 file.exists(saved_html_table)</code></pre><p class="fs-example-result"><strong>Result:</strong> A non-empty HTML table is written at the requested path and TRUE is returned.</p></div></details></td></tr>
-<tr><td><code>table</code></td><td>A supported table object.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply the editable table object. This example starts from 20 rows of mpg data; the written HTML is then reopened rather than inferred from the input object.</p><pre><code class="language-r">second_table_path &lt;- file.path(
+<tr><td><code>table</code></td><td>A supported table object.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Supply the editable table object. This example starts from 20 rows of mpg data, writes the HTML and reopens the completed file for checking.</p><pre><code class="language-r">second_table_path &lt;- file.path(
   table_output_dir,
   &quot;second-table.html&quot;
 )
@@ -3613,7 +3613,7 @@ c(
 )
 
 slide_options</code></pre><p class="fs-example-result"><strong>Result:</strong> The presentation figure is configured as a 12 × 6.75 inch PNG at the project's recorded 192 dpi.</p></div></details></td></tr>
-<tr><td><code>height</code></td><td>Figure height. Defaults to three quarters of the width, which is a convenience rather than a journal requirement.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Set the intended figure height when the default three-quarter aspect ratio is not suitable. The value uses the unit selected by units.</p><pre><code class="language-r">short_options &lt;- figspec_knitr_options(
+<tr><td><code>height</code></td><td>Figure height. Defaults to three quarters of the width when no height is recorded; supply an explicit value when the specification or layout requires one.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Set the intended figure height when the default three-quarter aspect ratio is not suitable. The value uses the unit selected by units.</p><pre><code class="language-r">short_options &lt;- figspec_knitr_options(
   report_chunk_spec,
   column = &quot;full&quot;,
   height = 90,
@@ -3708,7 +3708,7 @@ c(compact = compact_width, full = full_width)</code></pre><p class="fs-example-r
 knitr::opts_chunk$get(
   c(&quot;fig.width&quot;, &quot;fig.height&quot;, &quot;dpi&quot;)
 )</code></pre><p class="fs-example-result"><strong>Result:</strong> Later chunks use a 10 × 5.625 inch canvas at the presentation specification's 192 dpi.</p></div></details></td></tr>
-<tr><td><code>height</code></td><td>Figure height. Defaults to three quarters of the width, which is a convenience rather than a journal requirement.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Set a document-wide figure height when the default aspect ratio is not appropriate for the report or presentation layout.</p><pre><code class="language-r">figspec_knitr_setup(
+<tr><td><code>height</code></td><td>Figure height. Defaults to three quarters of the width when no height is recorded; supply an explicit value when the specification or layout requires one.<details class="fs-argument-example"><summary>See how to use it</summary><div class="fs-argument-example-body"><p>Set a document-wide figure height when the default aspect ratio is not appropriate for the report or presentation layout.</p><pre><code class="language-r">figspec_knitr_setup(
   document_spec,
   column = &quot;full&quot;,
   height = 90,
@@ -3839,14 +3839,14 @@ selected_sources</code></pre><p class="fs-example-result"><strong>Result:</stron
   timeout = 20
 )
 
-patient_source_check</code></pre><p class="fs-example-result"><strong>Result:</strong> The PLOS ONE source is given up to 20 seconds to respond; an unanswered request is reported as unreachable rather than being called a broken page.</p></div></details></td></tr>
+patient_source_check</code></pre><p class="fs-example-result"><strong>Result:</strong> The PLOS ONE source is given up to 20 seconds to respond; an unanswered request is marked unreachable so it can be checked in a browser.</p></div></details></td></tr>
 </tbody></table>
 
 ### `registry_entry_template()`
 
 Create a registry-entry template
 
-Start a new specification with a complete YAML template instead of trying to remember the registry schema. The template separates requirements that are stated, requirements confirmed as absent and fields that have not yet been reviewed.
+Start a new specification from a complete YAML template containing every registry field. The template separates requirements that are stated, requirements confirmed as absent and fields that have not yet been reviewed.
 
 <details class="fs-function-setup"><summary>Run the example setup</summary>
 <div class="fs-argument-example-body"><pre><code class="language-r">

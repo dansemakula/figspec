@@ -23,11 +23,11 @@ wants to reuse across its figures. Once registered, the style can be applied
 by name with \code{\link[=theme_spec]{theme_spec()}}.
 }
 \details{
-Styles are applied \emph{underneath} a specification's requirements, never over
-them. If your style sets type at 6 pt and the specification states a floor
-of 8 pt, the requirement takes precedence and \code{\link[=theme_spec]{theme_spec()}} tells you
-which elements it had to override. That ordering is deliberate: a style can
-change how a figure looks, but it can never make a figure non-compliant.
+The style supplies the starting appearance, followed by any overlapping
+requirements in the specification. If your style sets type at 6 pt and the
+specification states a floor of 8 pt, \code{\link[=theme_spec]{theme_spec()}} raises the type to 8 pt
+and tells you which elements changed. All other style choices remain in the
+finished figure.
 }
 \examples{
 library(ggplot2)

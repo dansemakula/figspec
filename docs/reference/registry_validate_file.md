@@ -1,9 +1,9 @@
 # Check a registry file before loading it
 
-Runs the same checks
+Runs the same checks as
 [`spec_load()`](https://dansemakula.github.io/figspec/reference/spec_load.md)
-runs, but reports everything wrong rather than stopping at the first
-problem.
+and returns the complete set of problems in one report, making the file
+easier to correct in a single pass.
 
 ## Usage
 

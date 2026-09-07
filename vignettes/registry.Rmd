@@ -70,9 +70,8 @@ spec$verified_on
 
 The source link lets you read the original guidance and confirm that it applies
 to the work you are preparing. The review date tells you when the registry
-entry was last compared with that guidance. It does not mean that the source
-has remained unchanged since that date or that every statement has been
-interpreted correctly.
+entry was last compared with that guidance. For a new submission, open the
+source and check for any instructions published after that date.
 
 When the guidance gives a numerical requirement, the specification can also
 keep the passage that supports the recorded value. For example, the widths in
@@ -118,11 +117,10 @@ status[
 ```
 
 Figure and table coverage is shown separately. These counts describe how much
-of each profile has been reviewed. They do not
-describe how many requirements a publisher ought to have. *Confirmed absent*
-means only that the sources checked for that specification did not state the
-requirement. Another page or a later version of the guidance may still contain
-it.
+of each profile has been reviewed. *Confirmed absent* means that the cited
+sources were checked and did not state the requirement. Use the source links
+and review date when you need to confirm whether newer or journal-specific
+guidance adds anything else.
 
 ## Add your own specification
 
@@ -212,10 +210,10 @@ spec_list()[
 ]
 ```
 
-When the same file already contains other specifications, `spec_save()` adds
-the new one without removing them. It refuses to replace an existing id unless
-`overwrite = TRUE` is supplied. The complete updated file is validated before
-it replaces the previous version.
+When the same file already contains other specifications, `spec_save()` keeps
+them and adds the new entry. To update an existing id, set `overwrite = TRUE`.
+The complete updated file is validated before it replaces the previous
+version, leaving the original available if validation fails.
 
 For a recommended team folder layout, the separate house-style file and an
 optional `.Rprofile` that loads both automatically, see
@@ -225,9 +223,10 @@ optional `.Rprofile` that loads both automatically, see
 unlink(registry_file)
 ```
 
-Validation checks that the file can be read and that its entries use the
-expected structure and values. It cannot confirm that the source was
-interpreted correctly. That still needs to be reviewed by a person.
+Validation confirms that the file can be read and that its entries use the
+expected structure and values. A reviewer then compares the recorded values
+with the cited source and confirms that the guidance has been interpreted in
+context.
 
 `registry_entry_template()` remains useful when documenting a publication for
 possible inclusion in figspec. It prints every field that can be reviewed,
@@ -266,16 +265,15 @@ period you choose:
 registry_stale_entries(max_age_days = 365)
 ```
 
-A specification listed by this function is not necessarily wrong. It is due
-for another comparison with its source. If the guidance has changed, update
-the recorded requirements, the passages that support them and the review date
-together.
+A specification listed by this function is due for another comparison with
+its source. Review the current guidance, then update the requirements,
+supporting passages and review date together when anything has changed.
 
-`registry_check_sources()` checks whether the web links recorded in the registry still
-respond. It is not run while this page is built because it requires an internet
-connection and some publisher websites block automated requests. A working
-link shows only that the page can be reached. Someone still needs to read the
-page and check whether its guidance has changed.
+`registry_check_sources()` checks whether the web links recorded in the
+registry still respond. Run it when an internet connection is available; some
+publisher websites may block automated requests. After confirming that a page
+can be reached, read its current guidance and compare it with the recorded
+requirements.
 
 ## Contribute to the bundled registry
 
@@ -314,9 +312,9 @@ file. It checks that the file contains the required information, that values
 use the expected formats and that the same item has not been recorded as both
 stated and not stated.
 
-Passing validation does not prove that the correct source was used or that its
-wording was interpreted correctly. A maintainer must still compare the entry
-with the cited guidance and review the supporting passages.
+After validation passes, a maintainer compares the entry with the cited
+guidance and reviews the supporting passages. This completes the content check
+that structural validation begins.
 
 ### Use harvesting tools as a starting point
 
@@ -326,9 +324,9 @@ toolkit that can help maintainers find publication pages, retrieve current or
 archived guidance and identify statements that may contain requirements. It is
 a development tool and is not installed with the CRAN package.
 
-The toolkit does not add requirements to the registry automatically. A person
-must confirm that the page applies to the intended publication, read the
-guidance in context, keep the wording that supports each value and decide what
-is stated, not stated or still unreviewed. The completed entry can then be
-validated and submitted for review by following the
+The toolkit gathers candidate material for review. Confirm that each page
+applies to the intended publication, read the guidance in context, keep the
+wording that supports each value and decide what is stated, not stated or still
+unreviewed. The completed entry can then be validated and submitted by
+following the
 [contribution guide](https://github.com/dansemakula/figspec/blob/HEAD/CONTRIBUTING.md).

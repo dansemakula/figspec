@@ -149,3 +149,15 @@ test_that("the README reports the registry size and links to its generated table
   expect_match(readme, paste0("contains \\*\\*", length(ids), " profiles"))
   expect_match(readme, "articles/journals\\.html")
 })
+
+test_that("the README represents the complete public API", {
+  skip_if_not(file.exists("../../README.md"), "README not available in this check")
+  readme <- paste(readLines("../../README.md", warn = FALSE), collapse = "\n")
+  exports <- sort(getNamespaceExports("figspec"))
+  documented <- vapply(
+    exports,
+    function(name) grepl(paste0("`", name, "()`"), readme, fixed = TRUE),
+    logical(1)
+  )
+  expect_length(exports[!documented], 0)
+})

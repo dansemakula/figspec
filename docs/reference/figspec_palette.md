@@ -22,8 +22,9 @@ figspec_palette(palette = "okabe_ito", n = NULL)
 
   The number of colours to return. When omitted, a sequential palette
   returns five colours and a fixed palette returns all of its colours.
-  Cividis and Viridis can generate any requested number; a fixed palette
-  returns an error rather than recycling a colour for two groups.
+  Cividis and Viridis can generate any requested number. A fixed palette
+  reports its capacity when more colours are requested, allowing you to
+  choose a suitable alternative.
 
 ## Value
 

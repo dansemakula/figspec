@@ -28,8 +28,12 @@ A data frame with one row per specification profile.
 ## Details
 
 The table includes commonly needed figure requirements and the date each
-source was last checked. A requirement shown as `NA` was not recorded as
-a stated value; it must not be interpreted as having no limit.
+source was last checked. `NA` marks a value that is not recorded as a
+stated requirement; use
+[`spec_get()`](https://dansemakula.github.io/figspec/reference/spec_get.md)
+or
+[`registry_status()`](https://dansemakula.github.io/figspec/reference/registry_status.md)
+to see whether its source was silent or the field is awaiting review.
 
 ## Examples
 

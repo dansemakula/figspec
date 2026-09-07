@@ -28,14 +28,13 @@
 
 #' Set exact dimensions for every data panel
 #'
-#' Sets the plot area to an exact physical size, rather than the image file.
-#' Two figures given the same panel size line up, whatever their axis labels
-#' do, and the type inside them stays at the size you set it.
+#' Sets the plot area to an exact physical size and calculates the complete
+#' image around it. Two figures given the same panel size line up even when
+#' their axis labels differ, and their text keeps its intended size.
 #'
-#' The usual way to size a figure sets the image and lets the panel take
-#' whatever is left over, so a longer y-axis label silently shrinks the plot
-#' area. This does the reverse: the panel is what you fix, and the image grows
-#' or shrinks around it.
+#' Conventional sizing fixes the complete image and leaves the remaining room
+#' to the panel. `fig_panel_size()` fixes the panel itself, then expands or
+#' contracts the image to accommodate its labels, axes, legend and margins.
 #'
 #' For a faceted plot, or a composition made with patchwork, the size applies
 #' to *each* panel, which is what makes panels comparable between figures.
@@ -292,15 +291,15 @@ print.figspec_geometry <- function(x, ...) {
       "  canvas  ", fmt_pair(x$canvas_width_mm, x$canvas_height_mm)
     ))
     cli::cli_alert_info(
-      "This plotting system does not expose its panel boundaries, so figspec
-       can verify the complete image but cannot report a separate panel size."
+      "This plotting system provides the complete canvas dimensions but not
+       separate panel boundaries. The canvas can be verified; panel dimensions
+       require a ggplot2-compatible figure."
     )
     return(invisible(x))
   } else if (free) {
     cli::cli_alert_info(
-      "The panels have no size of their own yet, so they will take whatever the
-       canvas leaves over. The decoration below is fixed by the labels and the
-       font, and does not change with the canvas."
+      "The canvas will determine the available panel space. The measurements
+       below show the fixed room used by labels, fonts and other decoration."
     )
   } else {
     cli::cli_verbatim(c(
@@ -819,8 +818,7 @@ check_size <- function(x, arg, units = "mm", allow_max = FALSE,
     figspec_abort(
       c("{.arg {arg}} must be greater than zero.",
         "x" = "You gave {.val {x}} {units}.",
-        "i" = "A figure with no width cannot be drawn, and the graphics device
-               would fail rather than refuse."),
+        "i" = "A figure needs a positive width before it can be drawn."),
       "bad_size", call, arg = arg, value = x
     )
   }

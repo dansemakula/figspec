@@ -45,17 +45,17 @@ summarise_export <- function(path) {
 
 ```
 
-figspec does not require every figure to begin in ggplot2. You can give
-`fig_save()` a ggplot2 plot, a lattice plot, a grid graphic, a Plotly widget or
-base R plotting code. The same specification then controls the output size,
-resolution and format. figspec also applies the requirements and visual
-defaults that the plotting system makes available before writing the file.
+figspec works with figures made in ggplot2, lattice, grid, Plotly and base R.
+Give `fig_save()` the editable figure or drawing code, and the same
+specification can control its output size, resolution and format. Before
+writing the file, figspec also applies the typography, line, colour and symbol
+settings that the plotting system makes available.
 
-The important difference is *when* figspec receives the figure. An editable
-plot object or a base R drawing function still contains instructions that can
-be changed. A completed PNG or a recorded base plot has already lost much of
-that information. figspec can verify the finished file, but it cannot safely
-reconstruct every original colour, type or line setting.
+The most complete workflow begins with an editable plot object or a base R
+drawing function, while its instructions can still be adjusted. A completed
+PNG or a recorded base plot contains less information about how it was drawn,
+but figspec can still verify the properties recorded in the finished file.
+Checking before and after export gives the fullest account of the result.
 
 ## Use one specification with several plotting systems
 
@@ -187,12 +187,11 @@ embed_saved_figure(
 )
 ```
 
-The distinction between code and a recorded plot matters. Explicit settings
-inside the drawing function still take precedence: if the code asks for
-2-point text or a particular colour, figspec does not rewrite the R commands.
-Pass defaults through the function when you want figspec to choose them. A
-`recordedplot` can be exported and checked, but it cannot be reliably restyled;
-use the drawing function whenever the original code is available.
+The drawing function remains in control of values that it sets explicitly. If
+the code requests 2-point text or a particular colour, those instructions are
+used as written. Leave those values at their defaults when you want figspec to
+supply them. A `recordedplot` can still be exported and checked; use the
+drawing function when you also want the specification applied before export.
 
 ## Lattice
 
@@ -239,10 +238,10 @@ if (exists("lattice_saved")) {
 
 ## Grid graphics
 
-Grid figures are trees of graphical objects. figspec can give the tree
-specification-aware font and line defaults. Settings written directly on a
-child grob remain unchanged because they are explicit design choices, not
-defaults that figspec can safely replace.
+Grid figures are trees of graphical objects. figspec gives the tree
+specification-aware font and line defaults while preserving settings written
+directly on a child grob. This lets the specification guide the overall figure
+without erasing deliberate choices inside individual elements.
 
 ```{r grid-example}
 normalise <- function(x) {
@@ -294,9 +293,9 @@ embed_saved_figure(
 )
 ```
 
-Grid does not expose a universal concept of a ggplot2 data panel, so exact
-panel sizing is not offered for a general grid tree. Set the complete canvas
-with `width` and `height`.
+Grid trees can have many different internal layouts, so they do not share one
+universal data-panel model. Set their complete canvas with `width` and
+`height`; figspec then exports and verifies that physical size.
 
 ## Plotly and other HTML widgets
 
@@ -363,9 +362,9 @@ if (
 ```
 
 Plotly's native SVG and PDF export uses its optional Kaleido environment.
-Other HTML widgets can be exported to PNG, JPEG or TIFF at exact dimensions,
-but figspec does not assume that an unfamiliar widget exposes editable fonts,
-lines or data marks.
+Other HTML widgets can be exported to PNG, JPEG or TIFF at exact dimensions.
+When a widget exposes additional editable properties, its adapter can also
+apply those settings before export.
 
 ## Verify the completed files
 
@@ -392,14 +391,14 @@ verification <- lapply(exports, function(path) {
 verification
 ```
 
-A raster image does not retain the original point size or the identity of its
-plotting system. Check the editable object when you need evidence about its
-type, layers or mappings, and check the exported file for the properties that
-only exist after export.
+A raster image records pixels, dimensions and resolution, but not the original
+point sizes or plotting-system instructions. Check the editable object for
+type, layers and mappings, then check the exported file for its final size,
+resolution, format and validity.
 
 ## Choose the right input
 
-| Figure you have | What to give figspec | What figspec can apply before export | Important limit |
+| Figure you have | What to give figspec | What figspec can apply before export | How to complete the workflow |
 |---|---|---|---|
 | ggplot2 | The plot object | Theme, type, axes, colours, shapes and line rules | Most complete inspection and exact panel sizing |
 | patchwork | The composition | Typography across components | Patchwork controls arrangement; exact panel sizing is available |
@@ -407,12 +406,12 @@ only exist after export.
 | lattice | The `trellis` object | Type, colours, symbols, line types and line widths | Exact panel sizing is not available |
 | grid | A grob or grob tree | Inherited font and line defaults | Explicit child settings remain unchanged; no general panel model |
 | Plotly | The Plotly object | Layout fonts and axes; trace colours, markers and lines | Raster export needs a local browser; vector export needs Kaleido |
-| Another HTML widget | The widget object | Exact raster dimensions | No general restyling contract |
-| Recorded base plot | The `recordedplot` | Nothing safely | It can still be exported and checked |
-| Finished file | Its file path | Nothing—the drawing is complete | figspec verifies what the file still records |
+| Another HTML widget | The widget object | Exact raster dimensions | Check the rendered file; additional styling depends on the widget's adapter |
+| Recorded base plot | The `recordedplot` | Export without restyling | Check the completed file, or supply the original drawing function to apply defaults |
+| Finished file | Its file path | The drawing is already complete | Verify the size, resolution, format and other properties retained by the file |
 
-If exact data-panel dimensions or detailed layer checks are central to the
-work, use a ggplot2-compatible figure. If the figure already belongs in
-another plotting system, figspec still provides one repeatable route from the
-editable input to a correctly sized and verified file without requiring you
-to rebuild it in ggplot2.
+Use a ggplot2-compatible figure when exact data-panel dimensions or detailed
+layer checks are central to the work. For figures built in another plotting
+system, figspec provides the same repeatable path from editable input to a
+correctly sized and verified file, so the original plotting system can remain
+part of the workflow.

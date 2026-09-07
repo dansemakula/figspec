@@ -43,8 +43,8 @@ library(ggplot2)
 ```
 
 The **plot panel** is the rectangle in which the data are drawn. Panel sizing
-means setting the physical width or height of that rectangle, rather than only
-setting the size of the complete image around it.
+lets you set the physical width or height of that rectangle directly. figspec
+then calculates the complete image needed around it.
 
 This matters when several figures will appear together in a paper, report or
 presentation. Readers compare the axes and data regions, so those regions
@@ -58,9 +58,8 @@ Two measurements determine the result:
   space remains after the axes, labels, legend and margins have been placed.
 
 Labels, legends and margins have fixed physical sizes. On canvases of equal
-width, a longer label leaves less room for the data. figspec can instead hold
-the panel width constant and calculate how much canvas each figure needs
-around it.
+width, a longer label leaves less room for the data. figspec holds the panel
+width constant and calculates how much canvas each figure needs around it.
 
 ## See where the space around the panel goes
 
@@ -373,9 +372,8 @@ embed_plot(
 ```
 
 The matching blue rectangles show the result: both data panels are now
-`r round(shared_width, 1)` mm wide. The second canvas is wider because figspec
-has added room for its longer labels instead of shrinking the panel or clipping
-the text.
+`r round(shared_width, 1)` mm wide. figspec gives the second figure a wider
+canvas, preserving both the shared data area and the full labels.
 
 ```{r panel-measurements, echo = FALSE}
 comparison <- data.frame(
@@ -405,13 +403,12 @@ submission_check(aligned, "cell_press")
 ```
 
 Publisher profiles specify the overall image dimensions, not the size of the
-plotting area inside the image. `submission_check()` therefore reports panel
-alignment as useful layout information, not as a journal requirement. Any
-publisher requirements that cannot be checked from a live plot remain clearly
-marked as incomplete.
+plotting area inside the image. `submission_check()` therefore presents panel
+alignment as layout information alongside the publication checks. The report
+also identifies any file properties that should be checked after export.
 
-This workflow is not limited to journals. Replace `journal` and `column` with
-an explicit canvas width for a report, thesis, presentation or dashboard:
+For a report, thesis, presentation or dashboard, supply the available canvas
+width directly:
 
 ```{r}
 report_panel_width <- fig_panel_width(figs, width = 150, units = "mm")
@@ -510,13 +507,12 @@ export_summary <- data.frame(
 knitr::kable(export_summary, row.names = FALSE, align = c("l", "c", "c", "c"))
 ```
 
-These values come from the files that were actually written, not from the code
-arguments alone: `fig_check()` reopened each PNG and read its saved dimensions
-and resolution. The panels match. The long-label image has a wider canvas
-because the text is preserved at its intended size rather than squeezed or
-clipped.
+These values come from the files that were actually written: `fig_check()`
+reopened each PNG and read its saved dimensions and resolution. The panels
+match, and the long-label image receives the additional canvas needed to keep
+its text at the intended size.
 
-For a publication profile, add `journal` and `column`. figspec will retain the
+For a publication profile, add `spec` and `column`. figspec will retain the
 publisher's required canvas width while fitting the requested panel inside it:
 
 ```{r, eval = FALSE}
@@ -531,10 +527,9 @@ fig_save(
 
 ## Use all the available canvas
 
-If a figure must fit an 85 mm space, guessing a conservative panel width can
-leave valuable room unused. `panel_width = "max"` measures the surrounding
-labels, axes, legend and margins, then gives everything else to the data panel.
-The comparison below uses the same plot and the same 85 mm canvas:
+If a figure must fit an 85 mm space, `panel_width = "max"` measures the labels,
+axes, legend and margins, then gives all remaining room to the data panel. The
+comparison below shows how much space this recovers from the same 85 mm canvas:
 
 ```{r}
 conservative_file <- tempfile(fileext = ".png")
@@ -617,9 +612,9 @@ both_sizes <- fig_save(
 fig_geometry(both_sizes)
 ```
 
-If the two dimensions cannot coexist, figspec stops before writing the file.
-The error states how wide the canvas must be or how small the panel must
-become:
+When the requested dimensions need more room than the canvas provides, figspec
+stops before writing the file. The message gives the canvas width or panel
+width that will make the combination work:
 
 ```{r, error = TRUE}
 fig_save(
@@ -635,11 +630,9 @@ fig_save(
 
 ### Faceted plots
 
-Facets multiply the number of data panels inside one canvas. On a narrow
-canvas, adding facets can quietly make every panel too small. In this example,
-three facets squeezed into an 85 mm canvas leave only about 24 mm for each data
-panel. Asking for 30 mm panels makes figspec calculate the wider canvas that
-the complete figure requires.
+Facets divide one canvas among several data panels. In this example, an 85 mm
+canvas leaves about 24 mm for each of three panels. Setting each panel to 30 mm
+makes figspec calculate the wider canvas needed for the complete figure.
 
 ```{r faceted-plot}
 facet_colours <- setNames(
@@ -704,16 +697,14 @@ embed_plot(
 )
 ```
 
-With conventional canvas sizing, R honours the requested 85 mm image width by
-leaving only `r round(faceted_geometry[[1]]$panel_width_mm, 1)` mm for each
-facet. ggplot2 does not provide an argument for saying that every facet must be
-30 mm wide. figspec adds that control: it keeps every data panel at 30 mm and
-calculates that the complete image must be
+With conventional canvas sizing, R honours the requested 85 mm image width and
+leaves `r round(faceted_geometry[[1]]$panel_width_mm, 1)` mm for each facet.
+figspec lets you set every facet to 30 mm and calculates that the complete
+image must be
 `r round(faceted_geometry[[2]]$canvas_width_mm, 1)` mm wide.
 
-The data ranges and text sizes do not change. The added value is predictable
-physical space for every facet, so adding more facets does not silently make
-each chart too narrow to read.
+The data ranges and text sizes stay the same. Every facet now has a known
+physical width, making the complete chart easier to plan and read.
 
 ### Separate plots assembled with patchwork
 
@@ -724,9 +715,8 @@ plot.
 
 Suppose this composition is first exported on a 120 mm canvas. Its two panels
 are about 45 mm wide. If a report layout requires each panel to be 60 mm wide,
-setting a larger canvas by trial and error does not guarantee the result.
-figspec sets the two 60 mm panels directly and calculates the canvas required
-for their axes, titles, spacing and margins.
+figspec can set that measurement directly and calculate the canvas required
+for the axes, titles, spacing and margins.
 
 ```{r patchwork-composition}
 vehicle_classes <- sort(unique(ggplot2::mpg$class))
@@ -801,9 +791,8 @@ the canvas from `r round(composition_geometry[[1]]$canvas_width_mm, 1)` to
 the labels.
 
 The result can then be passed directly to `fig_save()` for export or compared
-with other figures through `submission_check()`. The composition now has known,
-repeatable panel dimensions rather than dimensions inferred from whichever
-canvas happened to be used.
+with other figures through `submission_check()`. The composition now has
+known, repeatable panel dimensions that can be reproduced in every export.
 
 
 ```{r, include = FALSE}

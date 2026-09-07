@@ -17,9 +17,9 @@ A \code{figspec_report}.
 }
 \description{
 Checks container format, frame size, file size, video codec and audio bit
-rate. Codec and bit rate are read with the system \code{ffprobe} executable when
-it is available; without it those rows are reported as \code{unknown}, never
-guessed.
+rate. The system \code{ffprobe} executable provides codec and bit-rate evidence
+when it is available. Otherwise, those rows are marked \code{unknown} so the
+report shows exactly which properties still need to be confirmed.
 }
 \examples{
 # A real, valid 1 x 1 pixel GIF written to a temporary file.

@@ -23,8 +23,9 @@ when supplying \code{width} explicitly.}
 \item{width}{Explicit figure width for specifications that do not publish
 named columns.}
 
-\item{height}{Figure height. Defaults to three quarters of the width, which
-is a convenience rather than a journal requirement.}
+\item{height}{Figure height. Defaults to three quarters of the width when no
+height is recorded; supply an explicit value when the specification or
+layout requires one.}
 
 \item{units}{Units for \code{width} and \code{height}.}
 

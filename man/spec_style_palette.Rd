@@ -21,10 +21,10 @@ registry or user-supplied specification. This can represent the visual
 identity of a publication, project or organisation.
 }
 \details{
-A house-style palette is a design preference, not a requirement. It is never
-graded by \code{\link[=fig_check]{fig_check()}}, and using it does not by itself make a figure comply
-with a specification. When no palette is recorded, figspec reports that fact
-and returns \code{NULL} rather than inventing colours.
+A house-style palette is a design preference, so \code{\link[=fig_check]{fig_check()}} keeps it
+separate from pass-or-fail requirements. When no palette is recorded,
+figspec reports that fact and returns \code{NULL}, leaving the plotting system's
+existing colours in place.
 }
 \examples{
 spec_style_palette("plos_one")

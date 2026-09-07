@@ -27,10 +27,11 @@ A styled table object with evidence of the applied values attached.
 
 ## Details
 
-Only requirements that can be applied safely are changed. Rules that
-need editorial judgement remain for
+figspec applies the measurable requirements supported by the table
+system.
 [`table_check()`](https://dansemakula.github.io/figspec/reference/table_check.md)
-to report.
+gathers editorial requirements, such as title clarity, for the user's
+final review.
 
 ## Examples
 

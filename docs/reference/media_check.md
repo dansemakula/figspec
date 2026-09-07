@@ -1,9 +1,10 @@
 # Verify a supplementary media file
 
 Checks container format, frame size, file size, video codec and audio
-bit rate. Codec and bit rate are read with the system `ffprobe`
-executable when it is available; without it those rows are reported as
-`unknown`, never guessed.
+bit rate. The system `ffprobe` executable provides codec and bit-rate
+evidence when it is available. Otherwise, those rows are marked
+`unknown` so the report shows exactly which properties still need to be
+confirmed.
 
 ## Usage
 
@@ -52,7 +53,7 @@ media_check(media_file, project_media_spec)
 #>
 #> ── Project media handoff ───────────────────────────────────────────────────────
 #> checked:
-#> /var/folders/nr/p09jj77n7jn9606qt_2m77nc0000gn/T//Rtmpfw8GmK/file1506bbdeb79f.gif
+#> /var/folders/nr/p09jj77n7jn9606qt_2m77nc0000gn/T//Rtmpm4v1r5/file160645f70a53a.gif
 #>
 #> ✔ File validity valid                       requires: valid media container
 #> ✔ Format        GIF                         requires: GIF

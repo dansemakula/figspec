@@ -39,8 +39,9 @@ figspec_knitr_options(
 
 - height:
 
-  Figure height. Defaults to three quarters of the width, which is a
-  convenience rather than a journal requirement.
+  Figure height. Defaults to three quarters of the width when no height
+  is recorded; supply an explicit value when the specification or layout
+  requires one.
 
 - units:
 

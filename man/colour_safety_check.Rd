@@ -20,8 +20,8 @@ requirements for a publication, project or organisation.}
 \item{threshold}{The smallest perceptual difference that figspec will accept
 between two colours, measured as CIE Delta-E 2000. The default is 10;
 raising it makes the distinction test stricter. This setting controls the
-analysis and does not create a publication requirement that the selected
-specification does not state.}
+accessibility analysis; pass-or-fail publication results continue to use
+the rules recorded in the selected specification.}
 }
 \value{
 A \code{figspec_report}.
@@ -36,9 +36,9 @@ another way to identify the groups.
 }
 \details{
 When the selected specification states a colour or reproduction rule,
-figspec reports a pass or fail against that rule. Other findings are still
-shown as guidance, but are marked \code{unspecified} rather than being presented
-as requirements that the source did not state.
+figspec reports a pass or fail against that rule. Other findings appear as
+guidance with an \code{unspecified} status, keeping the source requirements and
+the general accessibility review clearly separated.
 }
 \examples{
 library(ggplot2)

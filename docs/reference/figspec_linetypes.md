@@ -25,8 +25,9 @@ A character vector containing one ggplot2 line type per series.
 ## Details
 
 These patterns are design recommendations, not requirements taken from a
-publication or project specification. figspec provides six and returns
-an error instead of recycling a pattern when more are requested.
+publication or project specification. figspec provides six and reports
+that capacity when more are requested, keeping every series visually
+distinct.
 
 ## Examples
 

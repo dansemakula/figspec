@@ -31,13 +31,12 @@ The registered style, invisibly.
 
 ## Details
 
-Styles are applied *underneath* a specification's requirements, never
-over them. If your style sets type at 6 pt and the specification states
-a floor of 8 pt, the requirement takes precedence and
+The style supplies the starting appearance, followed by any overlapping
+requirements in the specification. If your style sets type at 6 pt and
+the specification states a floor of 8 pt,
 [`theme_spec()`](https://dansemakula.github.io/figspec/reference/theme_spec.md)
-tells you which elements it had to override. That ordering is
-deliberate: a style can change how a figure looks, but it can never make
-a figure non-compliant.
+raises the type to 8 pt and tells you which elements changed. All other
+style choices remain in the finished figure.
 
 ## Examples
 

@@ -101,8 +101,9 @@ figspec_palettes <- function() {
 #'   [figspec_palettes()].
 #' @param n The number of colours to return. When omitted, a sequential palette
 #'   returns five colours and a fixed palette returns all of its colours.
-#'   Cividis and Viridis can generate any requested number; a fixed palette
-#'   returns an error rather than recycling a colour for two groups.
+#'   Cividis and Viridis can generate any requested number. A fixed palette
+#'   reports its capacity when more colours are requested, allowing you to
+#'   choose a suitable alternative.
 #' @return A character vector of hex colours.
 #' @examples
 #' library(ggplot2)
@@ -193,10 +194,10 @@ scale_fill_figspec <- function(palette = "okabe_ito", ...) {
 #' registry or user-supplied specification. This can represent the visual
 #' identity of a publication, project or organisation.
 #'
-#' A house-style palette is a design preference, not a requirement. It is never
-#' graded by [fig_check()], and using it does not by itself make a figure comply
-#' with a specification. When no palette is recorded, figspec reports that fact
-#' and returns `NULL` rather than inventing colours.
+#' A house-style palette is a design preference, so [fig_check()] keeps it
+#' separate from pass-or-fail requirements. When no palette is recorded,
+#' figspec reports that fact and returns `NULL`, leaving the plotting system's
+#' existing colours in place.
 #'
 #' @param spec The specification whose house-style palette should be
 #'   retrieved. Supply a registry id, a `figspec_spec`, or a named list. It may
@@ -212,9 +213,9 @@ spec_style_palette <- function(spec) {
   if (is.null(pal)) {
     msg_wrap(
       "No house-style palette is recorded for '", resolved$name,
-      "'. figspec does not invent missing house-style information. See ",
-      "figspec_palettes() for optional palettes and guidance on where each ",
-      "works best."
+      "'. The plotting system will keep its current colours. See ",
+      "figspec_palettes() when you want to choose an optional palette, with ",
+      "guidance on where each works best."
     )
     return(invisible(NULL))
   }

@@ -23,8 +23,9 @@ publication type. A row in this table can therefore represent many journals.
 }
 \details{
 The table includes commonly needed figure requirements and the date each
-source was last checked. A requirement shown as \code{NA} was not recorded as a
-stated value; it must not be interpreted as having no limit.
+source was last checked. \code{NA} marks a value that is not recorded as a stated
+requirement; use \code{\link[=spec_get]{spec_get()}} or \code{\link[=registry_status]{registry_status()}} to see whether its
+source was silent or the field is awaiting review.
 }
 \examples{
 spec_list()

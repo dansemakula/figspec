@@ -19,9 +19,9 @@ share them across projects you control.
 }
 \details{
 The complete style collection is written to a temporary file, reopened and
-validated before the requested path is replaced. Existing directories and
-symbolic links are refused. If writing or validation fails, an existing
-style file is left unchanged.
+validated before it is placed at the requested path. The destination must be
+a regular file path, and any existing style file remains available if the
+new collection cannot be written or validated.
 }
 \examples{
 library(ggplot2)

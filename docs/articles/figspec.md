@@ -208,7 +208,7 @@ applies the typography and structural rules that a ggplot2 theme can
 control. It also uses accessible colours and, when the plot maps a
 variable to shape, shapes designed to remain distinguishable in print.
 
-### What figspec changes
+### Before and after applying the specification
 
 The two figures below use the same data, variables and labels. Both are
 drawn on a Cell Press single-column canvas, which is 85 mm wide. The
@@ -240,7 +240,7 @@ common forms of colour-vision deficiency. Each series also has its own
 shape, so the figure still works in black and white. The data have not
 changed.
 
-## Checking a figure you have already drawn
+## Checking a figure you have already created
 
 Check the plot before saving whenever possible. At that stage, R still
 knows the text sizes, colours, layers and theme settings. In a finished
@@ -277,13 +277,12 @@ between two reasons:
 | Height    | not yet reviewed for this specification | unknown     |
 | File size | not specified by publisher              | unspecified |
 
-Frontiers does not publish a file-size limit in the guidance that was
-reviewed, so figspec reports *not specified by publisher*. A maximum
-figure height has not yet been entered in the registry, so it reports
-*not yet harvested for this journal*. The first describes the
-publisher’s guidance; the second describes the current state of the
-registry. Keeping them separate prevents missing data from being
-mistaken for confirmation that no rule exists.
+The reviewed Frontiers guidance gives no file-size limit, so figspec
+reports *not specified by publisher*. Its maximum figure height is still
+awaiting review and is reported as *not yet harvested for this journal*.
+The first result describes the published guidance; the second shows
+where the registry still needs work. Together they tell the user whether
+to proceed or check the source for an update.
 
 ## Fixing what failed
 
@@ -320,9 +319,9 @@ Other useful findings are shown as guidance.
 Cell Press states that red and green should not be used together, so
 figspec treats that combination as a failed requirement. The Royal
 Society publishes in black and white by default, so figspec checks
-whether its colours remain distinct in greyscale. When a publisher does
-not state either rule, figspec still reports the relevant result but
-labels it `unspecified` instead of presenting it as a requirement.
+whether its colours remain distinct in greyscale. For a publisher that
+gives no such rule, the same analysis appears as general guidance with
+an `unspecified` status.
 
 Colour does not have to carry all the information. Giving each series a
 different point shape or line type provides a second way to identify it
@@ -450,8 +449,8 @@ chart is grayscale art:
 [`fig_check()`](https://dansemakula.github.io/figspec/reference/fig_check.md)
 can classify a live plot from its layers and colours and then use the
 matching resolution rule. A saved file may no longer reveal how the plot
-was constructed, so `"auto"` uses the strictest recorded threshold
-rather than risk approving a file with too little resolution.
+was constructed. In that case, `"auto"` uses the strictest recorded
+threshold and clearly shows which resolution standard was applied.
 
 ## Checking a whole submission
 
@@ -480,14 +479,13 @@ horizontal box plot comparing highway fuel economy across vehicle
 classes, with each class shown in a different accessible
 colour.](figspec_files/figure-html/submission-plots-2.png)
 
-[`submission_check`](https://dansemakula.github.io/figspec/reference/submission_check.md)`(``submission_figures``, ``report_spec``, column ``=`` ``"full"``)`` ``#> `` ``#> ``──`` ``Submission check - Quarterly outcomes report`` ``────────────────────────────────`` ``#> 2 items checked (2 figures, 0 tables)`` ``#> `` ``#> ``!`` engine_size figure full incomplete (3 recorded requirement(s) not judged)`` ``#> ``!`` vehicle_class figure full incomplete (2 recorded requirement(s) not judged)`` ``#> `` ``#> ``ℹ`` Plot areas differ by 12.5 mm across this set (engine_size 119.2 mm, vehicle_class 131.7 mm). No publisher requires them to match, so this is not a failure. To make them match, pass fig_panel_width() to fig_save().`` ``#> `` ``#> ``!`` No failures found, but at least one item is not fully assessed.`` ``#> ``ℹ`` Some requirements could not be judged automatically. Use submission_detail() to see what remains to be reviewed for each item.`
+[`submission_check`](https://dansemakula.github.io/figspec/reference/submission_check.md)`(``submission_figures``, ``report_spec``, column ``=`` ``"full"``)`` ``#> `` ``#> ``──`` ``Submission check - Quarterly outcomes report`` ``────────────────────────────────`` ``#> 2 items checked (2 figures, 0 tables)`` ``#> `` ``#> ``!`` engine_size figure full incomplete (3 recorded requirement(s) not judged)`` ``#> ``!`` vehicle_class figure full incomplete (2 recorded requirement(s) not judged)`` ``#> `` ``#> ``ℹ`` Plot areas differ by 12.5 mm across this set (engine_size 119.2 mm, vehicle_class 131.7 mm). This layout measurement is reported separately from the requirement results. To make them match, pass fig_panel_width() to fig_save().`` ``#> `` ``#> ``!`` No failures found, but at least one item is not fully assessed.`` ``#> ``ℹ`` Some requirements could not be judged automatically. Use submission_detail() to see what remains to be reviewed for each item.`
 
-This first report checks everything that can be inspected while the
-plots are still editable. Properties that belong to the finished files,
-such as the saved format, resolution and file size, cannot be confirmed
-yet and remain incomplete. After export, run
+This first report checks the properties available while the plots are
+still editable. After export, run
 [`submission_check()`](https://dansemakula.github.io/figspec/reference/submission_check.md)
-on the saved files to verify those properties as well.
+on the saved files to add the final format, resolution and file-size
+evidence to the review.
 
 The same function accepts a directory or a vector of saved file paths.
 It can check those files for dimensions, format, resolution and file
@@ -516,9 +514,9 @@ The project specification created at the start works here too:
 
 A figure set may move to a new journal, report or production system. The
 new requirements can be incompatible with the old ones: Cell Press wants
-type between 6 and 8 pt, whereas PLOS ONE asks for 8 to 12 pt. Rather
-than redraw the set by hand, re-export the plot objects against the new
-specification.
+type between 6 and 8 pt, whereas PLOS ONE asks for 8 to 12 pt. Use the
+original plot objects to apply the new requirements and export the set
+again in one operation.
 
 [`fig_refit`](https://dansemakula.github.io/figspec/reference/fig_refit.md)`(``my_plots``, spec ``=`` ``"plos_one"``, output_dir ``=`` ``"figures_plos/"``)`
 
@@ -541,7 +539,7 @@ apply to which file.
 
 The same table can be exported and checked in one call:
 
-`table_path`` ``<-`` `[`file.path`](https://rdrr.io/r/base/file.path.html)`(`[`tempdir`](https://rdrr.io/r/base/tempfile.html)`(``)``, ``"vehicle-summary.html"``)`` ``saved_table`` ``<-`` `[`table_save`](https://dansemakula.github.io/figspec/reference/table_save.md)`(`` `` ``table_path``,`` `` ``summary_table``,`` `` ``table_report_spec``,`` `` transform ``=`` ``FALSE`` ``)`` `[`attr`](https://rdrr.io/r/base/attr.html)`(``saved_table``, ``"figspec_table_report"``)`` ``#> `` ``#> ``──`` ``Quarterly outcomes report`` ``───────────────────────────────────────────────────`` ``#> ``checked:`` ``#> ``/var/folders/nr/p09jj77n7jn9606qt_2m77nc0000gn/T//RtmpO1A3ui/vehicle-summary.html`` ``#> `` ``#> ``✔`` File validity valid requires: readable table object`` ``#> ``✔`` Minimum type size 9 requires: 9`` ``#> ``✔`` Bold header TRUE requires: TRUE`` ``#> ``✔`` Vertical rules FALSE requires: FALSE`` ``#> ``✔`` File format html requires: HTML, DOCX`` ``#> `` ``#> ``✔`` Every recorded requirement that applies was met.`
+`table_path`` ``<-`` `[`file.path`](https://rdrr.io/r/base/file.path.html)`(`[`tempdir`](https://rdrr.io/r/base/tempfile.html)`(``)``, ``"vehicle-summary.html"``)`` ``saved_table`` ``<-`` `[`table_save`](https://dansemakula.github.io/figspec/reference/table_save.md)`(`` `` ``table_path``,`` `` ``summary_table``,`` `` ``table_report_spec``,`` `` transform ``=`` ``FALSE`` ``)`` `[`attr`](https://rdrr.io/r/base/attr.html)`(``saved_table``, ``"figspec_table_report"``)`` ``#> `` ``#> ``──`` ``Quarterly outcomes report`` ``───────────────────────────────────────────────────`` ``#> ``checked:`` ``#> ``/var/folders/nr/p09jj77n7jn9606qt_2m77nc0000gn/T//RtmpwH7yBS/vehicle-summary.html`` ``#> `` ``#> ``✔`` File validity valid requires: readable table object`` ``#> ``✔`` Minimum type size 9 requires: 9`` ``#> ``✔`` Bold header TRUE requires: TRUE`` ``#> ``✔`` Vertical rules FALSE requires: FALSE`` ``#> ``✔`` File format html requires: HTML, DOCX`` ``#> `` ``#> ``✔`` Every recorded requirement that applies was met.`
 
 [`table_apply_spec()`](https://dansemakula.github.io/figspec/reference/table_apply_spec.md)
 also accepts existing gt, flextable, kableExtra and grid tables. Read
@@ -557,27 +555,26 @@ requirements:
 [`media_check()`](https://dansemakula.github.io/figspec/reference/media_check.md)
 inspects an actual supplementary video or audio file. It compares the
 file format, frame dimensions, file size, codec and audio bit rate with
-the recorded requirements. Anything it cannot determine is identified
-for manual review.
+the recorded requirements. The report lists the properties it verifies
+and gathers any remaining items for manual review.
 
-## When manual review is still needed
+## Complete the checks that need your judgement
 
-Some requirements cannot be checked automatically. If guidance gives
-dimensions in pixels but no resolution for converting them, figspec
-keeps the dimensions in pixels rather than guessing a physical size. If
-the guidance does not state a rule, the report says that it is
-unspecified. To check text size, provide the original plot because a
-saved raster image no longer records the text’s point size. The report
-lists each item that still needs manual review. For tables, instructions
-about whether a title is concise, a footnote is clear or every
-abbreviation is defined also remain for a person to assess.
+Some requirements depend on information that a finished file does not
+contain or on an editorial decision that software cannot make. When
+guidance gives dimensions in pixels without a resolution, figspec
+reports the pixel dimensions and asks for the resolution needed to
+calculate physical size. When a source gives no rule, the report marks
+that property as unspecified. Check text size from the editable plot,
+where the original point sizes are still available. For tables, read the
+title, footnotes and abbreviations in context. The report gathers these
+items in one place so you know exactly what to review before delivery.
 
-figspec also measures differences between plotting-panel sizes without
-calling them a failure. No publisher profile in the registry currently
-requires every panel to have the same dimensions. You can use the
-measurements to align a set when your report, presentation or figure
-layout needs it, without presenting a design preference as a publisher
-requirement.
+figspec also measures differences between plotting-panel sizes. No
+publisher profile in the registry currently requires every panel to have
+the same dimensions, so this measurement is presented as layout
+information. Use it to align a set for a report, presentation or
+composite figure while keeping the publisher checks separate.
 
 ## Where to go next
 

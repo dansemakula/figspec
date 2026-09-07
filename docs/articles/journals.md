@@ -7,10 +7,10 @@ journal portfolios, while seven cover individual journals with their own
 requirements.
 
 Each recorded requirement includes the page from which it was taken and
-the date on which that page was reviewed. A missing value is never
-treated as permission or as a passing result: figspec distinguishes a
-requirement that the source does not state from one that has not yet
-been reviewed for that profile.
+the date on which that page was reviewed. When a value is missing,
+figspec tells you whether the source was reviewed and gave no
+requirement or whether that field is still awaiting review. This makes
+the coverage of every profile visible before you use it.
 
 The registry is optional. You can also supply requirements maintained by
 your project or organisation, or load a registry file maintained by your
@@ -93,9 +93,9 @@ The compact table below is rebuilt from
 [`spec_list()`](https://dansemakula.github.io/figspec/reference/spec_list.md)
 and
 [`spec_get()`](https://dansemakula.github.io/figspec/reference/spec_get.md)
-whenever the website is generated. A dash keeps the overview readable;
-inspect the profile to learn whether its source is silent on that
-requirement or the field has not yet been reviewed.
+whenever the website is generated. A dash marks a value that is not
+shown in this overview. Open the profile to see whether its source gives
+no requirement or the field is still awaiting review.
 
 View all 29 publication profiles
 
@@ -175,9 +175,9 @@ distinguishes three kinds of registry coverage:
 - **Not yet harvested** means the field has not yet been reviewed or
   entered for that profile.
 
-The categories account for every field tracked by the registry. Keeping
-them separate prevents an unreviewed field from being mistaken for a
-requirement that the publisher does not state.
+Together, the categories account for every field tracked by the
+registry. They show which requirements are ready to use, which sources
+were silent and which fields still need to be reviewed.
 
 View coverage for all 29 profiles
 
@@ -215,8 +215,8 @@ View coverage for all 29 profiles
 
 ## Use your own specification
 
-Publication profiles are only one source of requirements. The same
-functions accept a named list describing a report, thesis, presentation,
+Publication profiles are one source of requirements. The same functions
+also accept a named list describing a report, thesis, presentation,
 organisation or production workflow. This example defines a 160 mm
 quarterly-report figure, builds a real plot from
 [`ggplot2::mpg`](https://ggplot2.tidyverse.org/reference/mpg.html), and
@@ -241,9 +241,9 @@ its saved properties against the project specification:
 | File format   | PNG, PDF               | PNG      | pass   |
 
 A field omitted from your own specification is reported as
-**unspecified**. It is not called *not yet harvested*, because you
-supplied the requirements and the omission is not a gap in figspec’s
-review of a publication source.
+**unspecified**. The *not yet harvested* label is reserved for fields
+still awaiting review in a publication profile, so the report always
+reflects the source of the missing information.
 
 Pass no specification at all and
 [`fig_check()`](https://dansemakula.github.io/figspec/reference/fig_check.md)

@@ -33,9 +33,9 @@ An integer vector containing one ggplot2 shape code per group.
 ## Details
 
 These shapes are design recommendations, not requirements taken from a
-publication or project specification. The sets are deliberately short:
-figspec returns an error instead of recycling a shape or adding symbols
-that become difficult to tell apart at small sizes.
+publication or project specification. The sets are deliberately short.
+When more shapes are requested, figspec reports the available number so
+you can split the figure or choose another visual cue.
 
 ## Examples
 

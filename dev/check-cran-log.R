@@ -68,7 +68,8 @@ prelaunch_urls <- c(
     "https://dansemakula.github.io/figspec/articles/",
     c("figspec.html", "figure-systems.html", "journals.html", "options.html",
       "panels.html", "registry.html", "tables.html")
-  )
+  ),
+  "https://dansemakula.github.io/figspec/reference/index.html"
 )
 prelaunch_sources <- c(
   "From: DESCRIPTION", "man/figspec-package.Rd", "inst/CITATION",

@@ -539,14 +539,14 @@ spec_save <- function(spec, path, id = NULL, source_url = NULL,
 #'
 #' Keep the YAML file with the project or in a shared version-controlled
 #' repository. When requirements change, edit the file and call
-#' `spec_load()` again; entries with the same user-defined id are updated
-#' for the current session. A loaded file cannot replace a profile bundled with
-#' figspec.
+#' `spec_load()` again; entries with the same user-defined id are updated for
+#' the current session. Bundled profile ids remain reserved, keeping loaded
+#' specifications clearly separated from package-maintained records.
 #'
 #' Registry YAML is treated as data: YAML expression evaluation is disabled
 #' regardless of the user's global `yaml.eval.expr` option. The complete file
-#' is validated before any entry is added, so an invalid entry cannot leave a
-#' partly updated session.
+#' is validated first, and its entries are added to the session together only
+#' after every one passes.
 #'
 #' @param path Path to a non-empty YAML registry file. The file may contain a
 #'   top-level `specifications:` list written by [spec_save()], the legacy
@@ -591,8 +591,9 @@ spec_load <- function(path) {
 #' publication type. A row in this table can therefore represent many journals.
 #'
 #' The table includes commonly needed figure requirements and the date each
-#' source was last checked. A requirement shown as `NA` was not recorded as a
-#' stated value; it must not be interpreted as having no limit.
+#' source was last checked. `NA` marks a value that is not recorded as a stated
+#' requirement; use [spec_get()] or [registry_status()] to see whether its
+#' source was silent or the field is awaiting review.
 #'
 #' @param discipline An optional character vector of discipline tags, such as
 #'   `"physics"` or `c("health", "medicine")`. Matching is case-insensitive,
@@ -669,7 +670,8 @@ spec_list <- function(discipline = NULL) {
 #' @param spec The specification to use: a registry id such as
 #'   `"plos_one"`, an existing `figspec_spec`, or a named list containing at
 #'   least a non-empty `name`. Use [spec_list()] to browse the available registry
-#'   ids. The specification does not have to describe a journal.
+#'   ids. Project, report and organisational specifications are accepted in the
+#'   same form as publication profiles.
 #' @return An object of class `figspec_spec`. An existing specification object
 #'   is returned unchanged.
 #' @examples

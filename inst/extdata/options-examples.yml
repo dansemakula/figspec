@@ -97,8 +97,8 @@ fig_save:
       result: The complete image is 120 mm wide.
     height:
       prose: >-
-        Set the height of the complete image instead of accepting figspec's
-        default aspect ratio.
+        Set the exact height of the complete image when your layout requires a
+        different aspect ratio.
       code: |-
         fig_save(
           file.path(tempdir(), "short-figure.png"),
@@ -551,12 +551,12 @@ fig_apply_spec:
           fig_apply_spec("cell_press", shapes = FALSE)
 
         own_shapes
-      result: Shapes 15, 17 and 18 are preserved rather than replaced by the figspec shape scale.
+      result: Shapes 15, 17 and 18 remain exactly as supplied.
     style:
       prose: >-
         Add a registered house style for the visual choices shared by a team
-        or project. Publication requirements are applied after the style, so
-        the style cannot weaken them.
+        or project. Stated publication requirements take precedence wherever
+        the two settings overlap.
       code: |-
         styled <- base_plot +
           fig_apply_spec(
@@ -684,9 +684,9 @@ fig_preview:
 
 fig_panel_size:
   introduction: >-
-    Set the physical size of the data panel instead of setting the outer image
-    size and accepting whatever room remains. For a faceted plot or a
-    multi-plot composition, the requested dimensions apply to every panel.
+    Set the physical size of the data panel and let figspec calculate the outer
+    image around it. For a faceted plot or a multi-plot composition, the
+    requested dimensions apply to every panel.
   setup: |-
     library(ggplot2)
 
@@ -1564,8 +1564,9 @@ colour_safety_check:
     threshold:
       prose: >-
         Set how different two colours must appear before figspec treats them as
-        distinct. A higher value is stricter. This affects the colour analysis,
-        but it does not turn the chosen cutoff into a rule from the source.
+        distinct. A higher value is stricter. This setting controls the colour
+        analysis. Publication grades continue to use the rules recorded in the
+        selected specification.
       code: |-
         grey_plot <- ggplot(
           mpg,
@@ -1605,7 +1606,8 @@ figspec_palettes:
     See which palettes figspec provides before choosing one for a plot. The
     catalogue distinguishes palettes for separate categories from palettes for
     ordered values, explains where each works best and records its source.
-    These are optional design tools rather than publication requirements.
+    These are optional design tools, kept separate from publication
+    requirements and their pass-or-fail checks.
   setup: |-
     library(ggplot2)
   example:
@@ -1698,8 +1700,8 @@ figspec_palette:
       prose: >-
         Ask for exactly as many colours as the data needs. Sequential palettes
         such as Cividis and Viridis generate the requested number, while a
-        fixed palette stops with a clear error if the request exceeds its
-        capacity instead of silently reusing colours.
+        fixed palette reports its capacity when more colours are requested,
+        allowing the user to choose a suitable alternative.
       code: |-
         displacement_band <- cut(
           mpg_six_classes$displ,
@@ -1961,9 +1963,8 @@ scale_shape_figspec:
 figspec_shapes:
   introduction: >-
     Retrieve distinct ggplot2 shape codes for a manual scale or another plotting
-    function. figspec supplies a short, deliberate set and stops instead of
-    recycling symbols when more shapes are requested than readers can reliably
-    distinguish.
+    function. figspec supplies a short, deliberate set and reports its capacity
+    when more shapes are requested than readers can reliably distinguish.
   setup: |-
     library(ggplot2)
 
@@ -2124,8 +2125,8 @@ spec_style_palette:
   introduction: >-
     Retrieve an optional palette recorded as part of a specification's house
     style. This may describe a publication, project or organisation. A recorded
-    palette is a visual preference rather than a requirement, and figspec does
-    not invent one when the specification contains none.
+    palette records a visual preference and remains separate from requirements.
+    When none is recorded, the plotting system's existing colours stay in use.
   setup: |-
     library(ggplot2)
 
@@ -2514,8 +2515,8 @@ spec_register:
       prose: >-
         Choose a short identifier that begins with a lower-case letter and uses
         only lower-case letters, numbers and underscores. This is the name used
-        in later figspec calls. An id already used by a bundled profile is
-        rejected so that a local entry cannot silently hide it.
+        in later figspec calls. Bundled profile ids are reserved, keeping local
+        entries clearly identified and easy to trace.
       code: |-
         registered_spec$id
 
@@ -2546,7 +2547,7 @@ spec_register:
         a private handbook or organisational decision.
       code: |-
         registered_spec$source_url
-      result: The example records internal:author-guidelines-v2, making clear that this source is maintained by the user rather than bundled by figspec.
+      result: The example records internal:author-guidelines-v2, clearly identifying the user-maintained source.
     verified_on:
       prose: >-
         Record when the source was last checked. Supply a Date or a real date in
@@ -2763,7 +2764,7 @@ spec_save:
           source_file,
           eval.expr = FALSE
         )$specifications[[1]]$source_url
-      result: The reusable entry records internal:methods-handbook-v3 instead of implying that its requirements came from a publisher.
+      result: The reusable entry identifies internal:methods-handbook-v3 as the source of its requirements.
     verified_on:
       prose: >-
         Record when the source or internal requirements were last checked. Use
@@ -3095,8 +3096,8 @@ submission_check:
       prose: >-
         Use one width name when every figure has the same target, or provide a
         named character vector when figures occupy different widths. Every name
-        must match a figure exactly so a typo cannot silently assign the wrong
-        width.
+        must match a figure exactly; figspec reports any unmatched or missing
+        name before checking the set.
       code: |-
         one_width_review <- submission_check(
           figures,
@@ -3117,9 +3118,9 @@ submission_check:
       result: The first review assigns double to all three figures. The named mapping assigns single to vehicles and double to economy and diamonds.
     dpi:
       prose: >-
-        Provide the shared resolution when a saved raster does not record it.
-        figspec uses the supplied value to convert pixels into physical size;
-        it does not rewrite or resample the file.
+        Provide the shared resolution when a saved raster lacks that metadata.
+        figspec uses the value to convert pixels into physical size while
+        leaving the original file unchanged.
       code: |-
         png_without_dpi <- file.path(
           example_root,
@@ -3436,8 +3437,8 @@ fig_suggest_art_type:
     plot:
       prose: >-
         Pass the ggplot object before exporting it. figspec examines the marks,
-        fills and colours that the plot will draw; it does not infer the
-        category from the function names used to build the plot.
+        fills and colours that will appear in the figure and bases the suggested
+        category on that visible content.
       code: |-
         suggested_type <- fig_suggest_art_type(
           plot = colour_plot
@@ -3555,7 +3556,7 @@ fig_refit:
         # spec = "pnas"
 
         project_review
-      result: The figure is prepared against the supplied Research report specification rather than a bundled journal profile.
+      result: The figure is prepared against the user-supplied Research report specification.
     output_dir:
       prose: >-
         Choose a dedicated output directory for the new figure set. figspec
@@ -3795,8 +3796,7 @@ table_save:
     table:
       prose: >-
         Supply the editable table object. This example starts from 20 rows of
-        mpg data; the written HTML is then reopened rather than inferred from
-        the input object.
+        mpg data, writes the HTML and reopens the completed file for checking.
       code: |-
         second_table_path <- file.path(
           table_output_dir,
@@ -3954,9 +3954,9 @@ table_check:
 
 media_spec:
   introduction: >-
-    Video and audio files have requirements that ordinary figure checks cannot
-    assess. Use this lookup to see the accepted containers, frame limits,
-    codec, bit rate and file-size rules recorded for a publication or project.
+    Video and audio use their own technical requirements. This lookup shows the
+    accepted containers, frame limits, codec, bit rate and file-size rules
+    recorded for a publication or project.
   setup: |-
     project_media_spec <- list(
       name = "Research media handoff",
@@ -3973,8 +3973,8 @@ media_spec:
     spec:
       prose: >-
         Supply a bundled registry id or your own specification. If no media
-        rules are recorded, figspec says so instead of treating the absence of
-        data as permission to use any format.
+        rules are recorded, the result identifies the missing section and
+        directs the user to the source guidance.
       code: |-
         science_media_rules <- media_spec(
           spec = "science"
@@ -3993,8 +3993,8 @@ media_check:
   introduction: >-
     These examples create a real 640 × 360 pixel MP4, read it back from disk
     and compare its saved properties with a media specification. ffprobe adds
-    codec and bit-rate inspection when it is installed; properties that cannot
-    be read are reported as unknown rather than guessed.
+    codec and bit-rate inspection when it is installed. The report marks any
+    property without reliable file evidence as unknown and ready for review.
   setup: |-
     ffmpeg <- Sys.which("ffmpeg")
     if (!nzchar(ffmpeg)) {
@@ -4090,8 +4090,8 @@ graphical_abstract_spec:
     spec:
       prose: >-
         Supply a bundled registry id or your own specification. If the selected
-        profile has no graphical-abstract rules on record, figspec reports the
-        gap instead of borrowing ordinary figure dimensions.
+        profile has no graphical-abstract rules on record, figspec identifies
+        the missing section and directs the user to the source guidance.
       code: |-
         rsc_abstract_rules <- graphical_abstract_spec(
           spec = "rsc"
@@ -4475,12 +4475,12 @@ registry_check_sources:
         )
 
         patient_source_check
-      result: The PLOS ONE source is given up to 20 seconds to respond; an unanswered request is reported as unreachable rather than being called a broken page.
+      result: The PLOS ONE source is given up to 20 seconds to respond; an unanswered request is marked unreachable so it can be checked in a browser.
 
 registry_entry_template:
   introduction: >-
-    Start a new specification with a complete YAML template instead of trying
-    to remember the registry schema. The template separates requirements that
+    Start a new specification from a complete YAML template containing every
+    registry field. The template separates requirements that
     are stated, requirements confirmed as absent and fields that have not yet
     been reviewed.
   setup: |-

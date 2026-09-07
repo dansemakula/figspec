@@ -18,14 +18,15 @@
 #' Apply a specification while building a plot
 #'
 #' Adds a figure specification to a plot the same way you would add a colour
-#' scale, so the figure is built to its requirements from the start rather than
-#' corrected afterwards. The specification may be an included publisher or
+#' scale. Applying it while the plot is editable makes the requirements part of
+#' the build. The specification may be an included publisher or
 #' journal profile, one loaded by your team, or a named list supplied directly
 #' in R. One line applies its typography, stated line weights and structural
 #' rules, together with colours and shapes chosen to remain distinguishable.
 #'
-#' Add it last. A scale added after this one replaces the journal's, which is
-#' occasionally what you want and usually not.
+#' Add it after any scales you want figspec to set. A later colour, fill or
+#' shape scale replaces the corresponding figspec scale, which lets you make an
+#' explicit final choice when the project needs one.
 #'
 #' When the specification includes a house-style palette,
 #' `fig_apply_spec()` uses it. Otherwise, a specification that calls for
@@ -42,8 +43,9 @@
 #' @param colour Whether to set the colour and fill scales. Turn this off to
 #'   keep a palette you have chosen yourself.
 #' @param shapes Whether to set the shape scale.
-#' @param style A house style registered with [style_register()], applied
-#'   underneath the journal's requirements.
+#' @param style A house style registered with [style_register()]. Visual
+#'   choices are applied first, followed by any overlapping requirements in
+#'   the specification.
 #' @param base_size Base type size in points, passed to [theme_spec()].
 #' @param color American spelling of `colour`. Takes precedence when given.
 #'   R's partial matching cannot cover this one, because `color` is not a

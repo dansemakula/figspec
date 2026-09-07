@@ -55,9 +55,9 @@ panels and the facet strips are removed, which is the convention for
 journals that treat facets as sub-figures. Keep the strips with
 \code{strips = TRUE} if their content is doing work the labels do not replace.
 
-Nothing here is invented. Where a journal states no labelling rule, the
-\code{level} you give applies, and if you give none the default is lower case —
-a convention, and reported as one rather than as a requirement.
+When the specification gives no labelling rule, \code{level} supplies the
+convention for the figure. If you leave it unset, figspec uses lower-case
+letters and records that choice as a convention in the report.
 }
 \examples{
 library(ggplot2)

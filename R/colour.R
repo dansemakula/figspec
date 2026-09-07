@@ -210,9 +210,9 @@ simulate_cvd <- function(cols, type) {
 #' another way to identify the groups.
 #'
 #' When the selected specification states a colour or reproduction rule,
-#' figspec reports a pass or fail against that rule. Other findings are still
-#' shown as guidance, but are marked `unspecified` rather than being presented
-#' as requirements that the source did not state.
+#' figspec reports a pass or fail against that rule. Other findings appear as
+#' guidance with an `unspecified` status, keeping the source requirements and
+#' the general accessibility review clearly separated.
 #'
 #' @param plot A ggplot object. Use the editable plot rather than an exported
 #'   file so that figspec can inspect the colours actually mapped to data.
@@ -222,8 +222,8 @@ simulate_cvd <- function(cols, type) {
 #' @param threshold The smallest perceptual difference that figspec will accept
 #'   between two colours, measured as CIE Delta-E 2000. The default is 10;
 #'   raising it makes the distinction test stricter. This setting controls the
-#'   analysis and does not create a publication requirement that the selected
-#'   specification does not state.
+#'   accessibility analysis; pass-or-fail publication results continue to use
+#'   the rules recorded in the selected specification.
 #' @return A `figspec_report`.
 #' @examples
 #' library(ggplot2)

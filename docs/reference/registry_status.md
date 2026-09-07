@@ -3,8 +3,8 @@
 Shows when each bundled specification was last checked and how its
 fields are accounted for. A field may contain a stated requirement, be
 recorded as not stated by the source, or remain to be reviewed. The
-result makes older and less complete profiles easy to identify without
-implying that a missing field has no requirement.
+result makes profiles due for further work easy to identify and explains
+every missing value.
 
 ## Usage
 

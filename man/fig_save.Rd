@@ -23,7 +23,7 @@ fig_save(
 }
 \arguments{
 \item{filename}{Output path. The extension selects the format. With a
-journal and no extension, the journal's first accepted format is used.}
+specification and no extension, its first accepted format is used.}
 
 \item{plot}{Figure to save. This can be a ggplot2 or patchwork object, a
 \code{gtable} or grid grob, a lattice plot, a Plotly or other HTML widget, a
@@ -34,10 +34,10 @@ one-sided formula. Defaults to the last ggplot2 plot displayed.}
 a \code{figspec_spec}, or a named list of requirements. When given, it supplies
 the canvas width, resolution, format and font.}
 
-\item{column}{Which of the journal's stated column widths to fit. Only
-meaningful with \code{spec}; defaults to \code{"single"} when one is given.}
+\item{column}{Which named width in the specification to fit. Only meaningful
+with \code{spec}; defaults to \code{"single"} when one is given.}
 
-\item{width}{Canvas width. Overrides the journal's column width.}
+\item{width}{Canvas width. Overrides the width selected by \code{column}.}
 
 \item{height}{Canvas height. Defaults to three quarters of the canvas
 width, which is a convenience, not a journal requirement.}
@@ -48,15 +48,17 @@ composition this applies to each panel.}
 
 \item{units}{Units for \code{width}, \code{height}, \code{panel_width} and \code{panel_height}.}
 
-\item{dpi}{Resolution. Defaults to the journal's stated minimum, or 300.}
+\item{dpi}{Resolution. Defaults to the specification's stated minimum, or
+300 when none is recorded.}
 
 \item{transform}{Whether to apply the specification's reachable visual
 requirements before export. For ggplot2 and lattice this includes
 typography and line rules together with accessible colour and shape
 defaults; Plotly receives the corresponding layout and trace settings;
 base graphics functions and grid grobs receive specification-aware
-defaults. A completed recorded plot cannot be restyled and is reported as
-such. Set to \code{FALSE} to preserve the plot exactly as supplied.}
+defaults. A completed recorded plot is exported with its existing styling;
+supply the original drawing function when you want defaults applied. Set
+to \code{FALSE} to preserve any supported plot exactly as supplied.}
 
 \item{check}{Whether to check the result and report failures as a warning.
 Compliance is judged only when \code{spec} is supplied.}
@@ -74,11 +76,10 @@ The path to the written file, invisibly, with the achieved geometry
 attached as the \code{"figspec_geometry"} attribute. See \code{\link[=fig_geometry]{fig_geometry()}}.
 }
 \description{
-Saves a figure built to a specification. A journal is one way to supply one:
-name a journal and the size, resolution, file format and font come from its
-published requirements. Give a panel size instead, or as well, and the plot
-area is set to that size exactly. Give neither and the figure is written
-with millimetres as the default unit and checked afterwards.
+Saves a figure built to a specification. A journal profile can supply its
+published size, resolution, file format and font requirements; a project or
+organisational specification works in the same place. You can also set the
+panel size directly. figspec writes the file and checks the completed output.
 }
 \section{Canvas and panel}{
 A figure has two widths:
@@ -88,19 +89,17 @@ A figure has two widths:
 text, tick marks, legend and margins have taken their share.
 }
 
-\code{width} sets the canvas. \code{panel_width} sets the panel. They are not
-alternatives and they are not in conflict: the two are related by
-\code{canvas = panel + decoration}, and the decoration is measured, not guessed.
-Give one and the other is worked out. Give both and both are honoured, with
-any slack going to the margin so that neither number is quietly adjusted.
-Ask for a pair that cannot exist and the error reports the two values that
-would work, because you cannot arrive at them without this measurement.
+\code{width} sets the canvas and \code{panel_width} sets the panel. Their relationship
+is \code{canvas = panel + decoration}, where decoration includes axes, labels,
+legends and margins. Give either measurement and figspec calculates the
+other. Give both and figspec preserves each value, placing any extra room in
+the margin. If the pair needs more room than the canvas provides, the error
+gives the canvas width or panel width that will work.
 
 Panel size is what makes a set of figures look like a set. Two figures saved
-at the same canvas width have different panel widths if their y-axis labels
-differ in length, and on the page they look mismatched. No journal states a
-rule about this, so figspec never reports it as a compliance failure — but
-it is usually what an author is trying to fix.
+at the same canvas width can have different panel widths when their y-axis
+labels differ in length. figspec presents this as layout information and
+lets you give the set one shared data area.
 
 \code{panel_width = "max"} takes the widest panel that still fits the canvas you
 are allowed. Under a journal, that is the widest panel that fits the column,
@@ -170,7 +169,7 @@ unlink(measured)
 }
 \seealso{
 \code{\link[=fig_panel_size]{fig_panel_size()}} to set a panel size without saving,
-\code{\link[=fig_columns]{fig_columns()}} for a journal's stated widths, and
+\code{\link[=fig_columns]{fig_columns()}} for the named widths in a specification, and
 \code{vignette("figure-systems")} for worked examples with ggplot2, base R,
 lattice, grid and Plotly.
 }

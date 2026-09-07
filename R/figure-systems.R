@@ -226,9 +226,10 @@ transform_figure <- function(plot, spec, system, family = "") {
   if (system %in% c("recordedplot", "gtable", "htmlwidget")) {
     warning(
       figure_system_label(system),
-      " can be exported and verified, but its completed drawing instructions ",
-      "cannot be restyled safely. For base R, pass the plotting commands as a ",
-      "function or one-sided formula to make them editable at render time.",
+      " already contains a completed drawing. figspec will export and verify ",
+      "its existing appearance. For base R, pass the plotting commands as a ",
+      "function or one-sided formula when you want specification-aware ",
+      "defaults applied before drawing.",
       call. = FALSE
     )
     attr(plot, "figspec_transformation") <- "unavailable"

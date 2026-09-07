@@ -34,8 +34,10 @@ publishers sit behind bot protection and answer a scripted request with
 as *blocked* and are not failures. Only `404` and `410` are read as
 dead.
 
-This reaches the network, so it is for maintainers rather than for use
-inside anything that has to run offline.
+Run this during registry maintenance when an internet connection is
+available. Offline package checks can use
+[`registry_status()`](https://dansemakula.github.io/figspec/reference/registry_status.md)
+to review the stored sources and dates.
 
 ## See also
 

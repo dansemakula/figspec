@@ -59,11 +59,11 @@ report for the files written.
 
 ## Details
 
-It works from live figure objects, not from saved files, and that is
-deliberate. Type size cannot be recovered from a saved raster, and
-rescaling one only degrades it, so re-fitting a finished TIFF cannot
-produce a compliant figure. Keep your plots in a list and this stays a
-one-line operation.
+Keep the editable figures in a named list so figspec can apply the new
+type, colour and line settings before export. Saved raster files no
+longer contain those editable settings. With the original objects
+available, adapting and checking the complete set remains a one-line
+operation.
 
 ## Examples
 

@@ -23,8 +23,9 @@
 #'   when supplying `width` explicitly.
 #' @param width Explicit figure width for specifications that do not publish
 #'   named columns.
-#' @param height Figure height. Defaults to three quarters of the width, which
-#'   is a convenience rather than a journal requirement.
+#' @param height Figure height. Defaults to three quarters of the width when no
+#'   height is recorded; supply an explicit value when the specification or
+#'   layout requires one.
 #' @param units Units for `width` and `height`.
 #' @param art_type Resolution category. With no plot available, `"auto"`
 #'   conservatively uses the strictest rule the journal states.

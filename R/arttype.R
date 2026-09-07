@@ -107,11 +107,10 @@ resolution_for_art_type <- function(spec, art_type) {
 #' [fig_save()]. It also shows the recorded thresholds when you supply a
 #' publication or project specification.
 #'
-#' The suggestion describes the plot's visible content; it does not rewrite or
-#' overrule the source's terminology. For example, some publishers reserve
-#' "line art" for pure black-and-white artwork, while others use the term more
-#' broadly. Read the displayed thresholds and source guidance before choosing a
-#' lower resolution for final delivery.
+#' The suggestion describes the plot's visible content. Because publishers may
+#' define terms such as "line art" differently, the output also displays the
+#' thresholds recorded in the selected specification. Compare the suggestion
+#' with the source guidance, then use that category for the final export.
 #'
 #' @param plot A ggplot object.
 #' @param spec Optional specification: a registry id, a `figspec_spec`, or a

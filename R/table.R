@@ -155,8 +155,9 @@ style_grid_table <- function(x, family = NULL, font_size = NA_real_,
 #' knitr or kableExtra tables and grid tables. A data frame or matrix is
 #' converted to a gt table.
 #'
-#' Only requirements that can be applied safely are changed. Rules that need
-#' editorial judgement remain for [table_check()] to report.
+#' figspec applies the measurable requirements supported by the table system.
+#' [table_check()] gathers editorial requirements, such as title clarity, for
+#' the user's final review.
 #'
 #' @param table A supported table object.
 #' @param spec The specification to apply. It must contain a tables section.
@@ -573,9 +574,9 @@ table_check_row <- function(check, requirement, actual, ok, spec, fields) {
 #' live-object checks can also use styling evidence that an image or PDF no
 #' longer preserves.
 #'
-#' Requirements that need a person to read the table, such as whether its title
-#' is concise or every abbreviation is defined, are reported as unresolved.
-#' figspec does not convert their absence into a pass.
+#' Requirements that depend on meaning, such as whether a title is concise or
+#' every abbreviation is defined, are gathered under unresolved items. Read
+#' these parts in context to complete the review.
 #'
 #' @param x A supported live table or one table-file path.
 #' @param spec The specification to use, or NULL for inspection only.
@@ -970,10 +971,10 @@ promote_table_file <- function(tmp, destination) {
 #' Export and verify a table
 #'
 #' Writes a supported R table to a format available from that table system.
-#' When a specification is supplied, figspec first applies the requirements it
-#' can enforce, writes to a temporary file in the destination directory,
-#' reopens that file for verification and only then replaces the requested
-#' output.
+#' When a specification is supplied, figspec applies the supported
+#' requirements, writes to a temporary file in the destination directory and
+#' reopens that file for verification. After the file passes its structural
+#' checks, it is placed at the requested output path.
 #'
 #' gt tables support HTML, DOCX, RTF, TeX, PDF and PNG. Flextable objects
 #' support HTML, DOCX, RTF and PNG. HTML or LaTeX kable objects support their

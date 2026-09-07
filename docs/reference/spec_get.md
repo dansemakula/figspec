@@ -21,8 +21,9 @@ spec_get(spec)
   existing `figspec_spec`, or a named list containing at least a
   non-empty `name`. Use
   [`spec_list()`](https://dansemakula.github.io/figspec/reference/spec_list.md)
-  to browse the available registry ids. The specification does not have
-  to describe a journal.
+  to browse the available registry ids. Project, report and
+  organisational specifications are accepted in the same form as
+  publication profiles.
 
 ## Value
 

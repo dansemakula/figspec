@@ -169,11 +169,11 @@ promote_style_file <- function(candidate, destination) {
 #' wants to reuse across its figures. Once registered, the style can be applied
 #' by name with [theme_spec()].
 #'
-#' Styles are applied *underneath* a specification's requirements, never over
-#' them. If your style sets type at 6 pt and the specification states a floor
-#' of 8 pt, the requirement takes precedence and [theme_spec()] tells you
-#' which elements it had to override. That ordering is deliberate: a style can
-#' change how a figure looks, but it can never make a figure non-compliant.
+#' The style supplies the starting appearance, followed by any overlapping
+#' requirements in the specification. If your style sets type at 6 pt and the
+#' specification states a floor of 8 pt, [theme_spec()] raises the type to 8 pt
+#' and tells you which elements changed. All other style choices remain in the
+#' finished figure.
 #'
 #' @param name A short identifier used to apply the style later.
 #' @param theme The ggplot2 theme to reuse, or a function that returns one.
@@ -293,9 +293,9 @@ style_remove <- function(name) {
 #' share them across projects you control.
 #'
 #' The complete style collection is written to a temporary file, reopened and
-#' validated before the requested path is replaced. Existing directories and
-#' symbolic links are refused. If writing or validation fails, an existing
-#' style file is left unchanged.
+#' validated before it is placed at the requested path. The destination must be
+#' a regular file path, and any existing style file remains available if the
+#' new collection cannot be written or validated.
 #'
 #' @param path The RDS file to create.
 #' @return `path` invisibly.

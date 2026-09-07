@@ -21,15 +21,14 @@ like a plot. Its achieved geometry is attached as the
 \code{"figspec_geometry"} attribute.
 }
 \description{
-Sets the plot area to an exact physical size, rather than the image file.
-Two figures given the same panel size line up, whatever their axis labels
-do, and the type inside them stays at the size you set it.
+Sets the plot area to an exact physical size and calculates the complete
+image around it. Two figures given the same panel size line up even when
+their axis labels differ, and their text keeps its intended size.
 }
 \details{
-The usual way to size a figure sets the image and lets the panel take
-whatever is left over, so a longer y-axis label silently shrinks the plot
-area. This does the reverse: the panel is what you fix, and the image grows
-or shrinks around it.
+Conventional sizing fixes the complete image and leaves the remaining room
+to the panel. \code{fig_panel_size()} fixes the panel itself, then expands or
+contracts the image to accommodate its labels, axes, legend and margins.
 
 For a faceted plot, or a composition made with patchwork, the size applies
 to \emph{each} panel, which is what makes panels comparable between figures.

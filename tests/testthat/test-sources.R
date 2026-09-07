@@ -65,8 +65,8 @@ test_that("the report counts blocked separately from gone", {
   txt <- paste(out, collapse = " ")
   expect_match(txt, "1 source is gone")
   expect_match(txt, "gone")
-  expect_match(txt, "2 blocked the request")
-  expect_match(txt, "not a failure")
+  expect_match(txt, "2 sources blocked the automated request")
+  expect_match(txt, "complete the link check")
 })
 
 test_that("a blocked source is not named among the gone", {

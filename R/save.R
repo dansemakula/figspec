@@ -23,11 +23,10 @@
 
 #' Save a figure at an exact size and resolution
 #'
-#' Saves a figure built to a specification. A journal is one way to supply one:
-#' name a journal and the size, resolution, file format and font come from its
-#' published requirements. Give a panel size instead, or as well, and the plot
-#' area is set to that size exactly. Give neither and the figure is written
-#' with millimetres as the default unit and checked afterwards.
+#' Saves a figure built to a specification. A journal profile can supply its
+#' published size, resolution, file format and font requirements; a project or
+#' organisational specification works in the same place. You can also set the
+#' panel size directly. figspec writes the file and checks the completed output.
 #'
 #' # Canvas and panel
 #'
@@ -37,19 +36,17 @@
 #' * the **panel**, which is the plot area left once the axis titles, axis
 #'   text, tick marks, legend and margins have taken their share.
 #'
-#' `width` sets the canvas. `panel_width` sets the panel. They are not
-#' alternatives and they are not in conflict: the two are related by
-#' `canvas = panel + decoration`, and the decoration is measured, not guessed.
-#' Give one and the other is worked out. Give both and both are honoured, with
-#' any slack going to the margin so that neither number is quietly adjusted.
-#' Ask for a pair that cannot exist and the error reports the two values that
-#' would work, because you cannot arrive at them without this measurement.
+#' `width` sets the canvas and `panel_width` sets the panel. Their relationship
+#' is `canvas = panel + decoration`, where decoration includes axes, labels,
+#' legends and margins. Give either measurement and figspec calculates the
+#' other. Give both and figspec preserves each value, placing any extra room in
+#' the margin. If the pair needs more room than the canvas provides, the error
+#' gives the canvas width or panel width that will work.
 #'
 #' Panel size is what makes a set of figures look like a set. Two figures saved
-#' at the same canvas width have different panel widths if their y-axis labels
-#' differ in length, and on the page they look mismatched. No journal states a
-#' rule about this, so figspec never reports it as a compliance failure — but
-#' it is usually what an author is trying to fix.
+#' at the same canvas width can have different panel widths when their y-axis
+#' labels differ in length. figspec presents this as layout information and
+#' lets you give the set one shared data area.
 #'
 #' `panel_width = "max"` takes the widest panel that still fits the canvas you
 #' are allowed. Under a journal, that is the widest panel that fits the column,
@@ -68,7 +65,7 @@
 #' `width` when no specification is needed.
 #'
 #' @param filename Output path. The extension selects the format. With a
-#'   journal and no extension, the journal's first accepted format is used.
+#'   specification and no extension, its first accepted format is used.
 #' @param plot Figure to save. This can be a ggplot2 or patchwork object, a
 #'   `gtable` or grid grob, a lattice plot, a Plotly or other HTML widget, a
 #'   recorded base plot, or base-graphics code wrapped in a function or
@@ -76,23 +73,25 @@
 #' @param spec Optional specification: a registry id such as `"cell_press"`,
 #'   a `figspec_spec`, or a named list of requirements. When given, it supplies
 #'   the canvas width, resolution, format and font.
-#' @param column Which of the journal's stated column widths to fit. Only
-#'   meaningful with `spec`; defaults to `"single"` when one is given.
-#' @param width Canvas width. Overrides the journal's column width.
+#' @param column Which named width in the specification to fit. Only meaningful
+#'   with `spec`; defaults to `"single"` when one is given.
+#' @param width Canvas width. Overrides the width selected by `column`.
 #' @param height Canvas height. Defaults to three quarters of the canvas
 #'   width, which is a convenience, not a journal requirement.
 #' @param panel_width,panel_height Size of the plot area itself. A number, or
 #'   `"max"` for the largest that fits the canvas. With facets or a patchwork
 #'   composition this applies to each panel.
 #' @param units Units for `width`, `height`, `panel_width` and `panel_height`.
-#' @param dpi Resolution. Defaults to the journal's stated minimum, or 300.
+#' @param dpi Resolution. Defaults to the specification's stated minimum, or
+#'   300 when none is recorded.
 #' @param transform Whether to apply the specification's reachable visual
 #'   requirements before export. For ggplot2 and lattice this includes
 #'   typography and line rules together with accessible colour and shape
 #'   defaults; Plotly receives the corresponding layout and trace settings;
 #'   base graphics functions and grid grobs receive specification-aware
-#'   defaults. A completed recorded plot cannot be restyled and is reported as
-#'   such. Set to `FALSE` to preserve the plot exactly as supplied.
+#'   defaults. A completed recorded plot is exported with its existing styling;
+#'   supply the original drawing function when you want defaults applied. Set
+#'   to `FALSE` to preserve any supported plot exactly as supplied.
 #' @param check Whether to check the result and report failures as a warning.
 #'   Compliance is judged only when `spec` is supplied.
 #' @param art_type Resolution category. `"auto"` classifies the live plot;
@@ -104,7 +103,7 @@
 #' @return The path to the written file, invisibly, with the achieved geometry
 #'   attached as the `"figspec_geometry"` attribute. See [fig_geometry()].
 #' @seealso [fig_panel_size()] to set a panel size without saving,
-#'   [fig_columns()] for a journal's stated widths, and
+#'   [fig_columns()] for the named widths in a specification, and
 #'   `vignette("figure-systems")` for worked examples with ggplot2, base R,
 #'   lattice, grid and Plotly.
 #' @examples

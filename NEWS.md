@@ -4,8 +4,9 @@ This is the first public release of figspec.
 
 figspec enables researchers and other R users to build, export and verify
 figures and tables against the specifications their work must meet. A
-specification can come from a journal, a publisher, a house style, an
-organisation or the needs of a particular project.
+specification can come from a journal, a publisher, an organisation or the
+needs of a particular project. A separate house style can be added when the
+work also needs a consistent visual identity.
 
 ## Build and export figures to a specification
 
@@ -26,7 +27,7 @@ organisation or the needs of a particular project.
 ## Verify figures before delivery
 
 * `fig_check()` reviews the requirements recorded in a specification and
-  reports what passes, what fails and what cannot be determined. Checks cover
+  reports what passes, what fails and what needs more information. Checks cover
   dimensions, resolution, format, file validity, typography, line weights,
   colour use, visual distinction, panel labels, axes, number formatting and
   relevant properties of raster and vector files.
@@ -42,15 +43,14 @@ organisation or the needs of a particular project.
 * `media_check()` verifies the format, frame dimensions, file size and, when
   FFmpeg is available, the codec or bit rate of supplementary video and audio.
 
-figspec does not turn missing information into a pass. It distinguishes a
-requirement stated by the source, a field reviewed but not stated, a field that
-has not yet been reviewed, and a property that cannot be recovered from the
-available input.
+Every missing value is explained. figspec distinguishes a requirement stated
+by the source, a field reviewed but not stated, a field still awaiting review,
+and a property that needs evidence from another input.
 
 ## Control the space available for data
 
-* `fig_panel_size()` sets the physical size of the plotting panel rather than
-  only the size of the surrounding image.
+* `fig_panel_size()` sets the physical size of the plotting panel and
+  calculates the surrounding image around it.
 * `fig_panel_width()` finds a panel width that a set of figures can share, even
   when their labels, legends and margins require different amounts of space.
 * `fig_save()` can export by panel size and calculate the canvas required
@@ -107,8 +107,8 @@ University Press, Cell Press, BMJ, Frontiers and IEEE.
   replaces an existing output only after rendering succeeds and the result is
   structurally valid.
 * `table_check()` combines evidence retained by the editable object with
-  evidence recovered from the written file. Rules needing editorial judgement
-  remain unresolved instead of being reported as passes.
+  evidence recovered from the written file. It gathers rules needing editorial
+  judgement in a separate part of the report for final review.
 * `submission_check()` now accepts mixed collections of figures and tables
   and labels each item in its summary.
 * `table_spec()`, `media_spec()` and `graphical_abstract_spec()` retrieve the
@@ -117,8 +117,8 @@ University Press, Cell Press, BMJ, Frontiers and IEEE.
 
 ## Reliability and safe defaults
 
-* Saved files are reopened and inspected. Corrupt or incorrectly labelled
-  files are reported as invalid rather than compliant.
+* Saved files are reopened and inspected. Corrupt files or files whose contents
+  do not match their extension are reported as invalid with the reason.
 * Inputs that could produce an unsafe path, an unusable graphics device or an
   ambiguous result are rejected with a clear error before files are written.
 * Raster and vector readers limit the amount of untrusted data they allocate
@@ -126,8 +126,8 @@ University Press, Cell Press, BMJ, Frontiers and IEEE.
 * Registry files are checked for invalid, unknown or contradictory fields
   before their specifications are loaded.
 * Registry harvesting places proposed values and exact source excerpts into a
-  review queue. It does not add unreviewed material directly to the trusted
-  registry.
+  review queue. A reviewer confirms them against the source before they enter
+  the bundled registry.
 
 figspec is licensed under GNU GPL version 3 or later. Third-party dependencies
 and generated website assets retain their own compatible licences.
@@ -139,11 +139,10 @@ individual journals are reviewed. Publisher-wide profiles provide a useful
 default, but an individual journal's current instructions take priority when
 they differ.
 
-Some properties exist only in the editable plot. Type size, line width and
-colour mappings generally cannot be recovered from a saved raster image, so
-figspec recommends checking plot objects before export and the written files
-afterwards. PDF, EPS and SVG may preserve some typography information that a
-raster file does not.
+Editable plots provide type size, line width and colour mappings. Saved files
+provide final dimensions, resolution, format and validity; PDF, EPS and SVG
+may also retain typography information. Checking the plot before export and
+the written file afterwards brings both kinds of evidence into one workflow.
 
 Publication guidance also changes over time. Source links, review dates and
 registry-maintenance tools are included so users and contributors can see what

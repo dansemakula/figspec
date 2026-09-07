@@ -25,10 +25,10 @@ was requested.
 }
 \description{
 Writes a supported R table to a format available from that table system.
-When a specification is supplied, figspec first applies the requirements it
-can enforce, writes to a temporary file in the destination directory,
-reopens that file for verification and only then replaces the requested
-output.
+When a specification is supplied, figspec applies the supported
+requirements, writes to a temporary file in the destination directory and
+reopens that file for verification. After the file passes its structural
+checks, it is placed at the requested output path.
 }
 \details{
 gt tables support HTML, DOCX, RTF, TeX, PDF and PNG. Flextable objects

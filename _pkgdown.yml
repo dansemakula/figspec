@@ -14,8 +14,8 @@ home:
     figspec enables researchers and other R users to build, export and verify
     figures and tables against requirements from publications, organisations
     and individual projects. It applies supported requirements while the work
-    is still editable, checks the exported result and clearly reports anything
-    that needs attention or cannot be determined.
+    is still editable, checks the exported result and gives users a clear list
+    of what is complete and what still needs attention.
 
 navbar:
   structure:

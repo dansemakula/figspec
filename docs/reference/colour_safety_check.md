@@ -33,8 +33,8 @@ color_safety_check(plot, spec, threshold = 10)
   The smallest perceptual difference that figspec will accept between
   two colours, measured as CIE Delta-E 2000. The default is 10; raising
   it makes the distinction test stricter. This setting controls the
-  analysis and does not create a publication requirement that the
-  selected specification does not state.
+  accessibility analysis; pass-or-fail publication results continue to
+  use the rules recorded in the selected specification.
 
 ## Value
 
@@ -43,9 +43,9 @@ A `figspec_report`.
 ## Details
 
 When the selected specification states a colour or reproduction rule,
-figspec reports a pass or fail against that rule. Other findings are
-still shown as guidance, but are marked `unspecified` rather than being
-presented as requirements that the source did not state.
+figspec reports a pass or fail against that rule. Other findings appear
+as guidance with an `unspecified` status, keeping the source
+requirements and the general accessibility review clearly separated.
 
 ## Examples
 

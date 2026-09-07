@@ -7,13 +7,13 @@ begin as data frames, matrices, 'gt', 'flextable', 'kableExtra' or grid
 objects. Figure checks cover physical dimensions, resolution, format,
 typography, line and point weights, colour, panel labels and axis rules.
 Table checks cover the output format and measurable layout and
-typography, while rules needing editorial judgement remain explicitly
-unresolved. Figures can also be sized by the data panel rather than only
-by the outer image. The registry records sourced publication
+typography, and list rules needing editorial judgement for final review.
+Figures can also be sized by the data panel, with the required outer
+image calculated around it. The registry records sourced publication
 requirements, and project or organisational specifications can be
 supplied directly. Every bundled requirement records its source and
-review date; missing information is reported rather than assumed to
-pass.
+review date. Missing fields are labelled according to whether the source
+was silent or the field awaits review.
 
 ## See also
 

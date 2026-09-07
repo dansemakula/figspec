@@ -1,7 +1,8 @@
 # Contributing to figspec
 
-The code is small. The registry is the part that makes figspec worth
-trusting, and most contributions will be to it.
+The registry is central to figspec because every check depends on the
+accuracy of its recorded requirements. Many contributions will add a
+profile, update a source or improve the coverage of an existing entry.
 
 ## The one rule
 
@@ -33,19 +34,21 @@ prints a skeleton naming every field figspec understands. Then:
 1.  Fill in **only** what the page states, and quote the wording for any
     number in a `source_quote_*` field.
 2.  List under `not_stated:` any field you **read the page for and
-    confirmed is absent**. Do not list a field you simply did not check.
-3.  Leave everything else alone. An untouched field reports as *not yet
-    harvested*, which is true and is better than a guess.
+    confirmed is absent**. Do not list a field you have not checked.
+3.  Leave everything else unfilled. An untouched field is reported as
+    *not yet harvested*, showing future contributors exactly what
+    remains to be reviewed.
 
 [`registry_validate_file`](https://dansemakula.github.io/figspec/reference/registry_validate_file.md)`(``"my-journals.yaml"``)`
 
-reports every problem rather than stopping at the first.
+returns all problems in one report so they can be corrected together.
 
 ## Hedged wording
 
-Publishers hedge constantly. What decides is the **main verb of the
-sentence stating the rule**, not the presence of a hedge. The full
-policy is at the top of `inst/extdata/journals.yaml`. In short:
+Publication guidance often uses qualified language. Classify a statement
+by the **main verb of the sentence that states the rule** and read that
+sentence in its surrounding context. The full policy is at the top of
+`inst/extdata/journals.yaml`. In short:
 
 - A hedge about the document, or about achievability, does not downgrade
   a rule. OUP calls its whole guide “tips rather than strict rules” and
@@ -89,8 +92,8 @@ does not have is worse than a narrower one.
 
 ## Harvesting at scale
 
-`data-raw/harvest.R` holds discovery through the DOAJ API, direct and
-archived fetch lanes, extraction of the publisher’s own specification
-sentences, and emission of reviewable candidates. It never writes to the
-registry, and it should stay that way: auto-populating would destroy the
-property that makes the registry worth trusting.
+`data-raw/harvest.R` supports discovery through the DOAJ API, retrieves
+direct or archived guidance, extracts candidate specification sentences
+and prepares them for review. A contributor then reads the source,
+confirms each value and submits the validated entry. This review step
+preserves the provenance on which the registry depends.

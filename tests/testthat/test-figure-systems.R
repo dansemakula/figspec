@@ -117,7 +117,7 @@ test_that("completed recorded plots are not falsely described as restyled", {
       out, recorded, spec = project_figure_spec("png", 150),
       column = "full", height = 60, check = FALSE
     ),
-    "cannot be restyled safely"
+    "already contains a completed drawing"
   )
   expect_true(file.exists(out))
   expect_identical(attr(saved, "figspec_system"), "recordedplot")

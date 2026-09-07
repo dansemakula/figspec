@@ -1,11 +1,10 @@
 # Save a figure at an exact size and resolution
 
-Saves a figure built to a specification. A journal is one way to supply
-one: name a journal and the size, resolution, file format and font come
-from its published requirements. Give a panel size instead, or as well,
-and the plot area is set to that size exactly. Give neither and the
-figure is written with millimetres as the default unit and checked
-afterwards.
+Saves a figure built to a specification. A journal profile can supply
+its published size, resolution, file format and font requirements; a
+project or organisational specification works in the same place. You can
+also set the panel size directly. figspec writes the file and checks the
+completed output.
 
 ## Usage
 
@@ -32,8 +31,8 @@ fig_save(
 
 - filename:
 
-  Output path. The extension selects the format. With a journal and no
-  extension, the journal's first accepted format is used.
+  Output path. The extension selects the format. With a specification
+  and no extension, its first accepted format is used.
 
 - plot:
 
@@ -50,12 +49,12 @@ fig_save(
 
 - column:
 
-  Which of the journal's stated column widths to fit. Only meaningful
-  with `spec`; defaults to `"single"` when one is given.
+  Which named width in the specification to fit. Only meaningful with
+  `spec`; defaults to `"single"` when one is given.
 
 - width:
 
-  Canvas width. Overrides the journal's column width.
+  Canvas width. Overrides the width selected by `column`.
 
 - height:
 
@@ -74,7 +73,8 @@ fig_save(
 
 - dpi:
 
-  Resolution. Defaults to the journal's stated minimum, or 300.
+  Resolution. Defaults to the specification's stated minimum, or 300
+  when none is recorded.
 
 - transform:
 
@@ -83,8 +83,9 @@ fig_save(
   line rules together with accessible colour and shape defaults; Plotly
   receives the corresponding layout and trace settings; base graphics
   functions and grid grobs receive specification-aware defaults. A
-  completed recorded plot cannot be restyled and is reported as such.
-  Set to `FALSE` to preserve the plot exactly as supplied.
+  completed recorded plot is exported with its existing styling; supply
+  the original drawing function when you want defaults applied. Set to
+  `FALSE` to preserve any supported plot exactly as supplied.
 
 - check:
 
@@ -122,20 +123,18 @@ A figure has two widths:
 - the **panel**, which is the plot area left once the axis titles, axis
   text, tick marks, legend and margins have taken their share.
 
-`width` sets the canvas. `panel_width` sets the panel. They are not
-alternatives and they are not in conflict: the two are related by
-`canvas = panel + decoration`, and the decoration is measured, not
-guessed. Give one and the other is worked out. Give both and both are
-honoured, with any slack going to the margin so that neither number is
-quietly adjusted. Ask for a pair that cannot exist and the error reports
-the two values that would work, because you cannot arrive at them
-without this measurement.
+`width` sets the canvas and `panel_width` sets the panel. Their
+relationship is `canvas = panel + decoration`, where decoration includes
+axes, labels, legends and margins. Give either measurement and figspec
+calculates the other. Give both and figspec preserves each value,
+placing any extra room in the margin. If the pair needs more room than
+the canvas provides, the error gives the canvas width or panel width
+that will work.
 
 Panel size is what makes a set of figures look like a set. Two figures
-saved at the same canvas width have different panel widths if their
-y-axis labels differ in length, and on the page they look mismatched. No
-journal states a rule about this, so figspec never reports it as a
-compliance failure — but it is usually what an author is trying to fix.
+saved at the same canvas width can have different panel widths when
+their y-axis labels differ in length. figspec presents this as layout
+information and lets you give the set one shared data area.
 
 `panel_width = "max"` takes the widest panel that still fits the canvas
 you are allowed. Under a journal, that is the widest panel that fits the
@@ -162,7 +161,7 @@ for one value.
 [`fig_panel_size()`](https://dansemakula.github.io/figspec/reference/fig_panel_size.md)
 to set a panel size without saving,
 [`fig_columns()`](https://dansemakula.github.io/figspec/reference/fig_columns.md)
-for a journal's stated widths, and
+for the named widths in a specification, and
 [`vignette("figure-systems")`](https://dansemakula.github.io/figspec/articles/figure-systems.md)
 for worked examples with ggplot2, base R, lattice, grid and Plotly.
 

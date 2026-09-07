@@ -24,8 +24,8 @@ R sessions:
 `table_spec_file`` ``<-`` `[`file.path`](https://rdrr.io/r/base/file.path.html)`(`[`tempdir`](https://rdrr.io/r/base/tempfile.html)`(``)``, ``"clinical-report-specifications.yml"``)`` `[`spec_save`](https://dansemakula.github.io/figspec/reference/spec_save.md)`(``report_spec``, ``table_spec_file``, id ``=`` ``"clinical_research_report"``)`` `[`spec_load`](https://dansemakula.github.io/figspec/reference/spec_load.md)`(``table_spec_file``)`
 
 The saved entry retains both table and figure requirements. Loading it
-does not modify figspec; it adds the project specification to the
-current R session.
+makes the project specification available in the current R session while
+leaving the installed package unchanged.
 
 Bundled publication profiles can be used in the same way when their
 table requirements have been reviewed.
@@ -87,8 +87,9 @@ can inspect those properties before any file is written:
 
 [`table_check`](https://dansemakula.github.io/figspec/reference/table_check.md)`(``styled_table``, ``report_spec``)`` ``#> `` ``#> ``──`` ``Clinical research report`` ``────────────────────────────────────────────────────`` ``#> ``checked: gt table object`` ``#> `` ``#> ``✔`` File validity valid requires: readable table object`` ``#> ``!`` File format could not determine requires: HTML, DOCX`` ``#> ``✔`` Font family Arial requires: Arial`` ``#> ``!`` Orientation could not determine requires: portrait`` ``#> ``✔`` Minimum type size 9 requires: 9`` ``#> ``✔`` Bold header TRUE requires: TRUE`` ``#> ``✔`` Vertical rules FALSE requires: FALSE`` ``#> ``✔`` Horizontal rules minimal requires: minimal`` ``#> ``!`` Repeated header could not determine requires: TRUE`` ``#> `` ``#> ``!`` No failures were found, but this assessment is incomplete.`` ``#> ``ℹ`` 3 requirements or registry fields could not be judged automatically - check`` ``#> by hand.`` ``#> ``Source:`` ``<internal:report-table-guide>`` (verified 2026-09-06)`
 
-The future file format remains unresolved at this point because there is
-no file yet. That is expected, not a failure.
+At this stage, the live-table report covers the styling and structure
+that can already be inspected. The file format is checked after export,
+when a completed file is available.
 
 ## Export and check the completed file
 
@@ -97,7 +98,7 @@ exports through the table’s own system. It first writes a temporary file
 in the destination directory, reopens and checks it, and only then
 places it at the requested path.
 
-`html_path`` ``<-`` `[`file.path`](https://rdrr.io/r/base/file.path.html)`(`[`tempdir`](https://rdrr.io/r/base/tempfile.html)`(``)``, ``"vehicle-summary.html"``)`` ``saved_table`` ``<-`` `[`table_save`](https://dansemakula.github.io/figspec/reference/table_save.md)`(`` `` ``html_path``,`` `` ``styled_table``,`` `` spec ``=`` ``report_spec``,`` `` transform ``=`` ``FALSE`` ``)`` `` `[`attr`](https://rdrr.io/r/base/attr.html)`(``saved_table``, ``"figspec_table_report"``)`` ``#> `` ``#> ``──`` ``Clinical research report`` ``────────────────────────────────────────────────────`` ``#> ``checked:`` ``#> ``/var/folders/nr/p09jj77n7jn9606qt_2m77nc0000gn/T//Rtmpq9XS93/vehicle-summary.html`` ``#> `` ``#> ``✔`` File validity valid requires: readable table object`` ``#> ``✔`` Font family Arial requires: Arial`` ``#> ``!`` Orientation could not determine requires: portrait`` ``#> ``✔`` Minimum type size 9 requires: 9`` ``#> ``✔`` Bold header TRUE requires: TRUE`` ``#> ``✔`` Vertical rules FALSE requires: FALSE`` ``#> ``✔`` Horizontal rules minimal requires: minimal`` ``#> ``!`` Repeated header could not determine requires: TRUE`` ``#> ``✔`` File format html requires: HTML, DOCX`` ``#> `` ``#> ``!`` No failures were found, but this assessment is incomplete.`` ``#> ``ℹ`` 2 requirements or registry fields could not be judged automatically - check`` ``#> by hand.`` ``#> ``Source:`` ``<internal:report-table-guide>`` (verified 2026-09-06)`
+`html_path`` ``<-`` `[`file.path`](https://rdrr.io/r/base/file.path.html)`(`[`tempdir`](https://rdrr.io/r/base/tempfile.html)`(``)``, ``"vehicle-summary.html"``)`` ``saved_table`` ``<-`` `[`table_save`](https://dansemakula.github.io/figspec/reference/table_save.md)`(`` `` ``html_path``,`` `` ``styled_table``,`` `` spec ``=`` ``report_spec``,`` `` transform ``=`` ``FALSE`` ``)`` `` `[`attr`](https://rdrr.io/r/base/attr.html)`(``saved_table``, ``"figspec_table_report"``)`` ``#> `` ``#> ``──`` ``Clinical research report`` ``────────────────────────────────────────────────────`` ``#> ``checked:`` ``#> ``/var/folders/nr/p09jj77n7jn9606qt_2m77nc0000gn/T//RtmpTnmpMS/vehicle-summary.html`` ``#> `` ``#> ``✔`` File validity valid requires: readable table object`` ``#> ``✔`` Font family Arial requires: Arial`` ``#> ``!`` Orientation could not determine requires: portrait`` ``#> ``✔`` Minimum type size 9 requires: 9`` ``#> ``✔`` Bold header TRUE requires: TRUE`` ``#> ``✔`` Vertical rules FALSE requires: FALSE`` ``#> ``✔`` Horizontal rules minimal requires: minimal`` ``#> ``!`` Repeated header could not determine requires: TRUE`` ``#> ``✔`` File format html requires: HTML, DOCX`` ``#> `` ``#> ``!`` No failures were found, but this assessment is incomplete.`` ``#> ``ℹ`` 2 requirements or registry fields could not be judged automatically - check`` ``#> by hand.`` ``#> ``Source:`` ``<internal:report-table-guide>`` (verified 2026-09-06)`
 
 The combined report now contains both kinds of evidence: styling from
 the editable table and HTML format and validity from the completed file.
@@ -107,7 +108,7 @@ Use DOCX instead when an editable Word file is required:
 
 ## Use the table system you already work with
 
-figspec does not ask every user to adopt one table package. It accepts:
+Continue using the table system that suits your work. figspec accepts:
 
 - data frames and matrices, which become gt tables;
 - existing gt tables;
@@ -129,10 +130,10 @@ The output formats still depend on the table system:
 | HTML or LaTeX kable       | its native format, PDF, PNG or JPEG |
 | grid table                | PDF, PNG or JPEG                    |
 
-Browser rendering is needed for HTML-to-PDF or image conversion, and
-LaTeX is needed for LaTeX-to-PDF or image conversion. figspec reports an
-unsupported combination instead of writing one kind of file with another
-extension.
+HTML-to-PDF or image conversion uses a local browser, while LaTeX-to-PDF
+or image conversion uses a local LaTeX installation. figspec checks that
+the required renderer and output combination are available before
+writing the file, so the extension always matches its contents.
 
 ## Review figures and tables together
 
@@ -146,15 +147,15 @@ The summary labels each item as a figure or table.
 [`submission_detail()`](https://dansemakula.github.io/figspec/reference/submission_detail.md)
 opens the full report for either one.
 
-## What still needs a person
+## Complete the editorial review
 
 Some requirements are measurements: file format, page orientation,
 width, font size, header emphasis or the presence of vertical rules.
 figspec can apply or inspect those when the table system exposes
 reliable evidence.
 
-Other requirements ask whether a title is sufficiently short, whether
-every abbreviation is defined or whether a footnote is clear. Those
-questions require reading the table in context. figspec keeps them in
-the report as unresolved so that they remain visible without pretending
-software has made an editorial decision.
+Other requirements ask whether a title is sufficiently short, every
+abbreviation is defined or a footnote is clear. Read those parts of the
+table in the context of the surrounding report or manuscript. figspec
+keeps each one in the report so the editorial review can be completed
+before delivery.

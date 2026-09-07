@@ -21,8 +21,9 @@ knitr or kableExtra tables and grid tables. A data frame or matrix is
 converted to a gt table.
 }
 \details{
-Only requirements that can be applied safely are changed. Rules that need
-editorial judgement remain for \code{\link[=table_check]{table_check()}} to report.
+figspec applies the measurable requirements supported by the table system.
+\code{\link[=table_check]{table_check()}} gathers editorial requirements, such as title clarity, for
+the user's final review.
 }
 \examples{
 report_spec <- list(

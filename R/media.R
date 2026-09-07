@@ -186,9 +186,9 @@ inspect_media_ffprobe <- function(path) {
 #' Verify a supplementary media file
 #'
 #' Checks container format, frame size, file size, video codec and audio bit
-#' rate. Codec and bit rate are read with the system `ffprobe` executable when
-#' it is available; without it those rows are reported as `unknown`, never
-#' guessed.
+#' rate. The system `ffprobe` executable provides codec and bit-rate evidence
+#' when it is available. Otherwise, those rows are marked `unknown` so the
+#' report shows exactly which properties still need to be confirmed.
 #'
 #' @param path One path to an existing media file.
 #' @param spec A registry id, a `figspec_spec`, or a named list containing

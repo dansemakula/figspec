@@ -58,9 +58,9 @@ plot_shapes <- function(plot) {
 #' sets automatically.
 #'
 #' These shapes are design recommendations, not requirements taken from a
-#' publication or project specification. The sets are deliberately short:
-#' figspec returns an error instead of recycling a shape or adding symbols that
-#' become difficult to tell apart at small sizes.
+#' publication or project specification. The sets are deliberately short.
+#' When more shapes are requested, figspec reports the available number so you
+#' can split the figure or choose another visual cue.
 #'
 #' @param n The number of shapes needed, usually the number of groups in the
 #'   data. Up to six solid, six hollow or five separately filled shapes are
@@ -107,8 +107,8 @@ figspec_shapes <- function(n, style = c("solid", "hollow", "filled")) {
 #' difficult to tell apart.
 #'
 #' These patterns are design recommendations, not requirements taken from a
-#' publication or project specification. figspec provides six and returns an
-#' error instead of recycling a pattern when more are requested.
+#' publication or project specification. figspec provides six and reports that
+#' capacity when more are requested, keeping every series visually distinct.
 #'
 #' @param n The number of line types needed, usually the number of series in
 #'   the data. Up to six are available.

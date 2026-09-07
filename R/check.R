@@ -628,26 +628,26 @@ graded <- function(check, requirement, actual, ok, spec = NULL, fields = NULL) {
 #' grid, or the path to an exported figure file. With no specification it
 #' reports what can be measured without issuing pass or fail claims. A
 #' specification may come from the included registry, your own registry, or a
-#' named list supplied directly in R. Plotting systems that do not expose the
-#' same layer and theme details as ggplot2 are rendered to a temporary file;
-#' file properties are then verified and unavailable properties remain
-#' `unknown`.
+#' named list supplied directly in R. For plotting systems that expose fewer
+#' editable details than ggplot2, figspec renders a temporary file and verifies
+#' the properties recorded there. The report identifies any requirements that
+#' need evidence from the original plotting code or another source.
 #'
 #' Each requirement is reported with one of five outcomes. `pass` and `fail`
-#' mean what they say. `unspecified` means the publisher does not state that
-#' requirement, so nothing can be concluded. `unknown` means the requirement
-#' exists but this input cannot answer it, for example type size in a raster
+#' mean what they say. `unspecified` means the selected specification gives no
+#' rule for that property. `unknown` means the requirement exists but this
+#' input does not contain the needed evidence, such as type size in a raster
 #' file. `invalid` means the input is not a readable file of the type its name
-#' claims. A pass applies only to the individual row; an overall compliance
-#' claim requires every recorded requirement to pass or be explicitly absent.
+#' claims. A pass applies to its individual requirement; the complete report
+#' shows whether every recorded requirement has been addressed.
 #'
-#' Type size is read back from PDF, EPS and SVG files, which record the size
-#' each string was set at. This is worth doing rather than trusting the plot
-#' object, because R's `pdf()` and `postscript()` devices round text to whole
-#' points: a theme asking for 8.8 pt writes 9 pt into the file, and one asking
-#' for 5.2 pt writes 5. The file is what a publisher receives. Reading a PDF
-#' needs the pdftools package. A raster carries no type sizes at all, and is
-#' reported as `unknown` rather than estimated.
+#' PDF, EPS and SVG files can record the size used for each string, so figspec
+#' reads those values from the completed file. This matters because R's
+#' `pdf()` and `postscript()` devices round text to whole points: a theme asking
+#' for 8.8 pt writes 9 pt into the file, and one asking for 5.2 pt writes 5.
+#' Reading a PDF requires the pdftools package. Raster files do not retain point
+#' sizes, so their typography row is marked `unknown` and directed to review of
+#' the editable plot.
 #'
 #' @param x A supported live figure, or a path to a figure file. Live figures
 #'   include ggplot2 and patchwork objects, lattice plots, Plotly and other HTML
@@ -657,13 +657,15 @@ graded <- function(check, requirement, actual, ok, spec = NULL, fields = NULL) {
 #'   a `figspec_spec`, or a named list of requirements.
 #' @param column Which column width the figure is intended for. One of
 #'   `"single"`, `"onehalf"` or `"double"`.
-#' @param width,height Intended output size. Defaults to the journal's width
-#'   for `column`. Ignored when `x` is a file, whose real size is measured.
+#' @param width,height Intended output size. Defaults to the width selected by
+#'   `column` in the specification. Ignored when `x` is a file, whose real size
+#'   is measured.
 #' @param units Units for `width` and `height`.
 #' @param dpi Resolution. For a live figure, the resolution you intend to
-#'   save at. For a file, the resolution it was written at, which lets figspec
-#'   judge physical size for files that do not record it themselves - base R's
-#'   `png()` and `tiff()` devices do not, whereas ragg does.
+#'   save at. For a file, the resolution it was written at. Supply this value
+#'   when a raster lacks embedded resolution metadata, as files written by base
+#'   R's `png()` and `tiff()` devices often do; figspec can then calculate its
+#'   physical size from the pixel dimensions.
 #' @param format Output format, for example `"tiff"`. Only used when `x` is a
 #'   live figure.
 #' @param colour_mode Intended output colour model for a live figure. Defaults
@@ -674,9 +676,9 @@ graded <- function(check, requirement, actual, ok, spec = NULL, fields = NULL) {
 #' @param art_type Which resolution rule applies. Publishers set different
 #'   minimums for different kinds of artwork: Cell Press asks 300 dpi for
 #'   colour or greyscale, 500 for black and white, and 1000 for line art.
-#'   `"auto"` classifies a plot from what it actually draws. For a saved file,
-#'   where that evidence has been lost, it applies the strictest stated rule so
-#'   that an ambiguous file cannot pass under the most lenient interpretation.
+#'   `"auto"` classifies a plot from what it actually draws. For a saved file
+#'   that no longer contains that evidence, it applies the strictest stated
+#'   rule and records the category used in the report.
 #'   `"color"` is accepted as an alias for `"colour"`.
 #' @return An object of class `figspec_report`, a data frame of one row per
 #'   requirement.

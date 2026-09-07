@@ -14,8 +14,8 @@ registry_validate_file(path)
 reported and \code{FALSE} is returned invisibly.
 }
 \description{
-Runs the same checks \code{\link[=spec_load]{spec_load()}} runs, but reports everything wrong
-rather than stopping at the first problem.
+Runs the same checks as \code{\link[=spec_load]{spec_load()}} and returns the complete set of
+problems in one report, making the file easier to correct in a single pass.
 }
 \examples{
 # registry_validate_file("my-journals.yaml")

@@ -32,13 +32,13 @@ A character vector containing the loaded ids, invisibly.
 Keep the YAML file with the project or in a shared version-controlled
 repository. When requirements change, edit the file and call
 `spec_load()` again; entries with the same user-defined id are updated
-for the current session. A loaded file cannot replace a profile bundled
-with figspec.
+for the current session. Bundled profile ids remain reserved, keeping
+loaded specifications clearly separated from package-maintained records.
 
 Registry YAML is treated as data: YAML expression evaluation is disabled
 regardless of the user's global `yaml.eval.expr` option. The complete
-file is validated before any entry is added, so an invalid entry cannot
-leave a partly updated session.
+file is validated first, and its entries are added to the session
+together only after every one passes.
 
 ## See also
 

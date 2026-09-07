@@ -72,7 +72,7 @@ test_that("no journal palette is invented", {
     list(width = 200),
     expect_message(
       spec_style_palette("plos_one"),
-      "does not invent missing house-style information"
+      "will keep its current colours"
     )
   )
 })

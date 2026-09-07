@@ -32,12 +32,12 @@ guidance, interpreting rules and applying them by hand. The specification can
 come from a publication, an organisation or the needs of a particular project.
 figspec can work with one item or review figures and tables together.
 
-## From requirements to finished files
+## From specified requirements to compliant files
 
 figspec provides one repeatable workflow:
 
-**Define the required result → apply what can be applied → export it
-correctly → verify the finished files.**
+**Define the required result → apply a specification → export it correctly →
+verify the finished files → Save specification → Reuse/Repeat.**
 
 That workflow is especially valuable when preparing many figures and tables,
 changing journals, maintaining an organisational style or producing the same
@@ -47,7 +47,7 @@ Individuals and teams can extend figspec without modifying the package. Their
 own requirements and visual styles can be named, saved with a project and
 loaded in later R sessions, giving repeated work the same rules and appearance.
 
-It addresses three common needs.
+Three recurring needs explain why these capabilities belong together.
 
 ## The need for figures that meet journal requirements
 
@@ -70,9 +70,9 @@ Frontiers, IEEE and other major publishers, so the registry reaches far beyond
 from the publisher default.
 
 Every recorded requirement is linked to the publisher's guidance and includes
-the date it was verified. figspec does not fill gaps with guesses: when a
-publisher does not state a requirement, or a field has not yet been reviewed,
-the package says so.
+the date it was verified. Each profile also distinguishes between a field the
+source does not mention and one that is still awaiting review. Users can
+therefore see exactly what information supports each result.
 
 Preparation rarely stops at one plot. `submission_check()` can review a
 directory of finished files or a named collection of figures and tables,
@@ -124,6 +124,10 @@ It applies the requirements that each plotting system makes available, exports
 the result at the requested size and verifies the finished file. Exact panel
 sizing and the most detailed checks remain available for ggplot2-compatible
 figures because those objects expose their complete panel and layer structure.
+A palette stored in a specification's optional `house_style` section is used
+across ggplot2, base R, lattice and Plotly where the plotting system exposes
+its colour settings. A registered house style is different: it is a reusable
+ggplot2 theme for choices such as the grid, background and legend position.
 The [cross-system guide](https://dansemakula.github.io/figspec/articles/figure-systems.html)
 shows the calling pattern, completed output and limits for each system.
 
@@ -179,8 +183,10 @@ fitted <- p + fig_apply_spec("cell_press")
 
 `fig_apply_spec()` applies the requirements that can be expressed in the plot,
 including typography, line settings, structural rules, colours and shapes.
-You can keep a palette or other design choice you have already made by turning
-off the corresponding adjustment.
+When a specification contains an optional `house_style$palette`, figspec uses
+that palette without treating it as a pass-or-fail requirement. For ggplot2,
+set `colour = FALSE` when you instead need to preserve colour scales already
+attached to the plot.
 
 ### 2. Verify the figure
 
@@ -190,10 +196,10 @@ report
 ```
 
 `fig_check()` returns one result for each relevant requirement. It identifies
-what meets the specification, what needs to change and what cannot be
-determined from the available input. Checking the plot object is important:
-properties such as text size, line weight and colour relationships cannot be
-reliably recovered after a figure has been converted to raster pixels.
+what meets the specification, what needs to change and what needs more
+information. Check the editable plot before export to assess text size, line
+weight and colour relationships. Then check the saved file to confirm its
+dimensions, resolution and format.
 
 ### 3. Export and check the finished file
 
@@ -238,7 +244,7 @@ what can be verified from the file with what remains known from the editable
 table. See [Build and check tables from R](https://dansemakula.github.io/figspec/articles/tables.html)
 for complete examples.
 
-## Size the panel, not just the image
+## Size the panel, and the figure
 
 Two image files can have the same width while leaving different amounts of
 space for the data. A long axis title, a legend or a multi-line label reduces
@@ -271,7 +277,7 @@ compliance:
 | <span class="fs-status fs-pass">pass</span> | The figure or table meets the stated requirement. |
 | <span class="fs-status fs-fail">fail</span> | The figure or table does not meet the requirement and needs attention. |
 | <span class="fs-status fs-unspecified">unspecified</span> | The specification does not state a requirement for this property. |
-| <span class="fs-status fs-unknown">unknown</span> | figspec cannot determine the answer from this input. |
+| <span class="fs-status fs-unknown">unknown</span> | The requirement needs information from another input or a manual check. |
 | <span class="fs-status fs-fail">invalid</span> | The file is corrupt or does not match its stated format. |
 
 From a plot object, figspec can examine typography, line and point weights,
@@ -280,8 +286,9 @@ From an exported file, it can verify properties such as dimensions,
 resolution, format, file size and selected format-specific requirements.
 For tables, it combines properties retained by the editable object with the
 format and structure of the completed file.
-Where a property cannot be recovered reliably, the result is `unknown`
-rather than an unsupported conclusion.
+An `unknown` result identifies the information that the supplied plot or file
+does not contain. The report then shows what still needs to be checked from the
+editable object, the source guidance or another file property.
 
 ## Journal and publisher profiles
 
@@ -326,13 +333,14 @@ These are two different kinds of reusable extension:
 
 | What you want to reuse | What it contains | Save and restore it with |
 |---|---|---|
-| A specification | Requirements that a finished figure or table must meet | `spec_save()` and `spec_load()` |
-| A house style | The preferred appearance of ggplot2 figures | `style_save()` and `style_load()` |
+| A specification | Requirements that a finished figure or table must meet, with an optional cross-system palette | `spec_save()` and `spec_load()` |
+| A registered house style | A reusable ggplot2 theme for choices such as the grid, background and legend position | `style_save()` and `style_load()` |
 
-A specification can be checked. A house style cannot: it records visual
-choices such as the theme, grid and legend position. When both are used,
-figspec applies the style where it can and lets stated requirements take
-precedence.
+A requirement in a specification can determine whether work passes or fails.
+Optional palettes and registered house styles record visual choices, so they
+shape appearance without becoming compliance rules. When a ggplot2 theme and
+requirements are used together, figspec retains compatible theme choices and
+applies the stated requirements wherever they are needed.
 
 ```r
 style_register(
@@ -358,7 +366,10 @@ report_spec <- list(
   name = "Research unit report",
   columns = list(full = 160),
   dpi_min = 300,
-  formats = c("png", "pdf")
+  formats = c("png", "pdf"),
+  house_style = list(
+    palette = c("#76549A", "#D99000", "#2B78A6")
+  )
 )
 
 spec_save(
@@ -369,8 +380,14 @@ spec_save(
 spec_load("project-specifications.yml")
 ```
 
-User-defined profiles are clearly marked so they cannot be confused with the
-registry maintained by figspec. No change to the package itself is required.
+The optional palette travels with the specification, so supported plotting
+systems can use the same purple, amber and blue identity. `fig_check()` treats
+it as a design preference, leaving pass-or-fail decisions to the requirements
+recorded in the specification.
+
+The registry marks user-defined profiles with their origin, making them easy
+to distinguish from profiles maintained by figspec. They extend the current R
+session without changing the installed package.
 
 For a project or research team, keep the files in a predictable folder:
 
@@ -450,9 +467,31 @@ The same specification can be used throughout a project:
 - `fig_suggest_art_type()` helps identify which resolution rule is relevant when
   a publisher distinguishes colour, grayscale, line and combination artwork.
 
-These functions report what they can establish and identify anything that
-still requires judgement. They do not infer requirements that a publisher has
-not stated.
+These functions report the evidence they can establish and collect the items
+that still require judgement. When a source gives no requirement, the report
+marks that property as unspecified and leaves the decision with the user.
+
+## Function families
+
+The complete public API is organised around the work a user needs to complete:
+
+| Task | What figspec provides | Functions |
+|---|---|---|
+| Build, export and verify figures | Apply reachable requirements while a figure is editable, write the requested format and inspect the completed file | `fig_apply_spec()`, `theme_spec()`, `fig_save()`, `fig_check()`, `fig_preview()`, `fig_geometry()` |
+| Size and align plotting areas | Set the physical size of the data panel, find a shared panel width and retrieve stated publication widths | `fig_panel_size()`, `fig_panel_width()`, `fig_width()`, `fig_columns()` |
+| Improve visual distinction | Use accessible colours, shapes, line types and weights; preserve an optional project palette; and check whether groups remain distinguishable | `figspec_palettes()`, `figspec_palette()`, `scale_colour_figspec()`, `scale_fill_figspec()`, `scale_shape_figspec()`, `figspec_shapes()`, `figspec_linetypes()`, `spec_linewidth()`, `colour_safety_check()`, `fig_tag_panels()`, `spec_style_palette()` |
+| Find, create and reuse specifications and styles | Use a bundled profile or save project and organisational requirements and ggplot2 themes for later sessions or team use | `spec_list()`, `spec_get()`, `spec_register()`, `spec_save()`, `spec_load()`, `style_register()`, `style_list()`, `style_remove()`, `style_save()`, `style_load()` |
+| Review a complete body of work | Check mixed collections of figures and tables, inspect one result in detail, choose an artwork rule and adapt editable figures to another specification | `submission_check()`, `submission_detail()`, `fig_suggest_art_type()`, `fig_refit()` |
+| Build, export and verify tables | Apply measurable requirements to supported R table objects, retain editability and check the written output | `table_spec()`, `table_apply_spec()`, `table_save()`, `table_check()` |
+| Work with other publication assets | Retrieve graphical-abstract and media requirements and inspect supplementary video or audio | `graphical_abstract_spec()`, `media_spec()`, `media_check()` |
+| Use the workflow in reports | Carry figure dimensions and resolution into R Markdown and Quarto | `figspec_knitr_options()`, `figspec_knitr_setup()` |
+| Inspect and maintain the registry | Measure coverage, find profiles due for review, recheck sources and validate proposed registry files | `registry_status()`, `registry_stale_entries()`, `registry_check_sources()`, `registry_entry_template()`, `registry_validate_file()` |
+
+The package also provides `color_safety_check()` and
+`scale_color_figspec()` as American-English aliases. The
+[complete function reference](https://dansemakula.github.io/figspec/reference/index.html)
+uses the same task-based groups and provides the arguments and examples for
+every function.
 
 ## Learn more
 
@@ -462,6 +501,7 @@ not stated.
 - [Build and check tables from R](https://dansemakula.github.io/figspec/articles/tables.html)
 - [Journal and publisher profiles](https://dansemakula.github.io/figspec/articles/journals.html)
 - [Every function and its options](https://dansemakula.github.io/figspec/articles/options.html)
+- [Complete function reference](https://dansemakula.github.io/figspec/reference/index.html)
 - [Registry provenance and maintenance](https://dansemakula.github.io/figspec/articles/registry.html)
 - [Contributing to figspec](CONTRIBUTING.md)
 

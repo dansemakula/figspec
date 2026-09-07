@@ -223,9 +223,9 @@ report_spec <- list(
 
 Set exact dimensions for every data panel
 
-Set the physical size of the data panel instead of setting the outer
-image size and accepting whatever room remains. For a faceted plot or a
-multi-plot composition, the requested dimensions apply to every panel.
+Set the physical size of the data panel and let figspec calculate the
+outer image around it. For a faceted plot or a multi-plot composition,
+the requested dimensions apply to every panel.
 
 Run the example setup
 
@@ -707,7 +707,7 @@ under the other spelling. Its options are identical.
 |:---|:---|
 | `plot` | A ggplot object. Use the editable plot rather than an exported file so that figspec can inspect the colours actually mapped to data. |
 | `spec` | The specification to check against. Supply a registry id, a figspec_spec, or a named list containing the colour and reproduction requirements for a publication, project or organisation. |
-| `threshold` | The smallest perceptual difference that figspec will accept between two colours, measured as CIE Delta-E 2000. The default is 10; raising it makes the distinction test stricter. This setting controls the analysis and does not create a publication requirement that the selected specification does not state. |
+| `threshold` | The smallest perceptual difference that figspec will accept between two colours, measured as CIE Delta-E 2000. The default is 10; raising it makes the distinction test stricter. This setting controls the accessibility analysis; pass-or-fail publication results continue to use the rules recorded in the selected specification. |
 
 ### `figspec_palettes()`
 
@@ -716,8 +716,8 @@ List the colour palettes included with figspec
 See which palettes figspec provides before choosing one for a plot. The
 catalogue distinguishes palettes for separate categories from palettes
 for ordered values, explains where each works best and records its
-source. These are optional design tools rather than publication
-requirements.
+source. These are optional design tools, kept separate from publication
+requirements and their pass-or-fail checks.
 
 *This function has no arguments.*
 
@@ -918,9 +918,9 @@ shape_base <- ggplot(
 Get a set of distinct point shapes
 
 Retrieve distinct ggplot2 shape codes for a manual scale or another
-plotting function. figspec supplies a short, deliberate set and stops
-instead of recycling symbols when more shapes are requested than readers
-can reliably distinguish.
+plotting function. figspec supplies a short, deliberate set and reports
+its capacity when more shapes are requested than readers can reliably
+distinguish.
 
 Run the example setup
 
@@ -992,8 +992,9 @@ Retrieve a recorded house-style palette
 
 Retrieve an optional palette recorded as part of a specification’s house
 style. This may describe a publication, project or organisation. A
-recorded palette is a visual preference rather than a requirement, and
-figspec does not invent one when the specification contains none.
+recorded palette records a visual preference and remains separate from
+requirements. When none is recorded, the plotting system’s existing
+colours stay in use.
 
 Run the example setup
 
@@ -1564,10 +1565,9 @@ dir.create(refit_root)
 
 Look up supplementary media requirements
 
-Video and audio files have requirements that ordinary figure checks
-cannot assess. Use this lookup to see the accepted containers, frame
-limits, codec, bit rate and file-size rules recorded for a publication
-or project.
+Video and audio use their own technical requirements. This lookup shows
+the accepted containers, frame limits, codec, bit rate and file-size
+rules recorded for a publication or project.
 
 Run the example setup
 
@@ -1594,8 +1594,9 @@ Verify a supplementary media file
 
 These examples create a real 640 × 360 pixel MP4, read it back from disk
 and compare its saved properties with a media specification. ffprobe
-adds codec and bit-rate inspection when it is installed; properties that
-cannot be read are reported as unknown rather than guessed.
+adds codec and bit-rate inspection when it is installed. The report
+marks any property without reliable file evidence as unknown and ready
+for review.
 
 Run the example setup
 
@@ -1919,10 +1920,10 @@ Run the example setup
 
 Create a registry-entry template
 
-Start a new specification with a complete YAML template instead of
-trying to remember the registry schema. The template separates
-requirements that are stated, requirements confirmed as absent and
-fields that have not yet been reviewed.
+Start a new specification from a complete YAML template containing every
+registry field. The template separates requirements that are stated,
+requirements confirmed as absent and fields that have not yet been
+reviewed.
 
 Run the example setup
 

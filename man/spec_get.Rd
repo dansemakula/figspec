@@ -10,7 +10,8 @@ spec_get(spec)
 \item{spec}{The specification to use: a registry id such as
 \code{"plos_one"}, an existing \code{figspec_spec}, or a named list containing at
 least a non-empty \code{name}. Use \code{\link[=spec_list]{spec_list()}} to browse the available registry
-ids. The specification does not have to describe a journal.}
+ids. Project, report and organisational specifications are accepted in the
+same form as publication profiles.}
 }
 \value{
 An object of class \code{figspec_spec}. An existing specification object

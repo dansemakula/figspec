@@ -26,11 +26,11 @@
 #' presentation or other project in one place, while retaining every complete
 #' report.
 #'
-#' Check live figure objects before export and the written files afterwards
-#' when you can. A live object may preserve styling information that a finished
-#' file does not. The files provide the actual dimensions, resolution, format,
-#' validity and file size. Raster files cannot preserve editable type-size
-#' information, so the two checks answer complementary questions.
+#' Check live figure objects before export and the written files afterwards.
+#' The live object provides styling information; the completed files provide
+#' their actual dimensions, resolution, format, validity and file size. Using
+#' both checks gives the complete picture, especially for raster files that no
+#' longer retain editable type-size information.
 #'
 #' # Panel consistency
 #'
@@ -38,9 +38,9 @@
 #' figure. Figures
 #' that meet the same width requirement still have different plot areas when
 #' their axis labels differ in length, and on the page that is what makes a set
-#' look uneven. No publisher states a rule about it, so it is never reported as
-#' a failure — it is an observation about your own figures, and [fig_save()]
-#' with a shared `panel_width` from [fig_panel_width()] is the fix.
+#' look uneven. The report presents this as layout information because current
+#' publisher profiles do not require equal panel dimensions. Use [fig_save()]
+#' with a shared `panel_width` from [fig_panel_width()] to align the set.
 #'
 #' @param x A non-empty list of supported live figures or tables, a directory
 #'   path, or a character vector of exported asset paths.
@@ -425,7 +425,7 @@ print.figspec_submission <- function(x, ...) {
         "Plot areas differ by {round(spread, 1)} mm across this set ",
         "({tightest} {round(min(x$panel_mm, na.rm = TRUE), 1)} mm, ",
         "{widest} {round(max(x$panel_mm, na.rm = TRUE), 1)} mm). ",
-        "No publisher requires them to match, so this is not a failure. ",
+        "This layout measurement is reported separately from the requirement results. ",
         "To make them match, pass fig_panel_width() to fig_save()."
       ))
     } else {

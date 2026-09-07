@@ -37,11 +37,11 @@ invisibly.
 
 ## Details
 
-The suggestion describes the plot's visible content; it does not rewrite
-or overrule the source's terminology. For example, some publishers
-reserve "line art" for pure black-and-white artwork, while others use
-the term more broadly. Read the displayed thresholds and source guidance
-before choosing a lower resolution for final delivery.
+The suggestion describes the plot's visible content. Because publishers
+may define terms such as "line art" differently, the output also
+displays the thresholds recorded in the selected specification. Compare
+the suggestion with the source guidance, then use that category for the
+final export.
 
 ## Examples
 
