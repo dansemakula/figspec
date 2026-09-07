@@ -61,7 +61,9 @@ reconstruct every original colour, type or line setting.
 
 The examples below use real observations from `ggplot2::mpg` and the same
 project specification. The report requires a 110 × 75 mm PNG at 160 dpi, text
-between 9 and 11 points, and lines at least 0.6 points wide:
+between 9 and 11 points, and lines at least 0.6 points wide. Its optional house
+style uses purple, amber and blue so the same visual identity carries across
+each plotting system:
 
 ```{r shared-specification}
 figure_spec <- list(
@@ -74,7 +76,10 @@ figure_spec <- list(
   font_min_pt = 9,
   font_max_pt = 11,
   min_line_pt = 0.6,
-  axis_lines_and_ticks = TRUE
+  axis_lines_and_ticks = TRUE,
+  house_style = list(
+    palette = c("#76549A", "#D99000", "#2B78A6")
+  )
 )
 
 vehicle_data <- ggplot2::mpg

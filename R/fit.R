@@ -27,10 +27,11 @@
 #' Add it last. A scale added after this one replaces the journal's, which is
 #' occasionally what you want and usually not.
 #'
-#' The palette follows the journal. Where a publisher reproduces figures in
-#' black and white, `fig_apply_spec()` reaches for cividis, which keeps its
-#' colours apart in greyscale. Everywhere else it uses Okabe-Ito, built to stay
-#' readable under the common forms of colour vision deficiency.
+#' When the specification includes a house-style palette,
+#' `fig_apply_spec()` uses it. Otherwise, a specification that calls for
+#' greyscale reproduction uses cividis, whose colours remain distinct in
+#' greyscale; other specifications use the colour-vision-safe Okabe-Ito
+#' palette.
 #'
 #' Line widths inside a geom are set on the layer rather than the theme, so
 #' pass [spec_linewidth()] to any layer that draws lines.
@@ -72,9 +73,13 @@ fig_apply_spec <- function(spec, colour = TRUE, shapes = TRUE,
                         style = NULL, base_size = NULL, color = NULL) {
   if (!is.null(color)) colour <- color
   resolved <- spec_get(spec)
-  pal <- if (isTRUE(resolved$print_greyscale)) "cividis" else "okabe_ito"
   preview <- list(theme_spec(spec, style = style, base_size = base_size))
-  if (isTRUE(colour)) preview <- c(preview, list(scale_colour_figspec(pal), scale_fill_figspec(pal)))
+  if (isTRUE(colour)) {
+    preview <- c(preview, list(
+      ggplot_spec_discrete_scale("colour", resolved),
+      ggplot_spec_discrete_scale("fill", resolved)
+    ))
+  }
   if (isTRUE(shapes)) preview <- c(preview, list(scale_shape_figspec()))
   structure(preview, class = c("figspec_fit", "list"),
             config = list(spec = spec, colour = isTRUE(colour),
@@ -96,22 +101,62 @@ ggplot_add.figspec_fit <- function(object, plot, ...) {
     if (is.null(sc)) "none" else if (isTRUE(sc$is_discrete())) "discrete" else "continuous"
   }
   if (isTRUE(config$colour)) {
-    pal <- if (isTRUE(spec$print_greyscale)) "cividis" else "okabe_ito"
     colour_kind <- scale_kind("colour")
     fill_kind <- scale_kind("fill")
     parts <- c(parts, list(
       if (identical(colour_kind, "continuous")) {
-        ggplot2::scale_colour_viridis_c(option = "D")
-      } else scale_colour_figspec(pal),
+        ggplot_spec_continuous_scale("colour", spec)
+      } else ggplot_spec_discrete_scale("colour", spec),
       if (identical(fill_kind, "continuous")) {
-        ggplot2::scale_fill_viridis_c(option = "D")
-      } else scale_fill_figspec(pal)
+        ggplot_spec_continuous_scale("fill", spec)
+      } else ggplot_spec_discrete_scale("fill", spec)
     ))
   }
   if (isTRUE(config$shapes) && !identical(scale_kind("shape"), "continuous")) {
     parts <- c(parts, list(scale_shape_figspec()))
   }
   Reduce(function(p, part) p + part, parts, init = plot)
+}
+
+ggplot_spec_discrete_scale <- function(aesthetic, spec) {
+  palette <- unlist(spec$house_style$palette %||% list(), use.names = FALSE)
+  if (!length(palette)) {
+    palette_id <- if (isTRUE(spec$print_greyscale)) "cividis" else "okabe_ito"
+    if (identical(aesthetic, "colour")) {
+      return(scale_colour_figspec(palette_id))
+    }
+    return(scale_fill_figspec(palette_id))
+  }
+  palette <- unname(palette)
+  palette_function <- function(n) {
+    if (n > length(palette)) {
+      figspec_abort(
+        c(
+          "The house-style palette contains {length(palette)} colours, but the plot needs {n}.",
+          ">" = "Add enough colours to {.code house_style$palette} for every category, or remove that palette to use a figspec default."
+        ),
+        "unsupported", available = length(palette), requested = n
+      )
+    }
+    palette[seq_len(n)]
+  }
+  ggplot2::discrete_scale(aesthetic, palette = palette_function)
+}
+
+ggplot_spec_continuous_scale <- function(aesthetic, spec) {
+  palette <- unlist(spec$house_style$palette %||% list(), use.names = FALSE)
+  if (!length(palette)) {
+    if (identical(aesthetic, "colour")) {
+      return(ggplot2::scale_colour_viridis_c(option = "D"))
+    }
+    return(ggplot2::scale_fill_viridis_c(option = "D"))
+  }
+  if (length(palette) == 1L) palette <- rep(palette, 2L)
+  if (identical(aesthetic, "colour")) {
+    ggplot2::scale_colour_gradientn(colours = palette)
+  } else {
+    ggplot2::scale_fill_gradientn(colours = palette)
+  }
 }
 
 #' Apply distinct shapes to categorical points

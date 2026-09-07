@@ -38,6 +38,32 @@ test_that("you can keep your own palette and take everything else", {
     fig_check(own, "cell_press")$check == "Type size", ]$status, "pass")
 })
 
+test_that("a specification's house-style palette reaches ggplot2", {
+  report_spec <- list(
+    name = "Research report",
+    house_style = list(
+      palette = c("#76549A", "#D99000", "#2B78A6")
+    )
+  )
+  fitted <- grouped() + fig_apply_spec(report_spec)
+  expect_setequal(
+    plot_colours(fitted),
+    report_spec$house_style$palette
+  )
+})
+
+test_that("a house-style palette is never silently recycled", {
+  short_spec <- list(
+    name = "Research report",
+    house_style = list(palette = c("#76549A", "#2B78A6"))
+  )
+  expect_error(
+    ggplot2::ggplot_build(grouped() + fig_apply_spec(short_spec)),
+    "plot needs 3",
+    class = "figspec_unsupported"
+  )
+})
+
 test_that("it composes onto a plot that maps neither colour nor shape", {
   plain <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
   expect_silent(invisible(ggplot2::ggplot_build(plain + fig_apply_spec("frontiers"))))

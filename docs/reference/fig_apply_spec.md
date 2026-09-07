@@ -64,10 +64,11 @@ A list of ggplot2 components, to add to a plot with `+`.
 Add it last. A scale added after this one replaces the journal's, which
 is occasionally what you want and usually not.
 
-The palette follows the journal. Where a publisher reproduces figures in
-black and white, `fig_apply_spec()` reaches for cividis, which keeps its
-colours apart in greyscale. Everywhere else it uses Okabe-Ito, built to
-stay readable under the common forms of colour vision deficiency.
+When the specification includes a house-style palette,
+`fig_apply_spec()` uses it. Otherwise, a specification that calls for
+greyscale reproduction uses cividis, whose colours remain distinct in
+greyscale; other specifications use the colour-vision-safe Okabe-Ito
+palette.
 
 Line widths inside a geom are set on the layer rather than the theme, so
 pass

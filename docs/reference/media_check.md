@@ -52,7 +52,7 @@ media_check(media_file, project_media_spec)
 #>
 #> ── Project media handoff ───────────────────────────────────────────────────────
 #> checked:
-#> /var/folders/nr/p09jj77n7jn9606qt_2m77nc0000gn/T//RtmpGbYD9A/file170cc599ae2e8.gif
+#> /var/folders/nr/p09jj77n7jn9606qt_2m77nc0000gn/T//Rtmpfw8GmK/file1506bbdeb79f.gif
 #>
 #> ✔ File validity valid                       requires: valid media container
 #> ✔ Format        GIF                         requires: GIF
