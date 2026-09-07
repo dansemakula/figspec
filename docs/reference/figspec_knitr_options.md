@@ -59,12 +59,12 @@ A named list suitable for `knitr::opts_chunk$set()`.
 ## Examples
 
 ``` r
-figspec_knitr_options("plos_one", "single")
+figspec_knitr_options("frontiers", "single")
 #> $fig.width
-#> [1] 2.629921
+#> [1] 3.346457
 #>
 #> $fig.height
-#> [1] 1.972441
+#> [1] 2.509843
 #>
 #> $dpi
 #> [1] 300
@@ -95,5 +95,5 @@ figspec_knitr_options(report_spec, "full", height = 100, units = "mm")
 #>
 
 # In a setup chunk:
-# do.call(knitr::opts_chunk$set, figspec_knitr_options("plos_one"))
+# do.call(knitr::opts_chunk$set, figspec_knitr_options("frontiers"))
 ```

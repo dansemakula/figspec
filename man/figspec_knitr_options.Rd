@@ -42,7 +42,7 @@ organisational specification into the width, height, resolution and graphics
 device settings understood by knitr.
 }
 \examples{
-figspec_knitr_options("plos_one", "single")
+figspec_knitr_options("frontiers", "single")
 
 # A report format maintained by your own team.
 report_spec <- list(
@@ -54,5 +54,5 @@ report_spec <- list(
 figspec_knitr_options(report_spec, "full", height = 100, units = "mm")
 
 # In a setup chunk:
-# do.call(knitr::opts_chunk$set, figspec_knitr_options("plos_one"))
+# do.call(knitr::opts_chunk$set, figspec_knitr_options("frontiers"))
 }

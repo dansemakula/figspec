@@ -31,7 +31,7 @@
 #'   conservatively uses the strictest rule the journal states.
 #' @return A named list suitable for `knitr::opts_chunk$set()`.
 #' @examples
-#' figspec_knitr_options("plos_one", "single")
+#' figspec_knitr_options("frontiers", "single")
 #'
 #' # A report format maintained by your own team.
 #' report_spec <- list(
@@ -43,7 +43,7 @@
 #' figspec_knitr_options(report_spec, "full", height = 100, units = "mm")
 #'
 #' # In a setup chunk:
-#' # do.call(knitr::opts_chunk$set, figspec_knitr_options("plos_one"))
+#' # do.call(knitr::opts_chunk$set, figspec_knitr_options("frontiers"))
 #' @export
 figspec_knitr_options <- function(spec, column = NULL, width = NULL,
                                   height = NULL, units = c("mm", "cm", "in"),
