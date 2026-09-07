@@ -19,7 +19,7 @@
 #   captions for the same thing.
 
 
-#' Label the panels of a figure
+#' Add and format labels for every panel
 #'
 #' Adds panel labels in the style the journal asks for. Where a publisher
 #' states one — capitals, lower case, numbers — that is what you get, so the
@@ -31,37 +31,44 @@
 #' journals that treat facets as sub-figures. Keep the strips with
 #' `strips = TRUE` if their content is doing work the labels do not replace.
 #'
-#' Nothing here is invented. Where a journal states no labelling rule, the
-#' `level` you give applies, and if you give none the default is lower case —
-#' a convention, and reported as one rather than as a requirement.
+#' When the specification gives no labelling rule, `level` supplies the
+#' convention for the figure. If you leave it unset, figspec uses lower-case
+#' letters and records that choice as a convention in the report.
 #'
-#' @param plot A ggplot, faceted or not, or a patchwork composition.
-#' @param journal Registry id, or a specification. Supplies the label style.
+#' @param plot A faceted ggplot or a patchwork composition to label.
+#' @param spec A registry id, a `figspec_spec`, or a named list containing
+#'   the panel-label requirements.
 #' @param level Label vocabulary: `"A"`, `"a"`, `"1"`, `"I"` or `"i"`.
-#'   Overrides the journal, which is what you want when a co-author has asked
-#'   for something the publisher does not mention.
-#' @param open,close Characters around the label. Journals rarely state these;
-#'   `"("` and `")"` are common in print.
-#' @param strips Whether to keep facet strips. Ignored for a composition.
-#' @param x,y,hjust,vjust Where the label sits inside its panel.
-#' @param ... Passed to [ggplot2::geom_text()], for size, face or family.
+#'   An explicit value overrides the specification; [fig_check()] will report
+#'   a failure if the choice conflicts with a stated requirement.
+#' @param open,close The characters placed before and after each label.
+#'   Parentheses are used by default.
+#' @param strips Whether to retain facet-strip headings. This is ignored for a
+#'   patchwork composition.
+#' @param x,y,hjust,vjust The position and alignment of labels inside each
+#'   faceted panel.
+#' @param ... Additional label settings passed to [ggplot2::geom_text()], such
+#'   as `size`, `fontface`, `family`, or `colour`.
 #' @return The plot, labelled. [fig_check()] recognises the result.
 #' @seealso [fig_check()], which reports whether a figure's panels meet the
 #'   journal's labelling rule.
 #' @examples
 #' library(ggplot2)
-#' p <- ggplot(mtcars, aes(wt, mpg)) + geom_point() + facet_wrap(~cyl)
+#' p <- ggplot(ggplot2::mpg, aes(displ, hwy)) +
+#'   geom_point() + facet_wrap(~drv)
 #'
 #' # Cell Press asks for capitals; AGU asks for lower case.
-#' tag_panels(p, "cell_press")
+#' fig_tag_panels(p, "cell_press")
 #'
 #' # Or say it yourself, where no journal is involved.
-#' tag_panels(p, level = "a")
+#' fig_tag_panels(p, level = "a")
 #' @export
-tag_panels <- function(plot, journal = NULL, level = NULL,
+fig_tag_panels <- function(plot, spec = NULL, level = NULL,
                        open = "(", close = ")", strips = FALSE,
                        x = -Inf, y = Inf, hjust = -0.6, vjust = 1.4, ...) {
-  level <- resolve_tag_level(journal, level)
+  level <- resolve_tag_level(spec, level)
+
+  resolved <- if (is.null(spec)) NULL else spec_get(spec)
 
   if (inherits(plot, "patchwork")) {
     if (!has_package("patchwork")) {
@@ -73,9 +80,11 @@ tag_panels <- function(plot, journal = NULL, level = NULL,
     }
     # patchwork owns tags on compositions and does them well. All figspec adds
     # is the level the publisher asked for.
-    return(plot + patchwork::plot_annotation(
+    out <- plot + patchwork::plot_annotation(
       tag_levels = level, tag_prefix = open, tag_suffix = close
-    ))
+    )
+    attr(out, "figspec_panel_tags_placement") <- "outside_image"
+    return(out)
   }
 
   if (!inherits(plot, "ggplot")) {
@@ -94,6 +103,14 @@ tag_panels <- function(plot, journal = NULL, level = NULL,
         ">" = "Facet the plot, or compose several with patchwork."),
       "bad_input"
     )
+  }
+
+  if (!is.null(resolved) && identical(resolved$panel_labels_placement, "outside_image")) {
+    figspec_abort(
+      c("{resolved$name} says not to embed part labels over the image.",
+        "i" = "Faceted labels drawn by {.fn fig_tag_panels} sit inside the panels.",
+        ">" = "Compose the panels and place labels in the surrounding layout, or follow the specification's delivery workflow."),
+      "unsupported")
   }
 
   n <- nrow(panels)
@@ -118,6 +135,7 @@ tag_panels <- function(plot, journal = NULL, level = NULL,
   # Record what was applied, so fig_check() recognises figspec's own labelling
   # exactly rather than having to infer it from the layers.
   attr(out, "figspec_panel_tags") <- level
+  attr(out, "figspec_panel_tags_placement") <- "inside_panel"
   out
 }
 
@@ -125,7 +143,7 @@ tag_panels <- function(plot, journal = NULL, level = NULL,
 # The label style a journal states, or the caller's own. An explicit `level`
 # wins: a publisher's rule is a floor, not a prohibition on being asked for
 # something else by a co-author or a house style.
-resolve_tag_level <- function(journal, level) {
+resolve_tag_level <- function(spec, level) {
   valid <- c("A", "a", "1", "I", "i")
   if (!is.null(level)) {
     if (!is.character(level) || length(level) != 1L || !level %in% valid) {
@@ -137,9 +155,9 @@ resolve_tag_level <- function(journal, level) {
     }
     return(level)
   }
-  if (is.null(journal)) return("a")
+  if (is.null(spec)) return("a")
 
-  spec <- journal_spec(journal)
+  spec <- spec_get(spec)
   stated <- spec$panel_labels
   if (is.null(stated)) {
     # Say so rather than letting a default pass for a requirement.

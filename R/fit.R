@@ -1,6 +1,6 @@
 # Building to a specification ------------------------------------------------
 #
-# fit_journal() is the entry point for the case where the journal is known
+# fig_apply_spec() is the entry point for the case where the journal is known
 # before the figure is drawn, which is the cheapest moment to satisfy it. It
 # returns a list of ggplot2 components, so it composes with `+` like any scale
 # or theme.
@@ -15,74 +15,170 @@
 # journal requirement - no publisher states which colours to use - so both can
 # be turned off without turning off anything the journal asked for.
 
-#' Bring a journal's requirements into a plot as you build it
+#' Apply a specification while building a plot
 #'
-#' Adds a journal's requirements to a plot the same way you would add a colour
-#' scale, so the figure is built to specification from the start rather than
-#' corrected afterwards. One line carries the journal's typography, its stated
-#' line weights, its structural rules such as axis lines and tick marks, and
-#' colours and shapes chosen to survive whatever that journal does to a figure
-#' in production.
+#' Adds a figure specification to a plot the same way you would add a colour
+#' scale. Applying it while the plot is editable makes the requirements part of
+#' the build. The specification may be an included publisher or
+#' journal profile, one loaded by your team, or a named list supplied directly
+#' in R. One line applies its typography, stated line weights and structural
+#' rules, together with colours and shapes chosen to remain distinguishable.
 #'
-#' Add it last. A scale added after this one replaces the journal's, which is
-#' occasionally what you want and usually not.
+#' Add it after any scales you want figspec to set. A later colour, fill or
+#' shape scale replaces the corresponding figspec scale, which lets you make an
+#' explicit final choice when the project needs one.
 #'
-#' The palette follows the journal. Where a publisher reproduces figures in
-#' black and white, `fit_journal()` reaches for cividis, which keeps its
-#' colours apart in greyscale. Everywhere else it uses Okabe-Ito, built to stay
-#' readable under the common forms of colour vision deficiency.
+#' When the specification includes a house-style palette,
+#' `fig_apply_spec()` uses it. Otherwise, a specification that calls for
+#' greyscale reproduction uses cividis, whose colours remain distinct in
+#' greyscale; other specifications use the colour-vision-safe Okabe-Ito
+#' palette.
 #'
 #' Line widths inside a geom are set on the layer rather than the theme, so
-#' pass [figspec_linewidth()] to any layer that draws lines.
+#' pass [spec_linewidth()] to any layer that draws lines.
 #'
-#' @param journal Registry id, for example `"cell_press"`.
+#' @param spec A registry id such as `"cell_press"`, a `figspec_spec`, or a
+#'   named list of requirements. The specification does not have to describe a
+#'   journal.
 #' @param colour Whether to set the colour and fill scales. Turn this off to
 #'   keep a palette you have chosen yourself.
 #' @param shapes Whether to set the shape scale.
-#' @param style A house style registered with [register_house_style()], applied
-#'   underneath the journal's requirements.
-#' @param base_size Base type size in points, passed to [theme_journal()].
+#' @param style A house style registered with [style_register()]. Visual
+#'   choices are applied first, followed by any overlapping requirements in
+#'   the specification.
+#' @param base_size Base type size in points, passed to [theme_spec()].
 #' @param color American spelling of `colour`. Takes precedence when given.
 #'   R's partial matching cannot cover this one, because `color` is not a
 #'   prefix of `colour` - the spellings diverge at the fifth letter.
 #' @return A list of ggplot2 components, to add to a plot with `+`.
+#' @seealso [spec_get()] for supplying a registry or project specification,
+#'   [fig_save()] for exact export, and [fig_check()] for verification.
 #' @examples
 #' library(ggplot2)
 #'
-#' ggplot(mtcars, aes(wt, mpg, colour = factor(cyl), shape = factor(cyl))) +
+#' ggplot(ggplot2::mpg, aes(displ, hwy, colour = class, shape = drv)) +
 #'   geom_point() +
-#'   fit_journal("cell_press")
+#'   fig_apply_spec("cell_press")
 #'
-#' # Keep your own palette, take everything else.
-#' ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
-#'   geom_point() +
-#'   scale_colour_viridis_d() +
-#'   fit_journal("plos_one", colour = FALSE)
+#' # A project specification supplied directly in R; no journal is involved.
+#' report_spec <- list(
+#'   name = "Quarterly research report",
+#'   font_min_pt = 9,
+#'   min_line_pt = 0.5,
+#'   print_greyscale = TRUE
+#' )
+#' ggplot(ggplot2::economics, aes(date, unemploy)) +
+#'   geom_line(linewidth = spec_linewidth(report_spec)) +
+#'   fig_apply_spec(report_spec)
 #' @export
-fit_journal <- function(journal, colour = TRUE, shapes = TRUE,
+fig_apply_spec <- function(spec, colour = TRUE, shapes = TRUE,
                         style = NULL, base_size = NULL, color = NULL) {
   if (!is.null(color)) colour <- color
-  spec <- journal_spec(journal)
-  parts <- list(theme_journal(journal, style = style, base_size = base_size))
-
+  resolved <- spec_get(spec)
+  preview <- list(theme_spec(spec, style = style, base_size = base_size))
   if (isTRUE(colour)) {
-    pal <- if (isTRUE(spec$print_greyscale)) "cividis" else "okabe_ito"
-    parts <- c(parts, list(scale_colour_figspec(pal), scale_fill_figspec(pal)))
+    preview <- c(preview, list(
+      ggplot_spec_discrete_scale("colour", resolved),
+      ggplot_spec_discrete_scale("fill", resolved)
+    ))
   }
-  if (isTRUE(shapes)) {
-    parts <- c(parts, list(scale_shape_figspec()))
-  }
-  parts
+  if (isTRUE(shapes)) preview <- c(preview, list(scale_shape_figspec()))
+  structure(preview, class = c("figspec_fit", "list"),
+            config = list(spec = spec, colour = isTRUE(colour),
+                          shapes = isTRUE(shapes), style = style,
+                          base_size = base_size))
 }
 
-#' A discrete shape scale using shapes that stay legible at journal size
+#' @importFrom ggplot2 ggplot_add
+#' @export
+ggplot_add.figspec_fit <- function(object, plot, ...) {
+  config <- attr(object, "config")
+  spec <- spec_get(config$spec)
+  parts <- list(theme_spec(config$spec, style = config$style,
+                              base_size = config$base_size))
+  scale_kind <- function(aesthetic) {
+    built <- tryCatch(ggplot2::ggplot_build(plot), error = function(e) NULL)
+    if (is.null(built)) return("none")
+    sc <- built$plot$scales$get_scales(aesthetic)
+    if (is.null(sc)) "none" else if (isTRUE(sc$is_discrete())) "discrete" else "continuous"
+  }
+  if (isTRUE(config$colour)) {
+    colour_kind <- scale_kind("colour")
+    fill_kind <- scale_kind("fill")
+    parts <- c(parts, list(
+      if (identical(colour_kind, "continuous")) {
+        ggplot_spec_continuous_scale("colour", spec)
+      } else ggplot_spec_discrete_scale("colour", spec),
+      if (identical(fill_kind, "continuous")) {
+        ggplot_spec_continuous_scale("fill", spec)
+      } else ggplot_spec_discrete_scale("fill", spec)
+    ))
+  }
+  if (isTRUE(config$shapes) && !identical(scale_kind("shape"), "continuous")) {
+    parts <- c(parts, list(scale_shape_figspec()))
+  }
+  Reduce(function(p, part) p + part, parts, init = plot)
+}
+
+ggplot_spec_discrete_scale <- function(aesthetic, spec) {
+  palette <- unlist(spec$house_style$palette %||% list(), use.names = FALSE)
+  if (!length(palette)) {
+    palette_id <- if (isTRUE(spec$print_greyscale)) "cividis" else "okabe_ito"
+    if (identical(aesthetic, "colour")) {
+      return(scale_colour_figspec(palette_id))
+    }
+    return(scale_fill_figspec(palette_id))
+  }
+  palette <- unname(palette)
+  palette_function <- function(n) {
+    if (n > length(palette)) {
+      figspec_abort(
+        c(
+          "The house-style palette contains {length(palette)} colours, but the plot needs {n}.",
+          ">" = "Add enough colours to {.code house_style$palette} for every category, or remove that palette to use a figspec default."
+        ),
+        "unsupported", available = length(palette), requested = n
+      )
+    }
+    palette[seq_len(n)]
+  }
+  ggplot2::discrete_scale(aesthetic, palette = palette_function)
+}
+
+ggplot_spec_continuous_scale <- function(aesthetic, spec) {
+  palette <- unlist(spec$house_style$palette %||% list(), use.names = FALSE)
+  if (!length(palette)) {
+    if (identical(aesthetic, "colour")) {
+      return(ggplot2::scale_colour_viridis_c(option = "D"))
+    }
+    return(ggplot2::scale_fill_viridis_c(option = "D"))
+  }
+  if (length(palette) == 1L) palette <- rep(palette, 2L)
+  if (identical(aesthetic, "colour")) {
+    ggplot2::scale_colour_gradientn(colours = palette)
+  } else {
+    ggplot2::scale_fill_gradientn(colours = palette)
+  }
+}
+
+#' Apply distinct shapes to categorical points
 #'
-#' @param ... Passed to [ggplot2::discrete_scale()].
-#' @param style Passed to [figspec_shapes()].
-#' @return A ggplot2 scale.
+#' Adds a discrete ggplot2 shape scale using the tested shape sets returned by
+#' [figspec_shapes()]. Shape can support colour as a second visual cue, helping
+#' readers distinguish groups when a figure is printed in greyscale or when
+#' colours appear similar.
+#'
+#' @param ... Additional settings for the discrete scale, such as its legend
+#'   title, labels, limits, missing-value shape or guide. These are passed to
+#'   [ggplot2::discrete_scale()].
+#' @param style The kind of marks to use: `"solid"` for solid symbols,
+#'   `"hollow"` for outlines, or `"filled"` for symbols whose interior and
+#'   outline colours can be controlled separately. The available sets contain
+#'   six solid, six hollow and five filled shapes.
+#' @return A discrete ggplot2 shape scale to add to a plot.
 #' @examples
 #' library(ggplot2)
-#' ggplot(mtcars, aes(wt, mpg, shape = factor(cyl))) +
+#' ggplot(ggplot2::mpg, aes(displ, hwy, shape = drv)) +
 #'   geom_point() +
 #'   scale_shape_figspec()
 #' @export

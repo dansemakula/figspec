@@ -2,21 +2,33 @@
 % Please edit documentation in R/submission.R
 \name{submission_detail}
 \alias{submission_detail}
-\title{The full report for one file in a submission check}
+\title{Open the full report for one submission item}
 \usage{
 submission_detail(x, file)
 }
 \arguments{
-\item{x}{A \code{figspec_submission} object.}
+\item{x}{The complete \code{figspec_submission} object returned by
+\code{\link[=submission_check]{submission_check()}}.}
 
-\item{file}{File name, as shown in the submission table.}
+\item{file}{Exactly one item name from the \code{file} column of \code{x}. For live
+objects this is the list name; for saved assets it is the file name shown
+in the submission summary.}
 }
 \value{
 The \code{figspec_report} for that file.
 }
 \description{
-The full report for one file in a submission check
+\code{\link[=submission_check]{submission_check()}} gives one summary row for each figure or table. This
+function retrieves the underlying report for the item you select, so you can
+see every requirement, measured value and reason for any failure or
+unresolved result.
 }
 \examples{
-# See check_submission() for a worked example.
+library(ggplot2)
+figures <- list(
+  vehicles = ggplot(ggplot2::mpg, aes(displ, hwy)) + geom_point(),
+  economy = ggplot(ggplot2::economics, aes(date, unemploy)) + geom_line()
+)
+review <- submission_check(figures, "frontiers")
+submission_detail(review, "vehicles")
 }

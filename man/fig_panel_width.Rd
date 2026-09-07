@@ -2,11 +2,11 @@
 % Please edit documentation in R/panel.R
 \name{fig_panel_width}
 \alias{fig_panel_width}
-\title{The panel width a set of figures can share}
+\title{Find one panel width that fits every figure}
 \usage{
 fig_panel_width(
   plots,
-  journal = NULL,
+  spec = NULL,
   column = NULL,
   width = NULL,
   units = c("mm", "cm", "in"),
@@ -14,20 +14,23 @@ fig_panel_width(
 )
 }
 \arguments{
-\item{plots}{A list of plots, or one plot.}
+\item{plots}{The plot or list of plots that should share a panel width.}
 
-\item{journal}{Registry id. Supplies the canvas width.}
+\item{spec}{A registry id, a \code{figspec_spec}, or a named list containing
+the available canvas widths.}
 
-\item{column}{Which of the journal's stated column widths to fit.}
+\item{column}{Which named width in the selected specification the figures
+must fit.}
 
-\item{width}{Canvas width, if you are not sizing to a journal.}
+\item{width}{The available canvas width when you are not using a named
+specification.}
 
-\item{units}{Units for \code{width} and for the returned value.}
+\item{units}{The units used for \code{width} and for the returned panel width.}
 
 \item{format}{File format the figures will be written in, for example
 \code{"tiff"}. Text is measured in the font the device resolves, so measuring
 on the device you will actually save with is what makes the answer exact.
-Defaults to the journal's first accepted format.}
+Defaults to the specification's first accepted format.}
 }
 \value{
 A single number: the shared panel width. The per-figure maxima are
@@ -48,12 +51,15 @@ longest axis labels has the least room, and it sets the width the others
 have to meet. That is what this measures.
 }
 \examples{
+\donttest{
 library(ggplot2)
 figs <- list(
-  a = ggplot(mtcars, aes(wt, mpg)) + geom_point(),
-  b = ggplot(mtcars, aes(wt, mpg)) + geom_point() + labs(y = "A much longer label")
+  vehicles = ggplot(ggplot2::mpg, aes(displ, hwy)) + geom_point(),
+  economy = ggplot(ggplot2::economics, aes(date, unemploy)) +
+    geom_line() + labs(y = "Number of unemployed people")
 )
-fig_panel_width(figs, journal = "frontiers")
+fig_panel_width(figs, width = 160)
+}
 }
 \seealso{
 \code{\link[=fig_save]{fig_save()}}

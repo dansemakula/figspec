@@ -11,3 +11,4 @@
 ^[^/]*\.html$
 ^Rplots[0-9]*\.pdf$
 ^dev$
+^\.figspec-site-(stage|candidate|backup)-

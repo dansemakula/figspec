@@ -1,18 +1,19 @@
-# figspec: Build, Check and Export Figures to a Specification
+# figspec: Build, Export and Verify Figures and Tables Against a Specification
 
-Sets the size, resolution, typography and colour of a figure from a
-specification, then checks the result and reports where it falls short.
-Sizes by the plot panel as well as by the image, so a set of figures can
-share one plot area whatever their axis labels do. The main registry
-holds the published figure requirements of many journals, so a target
-journal can be named instead of a specification written, and house
-styles or internal formats can be registered alongside. Covers width,
-resolution, file format, type size and font, line and point weights,
-colour mode and colour safety, panel labelling and axis rules. Builds
-and exports 'ggplot2' figures at exactly the stated size and resolution.
-Every registry requirement records the publisher page it was taken from
-and the date it was read; a requirement that is not stated is reported
-as unspecified rather than assumed to pass.
+Applies a specification while a figure or table is still editable,
+exports the result and checks the completed file. Figures can be made
+with 'ggplot2', 'lattice', 'plotly', base graphics or 'grid'; tables can
+begin as data frames, matrices, 'gt', 'flextable', 'kableExtra' or grid
+objects. Figure checks cover physical dimensions, resolution, format,
+typography, line and point weights, colour, panel labels and axis rules.
+Table checks cover the output format and measurable layout and
+typography, and list rules needing editorial judgement for final review.
+Figures can also be sized by the data panel, with the required outer
+image calculated around it. The registry records sourced publication
+requirements, and project or organisational specifications can be
+supplied directly. Every bundled requirement records its source and
+review date. Missing fields are labelled according to whether the source
+was silent or the field awaits review.
 
 ## See also
 
@@ -26,10 +27,10 @@ Useful links:
 
 ## Author
 
-**Maintainer**: Daniel Semakula <semakuladaniel@gmail.com> (MD, MPH,
-PhD) \[copyright holder\]
+**Maintainer**: Daniel Semakula <semakuladaniel@gmail.com>
+([ORCID](https://orcid.org/0000-0002-0806-213X)) \[copyright holder\]
 
 Authors:
 
-- Daniel Semakula <semakuladaniel@gmail.com> (MD, MPH, PhD) \[copyright
-  holder\]
+- Daniel Semakula <semakuladaniel@gmail.com>
+  ([ORCID](https://orcid.org/0000-0002-0806-213X)) \[copyright holder\]

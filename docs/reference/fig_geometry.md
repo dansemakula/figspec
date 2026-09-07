@@ -1,4 +1,4 @@
-# What size a figure actually is
+# Measure panel and canvas dimensions
 
 Reports the canvas and panel dimensions of a plot, in millimetres. Use
 it to see where the space in a figure is going before you decide what to
@@ -17,11 +17,17 @@ plot(x, ...)
 
 - x:
 
-  A `figspec_geometry` object, from `fig_geometry()`.
+  For `fig_geometry()`, a ggplot, patchwork composition, `gtable`, or
+  the value returned by
+  [`fig_save()`](https://dansemakula.github.io/figspec/reference/fig_save.md).
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html), the
+  `figspec_geometry` object returned by `fig_geometry()`.
 
 - ...:
 
-  Ignored.
+  Accepted by the
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) generic for
+  compatibility and ignored by this method.
 
 ## Value
 
@@ -32,18 +38,21 @@ decoration each dimension spends on axes, legends and margins.
 
 ``` r
 library(ggplot2)
-fig_geometry(ggplot(mtcars, aes(wt, mpg)) + geom_point())
-#> 
+p <- ggplot(ggplot2::mpg, aes(displ, hwy)) + geom_point()
+sized <- fig_panel_size(p, width = 62, height = 45)
+geometry <- fig_geometry(sized)
+geometry
+#>
 #> ── Figure geometry ─────────────────────────────────────────────────────────────
-#> ℹ The panels have no size of their own yet, so they will take whatever the
-#> canvas leaves over. The decoration below is fixed by the labels and the
-#> font, and does not change with the canvas.
-#> 
+#>   canvas  75.5 x 57.9 mm
+#>   panel   62 x 45 mm
+#>
 #> Decoration - where the rest of the space goes
-#>   left      11.8 mm
-#>   bottom    11.3 mm
+#>   left      11.6 mm
+#>   bottom    10.9 mm
 #>   right      1.9 mm
 #>   top        1.9 mm
-#> 
+#>
 #> ℹ `plot()` this to see it.
+plot(geometry)
 ```

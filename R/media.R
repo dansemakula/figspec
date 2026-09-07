@@ -10,35 +10,37 @@
 # that exceeds the maximum has to be scaled to fit while keeping its aspect
 # ratio, since stretching it would be worse than shrinking it.
 
-#' Supplementary media requirements for a journal
+#' Look up supplementary media requirements
 #'
-#' Journals publish separate rules for video and audio submitted as
-#' supplementary material: container format, codec, frame size and file size.
-#' These are not figure requirements and are not checked by [fig_check()].
+#' Publications and projects may set separate rules for video and audio:
+#' container format, codec, frame size, bit rate and file size. These are not
+#' figure requirements and are therefore kept separate from [fig_check()].
 #'
-#' @param journal Registry id, for example `"science"`.
+#' @param spec A registry id such as `"science"`, a `figspec_spec`, or a
+#'   named list of requirements.
 #' @return A list of the stated media requirements, or `NULL` with a message
-#'   when the registry records none for that journal.
+#'   when the selected specification records none.
 #' @examples
 #' media_spec("science")
 #' @export
-media_spec <- function(journal) {
-  spec <- journal_spec(journal)
+media_spec <- function(spec) {
+  spec <- spec_get(spec)
   if (is.null(spec$media)) {
     msg_wrap("No supplementary media requirements are recorded for '",
             spec$name, "'. See ", spec$source_url)
     return(invisible(NULL))
   }
   structure(
-    c(spec$media, list(journal = spec$name, source_url = spec$source_url,
-                       verified_on = spec$verified_on)),
+    c(spec$media, list(spec_name = spec$name, source_url = spec$source_url,
+                       verified_on = spec$verified_on,
+                       publication_stage = spec$publication_stage)),
     class = c("figspec_media_spec", "list")
   )
 }
 
 #' @export
 print.figspec_media_spec <- function(x, ...) {
-  cli::cli_h1("{x$journal} - supplementary media")
+  cli::cli_h1("{x$spec_name} - supplementary media")
   line <- function(label, v, unit = "") {
     if (is.null(v)) return(invisible(NULL))
     cli::cli_li("{.strong {label}:} {paste(unlist(v), collapse = ', ')}{unit}")
@@ -63,6 +65,9 @@ print.figspec_media_spec <- function(x, ...) {
   }
   cli::cli_text("")
   cli::cli_text("{.strong Source:} {.url {x$source_url}} (verified {x$verified_on})")
+  if (!is.null(x$publication_stage) && nzchar(x$publication_stage)) {
+    cli::cli_text("{.strong Applies at:} {x$publication_stage} submission")
+  }
   invisible(x)
 }
 
@@ -74,6 +79,7 @@ print.figspec_media_spec <- function(x, ...) {
 read_mp4_frame <- function(path) {
   n <- file.size(path)
   raw <- readBin(path, "raw", min(n, 4194304L))
+  if (length(raw) < 8L) return(NULL)
   tkhd <- charToRaw("tkhd")
   hits <- which(
     raw[seq_len(length(raw) - 3L)] == tkhd[1] &
@@ -110,7 +116,20 @@ read_gif_frame <- function(path) {
 
 inspect_media <- function(path) {
   ext <- tolower(tools::file_ext(path))
-  info <- list(format = ext, size_mb = file.size(path) / 1024^2)
+  raw <- readBin(path, "raw", min(file.size(path), 32L))
+  sig <- function(from, text) {
+    to <- from + nchar(text, type = "bytes") - 1L
+    length(raw) >= to && identical(as.integer(raw[from:to]), as.integer(charToRaw(text)))
+  }
+  valid <- switch(ext,
+    gif = sig(1L, "GIF87a") || sig(1L, "GIF89a"),
+    mp4 = , m4v = , mov = , m4a = sig(5L, "ftyp"),
+    wav = sig(1L, "RIFF") && sig(9L, "WAVE"),
+    mp3 = length(raw) >= 3L && (sig(1L, "ID3") ||
+      (as.integer(raw[1]) == 255L && bitwAnd(as.integer(raw[2]), 224L) == 224L)),
+    NA
+  )
+  info <- list(format = ext, size_mb = file.size(path) / 1024^2, valid = valid)
   frame <- switch(ext,
     mp4 = ,
     m4v = ,
@@ -122,25 +141,92 @@ inspect_media <- function(path) {
     info$width_px <- frame$width
     info$height_px <- frame$height
   }
+  probe <- inspect_media_ffprobe(path)
+  if (!is.null(probe)) {
+    signature_valid <- info$valid
+    info <- utils::modifyList(info, probe)
+    if (identical(signature_valid, FALSE)) info$valid <- FALSE
+  }
   info
 }
 
-#' Check a supplementary media file against a journal's requirements
+inspect_media_ffprobe <- function(path) {
+  exe <- Sys.which("ffprobe")
+  if (!nzchar(exe)) return(NULL)
+  probe_one <- function(selector) {
+    args <- c("-v", "error", "-select_streams", selector,
+              "-show_entries", "stream=codec_name,width,height,bit_rate",
+              "-of", "default=noprint_wrappers=1", shQuote(normalizePath(path)))
+    out <- tryCatch(suppressWarnings(system2(exe, args, stdout = TRUE, stderr = TRUE)),
+                    error = function(e) character())
+    if (!length(out) || !is.null(attr(out, "status"))) return(NULL)
+    bits <- strsplit(out[grepl("=", out, fixed = TRUE)], "=", fixed = TRUE)
+    values <- vapply(bits, function(x) paste(x[-1], collapse = "="), character(1))
+    names(values) <- vapply(bits, `[[`, character(1), 1L)
+    values
+  }
+  video <- probe_one("v:0")
+  audio <- probe_one("a:0")
+  if (is.null(video) && is.null(audio)) return(NULL)
+  number <- function(x) {
+    if (is.null(x) || !grepl("^[0-9]+(?:[.][0-9]+)?$", x)) return(NULL)
+    as.numeric(x)
+  }
+  list(
+    valid = TRUE,
+    width_px = number(video[["width"]]),
+    height_px = number(video[["height"]]),
+    video_codec = video[["codec_name"]] %||% NULL,
+    video_bitrate_kbps = if (!is.null(number(video[["bit_rate"]]))) number(video[["bit_rate"]]) / 1000 else NULL,
+    audio_codec = audio[["codec_name"]] %||% NULL,
+    audio_bitrate_kbps = if (!is.null(number(audio[["bit_rate"]]))) number(audio[["bit_rate"]]) / 1000 else NULL
+  )
+}
+
+#' Verify a supplementary media file
 #'
-#' Checks container format, frame size and file size. Codec and bit rate are
-#' recorded in the registry but are not inspected: reading them reliably needs
-#' a media library, and reporting a guess would be worse than reporting
-#' nothing.
+#' Checks container format, frame size, file size, video codec and audio bit
+#' rate. The system `ffprobe` executable provides codec and bit-rate evidence
+#' when it is available. Otherwise, those rows are marked `unknown` so the
+#' report shows exactly which properties still need to be confirmed.
 #'
-#' @param path Path to a media file.
-#' @param journal Registry id.
+#' @param path One path to an existing media file.
+#' @param spec A registry id, a `figspec_spec`, or a named list containing
+#'   supplementary media requirements.
 #' @return A `figspec_report`.
 #' @examples
-#' # check_media("movie_s1.mp4", "science")
+#' # A real, valid 1 x 1 pixel GIF written to a temporary file.
+#' gif_hex <- c(
+#'   "47", "49", "46", "38", "39", "61", "01", "00", "01", "00",
+#'   "80", "00", "00", "00", "00", "00", "ff", "ff", "ff", "21",
+#'   "f9", "04", "01", "00", "00", "00", "00", "2c", "00", "00",
+#'   "00", "00", "01", "00", "01", "00", "00", "02", "02", "44",
+#'   "01", "00", "3b"
+#' )
+#' media_file <- tempfile(fileext = ".gif")
+#' writeBin(as.raw(strtoi(gif_hex, 16L)), media_file)
+#'
+#' project_media_spec <- list(
+#'   name = "Project media handoff",
+#'   media = list(
+#'     video_formats = "gif",
+#'     frame_max = list(width = 1280, height = 720),
+#'     max_file_mb = 1
+#'   )
+#' )
+#' media_check(media_file, project_media_spec)
+#' unlink(media_file)
 #' @export
-check_media <- function(path, journal) {
+media_check <- function(path, spec) {
+  if (!is.character(path) || length(path) != 1L || is.na(path) ||
+      !nzchar(trimws(path))) {
+    figspec_abort("{.arg path} must be one non-empty media-file path.", "bad_input")
+  }
   if (!file.exists(path)) figspec_abort("File not found: {.file {path}}.", "not_found", path = path)
-  spec <- journal_spec(journal)
+  if (dir.exists(path)) {
+    figspec_abort("{.arg path} points to a directory, not a media file: {.file {path}}.", "bad_input")
+  }
+  spec <- spec_get(spec)
   media <- spec$media
   if (is.null(media)) {
     figspec_abort(
@@ -148,15 +234,24 @@ check_media <- function(path, journal) {
         "i" = "That is a gap in the registry, not a statement that the
                publisher has no rules.",
         ">" = "Check the guidelines yourself: {.url {spec$source_url}}"),
-      "not_found", journal = spec$name)
+      "not_found", spec_name = spec$name)
   }
   info <- inspect_media(path)
   rows <- list()
 
+  rows[[1]] <- if (identical(info$valid, FALSE)) {
+    new_row("File validity", "valid media container",
+            paste0("not a readable ", toupper(info$format), " file"), "invalid")
+  } else if (isTRUE(info$valid)) {
+    new_row("File validity", "valid media container", "valid", "pass")
+  } else {
+    new_row("File validity", "valid media container", "not inspected", "unknown")
+  }
+
   is_audio <- tolower(info$format) %in% tolower(unlist(media$audio_formats %||% list()))
   fmt_allowed <- c(unlist(media$video_formats %||% list()),
                    unlist(media$audio_formats %||% list()))
-  rows[[1]] <- graded(
+  rows[[length(rows) + 1L]] <- graded(
     "Format",
     if (length(fmt_allowed)) paste(toupper(fmt_allowed), collapse = ", ") else NULL,
     toupper(info$format),
@@ -184,16 +279,32 @@ check_media <- function(path, journal) {
     !is.null(media$max_file_mb) && info$size_mb <= as.numeric(media$max_file_mb)
   )
 
-  rows[[length(rows) + 1L]] <- new_row(
-    "Codec",
-    if (!is.null(media$video_codec)) media$video_codec else "not specified by publisher",
-    "not inspected - figspec does not decode media streams",
-    "unknown"
-  )
+  normalise_codec <- function(x) gsub("[^a-z0-9]", "", tolower(x))
+  if (!is_audio) {
+    rows[[length(rows) + 1L]] <- graded(
+      "Video codec",
+      media$video_codec,
+      info$video_codec,
+      !is.null(info$video_codec) && !is.null(media$video_codec) &&
+        normalise_codec(info$video_codec) == normalise_codec(media$video_codec)
+    )
+  } else {
+    rows[[length(rows) + 1L]] <- graded(
+      "Audio bit rate",
+      if (!is.null(media$audio_bitrate_kbps)) paste0("min ", media$audio_bitrate_kbps, " kb/s") else NULL,
+      if (!is.null(info$audio_bitrate_kbps)) paste0(round(info$audio_bitrate_kbps), " kb/s") else NULL,
+      !is.null(info$audio_bitrate_kbps) && !is.null(media$audio_bitrate_kbps) &&
+        info$audio_bitrate_kbps >= as.numeric(media$audio_bitrate_kbps)
+    )
+  }
 
   out <- do.call(rbind, rows)
   rownames(out) <- NULL
-  structure(out, journal = spec$name, journal_id = spec$id,
+  if (identical(info$valid, FALSE)) {
+    out$status[out$check != "File validity" & out$status %in% c("pass", "fail")] <- "invalid"
+  }
+  structure(out, spec_name = spec$name, spec_id = spec$id,
             source_url = spec$source_url, verified_on = spec$verified_on,
+            publication_stage = spec$publication_stage,
             input = path, class = c("figspec_report", "data.frame"))
 }

@@ -91,18 +91,48 @@ journals:
     - RGB
     - grayscale
     max_file_mb: 10
+    tiff_compression: lzw
+    allow_alpha: false
+    flattened: true
+    max_pages: 1
+    source_quote_tiff: TIFF files must be flattened, without alpha channels, use LZW compression, and be single page.
 - id: nature
   name: Nature
   publisher: Springer Nature
   disciplines: multidisciplinary
-  source_url: https://www.nature.com/nature/for-authors/initial-submission
-  verified_on: '2026-08-22'
+  source_url: https://www.nature.com/nature/for-authors/final-submission
+  verified_on: '2026-09-03'
+  publication_stage: final
+  sources:
+  - url: https://research-figure-guide.nature.com/figures/building-and-exporting-figure-panels/
+    verified_on: '2026-09-03'
+    fields: [columns, height_max_mm, font_min_pt, font_max_pt]
+    quote: The widths of printed figures are 89 mm (single column) and 183 mm
+      (double column); maximum height is 170 mm; use standard fonts such as Arial
+      or Helvetica; maximum text size is 7 pt and minimum text size is 5 pt.
+  - url: https://www.nature.com/nature/for-authors/final-submission
+    verified_on: '2026-09-03'
+    fields: [panel_labels, min_line_pt, max_line_pt]
+    quote: Separate panels should each be labelled with 8 pt bold upright a,
+      b, c; line weights and strokes should be set between 0.25 and 1 pt.
+  - url: https://www.nature.com/nature/for-authors/initial-submission
+    verified_on: '2026-09-03'
+    fields: [text_case, text_no_final_stop, dpi_min, colour_mode, formats,
+      avoid_colour_pairs, font_families]
+    quote: Provide images in RGB color and at 300 dpi or higher resolution;
+      avoid the use of red and green for contrast; acceptable editable and
+      bitmap formats are enumerated on the page.
+  - url: https://research-figure-guide.nature.com/figures/preparing-figures-our-specifications/
+    verified_on: '2026-09-03'
+    fields: [axis_lines_and_ticks, avoid_coloured_text]
+    quote: Axis lines and tick marks are required; coloured text should be
+      avoided and keylines or keys used instead.
   requirements:
     columns:
-      single: 90
-      double: 180
-    source_quote_width: For guidance, Nature's standard figure sizes are 90 mm (single
-      column) and 180 mm (double column) and the full depth of the page is 170 mm.
+      single: 89
+      double: 183
+    source_quote_width: For guidance, Nature's standard figure sizes are 89 mm wide
+      (single column) and 183 mm wide (double column).
     height_max_mm: 170
     text_case: sentence
     text_no_final_stop: yes
@@ -118,9 +148,8 @@ journals:
       Use symbol font for Greek letters.
     font_min_pt: 5.0
     font_max_pt: 7.0
-    source_quote_font: Figures are best prepared at a width of 90 mm (single column)
-      and 180 mm (double column) with a maximum height of 170mm. At this size, the
-      font size should be 5-7pt.
+    source_quote_font: Maximum text size is 7 pt; minimum text size is 5 pt. Use
+      standard fonts, for example Arial or Helvetica.
     formats:
     - ai
     - eps
@@ -146,6 +175,10 @@ journals:
     avoid_coloured_text: yes
     source_quote_text_colour: Avoid coloured text; keylines, keys, etc. should be
       used instead
+    min_line_pt: 0.25
+    max_line_pt: 1.0
+    source_quote_line: Line weights and strokes should be set between 0.25 and
+      1 pt at the final size.
   tables:
     orientation: portrait
     title_style: short, one-line title in bold text
@@ -154,8 +187,9 @@ journals:
       short, one-line title in bold text. Tables should be as small as possible.
     notes: |
       Symbols and abbreviations are defined immediately below the table, followed by essential descriptive material, all in double-spaced text.
-  notes: Widths and maximum height are corroborated by Nature s formatting guide at
-    a different URL, harvested a day earlier. Nature strongly encourages recolouring
+  notes: Widths were updated on 2026-09-03 from Nature s current final-artwork guide;
+    its older initial-submission page still says 90 and 180 mm rather than the current
+    89 and 183 mm. Nature strongly encourages recolouring
     primary data to colour-safe combinations such as green and magenta, and says the
     rainbow colour scale should be avoided; both are encouragement rather than rules
     and are not graded. Two Nature author pages give different figure-legend word
@@ -257,6 +291,9 @@ journals:
       in height when viewed at actual size.
     colour_mode: RGB
     min_line_pt: 2
+    panel_labels: uppercase
+    panel_labels_placement: outside_image
+    source_quote_panel_labels: Figures should be labeled with (A), (B), etc.; do not embed part labels over any part of the image because labels are replaced during typesetting.
   notes: |
     The two-point minimum line width is unusually heavy compared with other publishers; it is stated as "Any lines in the graphic should be no smaller than two points wide."
   not_stated: max_file_mb
@@ -299,7 +336,7 @@ journals:
   - multidisciplinary
   - humanities
   - social-sciences
-  source_url: https://www.cambridge.org/core/services/authors/journals/journals-artwork-guide
+  source_url: https://www.cambridge.org/core/services/authors/journals-artwork-guide
   verified_on: '2026-08-21'
   requirements:
     dpi_min: 300
@@ -430,7 +467,7 @@ journals:
   disciplines:
   - statistics
   - computing
-  source_url: https://www.jstatsoft.org/pages/view/style
+  source_url: https://www.jstatsoft.org/style
   verified_on: '2026-08-21'
   requirements:
     formats:
@@ -450,6 +487,7 @@ journals:
   disciplines: multidisciplinary
   source_url: https://www.science.org/content/page/instructions-preparing-initial-manuscript
   verified_on: '2026-08-22'
+  publication_stage: initial
   requirements:
     columns:
       single: 57.0
@@ -843,6 +881,7 @@ journals:
     source_quote_width: Most graphics are published at one column width (3.5 inches
       / 21 picas wide) or two column width (7.16 inches / 43 picas wide).
     dpi_min: 300.0
+    dpi_min_inclusive: false
     dpi_line_art: 600.0
     source_quote_dpi: IEEE standards for non-vector graphics are >300dpi for color
       and grayscale images; and >600dpi for black and white line art.
@@ -906,6 +945,7 @@ journals:
     source_quote_width: 'One column width: 3.5 inches, 88.9 millimeters, or 21 picas;
       Two columns width: 7.16 inches, 182 millimeters, or 43 picas'
     dpi_min: 300.0
+    dpi_min_inclusive: false
     dpi_line_art: 600.0
     source_quote_dpi: IEEE standards for non-vector graphics for color and grayscale
       images are >300dpi; IEEE standards for black and white line art are >600dpi
@@ -1007,4 +1047,77 @@ journals:
     and sized appropriately but gives no number, so no type size is recorded. Figures
     must not be larger than a single page, and must not include logos, trademarks
     or brand names.
-
+- id: bmc
+  name: BioMed Central journals
+  publisher: Springer Nature
+  disciplines:
+  - biomedical
+  - life-sciences
+  - medicine
+  source_url: https://link.springer.com/journal/12931/submission-guidelines
+  verified_on: '2026-09-03'
+  publication_stage: final
+  requirements:
+    columns:
+      single: 85.0
+      double: 170.0
+    height_max_mm: 225.0
+    source_quote_width: 'Figures in the final PDF version: width of 85 mm for half
+      page width figure; width of 170 mm for full page width figure; maximum height
+      of 225 mm for figure and legend.'
+    dpi_min: 300.0
+    source_quote_dpi: Image resolution of approximately 300 dpi at the final size.
+    formats:
+    - eps
+    - pdf
+    - doc
+    - ppt
+    - tiff
+    - jpeg
+    - png
+    - bmp
+    - cdx
+    source_quote_formats: 'We accept the following file formats for figures: EPS,
+      PDF, Microsoft Word, PowerPoint, TIFF, JPEG, PNG, BMP, CDX.'
+    max_file_mb: 10.0
+    source_quote_size: Individual figure files should not exceed 10 MB.
+    min_line_pt: 0.25
+    source_quote_line: All lines should be wider than 0.25 pt when constrained to
+      standard figure widths.
+    tiff_compression: lzw
+    source_quote_tiff: TIFF files should be saved with LZW compression.
+  notes: This is BioMed Central's shared figure boilerplate as served by Springer
+    Nature on the Respiratory Research submission page. A journal-specific rule
+    overrides it. The source says approximately 300 dpi; the registry preserves
+    that wording rather than silently presenting it as an exact publisher quote.
+- id: jid
+  name: The Journal of Infectious Diseases
+  publisher: Oxford University Press
+  disciplines:
+  - infectious-diseases
+  - medicine
+  source_url: https://academic.oup.com/jid/pages/author-guidelines
+  verified_on: '2026-09-03'
+  publication_stage: final
+  requirements:
+    dpi_min: 300.0
+    dpi_line_art: 600.0
+    source_quote_dpi: Each final figure file should have a resolution of at least
+      300 DPI. Line drawings must have a resolution of at least 600 DPI at their
+      final size.
+    formats:
+    - tiff
+    - eps
+    source_quote_formats: Save final figure files in .tiff or .eps format, using
+      CMYK colors, with fonts embedded.
+    colour_mode:
+    - CMYK
+    source_quote_colour: Save final figure files in .tiff or .eps format, using
+      CMYK colors, with fonts embedded.
+    allow_alpha: false
+    source_quote_alpha: 'Before you click Export As: Layer > Transparency > Remove
+      Alpha Channel.'
+  notes: This journal-specific entry supersedes the broad OUP entry for JID.
+    Initial submission can use lower-friction formats, but these are the final
+    publication requirements. The page also requires embedded fonts, which figspec
+    does not yet have a registry field capable of grading.

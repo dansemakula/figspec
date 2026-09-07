@@ -1,38 +1,55 @@
-# Set knitr chunk options for a journal
+# Apply figure settings to R Markdown or Quarto
 
-Convenience wrapper that applies
-[`figspec_chunk_opts()`](https://dansemakula.github.io/figspec/reference/figspec_chunk_opts.md)
-to the current document. Call it from a setup chunk.
+Applies the settings returned by
+[`figspec_knitr_options()`](https://dansemakula.github.io/figspec/reference/figspec_knitr_options.md)
+to knitr's current chunk configuration. Call it once in a document's
+setup chunk so later figures use the chosen dimensions, resolution and
+output format by default.
 
 ## Usage
 
 ``` r
 figspec_knitr_setup(
-  journal,
-  column = "single",
+  spec,
+  column = NULL,
+  width = NULL,
   height = NULL,
-  units = c("mm", "cm", "in")
+  units = c("mm", "cm", "in"),
+  art_type = c("auto", "colour", "bw", "line", "combination")
 )
 ```
 
 ## Arguments
 
-- journal:
+- spec:
 
-  Registry id, for example `"plos_one"`.
+  The specification to use: a registry id such as `"plos_one"`, a
+  `figspec_spec`, or a named list of requirements.
 
 - column:
 
-  Which column width to size to.
+  Which named width in the specification to use. Leave it `NULL` when
+  supplying `width` explicitly.
+
+- width:
+
+  Explicit figure width for specifications that do not publish named
+  columns.
 
 - height:
 
-  Figure height. Defaults to three quarters of the width, which is a
-  convenience rather than a journal requirement.
+  Figure height. Defaults to three quarters of the width when no height
+  is recorded; supply an explicit value when the specification or layout
+  requires one.
 
 - units:
 
-  Units for `height`.
+  Units for `width` and `height`.
+
+- art_type:
+
+  Resolution category. With no plot available, `"auto"` conservatively
+  uses the strictest rule the journal states.
 
 ## Value
 

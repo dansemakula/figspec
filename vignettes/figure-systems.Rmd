@@ -1,0 +1,417 @@
+---
+title: "Use figspec with different R plotting systems"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Use figspec with different R plotting systems}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7.2,
+  fig.height = 4.8,
+  dpi = 160
+)
+library(figspec)
+
+embed_saved_figure <- function(path, alt, width = "78%") {
+  uri <- knitr::image_uri(path)
+  knitr::asis_output(sprintf(
+    paste0(
+      '<p class="figspec-embedded-plot">',
+      '<img src="%s" style="width:%s;max-width:100%%;height:auto" ',
+      'alt="%s"></p>'
+    ),
+    uri, width, alt
+  ))
+}
+
+summarise_export <- function(path) {
+  geometry <- fig_geometry(path)
+  data.frame(
+    plotting_system = attr(path, "figspec_system"),
+    requirements_applied = attr(path, "figspec_transformation"),
+    canvas_mm = sprintf(
+      "%.0f × %.0f",
+      geometry$canvas_width_mm,
+      geometry$canvas_height_mm
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+```
+
+figspec works with figures made in ggplot2, lattice, grid, Plotly and base R.
+Give `fig_save()` the editable figure or drawing code, and the same
+specification can control its output size, resolution and format. Before
+writing the file, figspec also applies the typography, line, colour and symbol
+settings that the plotting system makes available.
+
+The most complete workflow begins with an editable plot object or a base R
+drawing function, while its instructions can still be adjusted. A completed
+PNG or a recorded base plot contains less information about how it was drawn,
+but figspec can still verify the properties recorded in the finished file.
+Checking before and after export gives the fullest account of the result.
+
+## Use one specification with several plotting systems
+
+The examples below use real observations from `ggplot2::mpg` and the same
+project specification. The report requires a 110 × 75 mm PNG at 160 dpi, text
+between 9 and 11 points, and lines at least 0.6 points wide. Its optional house
+style uses purple, amber and blue so the same visual identity carries across
+each plotting system:
+
+```{r shared-specification}
+figure_spec <- list(
+  name = "Shared research report",
+  source_url = "internal:research-report-guide",
+  verified_on = as.character(Sys.Date()),
+  columns = list(full = 110),
+  formats = "png",
+  dpi_min = 160,
+  font_min_pt = 9,
+  font_max_pt = 11,
+  min_line_pt = 0.6,
+  axis_lines_and_ticks = TRUE,
+  house_style = list(
+    palette = c("#76549A", "#D99000", "#2B78A6")
+  )
+)
+
+vehicle_data <- ggplot2::mpg
+```
+
+The specification is an ordinary named R list. A registry profile such as
+`"cell_press"` can be supplied in exactly the same position.
+
+## ggplot2 and patchwork
+
+For a ggplot2 figure, figspec can work with its layers, scales and theme. It
+can apply the recorded typography and axis requirements, add accessible
+colour and shape scales, control the data-panel dimensions and inspect the
+editable plot as well as the completed file.
+
+```{r ggplot-example}
+ggplot_figure <- ggplot2::ggplot(
+  vehicle_data,
+  ggplot2::aes(displ, hwy, colour = drv, shape = drv)
+) +
+  ggplot2::geom_point(size = 1.8, alpha = 0.75) +
+  ggplot2::labs(
+    title = "Engine size and highway fuel economy",
+    x = "Engine displacement (litres)",
+    y = "Highway fuel economy",
+    colour = "Drive type",
+    shape = "Drive type"
+  )
+
+ggplot_path <- file.path(tempdir(), "figspec-system-ggplot.png")
+ggplot_saved <- fig_save(
+  ggplot_path,
+  ggplot_figure,
+  spec = figure_spec,
+  column = "full",
+  height = 75,
+  check = FALSE
+)
+summarise_export(ggplot_saved)
+```
+
+```{r show-ggplot-export, echo=FALSE, results='asis'}
+embed_saved_figure(
+  ggplot_saved,
+  paste(
+    "A scatter plot made with ggplot2 showing engine displacement and",
+    "highway fuel economy. Colour and shape distinguish drive types."
+  )
+)
+```
+
+Patchwork compositions use the same `fig_save()` call. figspec applies the
+typography requirements across the component plots and can set the size of
+each data panel. Patchwork continues to control the arrangement.
+
+## Base R graphics
+
+Base R normally draws directly onto the active graphics device, so there may
+be no plot object to hand to another function. Give figspec the drawing code
+inside `function() { ... }` or a one-sided formula. figspec can then open the
+correct device first and set its type size, font, line-width and colour-palette
+defaults before the drawing runs.
+
+```{r base-example}
+base_figure <- function() {
+  drive <- factor(vehicle_data$drv)
+  graphics::plot(
+    vehicle_data$displ,
+    vehicle_data$hwy,
+    col = as.integer(drive),
+    pch = c(16, 17, 15)[drive],
+    xlab = "Engine displacement (litres)",
+    ylab = "Highway fuel economy",
+    main = "Engine size and highway fuel economy"
+  )
+  graphics::legend(
+    "topright",
+    legend = levels(drive),
+    col = seq_along(levels(drive)),
+    pch = c(16, 17, 15),
+    title = "Drive type",
+    bty = "n"
+  )
+}
+
+base_path <- file.path(tempdir(), "figspec-system-base.png")
+base_saved <- fig_save(
+  base_path,
+  base_figure,
+  spec = figure_spec,
+  column = "full",
+  height = 75,
+  check = FALSE
+)
+summarise_export(base_saved)
+```
+
+```{r show-base-export, echo=FALSE, results='asis'}
+embed_saved_figure(
+  base_saved,
+  paste(
+    "A scatter plot made with base R showing engine displacement and",
+    "highway fuel economy, exported through figspec."
+  )
+)
+```
+
+The drawing function remains in control of values that it sets explicitly. If
+the code requests 2-point text or a particular colour, those instructions are
+used as written. Leave those values at their defaults when you want figspec to
+supply them. A `recordedplot` can still be exported and checked; use the
+drawing function when you also want the specification applied before export.
+
+## Lattice
+
+A lattice plot is an editable `trellis` object. figspec supplies specification-
+aware typography, colours, symbols, line types and line widths through lattice
+settings, then prints the transformed object on the requested device.
+
+```{r lattice-example}
+if (requireNamespace("lattice", quietly = TRUE)) {
+  lattice_figure <- lattice::xyplot(
+    hwy ~ displ,
+    data = vehicle_data,
+    groups = drv,
+    auto.key = list(space = "right", title = "Drive type"),
+    xlab = "Engine displacement (litres)",
+    ylab = "Highway fuel economy",
+    main = "Engine size and highway fuel economy"
+  )
+
+  lattice_path <- file.path(tempdir(), "figspec-system-lattice.png")
+  lattice_saved <- fig_save(
+    lattice_path,
+    lattice_figure,
+    spec = figure_spec,
+    column = "full",
+    height = 75,
+    check = FALSE
+  )
+  summarise_export(lattice_saved)
+}
+```
+
+```{r show-lattice-export, echo=FALSE, results='asis'}
+if (exists("lattice_saved")) {
+  embed_saved_figure(
+    lattice_saved,
+    paste(
+      "A lattice scatter plot of engine displacement and highway fuel",
+      "economy, with drive types distinguished by colour and symbol."
+    )
+  )
+}
+```
+
+## Grid graphics
+
+Grid figures are trees of graphical objects. figspec gives the tree
+specification-aware font and line defaults while preserving settings written
+directly on a child grob. This lets the specification guide the overall figure
+without erasing deliberate choices inside individual elements.
+
+```{r grid-example}
+normalise <- function(x) {
+  (x - min(x)) / diff(range(x))
+}
+
+grid_figure <- grid::grobTree(
+  grid::rectGrob(
+    x = 0.55, y = 0.5, width = 0.78, height = 0.72,
+    gp = grid::gpar(fill = "#F3F8FC", col = "#1A7391")
+  ),
+  grid::pointsGrob(
+    x = grid::unit(0.18 + 0.68 * normalise(vehicle_data$displ), "npc"),
+    y = grid::unit(0.14 + 0.66 * normalise(vehicle_data$hwy), "npc"),
+    pch = 21,
+    size = grid::unit(2.1, "mm"),
+    gp = grid::gpar(fill = "#56B4E9", col = "white")
+  ),
+  grid::textGrob(
+    "Engine size and highway fuel economy",
+    x = 0.55, y = 0.91
+  ),
+  grid::textGrob("Engine displacement", x = 0.55, y = 0.06),
+  grid::textGrob(
+    "Highway fuel economy",
+    x = 0.08, y = 0.5, rot = 90
+  )
+)
+
+grid_path <- file.path(tempdir(), "figspec-system-grid.png")
+grid_saved <- fig_save(
+  grid_path,
+  grid_figure,
+  spec = figure_spec,
+  column = "full",
+  height = 75,
+  check = FALSE
+)
+summarise_export(grid_saved)
+```
+
+```{r show-grid-export, echo=FALSE, results='asis'}
+embed_saved_figure(
+  grid_saved,
+  paste(
+    "A grid graphic using real vehicle data, with a pale blue data area",
+    "and specification-aware text and line defaults."
+  )
+)
+```
+
+Grid trees can have many different internal layouts, so they do not share one
+universal data-panel model. Set their complete canvas with `width` and
+`height`; figspec then exports and verifies that physical size.
+
+## Plotly and other HTML widgets
+
+Plotly stores editable layout and trace definitions. figspec can apply fonts,
+axis lines, colours, marker symbols, line types and line weights before export.
+For a PNG, JPEG or TIFF, it renders the widget in a local Chrome or Chromium
+window at the requested pixel dimensions. Nothing is uploaded to an external
+service.
+
+```{r plotly-code, eval=FALSE}
+plotly_figure <- plotly::plot_ly(
+  vehicle_data,
+  x = ~displ,
+  y = ~hwy,
+  color = ~drv,
+  symbol = ~drv,
+  type = "scatter",
+  mode = "markers"
+)
+
+plotly_saved <- fig_save(
+  "plotly-figure.png",
+  plotly_figure,
+  spec = figure_spec,
+  column = "full",
+  height = 75
+)
+```
+
+The website build runs that workflow against a real local browser:
+
+```{r plotly-browser-export, echo=FALSE, results='asis', eval=identical(Sys.getenv("FIGSPEC_BUILD_BROWSER_EXAMPLES"), "true")}
+if (
+  requireNamespace("plotly", quietly = TRUE) &&
+  requireNamespace("htmlwidgets", quietly = TRUE) &&
+  requireNamespace("webshot2", quietly = TRUE)
+) {
+  plotly_figure <- plotly::plot_ly(
+    vehicle_data,
+    x = ~displ,
+    y = ~hwy,
+    color = ~drv,
+    symbol = ~drv,
+    type = "scatter",
+    mode = "markers"
+  )
+  plotly_path <- file.path(tempdir(), "figspec-system-plotly.png")
+  plotly_saved <- suppressMessages(fig_save(
+    plotly_path,
+    plotly_figure,
+    spec = figure_spec,
+    column = "full",
+    height = 75,
+    check = FALSE
+  ))
+  embed_saved_figure(
+    plotly_saved,
+    paste(
+      "A browser-rendered Plotly scatter plot using the same vehicle data",
+      "and project specification as the other examples."
+    )
+  )
+}
+```
+
+Plotly's native SVG and PDF export uses its optional Kaleido environment.
+Other HTML widgets can be exported to PNG, JPEG or TIFF at exact dimensions.
+When a widget exposes additional editable properties, its adapter can also
+apply those settings before export.
+
+## Verify the completed files
+
+The plotting systems differ, but the files they produce can be checked in one
+way. This example verifies the dimensions, resolution and format of every file
+created above:
+
+```{r verify-exports}
+exports <- list(
+  ggplot2 = ggplot_saved,
+  base_R = base_saved,
+  grid = grid_saved
+)
+if (exists("lattice_saved")) exports$lattice <- lattice_saved
+if (exists("plotly_saved")) exports$plotly <- plotly_saved
+
+verification <- lapply(exports, function(path) {
+  report <- fig_check(path, figure_spec, column = "full")
+  report[
+    report$check %in% c("Width", "Resolution", "File format"),
+    c("check", "actual", "status")
+  ]
+})
+verification
+```
+
+A raster image records pixels, dimensions and resolution, but not the original
+point sizes or plotting-system instructions. Check the editable object for
+type, layers and mappings, then check the exported file for its final size,
+resolution, format and validity.
+
+## Choose the right input
+
+| Figure you have | What to give figspec | What figspec can apply before export | How to complete the workflow |
+|---|---|---|---|
+| ggplot2 | The plot object | Theme, type, axes, colours, shapes and line rules | Most complete inspection and exact panel sizing |
+| patchwork | The composition | Typography across components | Patchwork controls arrangement; exact panel sizing is available |
+| base R | A function or one-sided formula containing the drawing code | Device font, type, line and palette defaults | Explicit drawing arguments take precedence |
+| lattice | The `trellis` object | Type, colours, symbols, line types and line widths | Exact panel sizing is not available |
+| grid | A grob or grob tree | Inherited font and line defaults | Explicit child settings remain unchanged; no general panel model |
+| Plotly | The Plotly object | Layout fonts and axes; trace colours, markers and lines | Raster export needs a local browser; vector export needs Kaleido |
+| Another HTML widget | The widget object | Exact raster dimensions | Check the rendered file; additional styling depends on the widget's adapter |
+| Recorded base plot | The `recordedplot` | Export without restyling | Check the completed file, or supply the original drawing function to apply defaults |
+| Finished file | Its file path | The drawing is already complete | Verify the size, resolution, format and other properties retained by the file |
+
+Use a ggplot2-compatible figure when exact data-panel dimensions or detailed
+layer checks are central to the work. For figures built in another plotting
+system, figspec provides the same repeatable path from editable input to a
+correctly sized and verified file, so the original plotting system can remain
+part of the workflow.

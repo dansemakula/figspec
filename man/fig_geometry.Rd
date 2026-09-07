@@ -3,16 +3,19 @@
 \name{fig_geometry}
 \alias{fig_geometry}
 \alias{plot.figspec_geometry}
-\title{What size a figure actually is}
+\title{Measure panel and canvas dimensions}
 \usage{
 fig_geometry(x)
 
 \method{plot}{figspec_geometry}(x, ...)
 }
 \arguments{
-\item{x}{A \code{figspec_geometry} object, from \code{\link[=fig_geometry]{fig_geometry()}}.}
+\item{x}{For \code{fig_geometry()}, a ggplot, patchwork composition, \code{gtable}, or
+the value returned by \code{\link[=fig_save]{fig_save()}}. For \code{plot()}, the \code{figspec_geometry}
+object returned by \code{fig_geometry()}.}
 
-\item{...}{Ignored.}
+\item{...}{Accepted by the \code{plot()} generic for compatibility and ignored by
+this method.}
 }
 \value{
 A one-row data frame: canvas and panel width and height, and the
@@ -24,5 +27,9 @@ see where the space in a figure is going before you decide what to change.
 }
 \examples{
 library(ggplot2)
-fig_geometry(ggplot(mtcars, aes(wt, mpg)) + geom_point())
+p <- ggplot(ggplot2::mpg, aes(displ, hwy)) + geom_point()
+sized <- fig_panel_size(p, width = 62, height = 45)
+geometry <- fig_geometry(sized)
+geometry
+plot(geometry)
 }

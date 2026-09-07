@@ -46,7 +46,7 @@ test_that("without colorspace the colour-vision check says so, and passes nothin
   # check that succeeded.
   skip_if_not_installed("ggplot2")
   without("colorspace")
-  r <- check_colour_safety(demo_plot(), "cell_press")
+  r <- colour_safety_check(demo_plot(), "cell_press")
   cvd <- r[r$check == "Colour vision", ]
   expect_equal(nrow(cvd), 1)
   expect_false(cvd$status == "pass")
@@ -109,13 +109,13 @@ test_that("without knitr the setup helper refuses rather than half-working", {
 test_that("without curl the source checker refuses rather than reporting nothing", {
   # Reporting an empty result would read as "every source is fine".
   without("curl")
-  expect_error(check_sources(), class = "figspec_needs_package")
+  expect_error(registry_check_sources(), class = "figspec_needs_package")
 })
 
 test_that("every needs_package error names the package and how to get it", {
   without("knitr", "curl")
   for (call in list(function() figspec_knitr_setup("cell_press"),
-                    function() check_sources())) {
+                    function() registry_check_sources())) {
     err <- tryCatch(call(), error = function(e) e)
     expect_s3_class(err, "figspec_needs_package")
     expect_match(conditionMessage(err), "install.packages")

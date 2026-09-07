@@ -137,7 +137,7 @@ msg_wrap <- function(...) {
 default_note <- function(spec, field, value, what) {
   msg_wrap(
     "'", spec$name, "' does not state ", what, ". Using ", value,
-    " as a figspec default - this is not a requirement of the journal. ",
+    " as a figspec default - this is not a recorded requirement in the specification. ",
     "See ", spec$source_url
   )
   value
@@ -161,4 +161,36 @@ alert_wrap <- function(text, type = c("info", "success", "danger", "warning")) {
 british_spelling <- function(x) {
   if (!is.character(x)) return(x)
   sub("color", "colour", x, fixed = TRUE)
+}
+
+# Some macOS R builds bundle the Fontconfig library and its matching
+# configuration in different locations. A separately installed Fontconfig can
+# then be discovered with a newer configuration syntax than the bundled
+# library understands. Scope the matching R configuration and a writable cache
+# to graphics work, and restore the caller's environment afterwards.
+with_r_fontconfig <- function(expr) {
+  config <- file.path(R.home(), "fontconfig", "fonts", "fonts.conf")
+  if (.Platform$OS.type != "unix" || !file.exists(config)) return(force(expr))
+  vars <- c("FONTCONFIG_FILE", "FONTCONFIG_PATH", "XDG_CACHE_HOME")
+  old <- Sys.getenv(vars, unset = NA_character_)
+  on.exit({
+    for (i in seq_along(vars)) {
+      if (is.na(old[[i]])) {
+        Sys.unsetenv(vars[[i]])
+      } else {
+        restore <- list(old[[i]])
+        names(restore) <- vars[[i]]
+        do.call(Sys.setenv, restore)
+      }
+    }
+  }, add = TRUE)
+  if (!nzchar(Sys.getenv("FONTCONFIG_FILE"))) {
+    Sys.setenv(FONTCONFIG_FILE = config, FONTCONFIG_PATH = dirname(config))
+  }
+  if (!nzchar(Sys.getenv("XDG_CACHE_HOME"))) {
+    cache <- file.path(tempdir(), "figspec-font-cache")
+    dir.create(cache, recursive = TRUE, showWarnings = FALSE)
+    Sys.setenv(XDG_CACHE_HOME = cache)
+  }
+  force(expr)
 }

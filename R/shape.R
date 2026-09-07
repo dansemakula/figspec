@@ -50,25 +50,35 @@ plot_shapes <- function(plot) {
   )
 }
 
-#' Point shapes that stay legible at journal size
+#' Get a set of distinct point shapes
 #'
-#' Returns shapes chosen to remain distinguishable when a figure is reduced to
-#' a single column. No publisher in the registry states which shapes to use, so
-#' this is a recommendation rather than a requirement. It matters because shape
-#' is the cue that still works when a journal prints in black and white.
+#' Returns ggplot2 shape codes chosen to remain visually distinct when a figure
+#' is reduced or reproduced without colour. Use the codes in a manual shape
+#' scale when you need direct control; [scale_shape_figspec()] applies the same
+#' sets automatically.
 #'
-#' @param n How many shapes are needed.
-#' @param style `"solid"` for filled marks, `"hollow"` for outlines, or
-#'   `"filled"` for shapes 21 to 25, which take a fill and an outline colour
-#'   separately.
-#' @return An integer vector of shape codes.
+#' These shapes are design recommendations, not requirements taken from a
+#' publication or project specification. The sets are deliberately short.
+#' When more shapes are requested, figspec reports the available number so you
+#' can split the figure or choose another visual cue.
+#'
+#' @param n The number of shapes needed, usually the number of groups in the
+#'   data. Up to six solid, six hollow or five separately filled shapes are
+#'   available.
+#' @param style The kind of marks to return: `"solid"` for solid symbols,
+#'   `"hollow"` for outlines, or `"filled"` for shapes 21 to 25, whose interior
+#'   and outline colours can be controlled separately.
+#' @return An integer vector containing one ggplot2 shape code per group.
 #' @examples
 #' library(ggplot2)
-#' ggplot(mtcars, aes(wt, mpg, shape = factor(cyl))) +
+#' ggplot(ggplot2::mpg, aes(displ, hwy, shape = drv)) +
 #'   geom_point() +
 #'   scale_shape_manual(values = figspec_shapes(3))
 #' @export
 figspec_shapes <- function(n, style = c("solid", "hollow", "filled")) {
+  if (!is.numeric(n) || length(n) != 1L || !is.finite(n) || n < 1 || n != floor(n)) {
+    figspec_abort("{.arg n} must be one positive whole number.", "bad_input")
+  }
   style <- match.arg(style)
   sets <- list(
     # Circle, triangle, square and diamond stay apart at small sizes; the
@@ -89,18 +99,35 @@ figspec_shapes <- function(n, style = c("solid", "hollow", "filled")) {
   pool[seq_len(n)]
 }
 
-#' Line types that stay distinct in print
+#' Get a set of distinct line types
 #'
-#' Line type is the other cue that survives black-and-white reproduction. As
-#' with shapes, no publisher in the registry states which to use, so this is a
-#' recommendation.
+#' Returns line types that can distinguish a small number of series without
+#' relying on colour alone. Use them in a manual linetype scale so that a plot
+#' remains readable when it is reproduced in greyscale or when two colours are
+#' difficult to tell apart.
 #'
-#' @param n How many line types are needed.
-#' @return A character vector of line types.
+#' These patterns are design recommendations, not requirements taken from a
+#' publication or project specification. figspec provides six and reports that
+#' capacity when more are requested, keeping every series visually distinct.
+#'
+#' @param n The number of line types needed, usually the number of series in
+#'   the data. Up to six are available.
+#' @return A character vector containing one ggplot2 line type per series.
 #' @examples
-#' figspec_linetypes(3)
+#' library(ggplot2)
+#' series <- subset(
+#'   ggplot2::economics_long,
+#'   variable %in% c("psavert", "uempmed", "unemploy")
+#' )
+#' ggplot(series, aes(date, value01, linetype = variable)) +
+#'   geom_line(linewidth = 0.7) +
+#'   scale_linetype_manual(values = figspec_linetypes(3)) +
+#'   labs(x = NULL, y = "Value, rescaled to 0–1", linetype = "Series")
 #' @export
 figspec_linetypes <- function(n) {
+  if (!is.numeric(n) || length(n) != 1L || !is.finite(n) || n < 1 || n != floor(n)) {
+    figspec_abort("{.arg n} must be one positive whole number.", "bad_input")
+  }
   pool <- c("solid", "dashed", "dotted", "dotdash", "longdash", "twodash")
   if (n > length(pool)) {
     figspec_abort(

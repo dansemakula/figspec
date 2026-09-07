@@ -9,63 +9,141 @@ template:
     code_font: {google: "JetBrains Mono"}
 
 home:
-  title: Build, check and export figures to a specification
+  title: Build, export and verify figures and tables against a specification
   description: >
-    figspec sizes a figure by its plot panel as well as by the image, exports
-    it at exactly that size and resolution, and then checks the result and says
-    where it falls short. Its main registry holds the published figure
-    requirements of 27 publishers - column widths to the millimetre, minimum
-    resolution, accepted formats, how small type may get - so a target journal
-    can be named instead of a specification written. Every registry requirement
-    records the page it came from and the date it was read.
+    figspec enables researchers and other R users to build, export and verify
+    figures and tables against requirements from publications, organisations
+    and individual projects. It applies supported requirements while the work
+    is still editable, checks the exported result and gives users a clear list
+    of what is complete and what still needs attention.
 
 navbar:
   structure:
-    left: [intro, reference, options, articles, news]
+    left: [home, intro, reference, guides, news]
     right: [search, github]
   components:
-    options:
-      text: Options
-      href: articles/options.html
-    articles:
-      text: Articles
+    home:
+      text: Home
+      href: index.html
+    guides:
+      text: Guides
       menu:
+      - text: All guides
+        href: articles/index.html
+      - text: -------
       - text: Getting started with figspec
         href: articles/figspec.html
-      - text: Sizing figures by panel, not by canvas
+      - text: Use figspec with different R plotting systems
+        href: articles/figure-systems.html
+      - text: Control figure and panel dimensions
         href: articles/panels.html
-      - text: Which journal am I submitting to?
+      - text: Build and check tables from R
+        href: articles/tables.html
+      - text: Find and use publication specifications
         href: articles/journals.html
-      - text: Every function and what its options do
-        href: articles/options.html
-      - text: "The registry: provenance, and adding your own"
+      - text: Choose, verify and add specifications
         href: articles/registry.html
+      - text: -------
+      - text: All function arguments
+        href: articles/options.html
+
+articles:
+- title: Guides
+  desc: >
+    Begin with the complete workflow, or open the guide for the task you are
+    working on. Each guide uses real data and runnable examples.
+  contents:
+  - figspec
+  - figure-systems
+  - panels
+  - tables
+  - journals
+  - registry
+  - options
 
 authors:
+  after: |
+    ### About the author and maintainer
+
+    Daniel Semakula earned his medical degree from Makerere University in
+    Uganda and has spent most of his career as a physician-researcher. He
+    earned a Master of Public Health from the University of Manchester in the
+    United Kingdom and completed a PhD at the University of Oslo in Norway. He
+    worked at Johns Hopkins University, first as a postdoctoral fellow and
+    later as a Senior Research Data Analyst in the School of Medicine's
+    Divisions of Hematology and General Internal Medicine. He has more than 15
+    years of experience analysing data and advising on data analysis for
+    student- and staff-led research projects. He also serves as an academic
+    editor for two international journals.
+
+    **Profiles:** [ORCID](https://orcid.org/0000-0002-0806-213X) ·
+    [Google Scholar](https://scholar.google.com/citations?user=rGFrKbcAAAAJ) ·
+    [GitHub](https://github.com/dansemakula/figspec)
+
   Daniel Semakula:
-    href: https://github.com/dansemakula
+    href: https://github.com/dansemakula/figspec
     html: "Daniel Semakula, MD, MPH, PhD"
 
+footer:
+  structure:
+    left: developed_and_maintained_by
+    right: built_with
+  components:
+    developed_and_maintained_by: Developed and maintained by [Daniel Semakula, MD, MPH, PhD](https://github.com/dansemakula/figspec).
+
 reference:
-- title: Checking a figure
-  desc: What a specification requires, and whether this figure meets it.
-  contents: [fig_check, check_colour_safety, check_submission, submission_detail, suggest_art_type]
-- title: Sizing and exporting
+- title: Building, checking and exporting a figure
   desc: >
-    Set the plot panel as well as the image, and export at exactly that size
-    and resolution.
-  contents: [fig_save, fig_panel_size, fig_panel_width, fig_geometry]
-- title: Building a compliant figure
-  contents: [fit_journal, theme_journal, tag_panels, figspec_preview, figspec_linewidth, figspec_shapes, figspec_linetypes]
-- title: Colour
-  contents: [figspec_palettes, figspec_palette, scale_colour_figspec, scale_shape_figspec, journal_palette]
+    The main workflow: apply a specification when you have one, export at an
+    exact canvas or panel size, inspect the resulting geometry, and verify the
+    plot or finished file. Open any function for its arguments and runnable
+    examples.
+  contents: [fig_save, fig_check, fig_geometry, fig_apply_spec, fig_preview]
+- title: Size and align figures
+  desc: >
+    Control the plotting area itself—not only the surrounding image—and give
+    a set of figures matching panels even when their labels, legends and
+    margins differ. Use a published width or supply your own dimensions.
+  contents: [fig_panel_size, fig_panel_width]
+- title: Apply and reuse visual standards
+  desc: >
+    Combine typographic requirements with a project or organisation's house
+    style, choose suitable line weights, and label multi-panel figures
+    consistently.
+  contents: [theme_spec, style_register, style_list, style_remove, style_save, style_load, fig_tag_panels, spec_linewidth]
+- title: Colour and visual distinction
+  desc: >
+    Choose colours, shapes and line types that remain distinguishable in
+    print and for readers with common colour-vision deficiencies, then check
+    the choices in a real plot.
+  contents: [colour_safety_check, figspec_palettes, figspec_palette, scale_colour_figspec, scale_fill_figspec, scale_shape_figspec, figspec_shapes, figspec_linetypes, spec_style_palette]
+- title: Find and use specifications
+  desc: >
+    Browse the included publisher and journal profiles, inspect their recorded
+    requirements, retrieve stated widths, or save and load requirements
+    maintained by your own team. A specification can be a registry profile or
+    a named set of requirements supplied directly in R.
+  contents: [spec_list, spec_get, fig_width, fig_columns, spec_register, spec_save, spec_load]
+- title: Check collections and publication assets
+  desc: >
+    Review figures and tables together, choose the appropriate resolution
+    rule, adapt a figure set to another destination, and inspect requirements
+    for supplementary media and graphical abstracts.
+  contents: [submission_check, submission_detail, fig_suggest_art_type, fig_refit, media_spec, media_check, graphical_abstract_spec]
+- title: Build, export and check tables
+  desc: >
+    Apply table requirements to data frames and tables made with gt,
+    flextable, kableExtra or grid; export through the table's own system; and
+    verify the editable object together with the completed file.
+  contents: [table_spec, table_apply_spec, table_save, table_check]
 - title: R Markdown and Quarto
-  contents: [figspec_chunk_opts, figspec_knitr_setup]
-- title: Looking things up
-  contents: [journals, journal_spec, fig_width, fig_columns, table_spec, media_spec, check_media, graphical_abstract_spec]
-- title: Moving between journals
-  contents: [refit_journal]
-- title: Your own styles and journals
-  contents: [register_house_style, house_styles, remove_house_style, save_house_styles, register_journal, load_journals]
-- title: Maintaining the registry
-  contents: [registry_status, stale_entries, check_sources, new_journal_entry, validate_registry_file]
+  desc: >
+    Carry the same dimensions and output requirements into reproducible
+    reports so figures are generated consistently whenever the document is
+    rebuilt.
+  contents: [figspec_knitr_options, figspec_knitr_setup]
+- title: Maintain trusted registry data
+  desc: >
+    See how complete and current each bundled profile is, recheck its cited
+    sources, and validate new or updated registry entries before sharing them.
+  contents: [registry_status, registry_stale_entries, registry_check_sources, registry_entry_template, registry_validate_file]

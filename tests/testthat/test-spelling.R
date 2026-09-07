@@ -96,7 +96,12 @@ test_that("a genuine typo is still an error, not silently corrected", {
 
 test_that("colour arguments answer to the American spelling", {
   skip_if_not_installed("ggplot2")
-  expect_no_error(fit_journal("plos_one", color = FALSE))
-  expect_equal(length(fit_journal("plos_one", color = FALSE)),
-               length(fit_journal("plos_one", colour = FALSE)))
+  expect_no_error(fig_apply_spec("plos_one", color = FALSE))
+  expect_equal(length(fig_apply_spec("plos_one", color = FALSE)),
+               length(fig_apply_spec("plos_one", colour = FALSE)))
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+  expect_identical(
+    fig_check(p, "nature", color_mode = "RGB"),
+    fig_check(p, "nature", colour_mode = "RGB")
+  )
 })

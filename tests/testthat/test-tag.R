@@ -1,4 +1,4 @@
-# tag_panels(): labelling panels in the style a journal states, across plain
+# fig_tag_panels(): labelling panels in the style a journal states, across plain
 # plots, facets and patchwork compositions.
 
 skip_if_not_installed("ggplot2")
@@ -54,34 +54,37 @@ test_that("labels applied by hand are recognised, brackets and all", {
   }
 })
 
-# tag_panels -------------------------------------------------------------
+# fig_tag_panels -------------------------------------------------------------
 
-test_that("tag_panels satisfies the journal it was given", {
-  expect_equal(label_row(tag_panels(pf(), "cell_press"))$status, "pass")
-  expect_match(label_row(tag_panels(pf(), "cell_press"))$actual, "capital letters")
+test_that("fig_tag_panels satisfies the journal it was given", {
+  expect_equal(label_row(fig_tag_panels(pf(), "cell_press"))$status, "pass")
+  expect_match(label_row(fig_tag_panels(pf(), "cell_press"))$actual, "capital letters")
 })
 
 test_that("the style comes from the registry, not from a default", {
   # Cell Press states capitals, AGU states lower case. Labelling for one and
   # checking against the other must fail, or the registry is not driving it.
-  expect_equal(label_row(tag_panels(pf(), "agu"), "agu")$status, "pass")
-  expect_match(label_row(tag_panels(pf(), "agu"), "agu")$actual, "lower-case")
-  expect_equal(label_row(tag_panels(pf(), "agu"), "cell_press")$status, "fail")
+  expect_equal(label_row(fig_tag_panels(pf(), "agu"), "agu")$status, "pass")
+  expect_match(label_row(fig_tag_panels(pf(), "agu"), "agu")$actual, "lower-case")
+  expect_equal(label_row(fig_tag_panels(pf(), "agu"), "cell_press")$status, "fail")
 })
 
 test_that("an explicit level overrides the journal", {
-  tagged <- tag_panels(pf(), "cell_press", level = "1")
+  tagged <- fig_tag_panels(pf(), "cell_press", level = "1")
   expect_match(label_row(tagged, "cell_press")$actual, "numbers")
 })
 
 test_that("a journal that states nothing says so rather than passing a default", {
-  expect_message(tag_panels(pf(), "plos_one"), "not a requirement of the journal")
+  expect_message(
+    fig_tag_panels(pf(), "plos_one"),
+    "not a recorded requirement"
+  )
 })
 
 test_that("every vocabulary produces a complete sequence", {
   expected <- list(A = "(A)", a = "(a)", `1` = "(1)", I = "(I)", i = "(i)")
   for (lv in names(expected)) {
-    b <- ggplot2::ggplot_build(tag_panels(pf(), level = lv))
+    b <- ggplot2::ggplot_build(fig_tag_panels(pf(), level = lv))
     labs <- b$data[[2]]$label
     expect_length(labs, 3L)
     expect_equal(labs[[1]], expected[[lv]])
@@ -90,42 +93,43 @@ test_that("every vocabulary produces a complete sequence", {
 
 test_that("facet_grid is labelled across both variables, in draw order", {
   grid <- p1() + ggplot2::facet_grid(am ~ cyl)
-  b <- ggplot2::ggplot_build(tag_panels(grid, level = "a"))
+  b <- ggplot2::ggplot_build(fig_tag_panels(grid, level = "a"))
   expect_equal(b$data[[2]]$label, paste0("(", letters[1:6], ")"))
 })
 
 test_that("strips are removed by default and kept on request", {
-  expect_s3_class(tag_panels(pf(), level = "a")$theme$strip.text, "element_blank")
-  expect_false(inherits(tag_panels(pf(), level = "a", strips = TRUE)$theme$strip.text,
+  expect_s3_class(fig_tag_panels(pf(), level = "a")$theme$strip.text, "element_blank")
+  expect_false(inherits(fig_tag_panels(pf(), level = "a", strips = TRUE)$theme$strip.text,
                         "element_blank"))
 })
 
 test_that("a composition is labelled through patchwork's own tags", {
   skip_if_not_installed("patchwork")
   comp <- patchwork::wrap_plots(p1(), p1(), p1())
-  expect_equal(label_row(tag_panels(comp, "cell_press"))$status, "pass")
+  expect_equal(label_row(fig_tag_panels(comp, "cell_press"))$status, "pass")
 })
 
-test_that("tag_panels refuses what it cannot label", {
-  expect_error(tag_panels(p1(), "cell_press"), class = "figspec_bad_input")
-  expect_error(tag_panels(pf(), level = "Z"), class = "figspec_bad_input")
-  expect_error(tag_panels(42), class = "figspec_bad_input")
+test_that("fig_tag_panels refuses what it cannot label", {
+  expect_error(fig_tag_panels(p1(), "cell_press"), class = "figspec_bad_input")
+  expect_error(fig_tag_panels(pf(), level = "Z"), class = "figspec_bad_input")
+  expect_error(fig_tag_panels(42), class = "figspec_bad_input")
 })
 
 test_that("more panels than letters is refused, with the way out", {
   many <- ggplot2::ggplot(data.frame(x = 1, y = 1, g = factor(1:30)),
                           ggplot2::aes(x, y)) +
     ggplot2::geom_point() + ggplot2::facet_wrap(~g)
-  err <- tryCatch(tag_panels(many, level = "A"), error = conditionMessage)
+  err <- tryCatch(fig_tag_panels(many, level = "A"), error = conditionMessage)
   expect_match(err, "more than the 26 letters")
   expect_match(err, 'level = "1"')
-  expect_silent(tag_panels(many, level = "1"))
+  expect_silent(fig_tag_panels(many, level = "1"))
 })
 
 test_that("a labelled figure still saves and measures", {
   out <- tempfile(fileext = ".png"); on.exit(unlink(out))
   g <- attr(suppressWarnings(
-    fig_save(out, tag_panels(pf(), "cell_press"), journal = "cell_press",
+    fig_save(out, fig_tag_panels(pf(), "cell_press"),
+             spec = font_neutral_spec("cell_press"),
              panel_width = 22)
   ), "figspec_geometry")
   expect_true(file.exists(out))

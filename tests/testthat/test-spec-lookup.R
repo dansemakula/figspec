@@ -10,6 +10,21 @@ test_that("a named column resolves to the width the publisher states", {
   expect_equal(fig_width("cell_press", "double", "mm"), 174)
 })
 
+test_that("a width name must be present and unambiguous", {
+  expect_error(
+    fig_width("cell_press", NA_character_),
+    class = "figspec_bad_input"
+  )
+  expect_error(
+    fig_width("cell_press", ""),
+    class = "figspec_bad_input"
+  )
+  expect_error(
+    fig_width("cell_press", c("single", "double")),
+    class = "figspec_bad_input"
+  )
+})
+
 test_that("width converts to the unit asked for", {
   mm <- fig_width("cell_press", "single", "mm")
   expect_equal(fig_width("cell_press", "single", "in"), mm / 25.4)
@@ -39,7 +54,7 @@ test_that("a journal stating a range rather than columns says so", {
 })
 
 test_that("a specification prints its provenance", {
-  out <- capture.output(print(journal_spec("cell_press")), type = "message")
+  out <- capture.output(print(spec_get("cell_press")), type = "message")
   txt <- paste(out, collapse = " ")
   expect_match(txt, "Cell Press")
   expect_match(txt, "cell.com")
@@ -49,6 +64,9 @@ test_that("a specification prints its provenance", {
 test_that("table requirements print where a journal states them", {
   out <- capture.output(print(table_spec("nature")), type = "message")
   expect_gt(length(out), 1)
+  txt <- paste(out, collapse = " ")
+  expect_match(txt, "Title style")
+  expect_false(grepl("title_style", txt, fixed = TRUE))
 })
 
 test_that("a journal with no table requirements says so rather than printing nothing", {

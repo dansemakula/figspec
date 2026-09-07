@@ -166,7 +166,8 @@ corrupt_file <- function(ext, bytes = NULL) {
 test_that("no header reader claims a measurement from bytes it cannot read", {
   for (ext in c(".png", ".tiff", ".jpg", ".pdf")) {
     info <- inspect_file(corrupt_file(ext))
-    measured <- info[setdiff(names(info), c("format", "size_mb"))]
+    expect_false(info$valid)
+    measured <- info[setdiff(names(info), c("format", "size_mb", "valid"))]
     expect_length(measured, 0)
   }
 })
@@ -174,7 +175,8 @@ test_that("no header reader claims a measurement from bytes it cannot read", {
 test_that("an empty file is read as empty rather than as anything", {
   for (ext in c(".png", ".tiff", ".jpg", ".pdf")) {
     info <- inspect_file(corrupt_file(ext, raw(0)))
-    expect_length(info[setdiff(names(info), c("format", "size_mb"))], 0)
+    expect_false(info$valid)
+    expect_length(info[setdiff(names(info), c("format", "size_mb", "valid"))], 0)
   }
 })
 
@@ -189,6 +191,7 @@ test_that("an extension that lies about the contents is not believed", {
   png_sig <- as.raw(c(137, 80, 78, 71, 13, 10, 26, 10))
   for (ext in c(".tiff", ".jpg")) {
     info <- inspect_file(corrupt_file(ext, png_sig))
-    expect_length(info[setdiff(names(info), c("format", "size_mb"))], 0)
+    expect_false(info$valid)
+    expect_length(info[setdiff(names(info), c("format", "size_mb", "valid"))], 0)
   }
 })

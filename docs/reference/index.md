@@ -1,127 +1,167 @@
 # Package index
 
-## Checking a figure
+## Building, checking and exporting a figure
 
-What a specification requires, and whether this figure meets it.
-
-- [`fig_check()`](https://dansemakula.github.io/figspec/reference/fig_check.md)
-  : Check a figure against a journal's requirements
-- [`check_colour_safety()`](https://dansemakula.github.io/figspec/reference/check_colour_safety.md)
-  [`check_color_safety()`](https://dansemakula.github.io/figspec/reference/check_colour_safety.md)
-  : Check a figure's colours for safety in print and for colour-blind
-  readers
-- [`check_submission()`](https://dansemakula.github.io/figspec/reference/check_submission.md)
-  : Check a whole set of figures together
-- [`submission_detail()`](https://dansemakula.github.io/figspec/reference/submission_detail.md)
-  : The full report for one file in a submission check
-- [`suggest_art_type()`](https://dansemakula.github.io/figspec/reference/suggest_art_type.md)
-  : Which resolution rule applies to this figure
-
-## Sizing and exporting
-
-Set the plot panel as well as the image, and export at exactly that size
-and resolution.
+The main workflow: apply a specification when you have one, export at an
+exact canvas or panel size, inspect the resulting geometry, and verify
+the plot or finished file. Open any function for its arguments and
+runnable examples.
 
 - [`fig_save()`](https://dansemakula.github.io/figspec/reference/fig_save.md)
   : Save a figure at an exact size and resolution
-- [`fig_panel_size()`](https://dansemakula.github.io/figspec/reference/fig_panel_size.md)
-  : Set the size of a plot's panels
-- [`fig_panel_width()`](https://dansemakula.github.io/figspec/reference/fig_panel_width.md)
-  : The panel width a set of figures can share
+- [`fig_check()`](https://dansemakula.github.io/figspec/reference/fig_check.md)
+  : Inspect a figure and verify it against a specification
 - [`fig_geometry()`](https://dansemakula.github.io/figspec/reference/fig_geometry.md)
   [`plot(`*`<figspec_geometry>`*`)`](https://dansemakula.github.io/figspec/reference/fig_geometry.md)
-  : What size a figure actually is
+  : Measure panel and canvas dimensions
+- [`fig_apply_spec()`](https://dansemakula.github.io/figspec/reference/fig_apply_spec.md)
+  : Apply a specification while building a plot
+- [`fig_preview()`](https://dansemakula.github.io/figspec/reference/fig_preview.md)
+  : Preview a figure at its intended output size
 
-## Building a compliant figure
+## Size and align figures
 
-- [`fit_journal()`](https://dansemakula.github.io/figspec/reference/fit_journal.md)
-  : Bring a journal's requirements into a plot as you build it
-- [`theme_journal()`](https://dansemakula.github.io/figspec/reference/theme_journal.md)
-  : A ggplot2 theme that satisfies a journal's typography rules
-- [`tag_panels()`](https://dansemakula.github.io/figspec/reference/tag_panels.md)
-  : Label the panels of a figure
-- [`figspec_preview()`](https://dansemakula.github.io/figspec/reference/figspec_preview.md)
-  : Preview a figure at the size it will actually be published
-- [`figspec_linewidth()`](https://dansemakula.github.io/figspec/reference/figspec_linewidth.md)
-  : Line width that satisfies a journal's minimum
-- [`figspec_shapes()`](https://dansemakula.github.io/figspec/reference/figspec_shapes.md)
-  : Point shapes that stay legible at journal size
-- [`figspec_linetypes()`](https://dansemakula.github.io/figspec/reference/figspec_linetypes.md)
-  : Line types that stay distinct in print
+Control the plotting area itself—not only the surrounding image—and give
+a set of figures matching panels even when their labels, legends and
+margins differ. Use a published width or supply your own dimensions.
 
-## Colour
+- [`fig_panel_size()`](https://dansemakula.github.io/figspec/reference/fig_panel_size.md)
+  : Set exact dimensions for every data panel
+- [`fig_panel_width()`](https://dansemakula.github.io/figspec/reference/fig_panel_width.md)
+  : Find one panel width that fits every figure
 
+## Apply and reuse visual standards
+
+Combine typographic requirements with a project or organisation’s house
+style, choose suitable line weights, and label multi-panel figures
+consistently.
+
+- [`theme_spec()`](https://dansemakula.github.io/figspec/reference/theme_spec.md)
+  : Apply typography requirements and a visual style
+- [`style_register()`](https://dansemakula.github.io/figspec/reference/style_register.md)
+  : Register a reusable visual style
+- [`style_list()`](https://dansemakula.github.io/figspec/reference/style_list.md)
+  : List the visual styles available in this session
+- [`style_remove()`](https://dansemakula.github.io/figspec/reference/style_remove.md)
+  : Remove a visual style from the current session
+- [`style_save()`](https://dansemakula.github.io/figspec/reference/style_save.md)
+  : Save visual styles for reuse
+- [`style_load()`](https://dansemakula.github.io/figspec/reference/style_load.md)
+  : Load saved visual styles
+- [`fig_tag_panels()`](https://dansemakula.github.io/figspec/reference/fig_tag_panels.md)
+  : Add and format labels for every panel
+- [`spec_linewidth()`](https://dansemakula.github.io/figspec/reference/spec_linewidth.md)
+  : Use line widths that meet a specification
+
+## Colour and visual distinction
+
+Choose colours, shapes and line types that remain distinguishable in
+print and for readers with common colour-vision deficiencies, then check
+the choices in a real plot.
+
+- [`colour_safety_check()`](https://dansemakula.github.io/figspec/reference/colour_safety_check.md)
+  [`color_safety_check()`](https://dansemakula.github.io/figspec/reference/colour_safety_check.md)
+  : Check whether a figure's colours remain distinguishable
 - [`figspec_palettes()`](https://dansemakula.github.io/figspec/reference/figspec_palettes.md)
-  : Colour palettes that survive print and colour-blind readers
+  : List the colour palettes included with figspec
 - [`figspec_palette()`](https://dansemakula.github.io/figspec/reference/figspec_palette.md)
-  : The colours in a figspec palette
+  : Get colours from a figspec palette
 - [`scale_colour_figspec()`](https://dansemakula.github.io/figspec/reference/scale_colour_figspec.md)
   [`scale_color_figspec()`](https://dansemakula.github.io/figspec/reference/scale_colour_figspec.md)
-  [`scale_fill_figspec()`](https://dansemakula.github.io/figspec/reference/scale_colour_figspec.md)
-  : Discrete colour and fill scales using a figspec palette
+  : Apply a figspec palette to point and line colours
+- [`scale_fill_figspec()`](https://dansemakula.github.io/figspec/reference/scale_fill_figspec.md)
+  : Apply a figspec palette to filled areas
 - [`scale_shape_figspec()`](https://dansemakula.github.io/figspec/reference/scale_shape_figspec.md)
-  : A discrete shape scale using shapes that stay legible at journal
-  size
-- [`journal_palette()`](https://dansemakula.github.io/figspec/reference/journal_palette.md)
-  : The palette recorded for a journal's house style
+  : Apply distinct shapes to categorical points
+- [`figspec_shapes()`](https://dansemakula.github.io/figspec/reference/figspec_shapes.md)
+  : Get a set of distinct point shapes
+- [`figspec_linetypes()`](https://dansemakula.github.io/figspec/reference/figspec_linetypes.md)
+  : Get a set of distinct line types
+- [`spec_style_palette()`](https://dansemakula.github.io/figspec/reference/spec_style_palette.md)
+  : Retrieve a recorded house-style palette
+
+## Find and use specifications
+
+Browse the included publisher and journal profiles, inspect their
+recorded requirements, retrieve stated widths, or save and load
+requirements maintained by your own team. A specification can be a
+registry profile or a named set of requirements supplied directly in R.
+
+- [`spec_list()`](https://dansemakula.github.io/figspec/reference/spec_list.md)
+  : Browse available specification profiles
+- [`spec_get()`](https://dansemakula.github.io/figspec/reference/spec_get.md)
+  : Retrieve or create a specification
+- [`fig_width()`](https://dansemakula.github.io/figspec/reference/fig_width.md)
+  : Look up a figure width
+- [`fig_columns()`](https://dansemakula.github.io/figspec/reference/fig_columns.md)
+  : List the available figure widths
+- [`spec_register()`](https://dansemakula.github.io/figspec/reference/spec_register.md)
+  : Register a publication specification for this session
+- [`spec_save()`](https://dansemakula.github.io/figspec/reference/spec_save.md)
+  : Save a specification for reuse
+- [`spec_load()`](https://dansemakula.github.io/figspec/reference/spec_load.md)
+  : Load specifications from a YAML registry
+
+## Check collections and publication assets
+
+Review figures and tables together, choose the appropriate resolution
+rule, adapt a figure set to another destination, and inspect
+requirements for supplementary media and graphical abstracts.
+
+- [`submission_check()`](https://dansemakula.github.io/figspec/reference/submission_check.md)
+  : Review figures and tables together
+- [`submission_detail()`](https://dansemakula.github.io/figspec/reference/submission_detail.md)
+  : Open the full report for one submission item
+- [`fig_suggest_art_type()`](https://dansemakula.github.io/figspec/reference/fig_suggest_art_type.md)
+  : Choose a resolution category for a figure
+- [`fig_refit()`](https://dansemakula.github.io/figspec/reference/fig_refit.md)
+  : Re-export a figure set for a new specification
+- [`media_spec()`](https://dansemakula.github.io/figspec/reference/media_spec.md)
+  : Look up supplementary media requirements
+- [`media_check()`](https://dansemakula.github.io/figspec/reference/media_check.md)
+  : Verify a supplementary media file
+- [`graphical_abstract_spec()`](https://dansemakula.github.io/figspec/reference/graphical_abstract_spec.md)
+  : Look up graphical abstract requirements
+
+## Build, export and check tables
+
+Apply table requirements to data frames and tables made with gt,
+flextable, kableExtra or grid; export through the table’s own system;
+and verify the editable object together with the completed file.
+
+- [`table_spec()`](https://dansemakula.github.io/figspec/reference/table_spec.md)
+  : Look up table requirements
+- [`table_apply_spec()`](https://dansemakula.github.io/figspec/reference/table_apply_spec.md)
+  : Apply a specification to a table
+- [`table_save()`](https://dansemakula.github.io/figspec/reference/table_save.md)
+  : Export and verify a table
+- [`table_check()`](https://dansemakula.github.io/figspec/reference/table_check.md)
+  : Verify a table against a specification
 
 ## R Markdown and Quarto
 
-- [`figspec_chunk_opts()`](https://dansemakula.github.io/figspec/reference/figspec_chunk_opts.md)
-  : Chunk options that produce journal-compliant figures in R Markdown
-  or Quarto
+Carry the same dimensions and output requirements into reproducible
+reports so figures are generated consistently whenever the document is
+rebuilt.
+
+- [`figspec_knitr_options()`](https://dansemakula.github.io/figspec/reference/figspec_knitr_options.md)
+  : Create figure settings for R Markdown or Quarto
 - [`figspec_knitr_setup()`](https://dansemakula.github.io/figspec/reference/figspec_knitr_setup.md)
-  : Set knitr chunk options for a journal
+  : Apply figure settings to R Markdown or Quarto
 
-## Looking things up
+## Maintain trusted registry data
 
-- [`journals()`](https://dansemakula.github.io/figspec/reference/journals.md)
-  : List the journals in the registry
-- [`journal_spec()`](https://dansemakula.github.io/figspec/reference/journal_spec.md)
-  : Look up one journal's figure specification
-- [`fig_width()`](https://dansemakula.github.io/figspec/reference/fig_width.md)
-  : Figure width for a journal column
-- [`fig_columns()`](https://dansemakula.github.io/figspec/reference/fig_columns.md)
-  : The column widths a journal states
-- [`table_spec()`](https://dansemakula.github.io/figspec/reference/table_spec.md)
-  : Table requirements for a journal
-- [`media_spec()`](https://dansemakula.github.io/figspec/reference/media_spec.md)
-  : Supplementary media requirements for a journal
-- [`check_media()`](https://dansemakula.github.io/figspec/reference/check_media.md)
-  : Check a supplementary media file against a journal's requirements
-- [`graphical_abstract_spec()`](https://dansemakula.github.io/figspec/reference/graphical_abstract_spec.md)
-  : Graphical abstract requirements for a journal
-
-## Moving between journals
-
-- [`refit_journal()`](https://dansemakula.github.io/figspec/reference/refit_journal.md)
-  : Re-export a set of figures for a different journal
-
-## Your own styles and journals
-
-- [`register_house_style()`](https://dansemakula.github.io/figspec/reference/register_house_style.md)
-  : Register a house style of your own
-- [`house_styles()`](https://dansemakula.github.io/figspec/reference/house_styles.md)
-  : House styles registered in this session
-- [`remove_house_style()`](https://dansemakula.github.io/figspec/reference/remove_house_style.md)
-  : Remove a registered house style
-- [`save_house_styles()`](https://dansemakula.github.io/figspec/reference/save_house_styles.md)
-  [`load_house_styles()`](https://dansemakula.github.io/figspec/reference/save_house_styles.md)
-  : Save and reload your house styles
-- [`register_journal()`](https://dansemakula.github.io/figspec/reference/register_journal.md)
-  : Add your own journal to the registry
-- [`load_journals()`](https://dansemakula.github.io/figspec/reference/load_journals.md)
-  : Load journal entries from your own registry file
-
-## Maintaining the registry
+See how complete and current each bundled profile is, recheck its cited
+sources, and validate new or updated registry entries before sharing
+them.
 
 - [`registry_status()`](https://dansemakula.github.io/figspec/reference/registry_status.md)
-  : How current is each registry entry, and how complete
-- [`stale_entries()`](https://dansemakula.github.io/figspec/reference/stale_entries.md)
-  : Entries that need rechecking
-- [`check_sources()`](https://dansemakula.github.io/figspec/reference/check_sources.md)
-  : Are the pages the registry cites still there
-- [`new_journal_entry()`](https://dansemakula.github.io/figspec/reference/new_journal_entry.md)
-  : A skeleton for a new registry entry
-- [`validate_registry_file()`](https://dansemakula.github.io/figspec/reference/validate_registry_file.md)
-  : Validate a registry file before loading it
+  : Review registry coverage and update dates
+- [`registry_stale_entries()`](https://dansemakula.github.io/figspec/reference/registry_stale_entries.md)
+  : Find specifications due for review
+- [`registry_check_sources()`](https://dansemakula.github.io/figspec/reference/registry_check_sources.md)
+  : Check whether registry source pages still respond
+- [`registry_entry_template()`](https://dansemakula.github.io/figspec/reference/registry_entry_template.md)
+  : Create a registry-entry template
+- [`registry_validate_file()`](https://dansemakula.github.io/figspec/reference/registry_validate_file.md)
+  : Check a registry file before loading it

@@ -1,115 +1,307 @@
 ---
-title: "Which journal am I submitting to?"
+title: "Find and use publication specifications"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Which journal am I submitting to?}
+  %\VignetteIndexEntry{Find and use publication specifications}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", echo = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ```{r setup, include = FALSE}
 library(figspec)
+library(ggplot2)
+
 fmt <- function(x, unit = "") {
   if (is.null(x) || !length(x) || all(is.na(x))) return("–")
   paste0(paste(unlist(x), collapse = ", "), unit)
 }
 ```
 
-The registry is figspec's main source of specifications: the published figure
-requirements of the publishers below, brought into the R session as data. It is
-not the only source — you can write a specification by hand, load internal
-formats with `load_journals()`, or register a house style — but it is the one
-the package maintains and stands behind.
+figspec includes a registry of carefully sourced figure requirements from
+major publishers and selected journals. It currently contains 29 profiles:
+22 record publisher-wide guidance that applies across large journal
+portfolios, while seven cover individual journals with their own requirements.
 
-Everything below is generated from the registry itself, so it cannot drift from
-what the package actually holds. A dash means the publisher states nothing, or
-nobody has harvested it yet — `journal_spec()` tells you which. That difference
-is deliberate and figspec keeps it visible: one is a fact about the publisher,
-the other a fact about the registry, and neither is a pass.
+Each recorded requirement includes the page from which it was taken and the
+date on which that page was reviewed. When a value is missing, figspec tells
+you whether the source was reviewed and gave no requirement or whether that
+field is still awaiting review. This makes the coverage of every profile
+visible before you use it.
 
-```{r}
-# Built from the public interface rather than the package's internals, so
-# this page cannot drift from what a reader can reach themselves.
-ids <- journals()$id
-reg <- stats::setNames(lapply(ids, journal_spec), ids)
+The registry is optional. You can also supply requirements maintained by your
+project or organisation, or load a registry file maintained by your team. A
+house style is different: it controls visual choices, while a specification
+defines requirements that can be checked.
+
+Figure and table guidance is reviewed separately. Some bundled profiles
+already contain table requirements, while others have not yet had their table
+guidance reviewed. `registry_status()` shows both kinds of coverage. The full
+table workflow can also use requirements supplied by a project or organisation;
+see [Build and check tables from R](tables.html).
+
+## Find a relevant profile
+
+`spec_list()` lists the available publisher and journal profiles. Use the
+registry ID in functions such as `spec_get()`, `fig_apply_spec()`,
+`fig_save()` and `fig_check()`. You can list everything or narrow the results
+by discipline:
+
+```{r find-profiles}
+physics_profiles <- spec_list(discipline = "physics")
+knitr::kable(
+  physics_profiles[, c(
+    "id", "name", "publisher", "single_mm", "double_mm", "verified_on"
+  )],
+  col.names = c(
+    "Registry ID", "Profile", "Publisher", "Single (mm)", "Double (mm)",
+    "Verified"
+  ),
+  row.names = FALSE
+)
+```
+
+A publisher-wide profile is appropriate when a journal follows that
+publisher's central figure guidance. Use a journal-specific profile when the
+journal publishes additional or different requirements. Always follow any
+instructions supplied directly by the journal for the article you are
+preparing.
+
+## Inspect a profile before using it
+
+`spec_get()` presents the recorded requirements, source and verification
+date together. `fig_columns()` extracts the available figure widths when that
+is all you need:
+
+```{r inspect-profile}
+cell_press <- spec_get("cell_press")
+cell_press
+fig_columns(cell_press)
+```
+
+The returned specification is an ordinary R object. Pass it directly to the
+rest of the figspec workflow, or use the shorter registry ID. Here the selected
+profile is applied to all 234 observations in `ggplot2::mpg`:
+
+```{r apply-profile, fig.width = 85/25.4, fig.height = 70/25.4, dpi = 200, out.width = "70%", fig.alt = "A coloured scatter plot of engine displacement and highway fuel economy after applying the Cell Press profile."}
+profile_plot <- ggplot(
+  ggplot2::mpg,
+  aes(displ, hwy, colour = factor(cyl), shape = factor(cyl))
+) +
+  geom_point(size = 1.8, alpha = 0.72) +
+  labs(x = "Engine displacement (litres)",
+       y = "Highway fuel economy",
+       colour = "Cylinders",
+       shape = "Cylinders") +
+  fig_apply_spec(cell_press)
+
+profile_plot
+```
+
+Because the plot is still editable, `fig_check()` can assess its text, colour,
+shapes and layout as well as its intended width:
+
+```{r check-profile-plot}
+profile_result <- fig_check(profile_plot, cell_press, column = "single")
+knitr::kable(
+  profile_result[
+    profile_result$check %in% c(
+      "Width", "Type size", "Colour pairs", "Colour vision",
+      "Redundant coding"
+    ),
+    c("check", "actual", "status")
+  ],
+  row.names = FALSE
+)
+```
+
+## Browse all included profiles
+
+The compact table below is rebuilt from `spec_list()` and `spec_get()` whenever
+the website is generated. A dash marks a value that is not shown in this
+overview. Open the profile to see whether its source gives no requirement or
+the field is still awaiting review.
+
+```{r all-profiles, echo = FALSE, results = "asis"}
+ids <- spec_list()$id
+reg <- stats::setNames(lapply(ids, spec_get), ids)
 rows <- do.call(rbind, lapply(reg, function(j) {
-  cols <- if (!is.null(j$columns)) {
+  cols <- if (!is.null(j$columns) && length(j$columns)) {
     paste(paste0(names(j$columns), " ", unlist(j$columns)), collapse = ", ")
   } else if (!is.null(j$width_min_mm) || !is.null(j$width_max_mm)) {
-    paste0(j$width_min_mm %||% "?", "–", j$width_max_mm %||% "?")
-  } else "–"
+    lower <- if (is.null(j$width_min_mm)) "?" else j$width_min_mm
+    upper <- if (is.null(j$width_max_mm)) "?" else j$width_max_mm
+    paste0(lower, "–", upper)
+  } else {
+    "–"
+  }
   data.frame(
-    Journal = j$name,
-    id = j$id,
-    `Width (mm)` = cols,
-    `dpi` = fmt(j$dpi_min),
-    `Line art` = fmt(j$dpi_line_art),
-    `Type (pt)` = if (is.null(j$font_min_pt)) "–" else
-      paste0(j$font_min_pt, if (!is.null(j$font_max_pt)) paste0("–", j$font_max_pt) else "+"),
-    Formats = fmt(toupper(unlist(j$formats %||% NULL))),
-    check.names = FALSE, stringsAsFactors = FALSE)
+    Profile = j$name,
+    `Registry ID` = j$id,
+    `Figure width (mm)` = cols,
+    `General dpi` = fmt(j$dpi_min),
+    `Line-art dpi` = fmt(j$dpi_line_art),
+    `Text size (pt)` = if (is.null(j$font_min_pt)) {
+      "–"
+    } else {
+      paste0(
+        j$font_min_pt,
+        if (!is.null(j$font_max_pt)) paste0("–", j$font_max_pt) else "+"
+      )
+    },
+    `Accepted formats` = fmt(toupper(unlist(j$formats))),
+    check.names = FALSE,
+    stringsAsFactors = FALSE
+  )
 }))
-rows <- rows[order(rows$Journal), ]
-knitr::kable(rows, row.names = FALSE)
+rows <- rows[order(rows$Profile), ]
+
+cat(sprintf(
+  '<details class="figspec-details"><summary>View all %d publication profiles</summary>\n',
+  nrow(rows)
+))
+cat(knitr::kable(rows, format = "html", row.names = FALSE), sep = "\n")
+cat("\n</details>")
 ```
 
-## Where publishers disagree
+## How publication requirements differ
 
-The registry makes some conflicts plain, and they are the reason a single
-"industry standard" does not exist.
+Publishers prepare figures for different page layouts, printing processes and
+digital formats, so their requirements are not identical. A figure that meets
+one publication's guidance may therefore need changes before it is submitted
+elsewhere. The registry records differences such as these:
 
-**Panel labels.** Cell Press wants capital letters. AGU, Nature, Springer and
-the Royal Society all want lower case. Nature wants them *upright, not italic*;
-the Royal Society wants them *italicised*. Same element, opposite rules.
+**Panel labels.** Cell Press asks for capital letters. AGU, Nature, Springer
+and the Royal Society use lower-case letters. Nature specifies upright labels,
+whereas the Royal Society specifies italics.
 
-**Outlining text.** BMJ requires text in EPS files to be outlined. Nature
-instructs authors not to outline text.
+**Text in EPS files.** BMJ asks authors to outline text in EPS artwork. Nature
+asks authors not to outline it.
 
-**Line art resolution.** Twelve entries state a separate figure for line art,
-from 600 dpi (IEEE, Wiley) to 1200 dpi (BMJ, ACS, OUP, Springer, Taylor &
-Francis) — against a general minimum of 300 almost everywhere. See
-`suggest_art_type()`, and note that line art means *monochrome*: five
-publishers define it as black and white.
+**Line-art resolution.** Twelve profiles record a separate resolution for line
+art. The recorded thresholds range from 600 dpi for IEEE and Wiley to 1200 dpi
+for BMJ, ACS, OUP, Springer and Taylor & Francis, compared with a common
+general minimum of 300 dpi. Where sources define line art, they commonly
+describe monochrome artwork without shading. `fig_suggest_art_type()` helps select
+the applicable resolution rule.
 
-**Colour in print.** Frontiers and PLOS say nothing about greyscale. The Royal
-Society, Sage and Taylor & Francis print in black and white by default, so
-figures must survive it. RSC prints colour free. RSC's *books* make it depend
-on the author's contract.
+**Colour in print.** Some publications accept or provide colour, while others
+expect figures to remain readable when printed in greyscale. The Royal Society,
+Sage and Taylor & Francis record black-and-white printing as the default; RSC
+records free colour for journals, while its book policy depends on the
+author's contract.
 
-## How complete is each entry
+These are production choices, not disagreements. figspec keeps them separate
+so that the requirements applied to a figure match its intended destination.
 
-```{r}
+## Check what each profile covers
+
+`registry_status()` distinguishes three kinds of registry coverage:
+
+* **Stated** means the source gives a requirement for that field.
+* **Confirmed absent** means the source was reviewed but gives no requirement
+  for that field.
+* **Not yet harvested** means the field has not yet been reviewed or entered
+  for that profile.
+
+Together, the categories account for every field tracked by the registry. They
+show which requirements are ready to use, which sources were silent and which
+fields still need to be reviewed.
+
+```{r coverage, echo = FALSE, results = "asis"}
 st <- registry_status()
-st <- st[order(-st$stated), c("id", "stated", "confirmed_absent", "unharvested", "verified_on")]
-names(st) <- c("id", "stated", "confirmed absent", "not yet harvested", "read on")
-knitr::kable(st, row.names = FALSE)
+st <- st[
+  order(-st$stated),
+  c("id", "stated", "confirmed_absent", "unharvested", "verified_on")
+]
+names(st) <- c(
+  "Registry ID", "Stated", "Confirmed absent", "Not yet harvested", "Verified"
+)
+
+cat(sprintf(
+  '<details class="figspec-details"><summary>View coverage for all %d profiles</summary>\n',
+  nrow(st)
+))
+cat(knitr::kable(st, format = "html", row.names = FALSE), sep = "\n")
+cat("\n</details>")
 ```
 
-`stated` is what the publisher says. `confirmed absent` is what somebody read
-the page for and found missing. `not yet harvested` is what nobody has checked.
-The three always sum to the full field list, so a half-finished entry cannot
-pass as a complete one.
+## Use your own specification
 
-## Using a specification that is not in here
+Publication profiles are one source of requirements. The same functions also
+accept a named list describing a report, thesis, presentation, organisation or
+production workflow. This example defines a 160 mm quarterly-report figure,
+builds a real plot from `ggplot2::mpg`, and applies the required text size:
 
-Anywhere a function takes a `journal`, it will also take a specification you
-supply — from `journal_spec()`, or as a plain named list of the same fields:
+```{r custom-specification, fig.width = 160/25.4, fig.height = 105/25.4, dpi = 150, out.width = "75%", fig.alt = "A coloured scatter plot of engine displacement and highway fuel economy prepared for a quarterly report specification."}
+project_spec <- spec_get(list(
+  name = "Quarterly outcomes report",
+  columns = list(full = 160),
+  formats = c("png", "pdf"),
+  dpi_min = 300,
+  font_min_pt = 9,
+  min_line_pt = 0.5
+))
 
-```{r, echo = TRUE, eval = FALSE}
-house <- list(name = "House style", dpi_min = 600, formats = list("tiff"))
-fig_check("figure_1.tiff", house)
+project_colours <- setNames(
+  figspec_palette("okabe_ito")[c(6, 7, 4)],
+  c("4", "f", "r")
+)
+
+project_plot <- ggplot(
+  ggplot2::mpg,
+  aes(displ, hwy, colour = drv, shape = drv)
+) +
+  geom_point(size = 2, alpha = 0.72) +
+  scale_colour_manual(values = project_colours) +
+  scale_shape_figspec() +
+  labs(x = "Engine displacement (litres)",
+       y = "Highway fuel economy",
+       colour = "Drive type",
+       shape = "Drive type") +
+  theme_spec(project_spec, base_size = 9)
+
+project_plot
 ```
 
-A field your specification does not mention is reported as **not specified**,
-which is distinct from the registry's *not yet harvested*: you wrote the
-specification, so its silence is your own, not a gap in figspec's reading of a
-publisher's page.
+The example below writes an actual 300 dpi PNG, reopens it and checks its saved
+properties against the project specification:
 
-Pass no specification at all and `fig_check()` becomes an inspection — it
-reports the figure's size, resolution, format and file size, and states plainly
-that nothing was judged. Nothing passes and nothing fails, because there was
-nothing to pass or fail against.
+```{r check-custom-export}
+project_file <- tempfile(fileext = ".png")
+fig_save(
+  project_file,
+  project_plot,
+  spec = project_spec,
+  column = "full",
+  dpi = 300,
+  check = FALSE
+)
+
+project_result <- fig_check(project_file, project_spec)
+knitr::kable(
+  project_result[
+    project_result$check %in% c(
+      "File validity", "Width", "Resolution", "File format"
+    ),
+    c("check", "requirement", "actual", "status")
+  ],
+  row.names = FALSE
+)
+```
+
+```{r cleanup-custom-export, include = FALSE}
+unlink(project_file)
+```
+
+A field omitted from your own specification is reported as **unspecified**.
+The *not yet harvested* label is reserved for fields still awaiting review in
+a publication profile, so the report always reflects the source of the
+missing information.
+
+Pass no specification at all and `fig_check()` becomes an inspection: it
+reports the figure's size, resolution, format and file size without assigning
+a pass or fail where no requirement was provided.

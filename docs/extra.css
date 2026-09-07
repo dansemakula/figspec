@@ -58,6 +58,8 @@ main h1 {
   font-size: 2.1rem;
   font-weight: 700;
   letter-spacing: -.02em;
+  hyphens: none;
+  word-break: normal;
   color: var(--fs-ink);
   margin-bottom: .4rem;
 }
@@ -65,6 +67,8 @@ main h2 {
   font-size: 1.6rem;
   font-weight: 700;
   letter-spacing: -.015em;
+  hyphens: none;
+  word-break: normal;
   color: var(--fs-ink);
   margin-top: 2.1rem;
   margin-bottom: .7rem;
@@ -75,6 +79,8 @@ main h3 {
   font-size: 1.2rem;
   font-weight: 650;
   letter-spacing: -.01em;
+  hyphens: none;
+  word-break: normal;
   color: var(--fs-ink);
   margin-top: 1.5rem;
   margin-bottom: .45rem;
@@ -170,6 +176,73 @@ main details[open] > summary { border-bottom: 1px solid var(--fs-teal-line); }
 main details > *:not(summary) { padding-left: .9rem; padding-right: .9rem; }
 main details > table { width: calc(100% - 1.8rem); margin: .9rem; }
 
+/* Argument examples stay compact until the reader asks for one. Keeping the
+   disclosure inside the description cell makes the expanded example part of
+   the argument it explains instead of sending the reader to another page. */
+main table details.fs-argument-example {
+  border: 0;
+  border-radius: 0;
+  margin: .45rem 0 0;
+  overflow: visible;
+}
+main table.fs-options-table {
+  width: 100%;
+  table-layout: fixed;
+}
+main table.fs-options-table td {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+main table details.fs-argument-example > summary {
+  display: inline-flex;
+  width: max-content;
+  max-width: 100%;
+  justify-content: flex-start;
+  padding: .22rem .55rem;
+  border: 1px solid var(--fs-teal-line);
+  border-radius: .35rem;
+  background: transparent;
+  color: var(--fs-teal-deep);
+  font-size: .84rem;
+  line-height: 1.35;
+}
+main table details.fs-argument-example > summary::after {
+  margin-left: .35rem;
+  font-size: 1rem;
+}
+main table details.fs-argument-example[open] > summary {
+  border-bottom: 1px solid var(--fs-teal-line);
+  background: var(--fs-teal-soft);
+}
+main table .fs-argument-example-body {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin-top: .5rem;
+  padding: .65rem .75rem;
+  border-left: 3px solid var(--fs-teal);
+  background: var(--fs-surface, #fff);
+}
+main table .fs-argument-example-body > :first-child { margin-top: 0; }
+main table .fs-argument-example-body > :last-child { margin-bottom: 0; }
+main table .fs-argument-example-body pre {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  margin: .55rem 0;
+  overflow-x: auto;
+}
+main table.fs-options-table .fs-argument-example-body pre code {
+  display: block;
+  white-space: pre;
+}
+main table .fs-example-result { font-size: .92rem; }
+main details > summary:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--fs-teal) 35%, transparent);
+  outline-offset: 2px;
+}
+
 /* ---- Reference pages: Usage and Arguments read as a specification ------- */
 
 main #usage + div.sourceCode, main #usage ~ div.sourceCode:first-of-type {
@@ -230,9 +303,33 @@ main dl dd:last-child { border-bottom: none; }
   margin-bottom: .2rem;
 }
 
+/* The index is the map of the public API, so say explicitly what happens when
+   a reader follows one of its links. The exhaustive argument catalogue stays
+   available without taking a permanent slot in the top navigation. */
+.fs-reference-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .8rem 1rem;
+  margin: .5rem 0 1.4rem;
+  border: 1px solid var(--fs-teal-line);
+  border-left: 4px solid var(--fs-teal);
+  border-radius: 0 .45rem .45rem 0;
+  background: var(--fs-teal-soft);
+}
+.fs-reference-intro p { margin: 0; }
+.fs-reference-intro-link {
+  flex: 0 0 auto;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 @media (max-width: 700px) {
   .template-reference-index main dl { grid-template-columns: 1fr; }
   .template-reference-index main dl dt { border-bottom: none; }
+  .fs-reference-intro { align-items: flex-start; flex-direction: column; }
+  .fs-reference-intro-link { white-space: normal; }
 }
 
 /* ---- Sidebars and navigation ------------------------------------------- */
@@ -293,6 +390,63 @@ main blockquote {
 }
 main blockquote > :last-child { margin-bottom: 0; }
 
+/* Comparative figures stay side by side where there is room, then stack at
+   the mobile breakpoint so axis labels and legends remain readable. The
+   width attribute written by knitr needs an explicit override. */
+main img.r-plt[width="75%"] {
+  display: block;
+  width: 75% !important;
+  max-width: 100%;
+  margin: 0 auto 1.25rem;
+}
+
+.figspec-export-pair {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2%;
+  margin: 1rem 0 1.4rem;
+}
+
+.figspec-export-pair img {
+  display: block;
+  object-fit: contain;
+}
+
+.figspec-embedded-plot {
+  margin: 1rem 0 1.4rem;
+  text-align: center;
+}
+
+.figspec-embedded-plot img {
+  display: inline-block;
+  object-fit: contain;
+}
+
+@media (max-width: 991.98px) {
+  main img.r-plt[width="48%"],
+  main img.r-plt[width="32%"],
+  main img.r-plt[width="75%"] {
+    display: block;
+    width: 100% !important;
+    max-width: 100%;
+    margin: 0 0 1rem;
+  }
+
+  .figspec-export-pair {
+    display: block;
+  }
+
+  .figspec-export-pair img {
+    width: 100% !important;
+    margin-bottom: 1rem;
+  }
+
+  .figspec-embedded-plot img {
+    width: 100% !important;
+  }
+}
+
 /* ---- Home page --------------------------------------------------------- */
 
 .template-home main h1 {
@@ -312,6 +466,86 @@ main pre code > span:last-child:empty { display: none; }
 main div.sourceCode > pre { margin-bottom: 0; }
 
 /* ---- Function reference pages ------------------------------------------ */
+
+/* A topic page is a useful destination but should not feel like a dead end.
+   Breadcrumbs preserve its place in the task-based index; the lower rail
+   offers previous, group and next routes without crowding the global navbar. */
+.fs-breadcrumb {
+  color: var(--fs-muted);
+  font-size: .88rem;
+  margin: .2rem 0 1rem;
+}
+.fs-breadcrumb-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .35rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.fs-breadcrumb-item + .fs-breadcrumb-item::before {
+  content: "/";
+  color: var(--fs-muted);
+  margin-right: .35rem;
+}
+.fs-breadcrumb-item[aria-current="page"] {
+  color: var(--fs-ink);
+  font-weight: 600;
+}
+
+.fs-page-return {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin: -.3rem 0 .8rem;
+  padding: .35rem .65rem;
+  border: 1px solid var(--fs-teal-line);
+  border-radius: 999px;
+  color: var(--fs-teal-deep);
+  font-size: .9rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+}
+.fs-page-return:hover,
+.fs-page-return:focus-visible {
+  background: var(--fs-teal-soft);
+  border-color: var(--fs-teal);
+}
+
+.fs-topic-nav {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: .8rem;
+  border-top: 1px solid var(--fs-rule);
+  margin-top: 2.2rem;
+  padding-top: 1rem;
+  font-size: .92rem;
+}
+.fs-topic-nav a {
+  display: block;
+  padding: .55rem .7rem;
+  border: 1px solid var(--fs-teal-line);
+  border-radius: .4rem;
+  text-decoration: none;
+  line-height: 1.35;
+}
+.fs-topic-nav a:hover,
+.fs-topic-nav a:focus-visible {
+  background: var(--fs-teal-soft);
+  border-color: var(--fs-teal);
+}
+.fs-topic-nav-previous { justify-self: start; }
+.fs-topic-nav-all { grid-column: 2; justify-self: center; font-weight: 600; }
+.fs-topic-nav-next { grid-column: 3; justify-self: end; text-align: right; }
+
+@media (max-width: 700px) {
+  .fs-topic-nav { display: flex; flex-direction: column; align-items: stretch; }
+  .fs-topic-nav a { text-align: left; }
+  .fs-topic-nav-all { order: -1; }
+}
 
 .template-reference-topic main h2 {
   font-size: 1.25rem;

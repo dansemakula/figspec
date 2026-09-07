@@ -25,6 +25,7 @@ topic_of <- local({
 })
 
 gaps <- 0L
+site_mode <- "--site" %in% commandArgs(trailingOnly = TRUE)
 chk <- function(label, missing) {
   ok <- length(missing) == 0L
   cat(sprintf("  %-46s %s%s\n", label, if (ok) "ok" else "GAP  ",
@@ -35,45 +36,129 @@ chk <- function(label, missing) {
 chk("every export has a help page",
     setdiff(ex, unlist(lapply(rd, aliases_of))))
 
-chk("every export is on the options page",
-    setdiff(ex, gsub("^### `|\\(\\)`$", "",
-                     grep("^### `", readLines("vignettes/options.Rmd", warn = FALSE),
-                          value = TRUE))))
+# A clean documentation build should remove topics and aliases that belonged
+# to former API names. Merely checking that every current export is documented
+# would allow those obsolete pages to survive indefinitely.
+alias_owner <- unlist(lapply(rd, function(f) {
+  stats::setNames(rep(basename(f), length(aliases_of(f))), aliases_of(f))
+}))
+duplicate_aliases <- unique(names(alias_owner)[duplicated(names(alias_owner))])
+chk("no help alias is defined by two topics", duplicate_aliases)
 
-idx <- paste(readLines("docs/reference/index.html", warn = FALSE), collapse = "\n")
-linked <- gsub('href="|\\.html"', "",
-               regmatches(idx, gregexpr('href="[a-zA-Z0-9_.]+\\.html"', idx))[[1]])
-chk("every export is on the site reference index",
-    Filter(function(f) !(topic_of(f) %in% linked), ex))
+allowed_non_export_aliases <- c(
+  "figspec", "figspec-package", "plot.figspec_geometry"
+)
+chk(
+  "help aliases are explicitly approved",
+  setdiff(names(alias_owner), c(ex, allowed_non_export_aliases))
+)
+
+documented_export_topics <- unique(unlist(lapply(ex, topic_of)))
+rd_topics <- sub("[.]Rd$", "", basename(rd))
+chk("no obsolete help topics remain",
+    setdiff(rd_topics, c(documented_export_topics, "figspec-package")))
+
+options_names <- gsub(
+  "^### `|\\(\\)`$", "",
+  grep("^### `", readLines("vignettes/options.Rmd", warn = FALSE), value = TRUE)
+)
+chk("every export is on the options page", setdiff(ex, options_names))
+chk("the options page has no unknown functions", setdiff(options_names, ex))
+chk("each options-page function appears once", unique(options_names[duplicated(options_names)]))
+
+site_index <- "docs/reference/index.html"
+if (site_mode && file.exists(site_index)) {
+  idx <- paste(readLines(site_index, warn = FALSE), collapse = "\n")
+  linked <- gsub('href="|\\.html"', "",
+                 regmatches(idx, gregexpr('href="[a-zA-Z0-9_.]+\\.html"', idx))[[1]])
+  chk("every export is on the site reference index",
+      Filter(function(f) !(topic_of(f) %in% linked), ex))
+
+  site_topics <- sub(
+    "[.]html$", "",
+    basename(list.files("docs/reference", pattern = "[.]html$", full.names = TRUE))
+  )
+  expected_site_topics <- unique(c("index", rd_topics, names(alias_owner)))
+  chk("no obsolete reference pages remain",
+      setdiff(site_topics, expected_site_topics))
+} else if (site_mode) {
+  chk("the built site has a reference index", site_index)
+}
 
 y <- yaml::read_yaml("_pkgdown.yml")
 listed <- gsub("[`\"]", "", unlist(lapply(y$reference, function(s) s$contents)))
-chk("_pkgdown.yml lists every topic",
-    Filter(function(f) !(topic_of(f) %in% listed || f %in% listed), ex))
+expected_reference_topics <- sort(unique(unlist(lapply(ex, topic_of))))
+chk("_pkgdown.yml lists every topic", setdiff(expected_reference_topics, listed))
+chk("_pkgdown.yml has no unknown topics", setdiff(listed, expected_reference_topics))
+chk("each pkgdown topic is grouped once", unique(listed[duplicated(listed)]))
 
 nav <- sub("\\.html$", "", sub("^articles/", "",
-           unlist(lapply(y$navbar$components$articles$menu, function(m) m$href))))
+           unlist(lapply(y$navbar$components$guides$menu, function(m) m$href))))
+vignette_files <- list.files("vignettes", pattern = "[.]Rmd$", full.names = TRUE)
 chk("every vignette is in the navbar",
-    setdiff(sub("[.]Rmd$", "", basename(list.files("vignettes", pattern = "[.]Rmd$"))), nav))
+    setdiff(sub("[.]Rmd$", "", basename(vignette_files)), nav))
+bad_chunk_fences <- basename(vignette_files[vapply(vignette_files, function(path) {
+  any(grepl("^~~~\\{r(?:[ ,}]|$)", readLines(path, warn = FALSE), perl = TRUE))
+}, logical(1))])
+chk("vignettes use executable R chunk fences", bad_chunk_fences)
+
+# Syntax-check every R chunk, including examples marked eval=FALSE. Those
+# setup examples appear in the published guide but are not executed while the
+# vignette is rendered, so a normal site build cannot detect a typing error in
+# them.
+bad_vignette_code <- basename(vignette_files[vapply(vignette_files, function(path) {
+  tangled <- tempfile(fileext = ".R")
+  on.exit(unlink(tangled), add = TRUE)
+  result <- tryCatch({
+    suppressMessages(knitr::purl(
+      path,
+      output = tangled,
+      documentation = 0,
+      quiet = TRUE
+    ))
+    parse(file = tangled)
+    NULL
+  }, error = identity)
+  inherits(result, "error")
+}, logical(1))])
+chk("every R vignette example parses", bad_vignette_code)
+
+if (site_mode && dir.exists("docs/articles")) {
+  article_pages <- sub(
+    "[.]html$", "",
+    basename(list.files("docs/articles", pattern = "[.]html$", full.names = TRUE))
+  )
+  expected_articles <- c(
+    "index",
+    sub("[.]Rmd$", "", basename(vignette_files))
+  )
+  chk("no obsolete article pages remain",
+      setdiff(article_pages, expected_articles))
+}
 
 # Site freshness is checked only when asked for, because roxygenise() rewrites
 # every man/ page on each run whether or not its content changed, so a
 # timestamp comparison flags a rebuild that has not actually gone stale. It is
 # worth checking before publishing, where the site is genuinely about to be
 # served, and dev/check.sh --full runs it there after rebuilding.
-if ("--site" %in% commandArgs(trailingOnly = TRUE)) {
+if (site_mode) {
   src <- c(list.files("R", full.names = TRUE), list.files("man", full.names = TRUE),
            list.files("vignettes", full.names = TRUE), "README.md", "_pkgdown.yml")
-  stale <- if (file.mtime("docs/index.html") < max(file.mtime(src)) - 60) "docs/" else character()
+  stale <- if (!file.exists("docs/index.html") ||
+               file.mtime("docs/index.html") < max(file.mtime(src)) - 60) "docs/" else character()
   chk("the site is not older than its sources", stale)
 }
 
 chk("the registry validates",
-    if (isTRUE(suppressMessages(validate_registry_file("inst/extdata/journals.yaml")))) character() else "registry")
+    if (isTRUE(suppressMessages(registry_validate_file("inst/extdata/journals.yaml")))) character() else "registry")
 
-n <- nrow(journals())
-readme_n <- as.integer(sub(".*\\*\\*([0-9]+) entries\\*\\*.*", "\\1",
-                           grep("entries\\*\\*", readLines("README.md", warn = FALSE), value = TRUE)[1]))
+n <- nrow(spec_list())
+readme_line <- grep(
+  "built-in registry contains \\*\\*[0-9]+ profiles",
+  readLines("README.md", warn = FALSE),
+  value = TRUE
+)[1]
+readme_n <- as.integer(sub(".*\\*\\*([0-9]+) profiles.*", "\\1", readme_line))
 chk("the README's journal count matches the registry",
     if (identical(n, readme_n)) character() else sprintf("README says %s, registry holds %s", readme_n, n))
 

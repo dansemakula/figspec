@@ -2,23 +2,24 @@
 % Please edit documentation in R/spec.R
 \name{table_spec}
 \alias{table_spec}
-\title{Table requirements for a journal}
+\title{Look up table requirements}
 \usage{
-table_spec(journal)
+table_spec(spec)
 }
 \arguments{
-\item{journal}{Registry id, for example \code{"nature"}.}
+\item{spec}{A registry id such as \code{"nature"}, a \code{figspec_spec}, or a
+named list containing table requirements.}
 }
 \value{
 A list of the stated table requirements, or \code{NULL} with a message
-when the registry records none for that journal.
+when the selected specification records none.
 }
 \description{
-Journals also publish rules for tables, but those rules are mostly editorial
-rather than numeric: orientation, how the title is set, where footnotes go.
-\code{table_spec()} surfaces what the publisher states so you can follow it. It
-deliberately does not try to check a table automatically, because almost
-nothing in a table specification is mechanically checkable from an R object.
+Publications, organisations and projects may set separate requirements for
+tables, including orientation, titles, notes and permitted file types.
+\code{table_spec()} returns the recorded instructions used by
+\code{\link[=table_apply_spec]{table_apply_spec()}}, \code{\link[=table_save]{table_save()}} and \code{\link[=table_check]{table_check()}}. Rules that require
+editorial judgement remain visible but are not claimed as verified.
 }
 \examples{
 table_spec("nature")

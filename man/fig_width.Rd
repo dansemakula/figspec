@@ -2,34 +2,42 @@
 % Please edit documentation in R/spec.R
 \name{fig_width}
 \alias{fig_width}
-\title{Figure width for a journal column}
+\title{Look up a figure width}
 \usage{
-fig_width(journal, column = "single", units = c("mm", "cm", "in"))
+fig_width(spec, column = "single", units = c("mm", "cm", "in"))
 }
 \arguments{
-\item{journal}{Registry id, for example \code{"cell_press"}.}
+\item{spec}{The specification to use: a registry id such as
+\code{"cell_press"}, a \code{figspec_spec}, or a named list of requirements.}
 
-\item{column}{Column name, for example \code{"single"}, \code{"double"} or, for
-Science, \code{"triple"}.}
+\item{column}{Name of the required width, such as \code{"single"}, \code{"double"}
+or \code{"triple"}. The available names come from the specification.}
 
 \item{units}{Unit for the returned width: \code{"mm"}, \code{"cm"} or \code{"in"}.}
 }
 \value{
-A single numeric width, or an error if the journal does not state
-a width for that column.
+A single numeric width in the requested unit. An error is raised if
+the specification does not contain the requested width.
 }
 \description{
-Resolves the width a figure should be saved at. Column names come from the
-journal itself rather than a fixed vocabulary: Science lays out in one, two
-or three columns, most journals in one, one-and-a-half or two. Use
-\code{\link[=fig_columns]{fig_columns()}} to see what a given journal offers.
+Returns a named figure width from a publication, project or organisational
+specification. The specification defines both the available names and their
+widths: for example, Cell Press records \code{"single"}, \code{"onehalf"} and
+\code{"double"}, while Science also records \code{"triple"}. Use \code{\link[=fig_columns]{fig_columns()}} to
+see the names available in a specification.
 }
 \details{
-When a journal states a permitted range rather than named columns,
-\code{"single"} returns the minimum width and \code{"double"} the maximum.
+When a specification records a permitted range instead of named widths,
+\code{"single"} returns the minimum and \code{"double"} returns the maximum.
 }
 \examples{
 fig_width("cell_press", "single")
 fig_width("science", "triple")
 fig_width("frontiers", "double", units = "in")
+
+report_spec <- spec_get(list(
+  name = "Research report",
+  columns = list(half = 80, full = 160)
+))
+fig_width(report_spec, "full")
 }

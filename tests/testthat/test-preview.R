@@ -1,4 +1,4 @@
-# figspec_preview(): the size it resolves, and its behaviour where no graphics
+# fig_preview(): the size it resolves, and its behaviour where no graphics
 # window can be opened.
 #
 # Both halves are tested. The non-interactive branch is straightforward. The
@@ -14,7 +14,7 @@ p_small <- function() {
 
 test_that("a non-interactive session is told the size rather than shown it", {
   skip_if_not_installed("ggplot2")
-  msg <- capture.output(figspec_preview(p_small(), "cell_press", "single"),
+  msg <- capture.output(fig_preview(p_small(), "cell_press", "single"),
                         type = "message")
   txt <- paste(msg, collapse = " ")
   expect_match(txt, "non-interactive")
@@ -27,14 +27,14 @@ test_that("a non-interactive session is told the size rather than shown it", {
 test_that("the plot is returned unchanged, so it can be piped through", {
   skip_if_not_installed("ggplot2")
   p <- p_small()
-  out <- suppressMessages(figspec_preview(p, "cell_press", "single"))
+  out <- suppressMessages(fig_preview(p, "cell_press", "single"))
   expect_identical(out, p)
 })
 
 test_that("an explicit height is used instead of the default proportion", {
   skip_if_not_installed("ggplot2")
   msg <- capture.output(
-    figspec_preview(p_small(), "cell_press", "single", height = 40),
+    fig_preview(p_small(), "cell_press", "single", height = 40),
     type = "message")
   expect_match(paste(msg, collapse = " "), "40")
 })
@@ -42,7 +42,7 @@ test_that("an explicit height is used instead of the default proportion", {
 test_that("a height given in other units is converted before it is reported", {
   skip_if_not_installed("ggplot2")
   msg <- capture.output(
-    figspec_preview(p_small(), "cell_press", "single", height = 4, units = "cm"),
+    fig_preview(p_small(), "cell_press", "single", height = 4, units = "cm"),
     type = "message")
   # 4 cm is 40 mm, and the message speaks millimetres.
   expect_match(paste(msg, collapse = " "), "40")
@@ -51,7 +51,7 @@ test_that("a height given in other units is converted before it is reported", {
 test_that("the column has to be one the journal states", {
   skip_if_not_installed("ggplot2")
   expect_error(
-    suppressMessages(figspec_preview(p_small(), "cell_press", "quadruple")),
+    suppressMessages(fig_preview(p_small(), "cell_press", "quadruple")),
     class = "figspec_error"
   )
 })
@@ -59,7 +59,7 @@ test_that("the column has to be one the journal states", {
 test_that("a journal that is not in the registry is an error, not a guess", {
   skip_if_not_installed("ggplot2")
   expect_error(
-    suppressMessages(figspec_preview(p_small(), "no_such_journal")),
+    suppressMessages(fig_preview(p_small(), "no_such_journal")),
     class = "figspec_not_found"
   )
 })
@@ -74,7 +74,7 @@ test_that("the device opened is exactly the journal's column width", {
   testthat::local_mocked_bindings(is_interactive = function() TRUE)
   on.exit(while (grDevices::dev.cur() > 1L) grDevices::dev.off(), add = TRUE)
 
-  suppressMessages(figspec_preview(p_small(), "cell_press", "single"))
+  suppressMessages(fig_preview(p_small(), "cell_press", "single"))
   size <- grDevices::dev.size("in")
 
   # Cell Press single column is 85 mm, default height three quarters of it.
@@ -88,7 +88,7 @@ test_that("a different column opens a different device", {
   testthat::local_mocked_bindings(is_interactive = function() TRUE)
   on.exit(while (grDevices::dev.cur() > 1L) grDevices::dev.off(), add = TRUE)
 
-  suppressMessages(figspec_preview(p_small(), "cell_press", "double"))
+  suppressMessages(fig_preview(p_small(), "cell_press", "double"))
   expect_equal(grDevices::dev.size("in")[1], 174 / 25.4, tolerance = 1e-3)
 })
 
@@ -98,7 +98,7 @@ test_that("an explicit height reaches the device, not just the message", {
   testthat::local_mocked_bindings(is_interactive = function() TRUE)
   on.exit(while (grDevices::dev.cur() > 1L) grDevices::dev.off(), add = TRUE)
 
-  suppressMessages(figspec_preview(p_small(), "cell_press", "single", height = 40))
+  suppressMessages(fig_preview(p_small(), "cell_press", "single", height = 40))
   expect_equal(grDevices::dev.size("in")[2], 40 / 25.4, tolerance = 1e-3)
 })
 
@@ -108,7 +108,7 @@ test_that("the interactive run says which journal and column it is showing", {
   testthat::local_mocked_bindings(is_interactive = function() TRUE)
   on.exit(while (grDevices::dev.cur() > 1L) grDevices::dev.off(), add = TRUE)
 
-  msg <- capture.output(figspec_preview(p_small(), "cell_press", "single"),
+  msg <- capture.output(fig_preview(p_small(), "cell_press", "single"),
                         type = "message")
   txt <- paste(msg, collapse = " ")
   expect_match(txt, "Cell Press")

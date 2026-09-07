@@ -26,32 +26,126 @@
 # which makes the total a sum rather than an estimate.
 
 
-#' Set the size of a plot's panels
+#' Set exact dimensions for every data panel
 #'
-#' Sets the plot area to an exact physical size, rather than the image file.
-#' Two figures given the same panel size line up, whatever their axis labels
-#' do, and the type inside them stays at the size you set it.
+#' Sets the plot area to an exact physical size and calculates the complete
+#' image around it. Two figures given the same panel size line up even when
+#' their axis labels differ, and their text keeps its intended size.
 #'
-#' The usual way to size a figure sets the image and lets the panel take
-#' whatever is left over, so a longer y-axis label silently shrinks the plot
-#' area. This does the reverse: the panel is what you fix, and the image grows
-#' or shrinks around it.
+#' Conventional sizing fixes the complete image and leaves the remaining room
+#' to the panel. `fig_panel_size()` fixes the panel itself, then expands or
+#' contracts the image to accommodate its labels, axes, legend and margins.
 #'
 #' For a faceted plot, or a composition made with patchwork, the size applies
 #' to *each* panel, which is what makes panels comparable between figures.
 #'
-#' @param plot A ggplot, a patchwork composition, or a `gtable`.
-#' @param width,height Panel size. `NULL` leaves that dimension alone.
-#' @param units Units for `width` and `height`.
-#' @return A `gtable`, which prints and saves like a plot. Its achieved
-#'   geometry is attached as the `"figspec_geometry"` attribute.
-#' @aliases set_panel_size panel_size
+#' @section What the example demonstrates:
+#' The example draws the same data twice at a common physical scale. In the
+#' first figure, a conventional 60 mm canvas leaves less than 62 mm for the
+#' data after the axes and labels have been accommodated. In the
+#' second, `fig_panel_size()` protects a 62 mm data panel and calculates the
+#' wider canvas needed around it. The browser may enlarge the complete
+#' comparison for readability, but the relative dimensions of the two figures
+#' remain unchanged.
+#'
+#' @param plot The plot or composition whose data panels you want to size. This
+#'   can be a ggplot, a patchwork composition, or a `gtable`.
+#' @param width,height The size of each data panel. Leave either value as
+#'   `NULL` to change only the other dimension.
+#' @param units The units used for `width` and `height`.
+#' @return A `gtable`, which can be drawn with [grid::grid.draw()] and saved
+#'   like a plot. Its achieved geometry is attached as the
+#'   `"figspec_geometry"` attribute.
 #' @seealso [fig_save()], which does this and works out the image size for you.
 #' @examples
 #' library(ggplot2)
-#' p <- ggplot(mtcars, aes(wt, mpg)) + geom_point()
-#' g <- fig_panel_size(p, width = 62, height = 45)
-#' fig_geometry(g)
+#'
+#' p <- ggplot(ggplot2::mpg, aes(displ, hwy, fill = cty)) +
+#'   geom_point(
+#'     shape = 21, size = 2, alpha = 0.82,
+#'     colour = "white", stroke = 0.25
+#'   ) +
+#'   scale_fill_gradient(
+#'     low = "#56B4E9", high = "#D55E00", guide = "none"
+#'   ) +
+#'   labs(
+#'     x = "Engine displacement (litres)",
+#'     y = "Highway fuel economy"
+#'   ) +
+#'   theme_minimal(base_size = 9) +
+#'   theme(
+#'     panel.background = element_rect(
+#'       fill = "#F3F8FC", colour = "#1A7391", linewidth = 0.7
+#'     ),
+#'     plot.background = element_rect(
+#'       fill = "white", colour = "#9AA4AE", linewidth = 0.6
+#'     ),
+#'     plot.title = element_text(face = "bold", colour = "#16313B"),
+#'     plot.subtitle = element_text(colour = "#4B6570")
+#'   )
+#'
+#' # Before: fixing the complete canvas at 60 mm leaves whatever panel width
+#' # remains after the axes and labels have taken their space.
+#' before_canvas <- 60
+#' before_panel <- fig_panel_width(p, width = before_canvas)
+#' before <- fig_panel_size(
+#'   p + labs(
+#'     title = "Before: 60 mm canvas",
+#'     subtitle = sprintf(
+#'       "Data panel: %.1f mm", before_panel
+#'     )
+#'   ),
+#'   width = before_panel, height = 45
+#' )
+#'
+#' # After: protect a 62 mm data panel and let figspec calculate the canvas.
+#' after <- fig_panel_size(
+#'   p + labs(
+#'     title = "After: 62 mm data panel",
+#'     subtitle = "The canvas expands to fit"
+#'   ),
+#'   width = 62, height = 45
+#' )
+#'
+#' before_geometry <- fig_geometry(before)
+#' after_geometry <- fig_geometry(after)
+#' data.frame(
+#'   version = c("Before", "After"),
+#'   canvas_width_mm = c(
+#'     before_geometry$canvas_width_mm,
+#'     after_geometry$canvas_width_mm
+#'   ),
+#'   panel_width_mm = c(
+#'     before_geometry$panel_width_mm,
+#'     after_geometry$panel_width_mm
+#'   )
+#' )
+#'
+#' # Draw both figures at the same physical scale. The wider after-image is
+#' # deliberate: its additional canvas preserves the requested data panel.
+#' comparison <- gtable::gtable_matrix(
+#'   "before-after",
+#'   grobs = matrix(list(before, after), nrow = 1),
+#'   widths = grid::unit(
+#'     c(
+#'       before_geometry$canvas_width_mm,
+#'       after_geometry$canvas_width_mm
+#'     ),
+#'     "mm"
+#'   ),
+#'   heights = grid::unit(
+#'     max(
+#'       before_geometry$canvas_height_mm,
+#'       after_geometry$canvas_height_mm
+#'     ),
+#'     "mm"
+#'   )
+#' )
+#' comparison <- gtable::gtable_add_cols(
+#'   comparison, grid::unit(5, "mm"), pos = 1
+#' )
+#' grid::grid.newpage()
+#' grid::grid.draw(comparison)
 #' @export
 fig_panel_size <- function(plot, width = NULL, height = NULL,
                            units = c("mm", "cm", "in")) {
@@ -74,18 +168,23 @@ fig_panel_size <- function(plot, width = NULL, height = NULL,
 }
 
 
-#' What size a figure actually is
+#' Measure panel and canvas dimensions
 #'
 #' Reports the canvas and panel dimensions of a plot, in millimetres. Use it to
 #' see where the space in a figure is going before you decide what to change.
 #'
-#' @param x A ggplot, a patchwork composition, a `gtable`, or the value
-#'   returned by [fig_save()].
+#' @param x For `fig_geometry()`, a ggplot, patchwork composition, `gtable`, or
+#'   the value returned by [fig_save()]. For `plot()`, the `figspec_geometry`
+#'   object returned by `fig_geometry()`.
 #' @return A one-row data frame: canvas and panel width and height, and the
 #'   decoration each dimension spends on axes, legends and margins.
 #' @examples
 #' library(ggplot2)
-#' fig_geometry(ggplot(mtcars, aes(wt, mpg)) + geom_point())
+#' p <- ggplot(ggplot2::mpg, aes(displ, hwy)) + geom_point()
+#' sized <- fig_panel_size(p, width = 62, height = 45)
+#' geometry <- fig_geometry(sized)
+#' geometry
+#' plot(geometry)
 #' @export
 fig_geometry <- function(x) {
   geom <- attr(x, "figspec_geometry")
@@ -185,12 +284,22 @@ print.figspec_geometry <- function(x, ...) {
   cli::cli_h1("Figure geometry")
   n <- x$panels_across * x$panels_down
   free <- is.na(x$panel_width_mm) && is.na(x$panel_height_mm)
+  canvas_only <- is.na(x$panels_across) || is.na(x$panels_down)
 
-  if (free) {
+  if (canvas_only) {
+    cli::cli_verbatim(paste0(
+      "  canvas  ", fmt_pair(x$canvas_width_mm, x$canvas_height_mm)
+    ))
     cli::cli_alert_info(
-      "The panels have no size of their own yet, so they will take whatever the
-       canvas leaves over. The decoration below is fixed by the labels and the
-       font, and does not change with the canvas."
+      "This plotting system provides the complete canvas dimensions but not
+       separate panel boundaries. The canvas can be verified; panel dimensions
+       require a ggplot2-compatible figure."
+    )
+    return(invisible(x))
+  } else if (free) {
+    cli::cli_alert_info(
+      "The canvas will determine the available panel space. The measurements
+       below show the fixed room used by labels, fonts and other decoration."
     )
   } else {
     cli::cli_verbatim(c(
@@ -357,15 +466,19 @@ pad_gtable <- function(gt, extra_w_mm = 0, extra_h_mm = 0) {
 # figure is actually destined for, at a size large enough that nothing is
 # clipped, and closes it again.
 on_measure_device <- function(ext, expr) {
-  old <- grDevices::dev.cur()
-  tmp <- tempfile(fileext = paste0(".", if (is.null(ext)) "pdf" else ext))
-  opened <- open_measure_device(ext, tmp)
-  on.exit({
-    if (opened) suppressWarnings(try(grDevices::dev.off(), silent = TRUE))
-    if (old > 1L && old %in% grDevices::dev.list()) grDevices::dev.set(old)
-    unlink(tmp)
-  }, add = TRUE)
-  force(expr)
+  with_r_fontconfig({
+    old <- grDevices::dev.cur()
+    tmp <- tempfile(fileext = paste0(".", if (is.null(ext)) "pdf" else ext))
+    opened <- open_measure_device(ext, tmp)
+    tryCatch(
+      force(expr),
+      finally = {
+        if (opened) suppressWarnings(try(grDevices::dev.off(), silent = TRUE))
+        if (old > 1L && old %in% grDevices::dev.list()) grDevices::dev.set(old)
+        unlink(tmp)
+      }
+    )
+  })
 }
 
 # Devices disagree about how they take a size: ragg wants pixels plus a
@@ -379,7 +492,7 @@ open_measure_device <- function(ext, path) {
 
   if (!is.null(dev)) {
     ok <- tryCatch({
-      if (isTRUE(ext %in% c("tiff", "tif", "png"))) {
+      if (isTRUE(ext %in% c("tiff", "tif", "png", "jpeg", "jpg"))) {
         dev(path, width = big_in, height = big_in, units = "in", res = 300)
       } else {
         dev(path, width = big_in, height = big_in)
@@ -409,8 +522,8 @@ mm <- function(x) trimws(fmt_num(x))
 # supplied, and says plainly when the combination cannot be built.
 #
 # The four inputs are canvas width, canvas height, panel width and panel
-# height, each optionally NULL, plus the journal's stated canvas width where
-# there is one. They are not in conflict with each other; they are a pair of
+# height, each optionally NULL, plus the specification's stated canvas width
+# where there is one. They are not in conflict with each other; they are a pair of
 # constraints on one equation, canvas = panel + decoration, whose third term is
 # measurable. So the job is to solve, and only to refuse when no solution
 # exists -- in which case the two numbers that would work are reported, since
@@ -418,7 +531,7 @@ mm <- function(x) trimws(fmt_num(x))
 solve_geometry <- function(plot, ext,
                            width_mm = NULL, height_mm = NULL,
                            panel_width = NULL, panel_height = NULL,
-                           journal_width_mm = NULL, journal_name = NULL) {
+                           spec_width_mm = NULL) {
 
   on_measure_device(ext, {
     gt <- as_plot_gtable(plot)
@@ -432,12 +545,12 @@ solve_geometry <- function(plot, ext,
     n_panel_rows <- count_panel_tracks(gt, "height")
 
     # "max" means: the widest panel that still fits the canvas we are allowed.
-    ceiling_w <- width_mm %||% journal_width_mm
+    ceiling_w <- width_mm %||% spec_width_mm
     if (identical(panel_width, "max")) {
       if (is.null(ceiling_w)) {
         figspec_abort(
           c("{.code panel_width = \"max\"} needs a canvas to fit inside.",
-            ">" = "Give a {.arg journal}, or a {.arg width}."),
+            ">" = "Give a {.arg spec}, or a {.arg width}."),
           "max_without_canvas", parent.frame()
         )
       }
@@ -529,7 +642,7 @@ solve_geometry <- function(plot, ext,
       final_h <- height_mm
     }
 
-    # A journal always pins the canvas (see fig_save()), so an over-wide panel
+    # A specification with a stated width pins the canvas (see fig_save()), so an over-wide panel
     # arrives at the canvas-versus-panel check above and is reported there.
     # An explicit `width` that overruns the column is caught by fig_check()
     # on the written file, which is where a width failure belongs.
@@ -562,7 +675,7 @@ count_panel_tracks <- function(gt, dim) {
 }
 
 
-#' The panel width a set of figures can share
+#' Find one panel width that fits every figure
 #'
 #' Works out the widest plot area that every figure in a set can use while
 #' still fitting the canvas. Pass the answer to [fig_save()] and the figures
@@ -575,37 +688,43 @@ count_panel_tracks <- function(gt, dim) {
 #' longest axis labels has the least room, and it sets the width the others
 #' have to meet. That is what this measures.
 #'
-#' @param plots A list of plots, or one plot.
-#' @param journal Registry id. Supplies the canvas width.
-#' @param column Which of the journal's stated column widths to fit.
-#' @param width Canvas width, if you are not sizing to a journal.
-#' @param units Units for `width` and for the returned value.
+#' @param plots The plot or list of plots that should share a panel width.
+#' @param spec A registry id, a `figspec_spec`, or a named list containing
+#'   the available canvas widths.
+#' @param column Which named width in the selected specification the figures
+#'   must fit.
+#' @param width The available canvas width when you are not using a named
+#'   specification.
+#' @param units The units used for `width` and for the returned panel width.
 #' @param format File format the figures will be written in, for example
 #'   `"tiff"`. Text is measured in the font the device resolves, so measuring
 #'   on the device you will actually save with is what makes the answer exact.
-#'   Defaults to the journal's first accepted format.
+#'   Defaults to the specification's first accepted format.
 #' @return A single number: the shared panel width. The per-figure maxima are
 #'   attached as the `"per_figure"` attribute, so you can see which figure is
 #'   the binding constraint.
 #' @seealso [fig_save()]
 #' @examples
+#' \donttest{
 #' library(ggplot2)
 #' figs <- list(
-#'   a = ggplot(mtcars, aes(wt, mpg)) + geom_point(),
-#'   b = ggplot(mtcars, aes(wt, mpg)) + geom_point() + labs(y = "A much longer label")
+#'   vehicles = ggplot(ggplot2::mpg, aes(displ, hwy)) + geom_point(),
+#'   economy = ggplot(ggplot2::economics, aes(date, unemploy)) +
+#'     geom_line() + labs(y = "Number of unemployed people")
 #' )
-#' fig_panel_width(figs, journal = "frontiers")
+#' fig_panel_width(figs, width = 160)
+#' }
 #' @export
-fig_panel_width <- function(plots, journal = NULL, column = NULL,
+fig_panel_width <- function(plots, spec = NULL, column = NULL,
                             width = NULL, units = c("mm", "cm", "in"),
                             format = NULL) {
   units <- match.arg(units)
   check_size(width, "width", units)
-  if (!is.null(column) && is.null(journal)) {
+  if (!is.null(column) && is.null(spec)) {
     figspec_abort(
-      c("{.arg column} names one of a journal's own widths, so it needs a {.arg journal}.",
+      c("{.arg column} names one of a specification's widths, so it needs a {.arg spec}.",
         ">" = "Give a {.arg width} in {units} instead."),
-      "column_without_journal", parent.frame(), column = column
+      "column_without_spec", parent.frame(), column = column
     )
   }
   if (inherits(plots, "ggplot") || inherits(plots, "patchwork") ||
@@ -616,18 +735,18 @@ fig_panel_width <- function(plots, journal = NULL, column = NULL,
 
   canvas_mm <- if (!is.null(width)) {
     convert_length(width, units, "mm")
-  } else if (!is.null(journal)) {
-    fig_width(journal, column %||% "single", "mm")
+  } else if (!is.null(spec)) {
+    fig_width(spec, column %||% "single", "mm")
   } else {
     figspec_abort(
-      c("Give a {.arg journal} or a {.arg width}.",
+      c("Give a {.arg spec} or a {.arg width}.",
         "i" = "A shared panel width is the widest panel that fits a canvas, so
                there has to be a canvas to fit inside."),
       "missing_arg")
   }
 
-  if (is.null(format) && !is.null(journal)) {
-    format <- tryCatch(default_format(journal_spec(journal)),
+  if (is.null(format) && !is.null(spec)) {
+    format <- tryCatch(default_format(spec_get(spec)),
                        error = function(e) NULL)
   }
   ext <- if (is.null(format)) "png" else tolower(sub("^\\.", "", format))
@@ -699,8 +818,7 @@ check_size <- function(x, arg, units = "mm", allow_max = FALSE,
     figspec_abort(
       c("{.arg {arg}} must be greater than zero.",
         "x" = "You gave {.val {x}} {units}.",
-        "i" = "A figure with no width cannot be drawn, and the graphics device
-               would fail rather than refuse."),
+        "i" = "A figure needs a positive width before it can be drawn."),
       "bad_size", call, arg = arg, value = x
     )
   }
@@ -721,8 +839,8 @@ check_dpi <- function(dpi, call = parent.frame()) {
 }
 
 
-#' @param x A `figspec_geometry` object, from [fig_geometry()].
-#' @param ... Ignored.
+#' @param ... Accepted by the `plot()` generic for compatibility and ignored by
+#'   this method.
 #' @rdname fig_geometry
 #' @export
 plot.figspec_geometry <- function(x, ...) {
@@ -735,6 +853,34 @@ plot.figspec_geometry <- function(x, ...) {
                figure."),
       "bad_input"
     )
+  }
+
+  if (is.na(x$panels_across) || is.na(x$panels_down) ||
+      is.na(x$panel_width_mm) || is.na(x$panel_height_mm)) {
+    diagram <- ggplot2::ggplot() +
+      ggplot2::annotate(
+        "rect", xmin = 0, xmax = x$canvas_width_mm,
+        ymin = 0, ymax = x$canvas_height_mm,
+        fill = "#E8F3F7", colour = "#1A7391", linewidth = 0.7
+      ) +
+      ggplot2::annotate(
+        "text", x = x$canvas_width_mm / 2, y = x$canvas_height_mm / 2,
+        label = paste0(
+          "canvas  ", mm(x$canvas_width_mm), " x ",
+          mm(x$canvas_height_mm), " mm\n",
+          "panel boundary not exposed"
+        ),
+        colour = "#16313B", size = 4
+      ) +
+      ggplot2::coord_fixed(
+        xlim = c(0, x$canvas_width_mm),
+        ylim = c(0, x$canvas_height_mm),
+        expand = FALSE,
+        clip = "off"
+      ) +
+      ggplot2::theme_void() +
+      ggplot2::theme(plot.margin = ggplot2::margin(18, 18, 18, 18))
+    return(diagram)
   }
 
   cw <- x$canvas_width_mm; ch <- x$canvas_height_mm
@@ -815,8 +961,8 @@ plot.figspec_geometry <- function(x, ...) {
     ggplot2::geom_text(data = labs,
                        ggplot2::aes(.data$x, .data$y, label = .data$label),
                        size = 3.2, lineheight = 0.95, colour = "grey10") +
-    ggplot2::scale_fill_manual(values = c(canvas = "grey93", panel = "white")) +
-    ggplot2::scale_colour_manual(values = c(canvas = "grey60", panel = "grey35")) +
+    ggplot2::scale_fill_manual(values = c(canvas = "#F1F4F5", panel = "#DCEFF5")) +
+    ggplot2::scale_colour_manual(values = c(canvas = "#98A6AD", panel = "#1A7391")) +
     ggplot2::coord_fixed(clip = "off") +
     ggplot2::labs(x = NULL, y = NULL) +
     ggplot2::theme_void() +

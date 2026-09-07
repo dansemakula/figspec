@@ -3,29 +3,32 @@
 \name{scale_colour_figspec}
 \alias{scale_colour_figspec}
 \alias{scale_color_figspec}
-\alias{scale_fill_figspec}
-\title{Discrete colour and fill scales using a figspec palette}
+\title{Apply a figspec palette to point and line colours}
 \usage{
 scale_colour_figspec(palette = "okabe_ito", ...)
 
 scale_color_figspec(palette = "okabe_ito", ...)
-
-scale_fill_figspec(palette = "okabe_ito", ...)
 }
 \arguments{
-\item{palette}{Palette id, from \code{\link[=figspec_palettes]{figspec_palettes()}}.}
+\item{palette}{The id of the figspec palette to use. See
+\code{\link[=figspec_palettes]{figspec_palettes()}} for the available choices and their recommended uses.}
 
-\item{...}{Passed to \code{\link[ggplot2:discrete_scale]{ggplot2::discrete_scale()}}.}
+\item{...}{Additional settings for the discrete scale, such as its legend
+title, labels, limits, missing-value colour or guide. These are passed to
+\code{\link[ggplot2:discrete_scale]{ggplot2::discrete_scale()}}.}
 }
 \value{
-A ggplot2 scale.
+A discrete ggplot2 colour scale to add to a plot.
 }
 \description{
-Discrete colour and fill scales using a figspec palette
+Adds a discrete ggplot2 colour scale using one of the palettes listed by
+\code{\link[=figspec_palettes]{figspec_palettes()}}. Use this scale when a variable is represented by the
+colour of points, lines or outlines. The American spelling
+\code{scale_color_figspec()} is an exact alias.
 }
 \examples{
 library(ggplot2)
-ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
+ggplot(ggplot2::mpg, aes(displ, hwy, colour = class)) +
   geom_point() +
   scale_colour_figspec()
 }

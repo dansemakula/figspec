@@ -1,0 +1,213 @@
+---
+title: "Build and check tables from R"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Build and check tables from R}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 8,
+  fig.height = 5
+)
+library(figspec)
+library(ggplot2)
+```
+
+Tables often have requirements of their own. A report may require 9 point
+Arial text and no vertical lines. A journal may require an editable Word table,
+a portrait page, a short title and abbreviations explained below the table.
+These are not figure rules, and figspec keeps them separate.
+
+This guide shows the complete table workflow: describe the table you need,
+apply the requirements while it is editable, export it, and check the file
+that was actually written.
+
+## Describe the table you need
+
+A table specification uses a `tables` section. This example defines the
+requirements for a research report directly in R, so you can see exactly what
+will be applied:
+
+```{r table-spec}
+report_spec <- list(
+  name = "Clinical research report",
+  source_url = "internal:report-table-guide",
+  verified_on = as.character(Sys.Date()),
+  tables = list(
+    formats = c("html", "docx"),
+    orientation = "portrait",
+    font_families = "Arial",
+    font_min_pt = 9,
+    header_bold = TRUE,
+    vertical_rules = FALSE,
+    horizontal_rules = "minimal",
+    repeat_header = TRUE
+  )
+)
+
+table_spec(report_spec)
+```
+
+The same specification can be kept with the project and reused in later R
+sessions:
+
+```{r save-table-specification}
+table_spec_file <- file.path(tempdir(), "clinical-report-specifications.yml")
+spec_save(report_spec, table_spec_file, id = "clinical_research_report")
+spec_load(table_spec_file)
+```
+
+The saved entry retains both table and figure requirements. Loading it makes
+the project specification available in the current R session while leaving
+the installed package unchanged.
+
+Bundled publication profiles can be used in the same way when their table
+requirements have been reviewed. `registry_status()` shows table coverage
+separately from figure coverage; an empty table section means that figspec has
+not yet reviewed that profile's table guidance.
+
+## Apply the requirements before export
+
+We will use 12 real observations from `ggplot2::mpg`. The plain data frame is
+useful data, but it does not yet record a font size, header treatment or rule
+style.
+
+```{r plain-table}
+vehicle_table <- mpg[1:12, c(
+  "manufacturer", "model", "displ", "year", "hwy"
+)]
+
+knitr::kable(vehicle_table)
+```
+
+`table_apply_spec()` turns the data frame into an editable gt table and applies
+the requirements the table system can express:
+
+```{r styled-table}
+styled_table <- table_apply_spec(vehicle_table, report_spec)
+styled_table
+```
+
+The rows and values have not changed. The difference is that the editable
+table now carries the required type size, font, header emphasis and rule
+choices. `table_check()` can inspect those properties before any file is
+written:
+
+```{r check-live-table}
+table_check(styled_table, report_spec)
+```
+
+At this stage, the live-table report covers the styling and structure that can
+already be inspected. The file format is checked after export, when a completed
+file is available.
+
+## Export and check the completed file
+
+`table_save()` exports through the table's own system. It first writes a
+temporary file in the destination directory, reopens and checks it, and only
+then places it at the requested path.
+
+```{r save-table}
+html_path <- file.path(tempdir(), "vehicle-summary.html")
+saved_table <- table_save(
+  html_path,
+  styled_table,
+  spec = report_spec,
+  transform = FALSE
+)
+
+attr(saved_table, "figspec_table_report")
+```
+
+The combined report now contains both kinds of evidence: styling from the
+editable table and HTML format and validity from the completed file. Use DOCX
+instead when an editable Word file is required:
+
+```{r save-docx, eval=FALSE}
+word_path <- file.path(tempdir(), "vehicle-summary.docx")
+table_save(word_path, vehicle_table, report_spec)
+```
+
+## Use the table system you already work with
+
+Continue using the table system that suits your work. figspec accepts:
+
+* data frames and matrices, which become gt tables;
+* existing gt tables;
+* flextable objects, including Word-oriented workflows;
+* knitr and kableExtra tables; and
+* grid tables, which can be exported as PDF or images.
+
+The same public calls are used for all of them:
+
+```{r backend-shape, eval=FALSE}
+table_apply_spec(my_table, report_spec)
+table_save("my-table.docx", my_table, report_spec)
+table_check("my-table.docx", report_spec)
+```
+
+The output formats still depend on the table system:
+
+| Table supplied to figspec | Available output |
+|---|---|
+| data frame or matrix | HTML, DOCX, RTF, TeX, PDF or PNG |
+| gt | HTML, DOCX, RTF, TeX, PDF or PNG |
+| flextable | HTML, DOCX, RTF or PNG |
+| HTML or LaTeX kable | its native format, PDF, PNG or JPEG |
+| grid table | PDF, PNG or JPEG |
+
+HTML-to-PDF or image conversion uses a local browser, while LaTeX-to-PDF or
+image conversion uses a local LaTeX installation. figspec checks that the
+required renderer and output combination are available before writing the
+file, so the extension always matches its contents.
+
+## Review figures and tables together
+
+A manuscript usually contains both. Put them in one named list and let
+`submission_check()` select the appropriate checks:
+
+```{r mixed-submission}
+figure <- ggplot(mpg, aes(displ, hwy, colour = drv, shape = drv)) +
+  geom_point() +
+  labs(
+    x = "Engine displacement (litres)",
+    y = "Highway fuel economy",
+    colour = "Drive layout",
+    shape = "Drive layout"
+  )
+
+mixed_spec <- report_spec
+mixed_spec$columns <- list(single = 85)
+mixed_spec$dpi_min <- 300
+mixed_spec$formats <- "png"
+
+mixed_review <- submission_check(
+  list(
+    fuel_economy_figure = figure,
+    vehicle_table = styled_table
+  ),
+  spec = mixed_spec,
+  column = "single"
+)
+
+mixed_review[, c("file", "asset", "result")]
+```
+
+The summary labels each item as a figure or table. `submission_detail()` opens
+the full report for either one.
+
+## Complete the editorial review
+
+Some requirements are measurements: file format, page orientation, width,
+font size, header emphasis or the presence of vertical rules. figspec can
+apply or inspect those when the table system exposes reliable evidence.
+
+Other requirements ask whether a title is sufficiently short, every
+abbreviation is defined or a footnote is clear. Read those parts of the table
+in the context of the surrounding report or manuscript. figspec keeps each one
+in the report so the editorial review can be completed before delivery.

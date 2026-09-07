@@ -2,74 +2,118 @@
 % Please edit documentation in R/check.R
 \name{fig_check}
 \alias{fig_check}
-\title{Check a figure against a journal's requirements}
+\title{Inspect a figure and verify it against a specification}
 \usage{
 fig_check(
   x,
-  journal = NULL,
-  column = "single",
+  spec = NULL,
+  column = NULL,
   width = NULL,
   height = NULL,
   units = c("mm", "cm", "in"),
   dpi = NULL,
   format = NULL,
-  art_type = c("colour", "bw", "line", "combination")
+  colour_mode = NULL,
+  color_mode = NULL,
+  art_type = c("auto", "colour", "bw", "line", "combination")
 )
 }
 \arguments{
-\item{x}{A ggplot object, or a path to a figure file.}
+\item{x}{A supported live figure, or a path to a figure file. Live figures
+include ggplot2 and patchwork objects, lattice plots, Plotly and other HTML
+widgets, grid grobs, recorded base plots, and base-graphics code wrapped
+in a function or one-sided formula.}
 
-\item{journal}{Registry id, for example \code{"frontiers"}.}
+\item{spec}{Optional specification: a registry id such as \code{"frontiers"},
+a \code{figspec_spec}, or a named list of requirements.}
 
 \item{column}{Which column width the figure is intended for. One of
 \code{"single"}, \code{"onehalf"} or \code{"double"}.}
 
-\item{width, height}{Intended output size. Defaults to the journal's width
-for \code{column}. Ignored when \code{x} is a file, whose real size is measured.}
+\item{width, height}{Intended output size. Defaults to the width selected by
+\code{column} in the specification. Ignored when \code{x} is a file, whose real size
+is measured.}
 
 \item{units}{Units for \code{width} and \code{height}.}
 
-\item{dpi}{Resolution. For a ggplot object, the resolution you intend to
-save at. For a file, the resolution it was written at, which lets figspec
-judge physical size for files that do not record it themselves - base R's
-\code{png()} and \code{tiff()} devices do not, whereas ragg does.}
+\item{dpi}{Resolution. For a live figure, the resolution you intend to
+save at. For a file, the resolution it was written at. Supply this value
+when a raster lacks embedded resolution metadata, as files written by base
+R's \code{png()} and \code{tiff()} devices often do; figspec can then calculate its
+physical size from the pixel dimensions.}
 
 \item{format}{Output format, for example \code{"tiff"}. Only used when \code{x} is a
-ggplot object.}
+live figure.}
+
+\item{colour_mode}{Intended output colour model for a live figure. Defaults
+to \code{"RGB"}; \code{\link[=fig_save]{fig_save()}} supplies \code{"CMYK"} when it selects a CMYK-capable
+vector device.}
+
+\item{color_mode}{American spelling of \code{colour_mode}. Takes precedence when
+supplied.}
 
 \item{art_type}{Which resolution rule applies. Publishers set different
 minimums for different kinds of artwork: Cell Press asks 300 dpi for
 colour or greyscale, 500 for black and white, and 1000 for line art.
-figspec cannot tell which one your figure is, so it checks against
-\code{"colour"} by default and names the other thresholds in the report rather
-than quietly applying the most lenient one. \code{"color"} is accepted too.}
+\code{"auto"} classifies a plot from what it actually draws. For a saved file
+that no longer contains that evidence, it applies the strictest stated
+rule and records the category used in the report.
+\code{"color"} is accepted as an alias for \code{"colour"}.}
 }
 \value{
 An object of class \code{figspec_report}, a data frame of one row per
 requirement.
 }
 \description{
-Accepts either a ggplot object, checked before it is saved, or the path to
-a figure file that has already been written.
+Accepts a live figure made with ggplot2, lattice, Plotly, base graphics or
+grid, or the path to an exported figure file. With no specification it
+reports what can be measured without issuing pass or fail claims. A
+specification may come from the included registry, your own registry, or a
+named list supplied directly in R. For plotting systems that expose fewer
+editable details than ggplot2, figspec renders a temporary file and verifies
+the properties recorded there. The report identifies any requirements that
+need evidence from the original plotting code or another source.
 }
 \details{
-Each requirement is reported with one of four outcomes. \code{pass} and \code{fail}
-mean what they say. \code{unspecified} means the publisher does not state that
-requirement, so nothing can be concluded. \code{unknown} means the requirement
-exists but this input cannot answer it, for example type size in a raster
-file. Only \code{fail} is a problem you must fix; \code{unspecified} and \code{unknown}
-are prompts to check by hand.
+Each requirement is reported with one of five outcomes. \code{pass} and \code{fail}
+mean what they say. \code{unspecified} means the selected specification gives no
+rule for that property. \code{unknown} means the requirement exists but this
+input does not contain the needed evidence, such as type size in a raster
+file. \code{invalid} means the input is not a readable file of the type its name
+claims. A pass applies to its individual requirement; the complete report
+shows whether every recorded requirement has been addressed.
 
-Type size is read back from PDF, EPS and SVG files, which record the size
-each string was set at. This is worth doing rather than trusting the plot
-object, because R's \code{pdf()} and \code{postscript()} devices round text to whole
-points: a theme asking for 8.8 pt writes 9 pt into the file, and one asking
-for 5.2 pt writes 5. The file is what a publisher receives. Reading a PDF
-needs the pdftools package. A raster carries no type sizes at all, and is
-reported as \code{unknown} rather than estimated.
+PDF, EPS and SVG files can record the size used for each string, so figspec
+reads those values from the completed file. This matters because R's
+\code{pdf()} and \code{postscript()} devices round text to whole points: a theme asking
+for 8.8 pt writes 9 pt into the file, and one asking for 5.2 pt writes 5.
+Reading a PDF requires the pdftools package. Raster files do not retain point
+sizes, so their typography row is marked \code{unknown} and directed to review of
+the editable plot.
 }
 \examples{
 library(ggplot2)
-p <- ggplot(mtcars, aes(wt, mpg)) + geom_point()
-fig_check(p, "frontiers")
+p <- ggplot(ggplot2::mpg, aes(displ, hwy, colour = class)) + geom_point()
+p
+
+# Inspect first, without judging the plot against external requirements.
+fig_check(p)
+
+# Verify the same plot against project requirements supplied directly in R.
+report_spec <- list(
+  name = "Quarterly research report",
+  columns = list(full = 160),
+  dpi_min = 300,
+  formats = "png",
+  font_min_pt = 9
+)
+fig_check(p, report_spec, column = "full", height = 95,
+          dpi = 300, format = "png")
+}
+\seealso{
+\code{\link[=fig_save]{fig_save()}} to export and check in one step,
+\code{\link[=submission_check]{submission_check()}} to review several figures together,
+\code{\link[=spec_get]{spec_get()}} for registry and project specifications, and
+\code{vignette("figure-systems")} for worked examples with different R
+plotting systems.
 }
