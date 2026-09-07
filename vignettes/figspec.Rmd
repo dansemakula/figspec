@@ -632,11 +632,11 @@ rather than through `ggsave()`. Their dimensions and resolution therefore come
 from chunk options such as `fig.width` and `dpi`.
 
 ```{r}
-figspec_knitr_options("cell_press", "double")
+figspec_knitr_options("frontiers", "double")
 ```
 
-Use `figspec_knitr_setup("cell_press", "double")` in the setup chunk to apply
-the journal's size and resolution to every figure in the document.
+Use `figspec_knitr_setup("frontiers", "double")` in the setup chunk to apply
+the publication's size and resolution to every figure in the document.
 
 The project specification created at the start works here too:
 
